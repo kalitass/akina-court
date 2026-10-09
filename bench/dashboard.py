@@ -120,11 +120,11 @@ CONTENT = {
         {"req": "Evidence is text and structured data: GPS points, chat, fare lines, timestamps, both parties' history",
          "how": "Every case file carries a 5-second GPS trace, the quoted route, chat, driver statement, fare breakdown, "
                 "LTA traffic bands and incidents, weather and both profiles; code turns them into a numbered fact table.",
-         "where": [("Fact table (expand on the replay page)", "/replay.html?case=C-0001"), ("Case files", "/api/cases/C-0001")], "status": "done"},
+         "where": [("Fact table", "/facts.html?case=C-0001"), ("Case files", "/api/cases/C-0001")], "status": "done"},
         {"req": "At least two dispute types",
          "how": "Route deviation and no-show / cancellation fee, plus safety as a third (escalation-only) type — "
                 "{n_demo} hand-built demo cases and {n_bench} benchmark cases cover all three.",
-         "where": [("Demo cases", "#demo"), ("Benchmark", "#bench")], "status": "done"},
+         "where": [("Demo cases", "/#watch"), ("Benchmark", "#accuracy")], "status": "done"},
         {"req": "Agent-to-agent communication must be observable",
          "how": "Every tool call, brief, rebuttal point, judge question and verifier check is an event streamed live "
                 "(server-sent events) and replayed in the court feed with timestamps.",
