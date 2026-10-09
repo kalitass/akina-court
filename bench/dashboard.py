@@ -451,14 +451,11 @@ body.light{--bg:#f3f4f6;--panel:rgba(255,255,255,.92);--panel2:rgba(17,24,39,.04
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);background-image:var(--glow);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:1180px;margin:0 auto;padding:36px 24px 80px}
-.toolbar{display:flex;gap:10px;justify-content:flex-end;align-items:center;font-size:12px;color:var(--muted)}
+.wrap{padding-bottom:80px}
+.toolbar{position:absolute;right:0;top:38px;display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)}
 .toolbar button{white-space:nowrap;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:600 12px var(--sans);cursor:pointer}
-header.hero{padding:28px 0 8px}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#ffb020,#ff5c5c);display:grid;place-items:center;font-weight:800;color:#111;font-size:18px}
-.brand .sub{font-size:12.5px;color:var(--muted)}
-h1{font-size:40px;line-height:1.1;letter-spacing:-.02em;margin:6px 0 14px;font-weight:800}
+.hero{position:relative;padding:0 0 8px}
+h1{font-size:40px;line-height:1.1;letter-spacing:-.02em;margin:34px 0 14px;font-weight:800}
 .blurb{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:-6px 0 10px;color:var(--ink)}
 .method{font:500 13px var(--sans);color:var(--amber);background:rgba(245,181,68,.08);border:1px solid rgba(245,181,68,.3);border-radius:10px;padding:8px 14px;margin:16px 0 10px}
 .chips.secondary .chip{color:var(--ink2)}
@@ -549,7 +546,7 @@ table.t td.leak{min-width:260px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px}
 .kv b{font-family:var(--mono);font-weight:600;white-space:nowrap}
 @media (max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:1fr}.cm{grid-template-columns:1fr}}
-@media (max-width:760px){.wrap{padding:20px 16px 60px}h1{font-size:30px}.blurb{font-size:18px}.pitch{font-size:17px}.tiles,.cards,.grid2,.stretch{grid-template-columns:1fr}
+@media (max-width:760px){.wrap{padding-bottom:60px}h1{font-size:30px}.blurb{font-size:18px}.pitch{font-size:17px}.tiles,.cards,.grid2,.stretch{grid-template-columns:1fr}
 .tile .n{font-size:36px}section.sec{margin-top:44px}.sec > h2{font-size:22px}.kv{grid-template-columns:1fr}}
 @media print{
 body{--bg:#fff;--panel:#fff;--panel2:#f3f4f6;--line:#cfd4dc;--ink:#111;--ink2:#1f2937;--muted:#555;--blue:#1a4fa3;--amber:#b45309;--red:#b91c1c;--green:#15803d;--purple:#6d28d9;--shadow:none;--glow:none;font-size:12px}
@@ -562,7 +559,6 @@ body{--bg:#fff;--panel:#fff;--panel2:#f3f4f6;--line:#cfd4dc;--ink:#111;--ink2:#1
 JS = r"""
 (function(){
   if(AKINA_THEME.light)document.body.classList.add('light');
-  AKINA_THEME.bind(document.getElementById('theme'),['Light theme','Dark theme']);
   document.getElementById('print').onclick=function(){window.print();};
   window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
 })();
@@ -687,10 +683,14 @@ def build(d: dict) -> str:
 <link rel="stylesheet" href="/styles/base.css">
 <title>{esc(CONTENT['title'])}</title>
 <meta name="description" content="One-page results dashboard: mechanism, benchmark vs a plain LLM, demo cases, MVP status, data and method, stretch.">
-<style>{CSS}.brand{{display:flex;align-items:center;gap:12px}}.brand .site{{margin-left:auto;display:flex;gap:16px;font-size:13px;font-weight:600;white-space:nowrap}}.brand .site a{{color:var(--blue);text-decoration:none}}@media(max-width:560px){{.brand .site{{display:none}}}}details.more>summary{{cursor:pointer;font-weight:700;font-size:14px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);list-style:none;display:flex;gap:10px;align-items:center}}details.more>summary::before{{content:"▸";color:var(--muted)}}details.more[open]>summary::before{{content:"▾"}}details.more[open]>summary{{margin-bottom:12px}}details.more>summary::-webkit-details-marker{{display:none}}</style></head><body><div class="wrap">
-<div class="toolbar"><button id="theme" type="button">Light theme</button><button id="print" type="button">Print</button></div>
-<header class="hero">
-<div class="brand"><a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="Akina Court logo" width="34" height="34"></a><div><div style="font-weight:800;font-size:15px">Akina Court</div><div class="sub">{esc(CONTENT['subtitle'])}</div></div><nav class="site" aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/ops.html">Ops</a><a href="/policy.html">Policy</a></nav></div>
+<style>{CSS}details.more>summary{{cursor:pointer;font-weight:700;font-size:14px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);list-style:none;display:flex;gap:10px;align-items:center}}details.more>summary::before{{content:"▸";color:var(--muted)}}details.more[open]>summary::before{{content:"▾"}}details.more[open]>summary{{margin-bottom:12px}}details.more>summary::-webkit-details-marker{{display:none}}</style></head><body><div class="wrap">
+<header class="site">
+  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="" width="34" height="34"></a>
+  <div class="ident"><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · Tencent Cloud AI CAN DO IT Hackathon SG 2026 · Ryde track</div></div>
+  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/facts.html?case=DISP-002">Facts</a><a href="/policy.html">Policy</a><a href="/ops.html">Ops</a><a href="/report.html">Results</a><button class="theme" type="button" aria-label="Switch colour theme">Light</button></nav>
+</header>
+<section class="hero">
+<div class="toolbar"><button id="print" type="button">Print</button></div>
 <h1>Results</h1>
 <p class="blurb">{esc(CONTENT['blurb'])}</p>
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
@@ -707,7 +707,7 @@ def build(d: dict) -> str:
 <span class="chip"><b>{pct(ct['same_ruling_rate'], 0)}</b>same ruling on repeat</span>
 <span class="chip"><b>{n_runs}</b>case-system runs · <b>{n_calls:,}</b> model calls</span>
 </div>
-</header>""")
+</section>""")
 
     # ---------------------------------------------------------------- 1. highlights
     hl = "".join(f"<li><b>{esc(t)}</b>{esc(b.format(**fill))}</li>" for t, b in CONTENT["highlights"])

@@ -19,8 +19,13 @@
       el.textContent = light ? labels[1] : labels[0]; el.onclick = window.AKINA_THEME.toggle;
     }
   };
-  /* embedded map replays carry the theme through their query string */
-  if (light) document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('iframe[src*="replay.html"]').forEach(function (f) { if (f.src.indexOf('theme=') < 0) f.src += (f.src.indexOf('?') < 0 ? '?' : '&') + 'theme=light'; });
+  document.addEventListener('DOMContentLoaded', function () {
+    /* the shared site header: wire its theme button, mark the current page */
+    window.AKINA_THEME.bind(document.querySelector('header.site button.theme'));
+    document.querySelectorAll('header.site nav a').forEach(function (a) {
+      if (a.pathname === location.pathname) a.setAttribute('aria-current', 'page');
+    });
+    /* embedded map replays carry the theme through their query string */
+    if (light) document.querySelectorAll('iframe[src*="replay.html"]').forEach(function (f) { if (f.src.indexOf('theme=') < 0) f.src += (f.src.indexOf('?') < 0 ? '?' : '&') + 'theme=light'; });
   });
 })();

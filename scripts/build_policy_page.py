@@ -227,12 +227,8 @@ html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans
 html{{scroll-behavior:smooth}}
 a{{color:var(--blue);text-decoration:none}}a:hover{{text-decoration:underline}}
 a:focus-visible,summary:focus-visible{{outline:2px solid var(--blue);outline-offset:2px}}
-.wrap{{max-width:820px;margin:0 auto;padding:0 20px}}
-header{{padding:26px 0 6px;display:flex;align-items:center;gap:12px}}
+
 .logo{{width:34px;height:34px;border-radius:9px;display:block;flex:none}}
-header .t{{font-weight:700;font-size:15px}}header .sub{{font-size:12px;color:var(--muted)}}
-header nav{{margin-left:auto;display:flex;gap:16px;font-size:13px;font-weight:600}}
-@media(max-width:560px){{header nav{{display:none}}}}
 h1{{font-size:clamp(28px,5vw,40px);line-height:1.1;letter-spacing:-.02em;margin:34px 0 12px}}
 .lead{{font-size:16.5px;color:var(--ink2);margin:0 0 18px}}
 .lead b{{color:var(--ink)}}
@@ -264,15 +260,15 @@ ul.code li{{padding:8px 0;border-top:1px solid var(--line);font-size:14px;color:
 ul.code li b{{color:var(--ink);margin-right:6px}}
 footer{{padding:26px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:28px}}
 footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight:600}}
-@media(max-width:560px){{.wrap{{padding:0 16px}}}}
+@media(max-width:560px){{}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>
-  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="Akina Court logo" width="34" height="34"></a>
-  <div><div class="t">Akina Court</div><div class="sub">Ryde Dispute Court · Tencent Cloud AI CAN DO IT Hackathon SG 2026 · Ryde track</div></div>
-  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/ops.html">Ops</a><a href="/report.html">Results</a><a href="/api/policy">Original (Chinese)</a></nav>
+<header class="site">
+  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="" width="34" height="34"></a>
+  <div class="ident"><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · Tencent Cloud AI CAN DO IT Hackathon SG 2026 · Ryde track</div></div>
+  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/facts.html?case=DISP-002">Facts</a><a href="/policy.html">Policy</a><a href="/ops.html">Ops</a><a href="/report.html">Results</a><button class="theme" type="button" aria-label="Switch colour theme">Light</button></nav>
 </header>
 <main>
 <h1>The rules the court applies</h1>

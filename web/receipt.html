@@ -11,13 +11,9 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:980px;margin:0 auto;padding:0 20px 48px}
-header{padding:26px 0 6px;display:flex;align-items:center;gap:12px}
+
 .logo{width:34px;height:34px;border-radius:9px;display:block}
-header .t{font-weight:700;font-size:15px}header .s{font-size:12px;color:var(--muted);white-space:nowrap}
-header nav{margin-left:auto;display:flex;gap:14px;font-size:12.5px;font-weight:600;white-space:nowrap}
-header nav a{color:var(--blue);text-decoration:none}
-h1{font-size:clamp(26px,4vw,38px);line-height:1.1;letter-spacing:-.02em;margin:26px 0 6px}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.1;letter-spacing:-.02em;margin:34px 0 6px}
 .lead{color:var(--ink2);font-size:16px;margin:0 0 18px}
 .q{color:var(--ink2);font-style:italic;margin:0 0 20px;padding-left:12px;border-left:3px solid var(--line)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px;margin-bottom:14px}
@@ -56,6 +52,7 @@ td.m{width:110px;white-space:nowrap}
 .trace li.sum{grid-template-columns:22px 1fr;color:var(--ink2)}
 .cid{font:700 11.5px var(--mono);color:var(--blue);text-decoration:none;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;display:inline-block;white-space:nowrap}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+ul.cited{list-style:none;margin:0 0 4px;padding:0}ul.cited li{display:flex;gap:10px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink2)}ul.cited li:first-child{border-top:0}ul.cited .chip{flex:none;margin-top:1px;min-width:38px;text-align:center}
 .chip{font:600 11.5px var(--mono);color:var(--ink2);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;text-decoration:none}
 .chip:hover,.cid:hover{border-color:var(--blue);color:var(--ink)}
 .wwc{margin:0;padding-left:18px;color:var(--ink2)}
@@ -64,13 +61,16 @@ td.m{width:110px;white-space:nowrap}
 .meta a{color:var(--blue);text-decoration:none}
 .small{font-size:13px;color:var(--muted);margin:8px 0 0}
 .err{padding:16px;border:1px solid rgba(255,92,92,.45);border-radius:12px;color:var(--red)}
-@media(max-width:620px){header nav{display:none}.trace li{grid-template-columns:22px 1fr}.trace .cid{grid-column:2}td.k{width:auto}}
+@media(max-width:620px){.trace li{grid-template-columns:22px 1fr}.trace .cid{grid-column:2}td.k{width:auto}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header><a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt=""></a><div><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · reproducibility receipt</div></div>
-  <nav><a id="navReplay" href="/replay.html">Replay this case</a><a href="/ops.html">Ops handoff</a><a href="/policy.html">Policy</a><a href="/report.html">Full results</a></nav></header>
+<header class="site">
+  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="" width="34" height="34"></a>
+  <div class="ident"><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · Tencent Cloud AI CAN DO IT Hackathon SG 2026 · Ryde track</div></div>
+  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/facts.html?case=DISP-002">Facts</a><a href="/policy.html">Policy</a><a href="/ops.html">Ops</a><a href="/report.html">Results</a><button class="theme" type="button" aria-label="Switch colour theme">Light</button></nav>
+</header>
 <main id="main"><p class="lead">Loading the receipt…</p></main>
 </div>
 <script>
@@ -81,7 +81,7 @@ td.m{width:110px;white-space:nowrap}
   const OUT = { refund_partial:'Partial refund', refund_full:'Full refund', no_action:'No refund', fee_waived:'Fee waived', escalate:'Sent to a human reviewer' };
   const TYPE = { route_deviation:'Route deviation', no_show:'No-show fee', safety:'Safety' };
   const KEYS = [['case_sha256','Case file','the trip, GPS, chat, fare and profiles the ruling was made on'],['policy_sha256','Policy text','policy/policy.md, every clause the judge may cite'],['code_sha256','Court code','core/: fact engine, policy engine, agents, checks'],['model','Model','the model id the agents were run with']];
-  document.getElementById('navReplay').href = `/replay.html?case=${encodeURIComponent(CASE)}${RUN !== CASE ? '&run=' + encodeURIComponent(RUN) : ''}&phase=court`;
+  const REPLAY_HREF = `/replay.html?case=${encodeURIComponent(CASE)}${RUN !== CASE ? '&run=' + encodeURIComponent(RUN) : ''}&phase=court`;
   let r, run;
   try {
     const [a, b] = await Promise.all([fetch(`/api/runs/${encodeURIComponent(RUN)}/receipt`), fetch(`/api/runs/${encodeURIComponent(RUN)}`)]);
@@ -111,7 +111,9 @@ td.m{width:110px;white-space:nowrap}
     return `<li class="${cls}"><span class="ic">${m[1]}</span><a class="cid" href="/policy.html#${esc(cid)}" target="_blank" rel="noopener">${esc(m[2])}</a><span><span class="rule">${esc(rule)}</span>${obs ? `<span class="obs">${esc(obs)}</span>` : ''}</span></li>`;
   }).join('');
   const wwc = (el.what_would_change || []).map(x => `<li>${esc(x)}</li>`).join('');
-  const facts = (ru.cited_facts || []).map(f => `<a class="chip" href="/replay.html?case=${encodeURIComponent(CASE)}&mode=expert&phase=court" title="open the fact table">${esc(f)}</a>`).join('');
+  const FTXT = {}; ((run && run.facts && run.facts.facts) || []).forEach(f => { FTXT[f.id] = f.text; });
+  const factHref = f => `/facts.html?case=${encodeURIComponent(CASE)}#${encodeURIComponent(f)}`;
+  const facts = (ru.cited_facts || []).map(f => `<li><a class="chip" href="${factHref(f)}">${esc(f)}</a><span>${esc(FTXT[f] || 'see the fact table')}</span></li>`).join('');
   const clauses = (ru.cited_policy || []).map(c => `<a class="chip" href="/policy.html#${esc(c.replace(/\(.*$/, ''))}" target="_blank" rel="noopener">${esc(c)}</a>`).join('');
   document.title = `Akina Court · Audit record ${RUN}`;
   main.innerHTML = `
@@ -128,10 +130,10 @@ td.m{width:110px;white-space:nowrap}
   <div class="card"><h2>How the policy decided it</h2><ul class="trace">${trace || '<li class="sum"><span class="ic">·</span><span>No policy trace stored for this run.</span></li>'}</ul></div>
   ${wwc ? `<div class="card"><h2>What would change this ruling</h2><ul class="wwc">${wwc}</ul></div>` : ''}
   <div class="card"><h2>On the record</h2>
-    <p class="small" style="margin:0 0 6px">Facts the ruling cites (${(ru.cited_facts || []).length} of ${(r.fact_ids || []).length} computed):</p><div class="chips">${facts || '—'}</div>
+    <p class="small" style="margin:0 0 6px">Facts the ruling cites (${(ru.cited_facts || []).length} of ${(r.fact_ids || []).length} computed by code; each number opens the full fact table):</p><ul class="cited">${facts || '<li>—</li>'}</ul>
     <p class="small" style="margin:10px 0 6px">Clauses the ruling cites:</p><div class="chips">${clauses || '—'}</div></div>
   <p class="meta">${esc(r.appeal || '')}</p>
-  <p class="meta"><a href="${esc(document.getElementById('navReplay').href)}">Watch the court on this case →</a></p>`;
+  <p class="meta"><a href="${esc(REPLAY_HREF)}">Watch the court on this case →</a></p>`;
 })();
 </script>
 </body>

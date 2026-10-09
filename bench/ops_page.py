@@ -355,12 +355,9 @@ def page(rows: list[dict], f: dict, model: str) -> str:
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}}
 a{{color:var(--blue);text-decoration:none}}a:hover{{text-decoration:underline}}
 a:focus-visible,button:focus-visible,.row:focus-visible{{outline:2px solid var(--blue);outline-offset:2px}}
-.wrap{{max-width:1120px;margin:0 auto;padding:0 20px}}
-header{{padding:26px 0 6px;display:flex;align-items:center;gap:12px}}
+
 .logo{{width:34px;height:34px;border-radius:9px;display:block}}
-header .t{{font-weight:700;font-size:15px}}header .s{{font-size:12px;color:var(--muted)}}
-header nav{{margin-left:auto;display:flex;gap:16px;font-size:13px;font-weight:600}}
-.hero{{padding:30px 0 6px}}
+.hero{{padding:34px 0 6px}}
 h1{{font-size:clamp(32px,5vw,50px);line-height:1.05;letter-spacing:-.025em;margin:0 0 14px;max-width:900px}}
 .lead{{font-size:18px;color:var(--ink2);max-width:880px;margin:0 0 16px}}
 .lead b{{color:var(--ink)}}
@@ -370,7 +367,7 @@ h1{{font-size:clamp(32px,5vw,50px);line-height:1.05;letter-spacing:-.025em;margi
 .grid{{display:grid;gap:14px}}
 .g3{{grid-template-columns:repeat(3,1fr)}}.g4{{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:860px){{.g3,.g4{{grid-template-columns:1fr 1fr}}}}
-@media(max-width:560px){{.g3,.g4{{grid-template-columns:1fr}}header nav{{display:none}}}}
+@media(max-width:560px){{.g3,.g4{{grid-template-columns:1fr}}}}
 .card{{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px 14px}}
 .card p{{margin:0;color:var(--ink2);font-size:13.5px}}
 section{{padding:26px 0 6px}}
@@ -450,15 +447,15 @@ pre{{white-space:pre-wrap;font:13px/1.5 var(--sans);color:var(--ink2);background
 .foot{{font-size:12.5px;color:var(--muted);margin-top:10px}}
 footer{{padding:28px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:30px}}
 footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weight:600}}
-@media(max-width:560px){{.wrap{{padding:0 16px}}h1{{font-size:32px}}.lead{{font-size:16px}}.num{{font-size:32px}}.dgrid{{gap:14px}}}}
+@media(max-width:560px){{h1{{font-size:32px}}.lead{{font-size:16px}}.num{{font-size:32px}}.dgrid{{gap:14px}}}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>
-  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="Akina Court logo" width="34" height="34"></a>
-  <div><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · operations hand-off · what the system clears and what still reaches your team</div></div>
-  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/policy.html">Policy</a><a href="/report.html">Results</a></nav>
+<header class="site">
+  <a href="/" aria-label="Akina Court home"><img class="logo" src="/logo.svg" alt="" width="34" height="34"></a>
+  <div class="ident"><div class="t">Akina Court</div><div class="s">Ryde Dispute Court · Tencent Cloud AI CAN DO IT Hackathon SG 2026 · Ryde track</div></div>
+  <nav aria-label="Site"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/facts.html?case=DISP-002">Facts</a><a href="/policy.html">Policy</a><a href="/ops.html">Ops</a><a href="/report.html">Results</a><button class="theme" type="button" aria-label="Switch colour theme">Light</button></nav>
 </header>
 
 <main>
