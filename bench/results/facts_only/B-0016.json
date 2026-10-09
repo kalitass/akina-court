@@ -4,15 +4,16 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:34:57.439634+00:00",
+ "ts": "2026-10-09T19:20:11.370911+00:00",
  "ok": true,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Reject the fare-refund request (RydeX is fixed-price and the billed distance did not exceed the optimal route); note the RD-1 shortest-route breach for record only and offer RydeHELP review of the driver's routing.",
-  "confidence": 0.86,
+  "ruling": "refund_partial",
+  "amount": 0.0,
+  "recommended_action": "Reject the rider's refund claim for RydeX (fixed quoted fare: the billed distance does not exceed the 16.6 km optimal route and no unpublished fee was added); log the driver's unexplained off-route segment as an RD-1 route-obligation violation for record, and inform the rider that route deviations on fixed-fare RydeX do not change the fare. No account flag: the driver's profile shows 0 upheld route disputes in 90 days.",
+  "confidence": 0.9,
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -23,8 +24,9 @@
    "F10",
    "F11",
    "F12",
-   "F14",
-   "F15"
+   "F13",
+   "F15",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -32,32 +34,41 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Off-route segment 09:06–09:13 adds 4.84 km over a stretch where the optimal route covers 0.00 km. Not exempt under RD-3: no rider-named stop or app reroute appears in chat (F7, F8). Not exempt under RD-5: no pre-deviation route-change proposal with rider consent (F9 shows the driver only explained after the fact). Not exempt under RD-4: F12 records no traffic incident near the route, and the speed records F10 (band 5) and F11 (band 4) miss the band 1–2 threshold and cannot exempt alone. Breach of the RD-1 shortest-and-most-direct-route duty; no refund attachable because the fare is fixed (RD-2 non-metered branch, F4, F6)."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8",
+     "F10",
+     "F11",
+     "F12",
+     "F13"
+    ],
+    "reason": "Off-route segment 09:06–09:13 (4.84 km, +4.84 km) with no passenger-named stop or routing request in the chat and no consent message from the rider before the segment start, so RD-3(a) and RD-5 do not exempt it. RD-4 cannot exempt it either: no traffic incident near the route [F13], and the speed-band records [F11][F12] are, under RD-4(b), corroboration only — the driver's 'GPS rerouted me' explanation [F10] is an uncorroborated statement. The segment is an unexempted deviation under RD-1."
    }
   ],
   "rejected_claims": [
    {
-    "id": "claim-extra-distance-refund",
-    "reason": "RydeX is a non-metered fixed-price service; F4 shows billed distance equal to the optimal route and F6 contains no ERP/toll or unpublished add-on, so RD-2 yields a refundable amount of $0.00."
+    "id": "rider-complaint-metered-17km",
+    "reason": "RydeX is a fixed quoted fare (F5/F6); the fare record shows 16.6 km billed — equal to the optimal route [F4] — and no meter; there is no extra distance charged to refund, and no ERP/toll or unpublished add-on in F6."
    },
    {
-    "id": "F9-driver-gps-reroute-defence",
-    "reason": "No traffic incident (F12) and only band 4–5 congestion (F10, F11) on other roads; RD-4 exemption not made out."
+    "id": "driver-gps-rerouted",
+    "reason": "A driver statement [F10] claiming GPS rerouting is not traffic corroboration; RD-4 requires a DataMall incident on the replaced optimal-route portion [F13 shows none], and verbal/claimed justification cannot exempt a segment under RD-4/RD-5."
    }
   ],
   "flag_account": false
  },
- "latency_s": 5.05,
- "input_tokens": 8225,
- "output_tokens": 1065,
+ "latency_s": 6.12,
+ "input_tokens": 8861,
+ "output_tokens": 1340,
  "requests": 1,
  "llm_calls": 1
 }

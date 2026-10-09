@@ -38,47 +38,43 @@
       {
         "id": "F3",
         "source": "chat",
-        "text": "Chat #1 21:42 rider: “Please stop the car, I want to get out here.” [request]",
+        "text": "Chat #1 21:42 rider: “Please stop the car, I want to get out here.”",
         "value": {
           "idx": 1,
           "from": "rider",
           "ts": "2026-09-24T21:42:00+08:00",
-          "flags": [
-            "request"
-          ]
+          "kind": "message"
         }
       },
       {
         "id": "F4",
         "source": "chat",
-        "text": "Chat #2 21:43 driver: “Sit down or I lock the doors.” [threat]",
+        "text": "Chat #2 21:43 driver: “Sit down or I lock the doors.”",
         "value": {
           "idx": 2,
           "from": "driver",
           "ts": "2026-09-24T21:43:00+08:00",
-          "flags": [
-            "threat"
-          ]
+          "kind": "message",
+          "keyword_hint": "lock the door"
         }
       },
       {
         "id": "F5",
         "source": "chat",
-        "text": "Threat keywords detected in driver message #2 at 21:43 (“lock the door”).",
+        "text": "Chat record: 2 message(s), every one timestamped.",
         "value": {
-          "threat": true,
-          "idx": 2,
-          "from": "driver",
-          "keyword": "lock the door"
+          "count": 2,
+          "complete": true,
+          "untimed": 0
         }
       },
       {
         "id": "F6",
         "source": "chat",
-        "text": "Driver statement: “The rider was drunk and tried to open the door on the expressway. I told her to sit down for her own safety and did not stop until the destination.”",
+        "text": "Driver statement (written after the trip, not part of the chat): “The rider was drunk and tried to open the door on the expressway. I told her to sit down for her own safety and did not stop until the destination.”",
         "value": {
           "from": "driver",
-          "flags": []
+          "statement": true
         }
       },
       {
@@ -115,7 +111,7 @@
   "events": [
     {
       "seq": 1,
-      "ts": "2026-10-09T13:35:23.404070Z",
+      "ts": "2026-10-09T19:46:31.906884Z",
       "elapsed": "00:00.0",
       "actor": "system",
       "kind": "intake",
@@ -129,12 +125,12 @@
     },
     {
       "seq": 2,
-      "ts": "2026-10-09T13:35:23.420408Z",
+      "ts": "2026-10-09T19:46:31.923496Z",
       "elapsed": "00:00.0",
       "actor": "system",
       "kind": "facts",
       "title": "Fact table built: 8 facts (code, no LLM)",
-      "body": "F1 [gps] Actual distance 15.4 km vs optimal route 15.5 km: -0.1 km (-0%).\nF2 [gps] Trip duration 20.7 min vs estimated 22 min (-1.1 min).\nF3 [chat] Chat #1 21:42 rider: “Please stop the car, I want to get out here.” [request]\nF4 [chat] Chat #2 21:43 driver: “Sit down or I lock the doors.” [threat]\nF5 [chat] Threat keywords detected in driver message #2 at 21:43 (“lock the door”).\nF6 [chat] Driver statement: “The rider was drunk and tried to open the door on the expressway. I told her to sit down for her own safety and did not stop until the destination.”\nF7 [profile] Rider: account age 520 d (1.4 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF8 [profile] Driver: account age 2100 d (5.8 y), rating 4.9, 1204 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
+      "body": "F1 [gps] Actual distance 15.4 km vs optimal route 15.5 km: -0.1 km (-0%).\nF2 [gps] Trip duration 20.7 min vs estimated 22 min (-1.1 min).\nF3 [chat] Chat #1 21:42 rider: “Please stop the car, I want to get out here.”\nF4 [chat] Chat #2 21:43 driver: “Sit down or I lock the doors.”\nF5 [chat] Chat record: 2 message(s), every one timestamped.\nF6 [chat] Driver statement (written after the trip, not part of the chat): “The rider was drunk and tried to open the door on the expressway. I told her to sit down for her own safety and did not stop until the destination.”\nF7 [profile] Rider: account age 520 d (1.4 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF8 [profile] Driver: account age 2100 d (5.8 y), rating 4.9, 1204 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -143,48 +139,25 @@
     },
     {
       "seq": 3,
-      "ts": "2026-10-09T13:35:23.420443Z",
+      "ts": "2026-10-09T19:46:31.923550Z",
       "elapsed": "00:00.0",
       "actor": "verify",
       "kind": "check",
       "title": "Policy execution trace (code): outcome fully determined by code",
-      "body": "✓ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (F5)\nallowed outcomes: escalate",
+      "body": "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)\nallowed outcomes: escalate",
       "tool": null,
       "brief": null,
       "rebuttal": null,
       "ruling": null,
       "certificate": [
-        "✓ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (F5)",
+        "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
         "allowed outcomes: escalate"
       ]
     },
     {
       "seq": 4,
-      "ts": "2026-10-09T13:35:24.726686Z",
-      "elapsed": "00:01.3",
-      "actor": "rider",
-      "kind": "tool",
-      "title": "get_route_facts(C-0006)",
-      "body": "returned F1, F2",
-      "tool": {
-        "fn": "get_route_facts",
-        "args": {
-          "case_id": "C-0006"
-        },
-        "returned": [
-          "F1",
-          "F2"
-        ]
-      },
-      "brief": null,
-      "rebuttal": null,
-      "ruling": null,
-      "certificate": null
-    },
-    {
-      "seq": 5,
-      "ts": "2026-10-09T13:35:24.726761Z",
-      "elapsed": "00:01.3",
+      "ts": "2026-10-09T19:46:32.929336Z",
+      "elapsed": "00:01.0",
       "actor": "rider",
       "kind": "tool",
       "title": "get_chat_facts(C-0006)",
@@ -207,9 +180,32 @@
       "certificate": null
     },
     {
+      "seq": 5,
+      "ts": "2026-10-09T19:46:32.929384Z",
+      "elapsed": "00:01.0",
+      "actor": "rider",
+      "kind": "tool",
+      "title": "get_route_facts(C-0006)",
+      "body": "returned F1, F2",
+      "tool": {
+        "fn": "get_route_facts",
+        "args": {
+          "case_id": "C-0006"
+        },
+        "returned": [
+          "F1",
+          "F2"
+        ]
+      },
+      "brief": null,
+      "rebuttal": null,
+      "ruling": null,
+      "certificate": null
+    },
+    {
       "seq": 6,
-      "ts": "2026-10-09T13:35:24.726894Z",
-      "elapsed": "00:01.3",
+      "ts": "2026-10-09T19:46:32.929482Z",
+      "elapsed": "00:01.0",
       "actor": "rider",
       "kind": "tool",
       "title": "get_fare_facts(C-0006)",
@@ -228,8 +224,8 @@
     },
     {
       "seq": 7,
-      "ts": "2026-10-09T13:35:24.726959Z",
-      "elapsed": "00:01.3",
+      "ts": "2026-10-09T19:46:32.929533Z",
+      "elapsed": "00:01.0",
       "actor": "rider",
       "kind": "tool",
       "title": "get_profile_facts(C-0006)",
@@ -251,31 +247,8 @@
     },
     {
       "seq": 8,
-      "ts": "2026-10-09T13:35:24.878784Z",
-      "elapsed": "00:01.5",
-      "actor": "driver",
-      "kind": "tool",
-      "title": "get_no_show_facts(C-0006)",
-      "body": "returned F1, F2",
-      "tool": {
-        "fn": "get_no_show_facts",
-        "args": {
-          "case_id": "C-0006"
-        },
-        "returned": [
-          "F1",
-          "F2"
-        ]
-      },
-      "brief": null,
-      "rebuttal": null,
-      "ruling": null,
-      "certificate": null
-    },
-    {
-      "seq": 9,
-      "ts": "2026-10-09T13:35:24.878900Z",
-      "elapsed": "00:01.5",
+      "ts": "2026-10-09T19:46:32.996178Z",
+      "elapsed": "00:01.1",
       "actor": "driver",
       "kind": "tool",
       "title": "get_chat_facts(C-0006)",
@@ -298,29 +271,9 @@
       "certificate": null
     },
     {
-      "seq": 10,
-      "ts": "2026-10-09T13:35:24.878943Z",
-      "elapsed": "00:01.5",
-      "actor": "driver",
-      "kind": "tool",
-      "title": "get_fare_facts(C-0006)",
-      "body": "returned nothing",
-      "tool": {
-        "fn": "get_fare_facts",
-        "args": {
-          "case_id": "C-0006"
-        },
-        "returned": []
-      },
-      "brief": null,
-      "rebuttal": null,
-      "ruling": null,
-      "certificate": null
-    },
-    {
-      "seq": 11,
-      "ts": "2026-10-09T13:35:24.879060Z",
-      "elapsed": "00:01.5",
+      "seq": 9,
+      "ts": "2026-10-09T19:46:32.996218Z",
+      "elapsed": "00:01.1",
       "actor": "driver",
       "kind": "tool",
       "title": "get_route_facts(C-0006)",
@@ -341,9 +294,72 @@
       "certificate": null
     },
     {
+      "seq": 10,
+      "ts": "2026-10-09T19:46:32.996245Z",
+      "elapsed": "00:01.1",
+      "actor": "driver",
+      "kind": "tool",
+      "title": "get_fare_facts(C-0006)",
+      "body": "returned nothing",
+      "tool": {
+        "fn": "get_fare_facts",
+        "args": {
+          "case_id": "C-0006"
+        },
+        "returned": []
+      },
+      "brief": null,
+      "rebuttal": null,
+      "ruling": null,
+      "certificate": null
+    },
+    {
+      "seq": 11,
+      "ts": "2026-10-09T19:46:32.996302Z",
+      "elapsed": "00:01.1",
+      "actor": "driver",
+      "kind": "tool",
+      "title": "get_no_show_facts(C-0006)",
+      "body": "returned F1, F2",
+      "tool": {
+        "fn": "get_no_show_facts",
+        "args": {
+          "case_id": "C-0006"
+        },
+        "returned": [
+          "F1",
+          "F2"
+        ]
+      },
+      "brief": null,
+      "rebuttal": null,
+      "ruling": null,
+      "certificate": null
+    },
+    {
       "seq": 12,
-      "ts": "2026-10-09T13:35:24.879090Z",
-      "elapsed": "00:01.5",
+      "ts": "2026-10-09T19:46:32.996400Z",
+      "elapsed": "00:01.1",
+      "actor": "driver",
+      "kind": "tool",
+      "title": "get_traffic_facts(C-0006)",
+      "body": "returned nothing",
+      "tool": {
+        "fn": "get_traffic_facts",
+        "args": {
+          "case_id": "C-0006"
+        },
+        "returned": []
+      },
+      "brief": null,
+      "rebuttal": null,
+      "ruling": null,
+      "certificate": null
+    },
+    {
+      "seq": 13,
+      "ts": "2026-10-09T19:46:32.996472Z",
+      "elapsed": "00:01.1",
       "actor": "driver",
       "kind": "tool",
       "title": "get_profile_facts(C-0006)",
@@ -364,29 +380,9 @@
       "certificate": null
     },
     {
-      "seq": 13,
-      "ts": "2026-10-09T13:35:24.879163Z",
-      "elapsed": "00:01.5",
-      "actor": "driver",
-      "kind": "tool",
-      "title": "get_traffic_facts(C-0006)",
-      "body": "returned nothing",
-      "tool": {
-        "fn": "get_traffic_facts",
-        "args": {
-          "case_id": "C-0006"
-        },
-        "returned": []
-      },
-      "brief": null,
-      "rebuttal": null,
-      "ruling": null,
-      "certificate": null
-    },
-    {
       "seq": 14,
-      "ts": "2026-10-09T13:35:25.705045Z",
-      "elapsed": "00:02.3",
+      "ts": "2026-10-09T19:46:33.933824Z",
+      "elapsed": "00:02.0",
       "actor": "rider",
       "kind": "tool",
       "title": "get_traffic_facts(C-0006)",
@@ -405,8 +401,8 @@
     },
     {
       "seq": 15,
-      "ts": "2026-10-09T13:35:25.705215Z",
-      "elapsed": "00:02.3",
+      "ts": "2026-10-09T19:46:33.933864Z",
+      "elapsed": "00:02.0",
       "actor": "rider",
       "kind": "tool",
       "title": "get_no_show_facts(C-0006)",
@@ -428,32 +424,19 @@
     },
     {
       "seq": 16,
-      "ts": "2026-10-09T13:35:29.902996Z",
-      "elapsed": "00:06.5",
+      "ts": "2026-10-09T19:46:39.398938Z",
+      "elapsed": "00:07.5",
       "actor": "rider",
       "kind": "brief",
-      "title": "Rider Advocate brief: 5 claims (0 void)",
-      "body": "C1: The driver's own in-app message at 21:43 reads \"Sit down or I lock the doors\", which the system tagged as a threat containing the keyword \"lock the door\" — i.e. intimidation directed at the passenger during the ride. [F4 F5] [SAFE-1]\nC2: The rider asked to be let out of the car at 21:42 (\"Please stop the car, I want to get out here\") and the driver's threatening reply followed one minute later, so the intimidation was a response to the rider's request to exit, not to any aggression by her. [F3 F4] [SAFE-1]\nC3: Because a threat/intimidation message appears in the chat record, this dispute must not be auto-adjudicated: the correct disposition is escalation to human review with a fact summary, not a fare ruling. [F4 F5] [SAFE-1]\nC4: The driver's written statement admits he refused to stop and continued to the destination after the rider asked to get out, which corroborates that she remained in a vehicle she had asked to leave. [F6 F3] [SAFE-1]\nC5: Both parties have clean 90-day dispute histories (rider 0 disputes / 0 upheld; driver 0 disputes / 0 upheld in 90 days), so no account flag is requested against the rider and the escalation should be decided on the chat record itself. [F7 F8] [SAFE-1]\nWeaknesses: The driver's statement (F6) asserts the rider was drunk and tried to open the door on the expressway, which, if credited, recasts \"lock the doors\" as a safety instruction rather than a threat — and chat/statements are the only evidence here, with no GPS or timeline record showing the door attempt or the rider's state. | There is no safety recording, no incident timeline and no medical or third-party evidence: F1 and F2 show only normal route and duration (15.4 km actual vs 15.5 km optimal; 20.7 min vs 22 min estimated), so the GPS facts neither support nor contradict the threat claim. | The driver's profile is strong (F8: 5.8 years, 4.9 rating, 1204 trips, 0 disputes upheld), which the driver's side will use to argue the message was an isolated, justified instruction — though per the policy a profile fact can never decide the case alone. | No refund is legally computable here: the fare is a fixed RydeX quote with no fare facts in the file, so I cannot size any monetary remedy from a fare or GPS fact and seek escalation instead.\nAsks: escalate",
+      "title": "Rider Advocate brief: 6 claims (0 void)",
+      "body": "C1: The driver's message to the rider was a threat: at 21:43, one minute after the rider asked to be let out, he wrote “Sit down or I lock the doors.” (F4), i.e. he told a passenger who had asked to exit that he would confine her in the vehicle. [F3 F4] [SAFE-1]\nC2: This is a first-person safety incident on a completed, in-person service: the rider reports she felt unsafe for the whole ride, and the driver's own written statement confirms he refused to stop and “did not stop until the destination” (F6), leaving her locked in a moving car after she asked to get out. [F4 F6] [SAFE-1]\nC3: The rider's request to be let out was clear and unambiguous and was made inside the trip window, 21:42 vs drop-off 21:55 (F3); the only reply on record is the driver's refusal-threat (F4), so nothing in the chat shows any rider conduct that could justify confinement. [F3 F4 F5] [SAFE-1]\nC4: The driver's explanation that the rider “tried to open the door on the expressway” appears only in his post-trip statement (F6), not in the chat, and no GPS, timeline or route record in this case shows a door-opening, a stop or any emergency (F1, F2) — the system records also show the trip ran 0.1 km short of optimal and 1.1 min faster than estimate, consistent with no emergency detour or intervention (F1, F2). [F1 F2 F6] [SAFE-1]\nC5: Because the record contains an intimidation of a passenger and a rider's fear for her safety, the case must go to a person rather than be decided automatically, with the fact summary (F3–F6) handed over. [F3 F4 F5 F6] [SAFE-1]\nC6: The rider's own record is clean — 520-day account, 4.8 rating, 0 disputes and 0 upheld in 90 days (F7) — which supports that her safety complaint is made in good faith; the driver's long tenure and 4.9 rating over 1204 trips (F8) do not rebut the timestamped chat record. [F7 F8] [SAFE-1]\nWeaknesses: The driver's statement (F6) alleges the rider was drunk and tried to open a car door on the expressway; if that is accepted, some physical intervention could be argued as safety-motivated. Note however it is a post-trip statement, not a chat message, and no GPS/timeline fact (F1, F2) corroborates any door incident. | There is no GPS or timeline evidence in this case file of the car doors actually being locked or of the vehicle being stationary/occupied against the rider's will — the confinement claim rests on the driver's own words (F4) plus the rider's complaint. | The driver did complete the trip normally (F1, F2: 15.4 km vs 15.5 km optimal, 20.7 min vs 22 min estimate), so the other side will argue the ride was uneventful; the route/duration data cannot speak to what was said or felt inside the car (F4). | The driver's clean 90-day history (F8: 0 disputes, 0 upheld) gives the other side a propensity argument, which is why the outcome is escalation rather than an automatic finding.\nAsks: escalate",
       "tool": null,
       "brief": {
         "side": "rider",
         "claims": [
           {
             "id": "C1",
-            "assertion": "The driver's own in-app message at 21:43 reads \"Sit down or I lock the doors\", which the system tagged as a threat containing the keyword \"lock the door\" — i.e. intimidation directed at the passenger during the ride.",
-            "facts": [
-              "F4",
-              "F5"
-            ],
-            "policy": [
-              "SAFE-1"
-            ],
-            "void": false,
-            "void_reason": null
-          },
-          {
-            "id": "C2",
-            "assertion": "The rider asked to be let out of the car at 21:42 (\"Please stop the car, I want to get out here\") and the driver's threatening reply followed one minute later, so the intimidation was a response to the rider's request to exit, not to any aggression by her.",
+            "assertion": "The driver's message to the rider was a threat: at 21:43, one minute after the rider asked to be let out, he wrote “Sit down or I lock the doors.” (F4), i.e. he told a passenger who had asked to exit that he would confine her in the vehicle.",
             "facts": [
               "F3",
               "F4"
@@ -465,9 +448,23 @@
             "void_reason": null
           },
           {
-            "id": "C3",
-            "assertion": "Because a threat/intimidation message appears in the chat record, this dispute must not be auto-adjudicated: the correct disposition is escalation to human review with a fact summary, not a fare ruling.",
+            "id": "C2",
+            "assertion": "This is a first-person safety incident on a completed, in-person service: the rider reports she felt unsafe for the whole ride, and the driver's own written statement confirms he refused to stop and “did not stop until the destination” (F6), leaving her locked in a moving car after she asked to get out.",
             "facts": [
+              "F4",
+              "F6"
+            ],
+            "policy": [
+              "SAFE-1"
+            ],
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "id": "C3",
+            "assertion": "The rider's request to be let out was clear and unambiguous and was made inside the trip window, 21:42 vs drop-off 21:55 (F3); the only reply on record is the driver's refusal-threat (F4), so nothing in the chat shows any rider conduct that could justify confinement.",
+            "facts": [
+              "F3",
               "F4",
               "F5"
             ],
@@ -479,10 +476,11 @@
           },
           {
             "id": "C4",
-            "assertion": "The driver's written statement admits he refused to stop and continued to the destination after the rider asked to get out, which corroborates that she remained in a vehicle she had asked to leave.",
+            "assertion": "The driver's explanation that the rider “tried to open the door on the expressway” appears only in his post-trip statement (F6), not in the chat, and no GPS, timeline or route record in this case shows a door-opening, a stop or any emergency (F1, F2) — the system records also show the trip ran 0.1 km short of optimal and 1.1 min faster than estimate, consistent with no emergency detour or intervention (F1, F2).",
             "facts": [
-              "F6",
-              "F3"
+              "F1",
+              "F2",
+              "F6"
             ],
             "policy": [
               "SAFE-1"
@@ -492,7 +490,22 @@
           },
           {
             "id": "C5",
-            "assertion": "Both parties have clean 90-day dispute histories (rider 0 disputes / 0 upheld; driver 0 disputes / 0 upheld in 90 days), so no account flag is requested against the rider and the escalation should be decided on the chat record itself.",
+            "assertion": "Because the record contains an intimidation of a passenger and a rider's fear for her safety, the case must go to a person rather than be decided automatically, with the fact summary (F3–F6) handed over.",
+            "facts": [
+              "F3",
+              "F4",
+              "F5",
+              "F6"
+            ],
+            "policy": [
+              "SAFE-1"
+            ],
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "id": "C6",
+            "assertion": "The rider's own record is clean — 520-day account, 4.8 rating, 0 disputes and 0 upheld in 90 days (F7) — which supports that her safety complaint is made in good faith; the driver's long tenure and 4.9 rating over 1204 trips (F8) do not rebut the timestamped chat record.",
             "facts": [
               "F7",
               "F8"
@@ -505,10 +518,10 @@
           }
         ],
         "weaknesses": [
-          "The driver's statement (F6) asserts the rider was drunk and tried to open the door on the expressway, which, if credited, recasts \"lock the doors\" as a safety instruction rather than a threat — and chat/statements are the only evidence here, with no GPS or timeline record showing the door attempt or the rider's state.",
-          "There is no safety recording, no incident timeline and no medical or third-party evidence: F1 and F2 show only normal route and duration (15.4 km actual vs 15.5 km optimal; 20.7 min vs 22 min estimated), so the GPS facts neither support nor contradict the threat claim.",
-          "The driver's profile is strong (F8: 5.8 years, 4.9 rating, 1204 trips, 0 disputes upheld), which the driver's side will use to argue the message was an isolated, justified instruction — though per the policy a profile fact can never decide the case alone.",
-          "No refund is legally computable here: the fare is a fixed RydeX quote with no fare facts in the file, so I cannot size any monetary remedy from a fare or GPS fact and seek escalation instead."
+          "The driver's statement (F6) alleges the rider was drunk and tried to open a car door on the expressway; if that is accepted, some physical intervention could be argued as safety-motivated. Note however it is a post-trip statement, not a chat message, and no GPS/timeline fact (F1, F2) corroborates any door incident.",
+          "There is no GPS or timeline evidence in this case file of the car doors actually being locked or of the vehicle being stationary/occupied against the rider's will — the confinement claim rests on the driver's own words (F4) plus the rider's complaint.",
+          "The driver did complete the trip normally (F1, F2: 15.4 km vs 15.5 km optimal, 20.7 min vs 22 min estimate), so the other side will argue the ride was uneventful; the route/duration data cannot speak to what was said or felt inside the car (F4).",
+          "The driver's clean 90-day history (F8: 0 disputes, 0 upheld) gives the other side a propensity argument, which is why the outcome is escalation rather than an automatic finding."
         ],
         "requested_outcome": {
           "action": "escalate",
@@ -521,12 +534,12 @@
     },
     {
       "seq": 17,
-      "ts": "2026-10-09T13:35:29.903014Z",
-      "elapsed": "00:06.5",
+      "ts": "2026-10-09T19:46:39.398950Z",
+      "elapsed": "00:07.5",
       "actor": "verify",
       "kind": "check",
       "title": "Citation check — rider",
-      "body": "C1: ok (F4, F5, SAFE-1)\nC2: ok (F3, F4, SAFE-1)\nC3: ok (F4, F5, SAFE-1)\nC4: ok (F6, F3, SAFE-1)\nC5: ok (F7, F8, SAFE-1)",
+      "body": "C1: ok (F3, F4, SAFE-1)\nC2: ok (F4, F6, SAFE-1)\nC3: ok (F3, F4, F5, SAFE-1)\nC4: ok (F1, F2, F6, SAFE-1)\nC5: ok (F3, F4, F5, F6, SAFE-1)\nC6: ok (F7, F8, SAFE-1)",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -535,35 +548,36 @@
     },
     {
       "seq": 18,
-      "ts": "2026-10-09T13:35:29.903037Z",
-      "elapsed": "00:06.5",
+      "ts": "2026-10-09T19:46:39.398978Z",
+      "elapsed": "00:07.5",
       "actor": "driver",
       "kind": "brief",
-      "title": "Driver Advocate brief: 6 claims (0 void)",
-      "body": "D1: The rider's chat message is an in-ride request to be let out mid-trip ('Please stop the car, I want to get out here.'), i.e. the dispute is about how the driver handled an in-motion request, not about any overcharge — the GPS record shows the trip was operated on the optimal route and slightly under it (15.4 km actual vs 15.5 km optimal, -0%). [F3 F1] [RD-1]\nD2: The driver's message was a safety instruction to remain seated with the doors secured, not an act of violence or a physical confinement: the rider was in a moving vehicle and the driver states she tried to open the door on the expressway, so telling her to sit down addresses an immediate risk in transit. [F4 F6] [SAFE-1]\nD3: The trip was completed normally and safely: door-to-door duration was 20.7 min against a 22 min estimate (-1.1 min), and there is no traffic incident or route anomaly record — no erratic driving or delay evidence exists on the face of the system records. [F2 F1] [RD-1 SAFE-2]\nD4: The keyword flag at 21:43 is produced by automated keyword matching on a single message and cannot by itself establish a genuine threat; the policy's own definition covers 'Threats and Intimidation' as a conduct pattern, and a lone instruction to sit down falls short of that pattern. [F5 F4] [SAFE-1]\nD5: The driver's account record is clean and long-standing — 5.8 years on platform, 4.9 rating, 1204 trips in 90 days, 0 disputes and 0 upheld — which is inconsistent with a rider-safety hazard and supports that no safety measure against him is warranted. [F8] [RD-6]\nD6: The rider's own account shows no prior disputes (0 in 90 days, rating 4.8), so there is also no pattern of unfounded complaints on either side; the case turns on the single 21:42–21:43 exchange, which the driver's statement explains, and no refund of the fixed $32.86 fare is justified because the trip was performed as quoted on the optimal route. [F7 F1 F2] [RD-2 FARE-1]\nWeaknesses: F4 is verbatim a driver message containing a threat-classified phrase ('Sit down or I lock the doors.') and F5 confirms the threat keywords were detected, so the rider will argue this is a direct SAFE-1 trigger that must go to human escalation regardless of my safety rationale — I cannot make the flagged message disappear. | F6 is only the driver's own statement and is not corroborated by any GPS or timeline record of the rider attempting to open a door; under the system-records-win rule (F1, F2 alone show nothing unusual), the 'she tried to open the door on the expressway' account may be discounted, weakening D2. | The chat facts show the driver did not stop until Bedok Mall (F6 with F3), so on the face of the record he refused an explicit request to be let out mid-ride; policy RD-3(a) treats a passenger-named stop as a legitimate routing request, which the rider can invoke as evidence he did not comply. | I have no traffic/weather facts (tool returned none) and no fare facts to rebut the rider's account with objective corroboration, and I can only offer profile facts F7/F8 as background — the policy says profile facts cannot decide the case.\nAsks: no_action",
+      "title": "Driver Advocate brief: 9 claims (0 void)",
+      "body": "D1: The rider's message at 21:42 (F3) — \"Please stop the car, I want to get out here\" — is not evidence of any threat by the driver; it is a request, and the only driver reply on record is F4 at 21:43: \"Sit down or I lock the doors.\" [F3 F4 F5] [SAFE-1]\nD2: On the words actually recorded in F4, the driver's message is a safety instruction, not a threat, intimidation or harassment: it demands the rider sit down and states what the driver would do, but contains no threat of harm, no abuse, no unwanted advance and no demand; SAFE-1 requires the court to read the words, and the words here do not name any harm or consequence to the rider. [F4 F5] [SAFE-1]\nD3: The chat record is complete and fully timestamped — 2 messages, every one timestamped (F5) — so there is no missing-message or missing-timestamp gap that could hide an unrecorded threat; the rider has produced no message of threat beyond F4, and F6 (the driver's own statement) records only that he told her to sit down for her own safety. [F3 F4 F5 F6] [SAFE-1]\nD4: The rider's whole complaint rests on one sentence (F4), and her own message (F3) shows she was already asking to alight mid-journey at 21:42; nothing in the record shows any physical act, any locked door event, or any second incident of intimidation by the driver. [F3 F4 F5 F6] [SAFE-1]\nD5: There is no dangerous-driving, collision or injury allegation at all: the rider's complaint alleges only that she 'felt unsafe' (an emotional state, not an event), and the driver's statement (F6) asserts the opposite danger — that the rider tried to open the door on the expressway — so SAFE-2, which requires an accident, injury or dangerous-driving allegation, is not triggered by the complaint as filed. [F6] [SAFE-2]\nD6: The driver's routing was impeccable and gives no independent ground for penalty: actual 15.4 km vs optimal 15.5 km (-0.1 km, -0%) and 20.7 min vs 22 min estimated (F1, F2), i.e. the ride was shorter and faster than the optimal route, so RD-1 is not violated and RD-2 yields zero refund. [F1 F2] [RD-1 RD-2]\nD7: The fare of $32.86 is the fixed RydeX quote for Clarke Quay → Bedok Mall and no extra item, waiting fee, cancellation fee or unpublished charge is in issue, so FARE-1 gives no basis for any refund against the driver. [F1] [FARE-1]\nD8: The driver's record is clean and long-standing — 5.8 years on the platform, 4.9 rating, 1,204 trips in 90 days, 0 disputes and 0 upheld disputes in 90 days (F8) — so there is no 'repeated or severe breach' pattern to support flag_account under RD-6 against him. [F8] [RD-6]\nD9: The rider herself has a 1.4-year account, 4.8 rating and 0 disputes in 90 days (F7), so neither party's profile shows any history that would justify an account action against the driver. [F7 F8] [RD-6]\nWeaknesses: The driver's own sentence is the weakest point: F4 (\"Sit down or I lock the doors\") is an implicit threat of confinement and reads badly, and the rider's complaint (and her 21:42 message F3) frames it as such; the judge may well treat F4 as intimidation under SAFE-1, in which case no automated ruling issues and the case goes to a person. | The driver did not stop when the rider asked to get out at 21:42 (F3); his statement (F6) admits he did not stop until the destination, which supports the rider's confinement narrative and is not contradicted by any gps fact (there is no stop fact in F1/F2). | F6 is only the driver's written statement, taken after the trip, and the policy (G11) treats driver statements about 'what really happened' as claims rather than evidence; the claim that the rider tried to open the door on the expressway (F6) has no independent gps, timeline or chat corroboration in the fact table, so the judge may not credit it against the rider's version. | The fact table contains no fact recording whether the doors were in fact locked — nothing in F1–F8 refutes the rider's 'locked in' complaint on that point, so the driver cannot prove denial of that act and must rely on the absence of any recorded lock event. | If the court instead reads F4 as a safety-justified instruction and issues no automated ruling, the alternative exposure is escalation, not the no_action the driver wants; SAFE-1 screening sends any threat/intimidation reading to a person, so a 'no_action' outcome is not guaranteed.\nAsks: escalate",
       "tool": null,
       "brief": {
         "side": "driver",
         "claims": [
           {
             "id": "D1",
-            "assertion": "The rider's chat message is an in-ride request to be let out mid-trip ('Please stop the car, I want to get out here.'), i.e. the dispute is about how the driver handled an in-motion request, not about any overcharge — the GPS record shows the trip was operated on the optimal route and slightly under it (15.4 km actual vs 15.5 km optimal, -0%).",
+            "assertion": "The rider's message at 21:42 (F3) — \"Please stop the car, I want to get out here\" — is not evidence of any threat by the driver; it is a request, and the only driver reply on record is F4 at 21:43: \"Sit down or I lock the doors.\"",
             "facts": [
               "F3",
-              "F1"
+              "F4",
+              "F5"
             ],
             "policy": [
-              "RD-1"
+              "SAFE-1"
             ],
             "void": false,
             "void_reason": null
           },
           {
             "id": "D2",
-            "assertion": "The driver's message was a safety instruction to remain seated with the doors secured, not an act of violence or a physical confinement: the rider was in a moving vehicle and the driver states she tried to open the door on the expressway, so telling her to sit down addresses an immediate risk in transit.",
+            "assertion": "On the words actually recorded in F4, the driver's message is a safety instruction, not a threat, intimidation or harassment: it demands the rider sit down and states what the driver would do, but contains no threat of harm, no abuse, no unwanted advance and no demand; SAFE-1 requires the court to read the words, and the words here do not name any harm or consequence to the rider.",
             "facts": [
               "F4",
-              "F6"
+              "F5"
             ],
             "policy": [
               "SAFE-1"
@@ -573,24 +587,27 @@
           },
           {
             "id": "D3",
-            "assertion": "The trip was completed normally and safely: door-to-door duration was 20.7 min against a 22 min estimate (-1.1 min), and there is no traffic incident or route anomaly record — no erratic driving or delay evidence exists on the face of the system records.",
+            "assertion": "The chat record is complete and fully timestamped — 2 messages, every one timestamped (F5) — so there is no missing-message or missing-timestamp gap that could hide an unrecorded threat; the rider has produced no message of threat beyond F4, and F6 (the driver's own statement) records only that he told her to sit down for her own safety.",
             "facts": [
-              "F2",
-              "F1"
+              "F3",
+              "F4",
+              "F5",
+              "F6"
             ],
             "policy": [
-              "RD-1",
-              "SAFE-2"
+              "SAFE-1"
             ],
             "void": false,
             "void_reason": null
           },
           {
             "id": "D4",
-            "assertion": "The keyword flag at 21:43 is produced by automated keyword matching on a single message and cannot by itself establish a genuine threat; the policy's own definition covers 'Threats and Intimidation' as a conduct pattern, and a lone instruction to sit down falls short of that pattern.",
+            "assertion": "The rider's whole complaint rests on one sentence (F4), and her own message (F3) shows she was already asking to alight mid-journey at 21:42; nothing in the record shows any physical act, any locked door event, or any second incident of intimidation by the driver.",
             "facts": [
+              "F3",
+              "F4",
               "F5",
-              "F4"
+              "F6"
             ],
             "policy": [
               "SAFE-1"
@@ -600,7 +617,45 @@
           },
           {
             "id": "D5",
-            "assertion": "The driver's account record is clean and long-standing — 5.8 years on platform, 4.9 rating, 1204 trips in 90 days, 0 disputes and 0 upheld — which is inconsistent with a rider-safety hazard and supports that no safety measure against him is warranted.",
+            "assertion": "There is no dangerous-driving, collision or injury allegation at all: the rider's complaint alleges only that she 'felt unsafe' (an emotional state, not an event), and the driver's statement (F6) asserts the opposite danger — that the rider tried to open the door on the expressway — so SAFE-2, which requires an accident, injury or dangerous-driving allegation, is not triggered by the complaint as filed.",
+            "facts": [
+              "F6"
+            ],
+            "policy": [
+              "SAFE-2"
+            ],
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "id": "D6",
+            "assertion": "The driver's routing was impeccable and gives no independent ground for penalty: actual 15.4 km vs optimal 15.5 km (-0.1 km, -0%) and 20.7 min vs 22 min estimated (F1, F2), i.e. the ride was shorter and faster than the optimal route, so RD-1 is not violated and RD-2 yields zero refund.",
+            "facts": [
+              "F1",
+              "F2"
+            ],
+            "policy": [
+              "RD-1",
+              "RD-2"
+            ],
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "id": "D7",
+            "assertion": "The fare of $32.86 is the fixed RydeX quote for Clarke Quay → Bedok Mall and no extra item, waiting fee, cancellation fee or unpublished charge is in issue, so FARE-1 gives no basis for any refund against the driver.",
+            "facts": [
+              "F1"
+            ],
+            "policy": [
+              "FARE-1"
+            ],
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "id": "D8",
+            "assertion": "The driver's record is clean and long-standing — 5.8 years on the platform, 4.9 rating, 1,204 trips in 90 days, 0 disputes and 0 upheld disputes in 90 days (F8) — so there is no 'repeated or severe breach' pattern to support flag_account under RD-6 against him.",
             "facts": [
               "F8"
             ],
@@ -611,29 +666,28 @@
             "void_reason": null
           },
           {
-            "id": "D6",
-            "assertion": "The rider's own account shows no prior disputes (0 in 90 days, rating 4.8), so there is also no pattern of unfounded complaints on either side; the case turns on the single 21:42–21:43 exchange, which the driver's statement explains, and no refund of the fixed $32.86 fare is justified because the trip was performed as quoted on the optimal route.",
+            "id": "D9",
+            "assertion": "The rider herself has a 1.4-year account, 4.8 rating and 0 disputes in 90 days (F7), so neither party's profile shows any history that would justify an account action against the driver.",
             "facts": [
               "F7",
-              "F1",
-              "F2"
+              "F8"
             ],
             "policy": [
-              "RD-2",
-              "FARE-1"
+              "RD-6"
             ],
             "void": false,
             "void_reason": null
           }
         ],
         "weaknesses": [
-          "F4 is verbatim a driver message containing a threat-classified phrase ('Sit down or I lock the doors.') and F5 confirms the threat keywords were detected, so the rider will argue this is a direct SAFE-1 trigger that must go to human escalation regardless of my safety rationale — I cannot make the flagged message disappear.",
-          "F6 is only the driver's own statement and is not corroborated by any GPS or timeline record of the rider attempting to open a door; under the system-records-win rule (F1, F2 alone show nothing unusual), the 'she tried to open the door on the expressway' account may be discounted, weakening D2.",
-          "The chat facts show the driver did not stop until Bedok Mall (F6 with F3), so on the face of the record he refused an explicit request to be let out mid-ride; policy RD-3(a) treats a passenger-named stop as a legitimate routing request, which the rider can invoke as evidence he did not comply.",
-          "I have no traffic/weather facts (tool returned none) and no fare facts to rebut the rider's account with objective corroboration, and I can only offer profile facts F7/F8 as background — the policy says profile facts cannot decide the case."
+          "The driver's own sentence is the weakest point: F4 (\"Sit down or I lock the doors\") is an implicit threat of confinement and reads badly, and the rider's complaint (and her 21:42 message F3) frames it as such; the judge may well treat F4 as intimidation under SAFE-1, in which case no automated ruling issues and the case goes to a person.",
+          "The driver did not stop when the rider asked to get out at 21:42 (F3); his statement (F6) admits he did not stop until the destination, which supports the rider's confinement narrative and is not contradicted by any gps fact (there is no stop fact in F1/F2).",
+          "F6 is only the driver's written statement, taken after the trip, and the policy (G11) treats driver statements about 'what really happened' as claims rather than evidence; the claim that the rider tried to open the door on the expressway (F6) has no independent gps, timeline or chat corroboration in the fact table, so the judge may not credit it against the rider's version.",
+          "The fact table contains no fact recording whether the doors were in fact locked — nothing in F1–F8 refutes the rider's 'locked in' complaint on that point, so the driver cannot prove denial of that act and must rely on the absence of any recorded lock event.",
+          "If the court instead reads F4 as a safety-justified instruction and issues no automated ruling, the alternative exposure is escalation, not the no_action the driver wants; SAFE-1 screening sends any threat/intimidation reading to a person, so a 'no_action' outcome is not guaranteed."
         ],
         "requested_outcome": {
-          "action": "no_action",
+          "action": "escalate",
           "amount": null
         }
       },
@@ -643,12 +697,12 @@
     },
     {
       "seq": 19,
-      "ts": "2026-10-09T13:35:29.903040Z",
-      "elapsed": "00:06.5",
+      "ts": "2026-10-09T19:46:39.398981Z",
+      "elapsed": "00:07.5",
       "actor": "verify",
       "kind": "check",
       "title": "Citation check — driver",
-      "body": "D1: ok (F3, F1, RD-1)\nD2: ok (F4, F6, SAFE-1)\nD3: ok (F2, F1, RD-1, SAFE-2)\nD4: ok (F5, F4, SAFE-1)\nD5: ok (F8, RD-6)\nD6: ok (F7, F1, F2, RD-2, FARE-1)",
+      "body": "D1: ok (F3, F4, F5, SAFE-1)\nD2: ok (F4, F5, SAFE-1)\nD3: ok (F3, F4, F5, F6, SAFE-1)\nD4: ok (F3, F4, F5, F6, SAFE-1)\nD5: ok (F6, SAFE-2)\nD6: ok (F1, F2, RD-1, RD-2)\nD7: ok (F1, FARE-1)\nD8: ok (F8, RD-6)\nD9: ok (F7, F8, RD-6)",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -657,12 +711,12 @@
     },
     {
       "seq": 20,
-      "ts": "2026-10-09T13:35:33.913077Z",
-      "elapsed": "00:10.5",
+      "ts": "2026-10-09T19:46:44.829001Z",
+      "elapsed": "00:12.9",
       "actor": "rider",
       "kind": "rebuttal",
-      "title": "Rider Advocate rebuttal: 6 points",
-      "body": "→ D1 (concedes): Conceded only as to the absence of any overcharge: the GPS record does show 15.4 km actual vs 15.5 km optimal (F1), so I do not press RD-1 or any fare remedy — but that is irrelevant to a SAFE-1 safety dispute, and F3 still shows the rider asked to get out mid-ride at 21:42. [F1 F3] [SAFE-1]\n→ D3: A normal distance and duration (F1, F2) says nothing about whether a threat was uttered; the rider's claim is about what was said and done to her inside the car, and F4/F5 record the flagged threat message, which SAFE-1 routes to escalation regardless of route or timing data. [F1 F2 F4 F5] [SAFE-1]\n→ D4: The keyword hit (F5) is not asked to stand alone: the underlying verbatim driver message \"Sit down or I lock the doors.\" (F4) is itself the conduct — a conditional threat of confinement, which the policy lists under Threats and Intimidation — and it was sent one minute after the rider asked to get out (F3), so it is a response to her request, not a neutral instruction. [F3 F4 F5] [SAFE-1]\n→ D2: The safety rationale rests entirely on the driver's own uncorroborated statement (F6); under the system-records-win rule there is no GPS, timeline or traffic fact in the file showing a door attempt or an expressway hazard to weigh against the verbatim message in F4, and the driver's own account admits he did not stop after the rider asked to get out (F3, F6). [F3 F4 F6] [SAFE-1]\n→ D5: The driver's clean record is background only (F8): the policy states profile facts can support a flag_account request but can never decide a case, so a 4.9 rating cannot neutralise a threat message that the system itself flagged (F5). [F4 F5 F8] [SAFE-1]\n→ D6: I accept that both sides have no prior disputes (F7, F8) and that no fare refund is at stake because the fixed RydeX quote was consistent with the route run (F1, F2); my ask is therefore not money but that the flagged threat (F4, F5) be escalated to human review rather than disposed of as no_action. [F1 F2 F4 F5 F7 F8] [SAFE-1]\nRevised ask: escalate",
+      "title": "Rider Advocate rebuttal: 10 points",
+      "body": "→ D1: Agreed on the premise but not the conclusion: F3 shows the rider was asking to be let out, and the only recorded driver reply is F4; that pairing — a passenger asking to exit and being told she will be locked in — is precisely the pattern of intimidation SAFE-1 screens for. [F3 F4] [SAFE-1]\n→ D2: F4 names a concrete consequence to the rider — being locked in a moving car after she asked to get out (F3) — and SAFE-1 is screened by the judge reading the words, not by whether a harm noun appears; \"Sit down or I lock the doors\" is a conditional threat of confinement, which is exactly the species of conduct SAFE-1 lists as intimidation. [F3 F4] [SAFE-1]\n→ D3: The completeness of the record (F5) helps the rider: because the chat is complete and timestamped, nothing supports the driver's version, and his only explanation for the refusal to stop appears in F6, a post-trip statement made after he knew a complaint existed — which is a claim, not corroboration, and nothing in F1–F5 records any door incident. [F1 F2 F5 F6] [SAFE-1]\n→ D4: The absence of a recorded \"lock event\" cuts against the driver, not the rider: he admits in F6 that he \"did not stop until the destination,\" which is the confinement the rider complains of, and no lock fact exists in F1–F8 because the dataset contains no door-state field — the driver's inability to disprove it is not proof it did not happen. [F3 F4 F6] [SAFE-1]\n→ D5: We do not rely on SAFE-2 and do not concede the framing: the rider's complaint is a safety incident of a rider being confined in the vehicle, which is squarely SAFE-1, and the driver's counter-allegation in F6 that she tried to open a door on the expressway is itself an unrecorded claim with no GPS, timeline or chat support (F1, F2, F5). [F5 F6] [SAFE-1 SAFE-2]\n→ D6 (concedes): We never claimed a route deviation — the rider's brief does not rest on RD-1/RD-2 — so D6 is directed at a claim that does not exist; F1 and F2 are cited by us only to show the driver's own version of an emergency (F6) left no trace in the recorded drive. [F1 F2] [RD-1 RD-2]\n→ D7 (concedes): Conceded as to fare: no refund is sought from the $32.86 fixed RydeX quote and we raise no FARE-1 item; the relief we seek is human review of the driver's conduct, not money. [F1] [FARE-1]\n→ D8 (concedes): We do not ask for flag_account and Do not rely on RD-6; the rider's request is escalation under SAFE-1, which turns on the words in F4, not on the driver's 90-day history (F8). [F8] [RD-6 SAFE-1]\n→ D9 (concedes): Conceded that neither profile constitutes an account-action ground; F7 is cited only to show the complaint is made in good faith by a rider with 0 disputes and 0 upheld in 90 days. [F7 F8] [RD-6]\n→ C6: Withdrawn as unnecessary: C6's comparison of the two profiles adds nothing to the SAFE-1 screening, which F3–F6 already require on their own. [F7 F8] [SAFE-1]",
       "tool": null,
       "brief": null,
       "rebuttal": {
@@ -670,41 +724,10 @@
         "points": [
           {
             "target_claim_id": "D1",
-            "response": "Conceded only as to the absence of any overcharge: the GPS record does show 15.4 km actual vs 15.5 km optimal (F1), so I do not press RD-1 or any fare remedy — but that is irrelevant to a SAFE-1 safety dispute, and F3 still shows the rider asked to get out mid-ride at 21:42.",
-            "facts": [
-              "F1",
-              "F3"
-            ],
-            "policy": [
-              "SAFE-1"
-            ],
-            "concede": true,
-            "void": false,
-            "void_reason": null
-          },
-          {
-            "target_claim_id": "D3",
-            "response": "A normal distance and duration (F1, F2) says nothing about whether a threat was uttered; the rider's claim is about what was said and done to her inside the car, and F4/F5 record the flagged threat message, which SAFE-1 routes to escalation regardless of route or timing data.",
-            "facts": [
-              "F1",
-              "F2",
-              "F4",
-              "F5"
-            ],
-            "policy": [
-              "SAFE-1"
-            ],
-            "concede": false,
-            "void": false,
-            "void_reason": null
-          },
-          {
-            "target_claim_id": "D4",
-            "response": "The keyword hit (F5) is not asked to stand alone: the underlying verbatim driver message \"Sit down or I lock the doors.\" (F4) is itself the conduct — a conditional threat of confinement, which the policy lists under Threats and Intimidation — and it was sent one minute after the rider asked to get out (F3), so it is a response to her request, not a neutral instruction.",
+            "response": "Agreed on the premise but not the conclusion: F3 shows the rider was asking to be let out, and the only recorded driver reply is F4; that pairing — a passenger asking to exit and being told she will be locked in — is precisely the pattern of intimidation SAFE-1 screens for.",
             "facts": [
               "F3",
-              "F4",
-              "F5"
+              "F4"
             ],
             "policy": [
               "SAFE-1"
@@ -715,7 +738,37 @@
           },
           {
             "target_claim_id": "D2",
-            "response": "The safety rationale rests entirely on the driver's own uncorroborated statement (F6); under the system-records-win rule there is no GPS, timeline or traffic fact in the file showing a door attempt or an expressway hazard to weigh against the verbatim message in F4, and the driver's own account admits he did not stop after the rider asked to get out (F3, F6).",
+            "response": "F4 names a concrete consequence to the rider — being locked in a moving car after she asked to get out (F3) — and SAFE-1 is screened by the judge reading the words, not by whether a harm noun appears; \"Sit down or I lock the doors\" is a conditional threat of confinement, which is exactly the species of conduct SAFE-1 lists as intimidation.",
+            "facts": [
+              "F3",
+              "F4"
+            ],
+            "policy": [
+              "SAFE-1"
+            ],
+            "concede": false,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "D3",
+            "response": "The completeness of the record (F5) helps the rider: because the chat is complete and timestamped, nothing supports the driver's version, and his only explanation for the refusal to stop appears in F6, a post-trip statement made after he knew a complaint existed — which is a claim, not corroboration, and nothing in F1–F5 records any door incident.",
+            "facts": [
+              "F1",
+              "F2",
+              "F5",
+              "F6"
+            ],
+            "policy": [
+              "SAFE-1"
+            ],
+            "concede": false,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "D4",
+            "response": "The absence of a recorded \"lock event\" cuts against the driver, not the rider: he admits in F6 that he \"did not stop until the destination,\" which is the confinement the rider complains of, and no lock fact exists in F1–F8 because the dataset contains no door-state field — the driver's inability to disprove it is not proof it did not happen.",
             "facts": [
               "F3",
               "F4",
@@ -730,14 +783,14 @@
           },
           {
             "target_claim_id": "D5",
-            "response": "The driver's clean record is background only (F8): the policy states profile facts can support a flag_account request but can never decide a case, so a 4.9 rating cannot neutralise a threat message that the system itself flagged (F5).",
+            "response": "We do not rely on SAFE-2 and do not concede the framing: the rider's complaint is a safety incident of a rider being confined in the vehicle, which is squarely SAFE-1, and the driver's counter-allegation in F6 that she tried to open a door on the expressway is itself an unrecorded claim with no GPS, timeline or chat support (F1, F2, F5).",
             "facts": [
-              "F4",
               "F5",
-              "F8"
+              "F6"
             ],
             "policy": [
-              "SAFE-1"
+              "SAFE-1",
+              "SAFE-2"
             ],
             "concede": false,
             "void": false,
@@ -745,12 +798,64 @@
           },
           {
             "target_claim_id": "D6",
-            "response": "I accept that both sides have no prior disputes (F7, F8) and that no fare refund is at stake because the fixed RydeX quote was consistent with the route run (F1, F2); my ask is therefore not money but that the flagged threat (F4, F5) be escalated to human review rather than disposed of as no_action.",
+            "response": "We never claimed a route deviation — the rider's brief does not rest on RD-1/RD-2 — so D6 is directed at a claim that does not exist; F1 and F2 are cited by us only to show the driver's own version of an emergency (F6) left no trace in the recorded drive.",
             "facts": [
               "F1",
-              "F2",
-              "F4",
-              "F5",
+              "F2"
+            ],
+            "policy": [
+              "RD-1",
+              "RD-2"
+            ],
+            "concede": true,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "D7",
+            "response": "Conceded as to fare: no refund is sought from the $32.86 fixed RydeX quote and we raise no FARE-1 item; the relief we seek is human review of the driver's conduct, not money.",
+            "facts": [
+              "F1"
+            ],
+            "policy": [
+              "FARE-1"
+            ],
+            "concede": true,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "D8",
+            "response": "We do not ask for flag_account and Do not rely on RD-6; the rider's request is escalation under SAFE-1, which turns on the words in F4, not on the driver's 90-day history (F8).",
+            "facts": [
+              "F8"
+            ],
+            "policy": [
+              "RD-6",
+              "SAFE-1"
+            ],
+            "concede": true,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "D9",
+            "response": "Conceded that neither profile constitutes an account-action ground; F7 is cited only to show the complaint is made in good faith by a rider with 0 disputes and 0 upheld in 90 days.",
+            "facts": [
+              "F7",
+              "F8"
+            ],
+            "policy": [
+              "RD-6"
+            ],
+            "concede": true,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "C6",
+            "response": "Withdrawn as unnecessary: C6's comparison of the two profiles adds nothing to the SAFE-1 screening, which F3–F6 already require on their own.",
+            "facts": [
               "F7",
               "F8"
             ],
@@ -762,22 +867,19 @@
             "void_reason": null
           }
         ],
-        "revised_outcome": {
-          "action": "escalate",
-          "amount": null
-        }
+        "revised_outcome": null
       },
       "ruling": null,
       "certificate": null
     },
     {
       "seq": 21,
-      "ts": "2026-10-09T13:35:33.913090Z",
-      "elapsed": "00:10.5",
+      "ts": "2026-10-09T19:46:44.829020Z",
+      "elapsed": "00:12.9",
       "actor": "verify",
       "kind": "check",
       "title": "Rebuttal check — rider",
-      "body": "→D1 (concede): ok\n→D3: ok\n→D4: ok\n→D2: ok\n→D5: ok\n→D6: ok",
+      "body": "→D1: ok\n→D2: ok\n→D3: ok\n→D4: ok\n→D5: ok\n→D6 (concede): ok\n→D7 (concede): ok\n→D8 (concede): ok\n→D9 (concede): ok\n→C6: ok",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -786,12 +888,12 @@
     },
     {
       "seq": 22,
-      "ts": "2026-10-09T13:35:33.913116Z",
-      "elapsed": "00:10.5",
+      "ts": "2026-10-09T19:46:44.829049Z",
+      "elapsed": "00:12.9",
       "actor": "driver",
       "kind": "rebuttal",
       "title": "Driver Advocate rebuttal: 6 points",
-      "body": "→ C1: I do not dispute that F4 is verbatim and that F5 shows automated keyword matching; my point is that a keyword detection is not a finding of intimidation under SAFE-1, which speaks of 'Assault, harassment, or abuse of any kind … Threats and Intimidation' as a conduct pattern, and the same tool that produced F5 also produced only one single message across the whole 21:34–21:55 trip. [F4 F5] [SAFE-1]\n→ C2: C2 assumes the rider's request caused the message, but the chat shows only two messages one minute apart (F3, F4) and no context explaining why she asked to exit; the driver's statement (F6) supplies that reason — an attempted door opening on the expressway — so the causal story is contested, not established. [F3 F4 F6] [SAFE-1]\n→ C3 (concedes): I concede that where a threat keyword appears in the chat record, SAFE-1 directs escalation rather than an automatic monetary ruling — I do not ask the judge to rule on the threat itself, only to record that the fare and route records show no overcharge or route violation supporting any refund. [F4 F5 F1 F2] [SAFE-1]\n→ C4: F6 does record that the driver continued to the destination after F3, but the same statement explains he did so for her own safety after an attempt to open the door on an expressway; SAFE-2 escalation covers exactly this situation and no clause makes continuing to a destination, by itself, a basis for a refund. [F6 F3] [SAFE-2]\n→ C5: I agree no flag is sought against the rider and that F7/F8 are background only; for symmetry the rider's clean record (F7) also means nothing is proved against the driver, whose record (F8: 5.8 years, 4.9, 1204 trips, 0 upheld) is inconsistent with the serious-safety-conduct finding C3 invites. [F7 F8] [RD-6]\n→ D1 (concedes): I withdraw the framing of D1 insofar as it suggests the rider's exit request has no policy weight: RD-3(a) does treat a passenger-named stop as a legitimate routing request, so I no longer rely on the request itself being irrelevant — the operational record (F1, F2) still shows no deviation or overcharge in the ride as performed. [F3 F1 F2] [RD-3 RD-2]\nRevised ask: escalate",
+      "body": "→ C1: F4 is one sentence — \"Sit down or I lock the doors\" — and it names no harm, no violence, no sexual advance and no penalty to the rider; it is an instruction to sit down plus a stated action, which is not intimidation on its face, and SAFE-1 reserves the characterisation of the words to the court rather than calling any one sentence a threat. [F4 F5] [SAFE-1]\n→ C2: F6 says only that the driver told her to sit down \"for her own safety\" and did not stop until the destination; it does not say the doors were locked or that she was confined, and there is no fact in the record evidencing any locked door, so the leap from one message (F4) and one statement (F6) to \"locked in a moving car\" is unsupported. [F4 F6] [SAFE-1]\n→ C3: The complete, fully timestamped two-message record (F5, F3 at 21:42 and F4 at 21:43) shows the rider asked to alight on the move with no stated reason; it does not show why she wanted out, and F6 records the driver's account that she tried to open the door on the expressway — so the chat cannot establish that her request was one a driver was required to obey mid-carriageway. [F3 F4 F5 F6] [SAFE-1]\n→ C4 (concedes): Concede the narrow point: F6 is a post-trip written statement and no gps fact (F1, F2) corroborates a door-opening or an emergency, so F6 alone cannot be treated as established — but by the same rule the rider's \"felt unsafe\" narrative in her complaint is also a statement with no system record behind it, and F1/F2 show the routing itself was flawless (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min), which is all the driver needs against any routing or fare allegation under RD-1/RD-2 and FARE-1. [F1 F2 F6] [RD-1 RD-2 FARE-1]\n→ C5: The driver does not resist escalation — this is exactly what he asks for — but escalation must not be dressed up as a finding against him: SAFE-1 escalates so a person can read F3–F6, and the fact summary should record that F1/F2 show no route deviation, no excess distance and no fare irregularity, and that F8 shows 5.8 years on the platform, 4.9 rating, 1,204 trips and 0 disputes in 90 days. [F1 F2 F3 F4 F5 F6 F8] [SAFE-1]\n→ C6: The rider's clean record (F7) is exactly as probative as the driver's (F8) and the policy bars profile facts from deciding anything; F8 additionally shows 0 disputes and 0 upheld disputes in 90 days across 1,204 trips, so there is no \"repeated or severe\" pattern that could support any flag_account against the driver under RD-6. [F7 F8] [RD-6]\nRevised ask: escalate",
       "tool": null,
       "brief": null,
       "rebuttal": {
@@ -799,7 +901,7 @@
         "points": [
           {
             "target_claim_id": "C1",
-            "response": "I do not dispute that F4 is verbatim and that F5 shows automated keyword matching; my point is that a keyword detection is not a finding of intimidation under SAFE-1, which speaks of 'Assault, harassment, or abuse of any kind … Threats and Intimidation' as a conduct pattern, and the same tool that produced F5 also produced only one single message across the whole 21:34–21:55 trip.",
+            "response": "F4 is one sentence — \"Sit down or I lock the doors\" — and it names no harm, no violence, no sexual advance and no penalty to the rider; it is an instruction to sit down plus a stated action, which is not intimidation on its face, and SAFE-1 reserves the characterisation of the words to the court rather than calling any one sentence a threat.",
             "facts": [
               "F4",
               "F5"
@@ -813,9 +915,8 @@
           },
           {
             "target_claim_id": "C2",
-            "response": "C2 assumes the rider's request caused the message, but the chat shows only two messages one minute apart (F3, F4) and no context explaining why she asked to exit; the driver's statement (F6) supplies that reason — an attempted door opening on the expressway — so the causal story is contested, not established.",
+            "response": "F6 says only that the driver told her to sit down \"for her own safety\" and did not stop until the destination; it does not say the doors were locked or that she was confined, and there is no fact in the record evidencing any locked door, so the leap from one message (F4) and one statement (F6) to \"locked in a moving car\" is unsupported.",
             "facts": [
-              "F3",
               "F4",
               "F6"
             ],
@@ -828,37 +929,59 @@
           },
           {
             "target_claim_id": "C3",
-            "response": "I concede that where a threat keyword appears in the chat record, SAFE-1 directs escalation rather than an automatic monetary ruling — I do not ask the judge to rule on the threat itself, only to record that the fare and route records show no overcharge or route violation supporting any refund.",
+            "response": "The complete, fully timestamped two-message record (F5, F3 at 21:42 and F4 at 21:43) shows the rider asked to alight on the move with no stated reason; it does not show why she wanted out, and F6 records the driver's account that she tried to open the door on the expressway — so the chat cannot establish that her request was one a driver was required to obey mid-carriageway.",
             "facts": [
+              "F3",
               "F4",
               "F5",
-              "F1",
-              "F2"
+              "F6"
             ],
             "policy": [
               "SAFE-1"
-            ],
-            "concede": true,
-            "void": false,
-            "void_reason": null
-          },
-          {
-            "target_claim_id": "C4",
-            "response": "F6 does record that the driver continued to the destination after F3, but the same statement explains he did so for her own safety after an attempt to open the door on an expressway; SAFE-2 escalation covers exactly this situation and no clause makes continuing to a destination, by itself, a basis for a refund.",
-            "facts": [
-              "F6",
-              "F3"
-            ],
-            "policy": [
-              "SAFE-2"
             ],
             "concede": false,
             "void": false,
             "void_reason": null
           },
           {
+            "target_claim_id": "C4",
+            "response": "Concede the narrow point: F6 is a post-trip written statement and no gps fact (F1, F2) corroborates a door-opening or an emergency, so F6 alone cannot be treated as established — but by the same rule the rider's \"felt unsafe\" narrative in her complaint is also a statement with no system record behind it, and F1/F2 show the routing itself was flawless (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min), which is all the driver needs against any routing or fare allegation under RD-1/RD-2 and FARE-1.",
+            "facts": [
+              "F1",
+              "F2",
+              "F6"
+            ],
+            "policy": [
+              "RD-1",
+              "RD-2",
+              "FARE-1"
+            ],
+            "concede": true,
+            "void": false,
+            "void_reason": null
+          },
+          {
             "target_claim_id": "C5",
-            "response": "I agree no flag is sought against the rider and that F7/F8 are background only; for symmetry the rider's clean record (F7) also means nothing is proved against the driver, whose record (F8: 5.8 years, 4.9, 1204 trips, 0 upheld) is inconsistent with the serious-safety-conduct finding C3 invites.",
+            "response": "The driver does not resist escalation — this is exactly what he asks for — but escalation must not be dressed up as a finding against him: SAFE-1 escalates so a person can read F3–F6, and the fact summary should record that F1/F2 show no route deviation, no excess distance and no fare irregularity, and that F8 shows 5.8 years on the platform, 4.9 rating, 1,204 trips and 0 disputes in 90 days.",
+            "facts": [
+              "F1",
+              "F2",
+              "F3",
+              "F4",
+              "F5",
+              "F6",
+              "F8"
+            ],
+            "policy": [
+              "SAFE-1"
+            ],
+            "concede": false,
+            "void": false,
+            "void_reason": null
+          },
+          {
+            "target_claim_id": "C6",
+            "response": "The rider's clean record (F7) is exactly as probative as the driver's (F8) and the policy bars profile facts from deciding anything; F8 additionally shows 0 disputes and 0 upheld disputes in 90 days across 1,204 trips, so there is no \"repeated or severe\" pattern that could support any flag_account against the driver under RD-6.",
             "facts": [
               "F7",
               "F8"
@@ -867,22 +990,6 @@
               "RD-6"
             ],
             "concede": false,
-            "void": false,
-            "void_reason": null
-          },
-          {
-            "target_claim_id": "D1",
-            "response": "I withdraw the framing of D1 insofar as it suggests the rider's exit request has no policy weight: RD-3(a) does treat a passenger-named stop as a legitimate routing request, so I no longer rely on the request itself being irrelevant — the operational record (F1, F2) still shows no deviation or overcharge in the ride as performed.",
-            "facts": [
-              "F3",
-              "F1",
-              "F2"
-            ],
-            "policy": [
-              "RD-3",
-              "RD-2"
-            ],
-            "concede": true,
             "void": false,
             "void_reason": null
           }
@@ -897,12 +1004,12 @@
     },
     {
       "seq": 23,
-      "ts": "2026-10-09T13:35:33.913119Z",
-      "elapsed": "00:10.5",
+      "ts": "2026-10-09T19:46:44.829053Z",
+      "elapsed": "00:12.9",
       "actor": "verify",
       "kind": "check",
       "title": "Rebuttal check — driver",
-      "body": "→C1: ok\n→C2: ok\n→C3 (concede): ok\n→C4: ok\n→C5: ok\n→D1 (concede): ok",
+      "body": "→C1: ok\n→C2: ok\n→C3: ok\n→C4 (concede): ok\n→C5: ok\n→C6: ok",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -911,21 +1018,21 @@
     },
     {
       "seq": 24,
-      "ts": "2026-10-09T13:35:42.278487Z",
-      "elapsed": "00:18.9",
+      "ts": "2026-10-09T19:46:53.819995Z",
+      "elapsed": "00:21.9",
       "actor": "judge",
       "kind": "ruling",
       "title": "Proposed ruling: escalate (model confidence 0.90)",
-      "body": "This is a filed safety dispute and the chat record contains a driver message explicitly tagged as a threat [F4][F5], so the file cannot be auto-adjudicated: SAFE-1 requires escalation with a factual summary for human handling rather than any fare or conduct ruling [F4][F5][SAFE-1]. Both advocates now converge on this disposition (rider C3 and driver's concession to C3), which matches the execution trace (SAFE-1 ✓, allowed outcomes: escalate).\n\nWhat the record shows. The rider asked to be let out mid-trip at 21:42 [F3]. One minute later the driver sent \"Sit down or I lock the doors.\" [F4], which the keyword filter flagged as threat-classified [F5]. The driver's written account states the rider was drunk and tried to open the door on the expressway, and that he told her to sit down for her own safety and did not stop until Bedok Mall [F6].\n\nWhat is disputed and uncorroborated. The safety rationale in F6 rests on the driver's statement alone; there is no gps, timeline or traffic fact in the file evidencing a door attempt, the rider's state, or an expressway hazard, so F6 is uncorroborated [F6]. The gps facts are neutral: actual 15.4 km vs optimal 15.5 km and 20.7 min vs 22 min estimated show no route or duration anomaly and neither support nor contradict the threat claim [F1][F2]. Because chat versus statement is the only conflict here, and the dispute is safety-typed, the credibility assessment belongs to a human reviewer, not to this recommendation [F4][F5][SAFE-1].\n\nWhy no monetary outcome. The ride was a fixed-quote RydeX trip whose performed distance matched the optimal route [F1], so no RD-2 surplus arises; no fare facts exist from which a refund could be computed [F1][F2][RD-1]. The mid-ride exit request does not create a deductible charge in this file; it is relevant only as context for the human review of what happened between 21:42 and drop-off [F3][F6].\n\nPoints for the human reviewer to check: (i) whether any gps/timeline trace or app log shows the door attempt or the rider's condition alleged in F6; (ii) whether the driver stopped when requested at 21:42 [F3][F6]; (iii) the full chat history around 21:42–21:43 to assess whether F4 was a safety instruction or intimidation — F5's keyword match is a filter output, not a finding [F5]; (iv) both parties' clean 90-day records are background only and cannot decide the safety question [F7][F8][SAFE-1]. No account flag is set here; profile facts alone cannot ground one [F7][F8][RD-6].",
+      "body": "This case is filed as a safety dispute, and the trace confirms no automated ruling issues: SAFE-1 requires escalation when threats, intimidation or harassment appear in the chat, complaint or driver's statement [F3][F4][F6][SAFE-1]. Reading the two-message, fully timestamped record [F5], the rider asked to be let out mid-journey at 21:42 [F3]; the only reply on record, one minute later, is the driver's \"Sit down or I lock the doors\" [F4]. Read in context — a passenger asking to exit answered with a stated intention to lock the doors — that is a conditional threat of confinement aimed at the rider, i.e. intimidation of a passenger, and at minimum \"suspected\" under SAFE-1; it is not a route-argument rudeness, which the screen would ignore [F3][F4][F5][SAFE-1]. The driver's post-trip statement confirms he \"did not stop until the destination\" [F6], which is a statement, not system evidence, and cannot be credited against the rider's version under the statement-vs-record and G11 treatment of driver claims [F6][SAFE-1]. The driver's own SAFE-2 argument does not help him: SAFE-2 concerns accidents, injuries and dangerous-driving allegations [F6][SAFE-2], and the rider's complaint is not of that kind; the \"tried to open the door on the expressway\" allegation is itself an uncorroborated statement, so nothing here is resolved by it [F6][SAFE-1][SAFE-2]. The routing and fare data settle only that there was no route deviation and no fare irregularity — 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min [F1][F2] means RD-1 is not violated and RD-2 yields no refund; the fixed $32.86 RydeX quote has no unpublished item, so FARE-1 gives no refund [F1][RD-1][RD-2][FARE-1]. Likewise the profiles — rider 520 d / 4.8 / 0 disputes [F7], driver 5.8 y / 4.9 / 1,204 trips / 0 upheld [F8] — cannot decide anything and give no ground for an account action under RD-6, so no flag_account is set [F7][F8][RD-6]. What remains undecided is exactly the safety question: whether the doors were ever locked, whether the car was moving, and whether the rider's conduct justified the instruction. No GPS, timeline or other record in this file speaks to the cabin events between 21:42 and drop-off, so under the evidence rule the gap cannot be read in either side's favour [F1][F2][F3][F4][F6][SAFE-1]. The amount is therefore null: an escalated safety case carries no monetary determination, and neither RD-2 nor FARE-1 produces any refundable sum on these facts [F1][RD-2][FARE-1].",
       "tool": null,
       "brief": null,
       "rebuttal": null,
       "ruling": {
         "ruling": "escalate",
         "amount": null,
-        "recommended_action": "Route to RydeHELP human safety review: attach the full in-app chat transcript (F3–F5) and the driver's statement (F6); obtain GPS/timeline records for 21:42–21:55 to test the alleged door-opening/expressway hazard and whether the driver stopped when asked; no fare action on the completed RydeX trip; remind both parties of the SAFE-2 report path (995 for medical need, RydeHELP for reporting).",
+        "recommended_action": "Send to a Ryde human reviewer with the fact summary (F3–F6) and the safety screen flagged; ask the driver for his account of the 21:42–21:55 window and check any post-trip statement against the in-app record. Do not execute any refund or account action automatically; do not flag_account.",
         "confidence": 0.9,
-        "reasoning": "This is a filed safety dispute and the chat record contains a driver message explicitly tagged as a threat [F4][F5], so the file cannot be auto-adjudicated: SAFE-1 requires escalation with a factual summary for human handling rather than any fare or conduct ruling [F4][F5][SAFE-1]. Both advocates now converge on this disposition (rider C3 and driver's concession to C3), which matches the execution trace (SAFE-1 ✓, allowed outcomes: escalate).\n\nWhat the record shows. The rider asked to be let out mid-trip at 21:42 [F3]. One minute later the driver sent \"Sit down or I lock the doors.\" [F4], which the keyword filter flagged as threat-classified [F5]. The driver's written account states the rider was drunk and tried to open the door on the expressway, and that he told her to sit down for her own safety and did not stop until Bedok Mall [F6].\n\nWhat is disputed and uncorroborated. The safety rationale in F6 rests on the driver's statement alone; there is no gps, timeline or traffic fact in the file evidencing a door attempt, the rider's state, or an expressway hazard, so F6 is uncorroborated [F6]. The gps facts are neutral: actual 15.4 km vs optimal 15.5 km and 20.7 min vs 22 min estimated show no route or duration anomaly and neither support nor contradict the threat claim [F1][F2]. Because chat versus statement is the only conflict here, and the dispute is safety-typed, the credibility assessment belongs to a human reviewer, not to this recommendation [F4][F5][SAFE-1].\n\nWhy no monetary outcome. The ride was a fixed-quote RydeX trip whose performed distance matched the optimal route [F1], so no RD-2 surplus arises; no fare facts exist from which a refund could be computed [F1][F2][RD-1]. The mid-ride exit request does not create a deductible charge in this file; it is relevant only as context for the human review of what happened between 21:42 and drop-off [F3][F6].\n\nPoints for the human reviewer to check: (i) whether any gps/timeline trace or app log shows the door attempt or the rider's condition alleged in F6; (ii) whether the driver stopped when requested at 21:42 [F3][F6]; (iii) the full chat history around 21:42–21:43 to assess whether F4 was a safety instruction or intimidation — F5's keyword match is a filter output, not a finding [F5]; (iv) both parties' clean 90-day records are background only and cannot decide the safety question [F7][F8][SAFE-1]. No account flag is set here; profile facts alone cannot ground one [F7][F8][RD-6].",
+        "reasoning": "This case is filed as a safety dispute, and the trace confirms no automated ruling issues: SAFE-1 requires escalation when threats, intimidation or harassment appear in the chat, complaint or driver's statement [F3][F4][F6][SAFE-1]. Reading the two-message, fully timestamped record [F5], the rider asked to be let out mid-journey at 21:42 [F3]; the only reply on record, one minute later, is the driver's \"Sit down or I lock the doors\" [F4]. Read in context — a passenger asking to exit answered with a stated intention to lock the doors — that is a conditional threat of confinement aimed at the rider, i.e. intimidation of a passenger, and at minimum \"suspected\" under SAFE-1; it is not a route-argument rudeness, which the screen would ignore [F3][F4][F5][SAFE-1]. The driver's post-trip statement confirms he \"did not stop until the destination\" [F6], which is a statement, not system evidence, and cannot be credited against the rider's version under the statement-vs-record and G11 treatment of driver claims [F6][SAFE-1]. The driver's own SAFE-2 argument does not help him: SAFE-2 concerns accidents, injuries and dangerous-driving allegations [F6][SAFE-2], and the rider's complaint is not of that kind; the \"tried to open the door on the expressway\" allegation is itself an uncorroborated statement, so nothing here is resolved by it [F6][SAFE-1][SAFE-2]. The routing and fare data settle only that there was no route deviation and no fare irregularity — 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min [F1][F2] means RD-1 is not violated and RD-2 yields no refund; the fixed $32.86 RydeX quote has no unpublished item, so FARE-1 gives no refund [F1][RD-1][RD-2][FARE-1]. Likewise the profiles — rider 520 d / 4.8 / 0 disputes [F7], driver 5.8 y / 4.9 / 1,204 trips / 0 upheld [F8] — cannot decide anything and give no ground for an account action under RD-6, so no flag_account is set [F7][F8][RD-6]. What remains undecided is exactly the safety question: whether the doors were ever locked, whether the car was moving, and whether the rider's conduct justified the instruction. No GPS, timeline or other record in this file speaks to the cabin events between 21:42 and drop-off, so under the evidence rule the gap cannot be read in either side's favour [F1][F2][F3][F4][F6][SAFE-1]. The amount is therefore null: an escalated safety case carries no monetary determination, and neither RD-2 nor FARE-1 produces any refundable sum on these facts [F1][RD-2][FARE-1].",
         "cited_facts": [
           "F1",
           "F2",
@@ -938,80 +1045,85 @@
         ],
         "cited_policy": [
           "SAFE-1",
+          "SAFE-2",
           "RD-1",
           "RD-2",
+          "FARE-1",
           "RD-6"
         ],
         "rejected_claims": [
           {
-            "id": "C1",
-            "reason": "Accepted as to the facts (F4 verbatim, F5 keyword hit) but it cannot yield a fast-track decision: SAFE-1 routes a flagged threat to escalation, so it supports escalate, not a substantive finding of intimidation [F4][F5][SAFE-1]."
-          },
-          {
-            "id": "C2",
-            "reason": "The causal reading is contested: the record contains only two messages one minute apart (F3, F4) with no context, and the driver's statement (F6) offers a different cause; causality is for the human reviewer, not this recommendation [F3][F4][F6][SAFE-1]."
-          },
-          {
-            "id": "C4",
-            "reason": "The driver having continued to Bedok Mall is recorded (F3, F6) but is not by itself a monetary or conduct finding under any cited clause; it is context for the human safety review [F3][F6][SAFE-1]."
-          },
-          {
-            "id": "C5",
-            "reason": "Correct that no flag is sought against the rider (F7, F8), but clean profile histories cannot decide the safety question, so the escalation must rest on the chat record alone [F4][F5][F7][F8][SAFE-1]."
-          },
-          {
-            "id": "D1",
-            "reason": "Conceded by the driver and withdrawn; in any event the absence of deviation (F1) is irrelevant to a SAFE-1 safety dispute and yields refund_partial of zero [F1][RD-1][RD-2]."
-          },
-          {
-            "id": "D3",
-            "reason": "Normal distance and duration (F1, F2) do not rebut a threat allegation; SAFE-1 turns on the chat content, not on route or timing data [F1][F2][F4][F5][SAFE-1]."
+            "id": "D2",
+            "reason": "Not accepted: the words in F4, read with the rider's request in F3 and the complete timestamped record F5, state a consequence to the rider (locking the doors) in answer to her request to exit, which is intimidation on its face under SAFE-1; the screen turns on the judge's reading, not on the presence of a harm noun."
           },
           {
             "id": "D4",
-            "reason": "Whether a single flagged message amounts to intimidation under SAFE-1 is precisely the judgment reserved to human review; the keyword match (F5) plus the verbatim message (F4) trigger escalation regardless [F4][F5][SAFE-1]."
+            "reason": "Not accepted as a ground to leave the fare and conduct as they are: the driver's statement F6 admits he did not stop until the destination, so the absence of a recorded lock event (no such field in F1–F8) does not resolve the confinement allegation; it leaves the safety question open under SAFE-1, which is why the case escalates rather than closing with no_action."
           },
           {
             "id": "D5",
-            "reason": "The driver's clean record (F8) is background only and cannot decide the case; no RD-6 flag is applied, but the record cannot neutralise the flagged message [F4][F5][F8][RD-6]."
+            "reason": "Partly accepted only as to SAFE-2: no accident, injury or dangerous-driving allegation is before Ryde on the complaint as filed (F6 is a counter-statement), so SAFE-2 alone does not convert this into an injury case; but the rider's complaint remains a safety incident under SAFE-1, and D5's reading of F6 cannot be used to close the file."
           },
           {
             "id": "D6",
-            "reason": "Accepted insofar as no fare refund is due on the fixed RydeX quote with no route surplus (F1, F2); however the requested no_action is unavailable because SAFE-1 mandates escalation [F1][F2][F4][F5][SAFE-1]."
+            "reason": "Not a contested issue and therefore not accepted as a defence to the complaint: F1 and F2 show actual 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min, so RD-1 is not violated and RD-2 yields zero refund — but the rider seeks human review of the driver's conduct under SAFE-1, not a routing refund."
+          },
+          {
+            "id": "D7",
+            "reason": "Accepted as to the fare only: the $32.86 fixed RydeX quote (F1) contains no unpublished item, so FARE-1 gives no refund; that does not dispose of the safety complaint, which escalates under SAFE-1."
+          },
+          {
+            "id": "D8",
+            "reason": "Accepted as to RD-6: the driver's profile (F8: 5.8 y, 4.9, 1,204 trips, 0 upheld in 90 d) shows no repeated-breach pattern, and profile facts cannot decide a case, so no flag_account is added; it does not defeat the SAFE-1 review."
+          },
+          {
+            "id": "C1",
+            "reason": "Not adopted as a ruling ground: F4, read with F3 and F5, does raise an intimidation concern, but that takes the case out of automatic decision-making under SAFE-1, so it is escalated rather than converted into a finding or a monetary award against the driver."
+          },
+          {
+            "id": "C6",
+            "reason": "Withdrawn by the rider and not relied on: the rider's clean profile (F7: 520 d, 4.8, 0 disputes in 90 d) cannot decide the safety question, which rests on the chat record F3–F5 and the driver's statement F6, and profile facts never decide a case alone."
           }
         ],
         "flag_account": false,
         "segment_findings": [],
+        "safety_concern": "suspected",
+        "safety_basis": [
+          "F3",
+          "F4",
+          "F6"
+        ],
+        "evidence_gap": "No system record (gps door state / stopping event / timeline) shows whether the doors were actually locked or the car was stationary or moving at 21:42–21:43; the rider's fare-of-confinement and the driver's claim in F6 that the rider tried to open the door on the expressway both rest on statements only (F6 is a post-trip statement, per G11). F1/F2 (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min) cannot speak to events inside the cabin. Reviewer should check the full in-app chat, the driver's I'm-Here/stop logs, and any in-car audio/video.",
         "escalate": true,
-        "escalation_reason": "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request."
+        "escalation_reason": "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling."
       },
       "certificate": null
     },
     {
       "seq": 25,
-      "ts": "2026-10-09T13:35:42.278524Z",
-      "elapsed": "00:18.9",
+      "ts": "2026-10-09T19:46:53.820039Z",
+      "elapsed": "00:21.9",
       "actor": "verify",
       "kind": "check",
       "title": "Ruling verification against the policy certificate",
-      "body": "HARD: safety case / threat keyword present → escalate (SAFE-1)",
+      "body": "HARD: complaint filed as a safety incident → escalate (SAFE-1 / SAFE-2)",
       "tool": null,
       "brief": null,
       "rebuttal": null,
       "ruling": null,
       "certificate": [
-        "✓ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (F5)",
+        "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
         "allowed outcomes: escalate"
       ]
     },
     {
       "seq": 26,
-      "ts": "2026-10-09T13:35:42.278529Z",
-      "elapsed": "00:18.9",
+      "ts": "2026-10-09T19:46:53.820044Z",
+      "elapsed": "00:21.9",
       "actor": "verify",
       "kind": "escalate",
       "title": "Routed to human review",
-      "body": "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request.",
+      "body": "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling.",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -1020,12 +1132,12 @@
     },
     {
       "seq": 27,
-      "ts": "2026-10-09T13:35:44.087710Z",
-      "elapsed": "00:20.7",
+      "ts": "2026-10-09T19:46:55.716933Z",
+      "elapsed": "00:23.8",
       "actor": "system",
       "kind": "notify",
       "title": "Notices sent to rider and driver",
-      "body": "RIDER: We've finished the first look at your dispute. Because it involves safety, we can't decide it ourselves — it has gone to a RydeHELP human reviewer. No money changes hands on the trip itself: your fare stands and no refund is due.\n\nThe reviewer will look at the chat around the time you asked to get out, whether the driver stopped when asked, and the trip's GPS and timeline records. They will also see your account history, which is clean.\n\nIf you need medical help, call 995. To report anything else, use RydeHELP.\n\nDRIVER: We've finished the first look at this dispute. Because it involves safety, it has gone to a RydeHELP human reviewer. No fare action is taken on the completed trip — your earnings stand.\n\nThe reviewer will look at the chat around the time the rider asked to get out, whether you stopped when asked, and the trip's GPS and timeline records, alongside your statement. Your clean 90-day record is on file as background only. No flag is placed on your account at this stage.\n\nFor medical need, call 995. To report anything else, use RydeHELP.",
+      "body": "RIDER: We've finished the first look at your dispute and are sending it to a Ryde human reviewer. Nothing is decided yet — no refund or account action has been taken.\n\nThe reviewer will look at the messages you exchanged during the trip, including your request to be let out and the reply you received, plus the driver's account of what happened between 21:42 and the end of the ride. They'll check that account against the in-app record.\n\nThe safety screen is flagged, so this gets human attention rather than an automated outcome. If you have anything else — what you saw, what the driver said, or what happened with the doors — you can add it to this case.\n\nDRIVER: We've finished the first look at this dispute and are sending it to a Ryde human reviewer. Nothing is decided yet — no payment or account action has been taken.\n\nThe reviewer will ask you for your account of the trip window from 21:42 to 21:55, and will check that account against the in-app record. The messages exchanged during the ride and the rider's complaint are part of what they'll consider.\n\nNo refund has been issued and no fare adjustment has been made — the route data shows no deviation and the fare was correct, so nothing is owed on that side. If you want to add anything about what happened in the car, you can send it to this case.",
       "tool": null,
       "brief": null,
       "rebuttal": null,
@@ -1036,9 +1148,9 @@
   "ruling": {
     "ruling": "escalate",
     "amount": null,
-    "recommended_action": "Route to RydeHELP human safety review: attach the full in-app chat transcript (F3–F5) and the driver's statement (F6); obtain GPS/timeline records for 21:42–21:55 to test the alleged door-opening/expressway hazard and whether the driver stopped when asked; no fare action on the completed RydeX trip; remind both parties of the SAFE-2 report path (995 for medical need, RydeHELP for reporting).",
+    "recommended_action": "Send to a Ryde human reviewer with the fact summary (F3–F6) and the safety screen flagged; ask the driver for his account of the 21:42–21:55 window and check any post-trip statement against the in-app record. Do not execute any refund or account action automatically; do not flag_account.",
     "confidence": 0.9,
-    "reasoning": "This is a filed safety dispute and the chat record contains a driver message explicitly tagged as a threat [F4][F5], so the file cannot be auto-adjudicated: SAFE-1 requires escalation with a factual summary for human handling rather than any fare or conduct ruling [F4][F5][SAFE-1]. Both advocates now converge on this disposition (rider C3 and driver's concession to C3), which matches the execution trace (SAFE-1 ✓, allowed outcomes: escalate).\n\nWhat the record shows. The rider asked to be let out mid-trip at 21:42 [F3]. One minute later the driver sent \"Sit down or I lock the doors.\" [F4], which the keyword filter flagged as threat-classified [F5]. The driver's written account states the rider was drunk and tried to open the door on the expressway, and that he told her to sit down for her own safety and did not stop until Bedok Mall [F6].\n\nWhat is disputed and uncorroborated. The safety rationale in F6 rests on the driver's statement alone; there is no gps, timeline or traffic fact in the file evidencing a door attempt, the rider's state, or an expressway hazard, so F6 is uncorroborated [F6]. The gps facts are neutral: actual 15.4 km vs optimal 15.5 km and 20.7 min vs 22 min estimated show no route or duration anomaly and neither support nor contradict the threat claim [F1][F2]. Because chat versus statement is the only conflict here, and the dispute is safety-typed, the credibility assessment belongs to a human reviewer, not to this recommendation [F4][F5][SAFE-1].\n\nWhy no monetary outcome. The ride was a fixed-quote RydeX trip whose performed distance matched the optimal route [F1], so no RD-2 surplus arises; no fare facts exist from which a refund could be computed [F1][F2][RD-1]. The mid-ride exit request does not create a deductible charge in this file; it is relevant only as context for the human review of what happened between 21:42 and drop-off [F3][F6].\n\nPoints for the human reviewer to check: (i) whether any gps/timeline trace or app log shows the door attempt or the rider's condition alleged in F6; (ii) whether the driver stopped when requested at 21:42 [F3][F6]; (iii) the full chat history around 21:42–21:43 to assess whether F4 was a safety instruction or intimidation — F5's keyword match is a filter output, not a finding [F5]; (iv) both parties' clean 90-day records are background only and cannot decide the safety question [F7][F8][SAFE-1]. No account flag is set here; profile facts alone cannot ground one [F7][F8][RD-6].",
+    "reasoning": "This case is filed as a safety dispute, and the trace confirms no automated ruling issues: SAFE-1 requires escalation when threats, intimidation or harassment appear in the chat, complaint or driver's statement [F3][F4][F6][SAFE-1]. Reading the two-message, fully timestamped record [F5], the rider asked to be let out mid-journey at 21:42 [F3]; the only reply on record, one minute later, is the driver's \"Sit down or I lock the doors\" [F4]. Read in context — a passenger asking to exit answered with a stated intention to lock the doors — that is a conditional threat of confinement aimed at the rider, i.e. intimidation of a passenger, and at minimum \"suspected\" under SAFE-1; it is not a route-argument rudeness, which the screen would ignore [F3][F4][F5][SAFE-1]. The driver's post-trip statement confirms he \"did not stop until the destination\" [F6], which is a statement, not system evidence, and cannot be credited against the rider's version under the statement-vs-record and G11 treatment of driver claims [F6][SAFE-1]. The driver's own SAFE-2 argument does not help him: SAFE-2 concerns accidents, injuries and dangerous-driving allegations [F6][SAFE-2], and the rider's complaint is not of that kind; the \"tried to open the door on the expressway\" allegation is itself an uncorroborated statement, so nothing here is resolved by it [F6][SAFE-1][SAFE-2]. The routing and fare data settle only that there was no route deviation and no fare irregularity — 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min [F1][F2] means RD-1 is not violated and RD-2 yields no refund; the fixed $32.86 RydeX quote has no unpublished item, so FARE-1 gives no refund [F1][RD-1][RD-2][FARE-1]. Likewise the profiles — rider 520 d / 4.8 / 0 disputes [F7], driver 5.8 y / 4.9 / 1,204 trips / 0 upheld [F8] — cannot decide anything and give no ground for an account action under RD-6, so no flag_account is set [F7][F8][RD-6]. What remains undecided is exactly the safety question: whether the doors were ever locked, whether the car was moving, and whether the rider's conduct justified the instruction. No GPS, timeline or other record in this file speaks to the cabin events between 21:42 and drop-off, so under the evidence rule the gap cannot be read in either side's favour [F1][F2][F3][F4][F6][SAFE-1]. The amount is therefore null: an escalated safety case carries no monetary determination, and neither RD-2 nor FARE-1 produces any refundable sum on these facts [F1][RD-2][FARE-1].",
     "cited_facts": [
       "F1",
       "F2",
@@ -1051,59 +1163,64 @@
     ],
     "cited_policy": [
       "SAFE-1",
+      "SAFE-2",
       "RD-1",
       "RD-2",
+      "FARE-1",
       "RD-6"
     ],
     "rejected_claims": [
       {
-        "id": "C1",
-        "reason": "Accepted as to the facts (F4 verbatim, F5 keyword hit) but it cannot yield a fast-track decision: SAFE-1 routes a flagged threat to escalation, so it supports escalate, not a substantive finding of intimidation [F4][F5][SAFE-1]."
-      },
-      {
-        "id": "C2",
-        "reason": "The causal reading is contested: the record contains only two messages one minute apart (F3, F4) with no context, and the driver's statement (F6) offers a different cause; causality is for the human reviewer, not this recommendation [F3][F4][F6][SAFE-1]."
-      },
-      {
-        "id": "C4",
-        "reason": "The driver having continued to Bedok Mall is recorded (F3, F6) but is not by itself a monetary or conduct finding under any cited clause; it is context for the human safety review [F3][F6][SAFE-1]."
-      },
-      {
-        "id": "C5",
-        "reason": "Correct that no flag is sought against the rider (F7, F8), but clean profile histories cannot decide the safety question, so the escalation must rest on the chat record alone [F4][F5][F7][F8][SAFE-1]."
-      },
-      {
-        "id": "D1",
-        "reason": "Conceded by the driver and withdrawn; in any event the absence of deviation (F1) is irrelevant to a SAFE-1 safety dispute and yields refund_partial of zero [F1][RD-1][RD-2]."
-      },
-      {
-        "id": "D3",
-        "reason": "Normal distance and duration (F1, F2) do not rebut a threat allegation; SAFE-1 turns on the chat content, not on route or timing data [F1][F2][F4][F5][SAFE-1]."
+        "id": "D2",
+        "reason": "Not accepted: the words in F4, read with the rider's request in F3 and the complete timestamped record F5, state a consequence to the rider (locking the doors) in answer to her request to exit, which is intimidation on its face under SAFE-1; the screen turns on the judge's reading, not on the presence of a harm noun."
       },
       {
         "id": "D4",
-        "reason": "Whether a single flagged message amounts to intimidation under SAFE-1 is precisely the judgment reserved to human review; the keyword match (F5) plus the verbatim message (F4) trigger escalation regardless [F4][F5][SAFE-1]."
+        "reason": "Not accepted as a ground to leave the fare and conduct as they are: the driver's statement F6 admits he did not stop until the destination, so the absence of a recorded lock event (no such field in F1–F8) does not resolve the confinement allegation; it leaves the safety question open under SAFE-1, which is why the case escalates rather than closing with no_action."
       },
       {
         "id": "D5",
-        "reason": "The driver's clean record (F8) is background only and cannot decide the case; no RD-6 flag is applied, but the record cannot neutralise the flagged message [F4][F5][F8][RD-6]."
+        "reason": "Partly accepted only as to SAFE-2: no accident, injury or dangerous-driving allegation is before Ryde on the complaint as filed (F6 is a counter-statement), so SAFE-2 alone does not convert this into an injury case; but the rider's complaint remains a safety incident under SAFE-1, and D5's reading of F6 cannot be used to close the file."
       },
       {
         "id": "D6",
-        "reason": "Accepted insofar as no fare refund is due on the fixed RydeX quote with no route surplus (F1, F2); however the requested no_action is unavailable because SAFE-1 mandates escalation [F1][F2][F4][F5][SAFE-1]."
+        "reason": "Not a contested issue and therefore not accepted as a defence to the complaint: F1 and F2 show actual 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min, so RD-1 is not violated and RD-2 yields zero refund — but the rider seeks human review of the driver's conduct under SAFE-1, not a routing refund."
+      },
+      {
+        "id": "D7",
+        "reason": "Accepted as to the fare only: the $32.86 fixed RydeX quote (F1) contains no unpublished item, so FARE-1 gives no refund; that does not dispose of the safety complaint, which escalates under SAFE-1."
+      },
+      {
+        "id": "D8",
+        "reason": "Accepted as to RD-6: the driver's profile (F8: 5.8 y, 4.9, 1,204 trips, 0 upheld in 90 d) shows no repeated-breach pattern, and profile facts cannot decide a case, so no flag_account is added; it does not defeat the SAFE-1 review."
+      },
+      {
+        "id": "C1",
+        "reason": "Not adopted as a ruling ground: F4, read with F3 and F5, does raise an intimidation concern, but that takes the case out of automatic decision-making under SAFE-1, so it is escalated rather than converted into a finding or a monetary award against the driver."
+      },
+      {
+        "id": "C6",
+        "reason": "Withdrawn by the rider and not relied on: the rider's clean profile (F7: 520 d, 4.8, 0 disputes in 90 d) cannot decide the safety question, which rests on the chat record F3–F5 and the driver's statement F6, and profile facts never decide a case alone."
       }
     ],
     "flag_account": false,
     "segment_findings": [],
+    "safety_concern": "suspected",
+    "safety_basis": [
+      "F3",
+      "F4",
+      "F6"
+    ],
+    "evidence_gap": "No system record (gps door state / stopping event / timeline) shows whether the doors were actually locked or the car was stationary or moving at 21:42–21:43; the rider's fare-of-confinement and the driver's claim in F6 that the rider tried to open the door on the expressway both rest on statements only (F6 is a post-trip statement, per G11). F1/F2 (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min) cannot speak to events inside the cabin. Reviewer should check the full in-app chat, the driver's I'm-Here/stop logs, and any in-car audio/video.",
     "escalate": true,
-    "escalation_reason": "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request."
+    "escalation_reason": "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling."
   },
   "proposed_ruling": {
     "ruling": "escalate",
     "amount": null,
-    "recommended_action": "Route to RydeHELP human safety review: attach the full in-app chat transcript (F3–F5) and the driver's statement (F6); obtain GPS/timeline records for 21:42–21:55 to test the alleged door-opening/expressway hazard and whether the driver stopped when asked; no fare action on the completed RydeX trip; remind both parties of the SAFE-2 report path (995 for medical need, RydeHELP for reporting).",
+    "recommended_action": "Send to a Ryde human reviewer with the fact summary (F3–F6) and the safety screen flagged; ask the driver for his account of the 21:42–21:55 window and check any post-trip statement against the in-app record. Do not execute any refund or account action automatically; do not flag_account.",
     "confidence": 0.9,
-    "reasoning": "This is a filed safety dispute and the chat record contains a driver message explicitly tagged as a threat [F4][F5], so the file cannot be auto-adjudicated: SAFE-1 requires escalation with a factual summary for human handling rather than any fare or conduct ruling [F4][F5][SAFE-1]. Both advocates now converge on this disposition (rider C3 and driver's concession to C3), which matches the execution trace (SAFE-1 ✓, allowed outcomes: escalate).\n\nWhat the record shows. The rider asked to be let out mid-trip at 21:42 [F3]. One minute later the driver sent \"Sit down or I lock the doors.\" [F4], which the keyword filter flagged as threat-classified [F5]. The driver's written account states the rider was drunk and tried to open the door on the expressway, and that he told her to sit down for her own safety and did not stop until Bedok Mall [F6].\n\nWhat is disputed and uncorroborated. The safety rationale in F6 rests on the driver's statement alone; there is no gps, timeline or traffic fact in the file evidencing a door attempt, the rider's state, or an expressway hazard, so F6 is uncorroborated [F6]. The gps facts are neutral: actual 15.4 km vs optimal 15.5 km and 20.7 min vs 22 min estimated show no route or duration anomaly and neither support nor contradict the threat claim [F1][F2]. Because chat versus statement is the only conflict here, and the dispute is safety-typed, the credibility assessment belongs to a human reviewer, not to this recommendation [F4][F5][SAFE-1].\n\nWhy no monetary outcome. The ride was a fixed-quote RydeX trip whose performed distance matched the optimal route [F1], so no RD-2 surplus arises; no fare facts exist from which a refund could be computed [F1][F2][RD-1]. The mid-ride exit request does not create a deductible charge in this file; it is relevant only as context for the human review of what happened between 21:42 and drop-off [F3][F6].\n\nPoints for the human reviewer to check: (i) whether any gps/timeline trace or app log shows the door attempt or the rider's condition alleged in F6; (ii) whether the driver stopped when requested at 21:42 [F3][F6]; (iii) the full chat history around 21:42–21:43 to assess whether F4 was a safety instruction or intimidation — F5's keyword match is a filter output, not a finding [F5]; (iv) both parties' clean 90-day records are background only and cannot decide the safety question [F7][F8][SAFE-1]. No account flag is set here; profile facts alone cannot ground one [F7][F8][RD-6].",
+    "reasoning": "This case is filed as a safety dispute, and the trace confirms no automated ruling issues: SAFE-1 requires escalation when threats, intimidation or harassment appear in the chat, complaint or driver's statement [F3][F4][F6][SAFE-1]. Reading the two-message, fully timestamped record [F5], the rider asked to be let out mid-journey at 21:42 [F3]; the only reply on record, one minute later, is the driver's \"Sit down or I lock the doors\" [F4]. Read in context — a passenger asking to exit answered with a stated intention to lock the doors — that is a conditional threat of confinement aimed at the rider, i.e. intimidation of a passenger, and at minimum \"suspected\" under SAFE-1; it is not a route-argument rudeness, which the screen would ignore [F3][F4][F5][SAFE-1]. The driver's post-trip statement confirms he \"did not stop until the destination\" [F6], which is a statement, not system evidence, and cannot be credited against the rider's version under the statement-vs-record and G11 treatment of driver claims [F6][SAFE-1]. The driver's own SAFE-2 argument does not help him: SAFE-2 concerns accidents, injuries and dangerous-driving allegations [F6][SAFE-2], and the rider's complaint is not of that kind; the \"tried to open the door on the expressway\" allegation is itself an uncorroborated statement, so nothing here is resolved by it [F6][SAFE-1][SAFE-2]. The routing and fare data settle only that there was no route deviation and no fare irregularity — 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min [F1][F2] means RD-1 is not violated and RD-2 yields no refund; the fixed $32.86 RydeX quote has no unpublished item, so FARE-1 gives no refund [F1][RD-1][RD-2][FARE-1]. Likewise the profiles — rider 520 d / 4.8 / 0 disputes [F7], driver 5.8 y / 4.9 / 1,204 trips / 0 upheld [F8] — cannot decide anything and give no ground for an account action under RD-6, so no flag_account is set [F7][F8][RD-6]. What remains undecided is exactly the safety question: whether the doors were ever locked, whether the car was moving, and whether the rider's conduct justified the instruction. No GPS, timeline or other record in this file speaks to the cabin events between 21:42 and drop-off, so under the evidence rule the gap cannot be read in either side's favour [F1][F2][F3][F4][F6][SAFE-1]. The amount is therefore null: an escalated safety case carries no monetary determination, and neither RD-2 nor FARE-1 produces any refundable sum on these facts [F1][RD-2][FARE-1].",
     "cited_facts": [
       "F1",
       "F2",
@@ -1116,67 +1233,72 @@
     ],
     "cited_policy": [
       "SAFE-1",
+      "SAFE-2",
       "RD-1",
       "RD-2",
+      "FARE-1",
       "RD-6"
     ],
     "rejected_claims": [
       {
-        "id": "C1",
-        "reason": "Accepted as to the facts (F4 verbatim, F5 keyword hit) but it cannot yield a fast-track decision: SAFE-1 routes a flagged threat to escalation, so it supports escalate, not a substantive finding of intimidation [F4][F5][SAFE-1]."
-      },
-      {
-        "id": "C2",
-        "reason": "The causal reading is contested: the record contains only two messages one minute apart (F3, F4) with no context, and the driver's statement (F6) offers a different cause; causality is for the human reviewer, not this recommendation [F3][F4][F6][SAFE-1]."
-      },
-      {
-        "id": "C4",
-        "reason": "The driver having continued to Bedok Mall is recorded (F3, F6) but is not by itself a monetary or conduct finding under any cited clause; it is context for the human safety review [F3][F6][SAFE-1]."
-      },
-      {
-        "id": "C5",
-        "reason": "Correct that no flag is sought against the rider (F7, F8), but clean profile histories cannot decide the safety question, so the escalation must rest on the chat record alone [F4][F5][F7][F8][SAFE-1]."
-      },
-      {
-        "id": "D1",
-        "reason": "Conceded by the driver and withdrawn; in any event the absence of deviation (F1) is irrelevant to a SAFE-1 safety dispute and yields refund_partial of zero [F1][RD-1][RD-2]."
-      },
-      {
-        "id": "D3",
-        "reason": "Normal distance and duration (F1, F2) do not rebut a threat allegation; SAFE-1 turns on the chat content, not on route or timing data [F1][F2][F4][F5][SAFE-1]."
+        "id": "D2",
+        "reason": "Not accepted: the words in F4, read with the rider's request in F3 and the complete timestamped record F5, state a consequence to the rider (locking the doors) in answer to her request to exit, which is intimidation on its face under SAFE-1; the screen turns on the judge's reading, not on the presence of a harm noun."
       },
       {
         "id": "D4",
-        "reason": "Whether a single flagged message amounts to intimidation under SAFE-1 is precisely the judgment reserved to human review; the keyword match (F5) plus the verbatim message (F4) trigger escalation regardless [F4][F5][SAFE-1]."
+        "reason": "Not accepted as a ground to leave the fare and conduct as they are: the driver's statement F6 admits he did not stop until the destination, so the absence of a recorded lock event (no such field in F1–F8) does not resolve the confinement allegation; it leaves the safety question open under SAFE-1, which is why the case escalates rather than closing with no_action."
       },
       {
         "id": "D5",
-        "reason": "The driver's clean record (F8) is background only and cannot decide the case; no RD-6 flag is applied, but the record cannot neutralise the flagged message [F4][F5][F8][RD-6]."
+        "reason": "Partly accepted only as to SAFE-2: no accident, injury or dangerous-driving allegation is before Ryde on the complaint as filed (F6 is a counter-statement), so SAFE-2 alone does not convert this into an injury case; but the rider's complaint remains a safety incident under SAFE-1, and D5's reading of F6 cannot be used to close the file."
       },
       {
         "id": "D6",
-        "reason": "Accepted insofar as no fare refund is due on the fixed RydeX quote with no route surplus (F1, F2); however the requested no_action is unavailable because SAFE-1 mandates escalation [F1][F2][F4][F5][SAFE-1]."
+        "reason": "Not a contested issue and therefore not accepted as a defence to the complaint: F1 and F2 show actual 15.4 km vs 15.5 km optimal and 20.7 min vs 22 min, so RD-1 is not violated and RD-2 yields zero refund — but the rider seeks human review of the driver's conduct under SAFE-1, not a routing refund."
+      },
+      {
+        "id": "D7",
+        "reason": "Accepted as to the fare only: the $32.86 fixed RydeX quote (F1) contains no unpublished item, so FARE-1 gives no refund; that does not dispose of the safety complaint, which escalates under SAFE-1."
+      },
+      {
+        "id": "D8",
+        "reason": "Accepted as to RD-6: the driver's profile (F8: 5.8 y, 4.9, 1,204 trips, 0 upheld in 90 d) shows no repeated-breach pattern, and profile facts cannot decide a case, so no flag_account is added; it does not defeat the SAFE-1 review."
+      },
+      {
+        "id": "C1",
+        "reason": "Not adopted as a ruling ground: F4, read with F3 and F5, does raise an intimidation concern, but that takes the case out of automatic decision-making under SAFE-1, so it is escalated rather than converted into a finding or a monetary award against the driver."
+      },
+      {
+        "id": "C6",
+        "reason": "Withdrawn by the rider and not relied on: the rider's clean profile (F7: 520 d, 4.8, 0 disputes in 90 d) cannot decide the safety question, which rests on the chat record F3–F5 and the driver's statement F6, and profile facts never decide a case alone."
       }
     ],
     "flag_account": false,
     "segment_findings": [],
+    "safety_concern": "suspected",
+    "safety_basis": [
+      "F3",
+      "F4",
+      "F6"
+    ],
+    "evidence_gap": "No system record (gps door state / stopping event / timeline) shows whether the doors were actually locked or the car was stationary or moving at 21:42–21:43; the rider's fare-of-confinement and the driver's claim in F6 that the rider tried to open the door on the expressway both rest on statements only (F6 is a post-trip statement, per G11). F1/F2 (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min) cannot speak to events inside the cabin. Reviewer should check the full in-app chat, the driver's I'm-Here/stop logs, and any in-car audio/video.",
     "escalate": true,
-    "escalation_reason": "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request."
+    "escalation_reason": "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling."
   },
   "certificate": [
-    "✓ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (F5)",
+    "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
     "allowed outcomes: escalate"
   ],
   "eligibility": {
     "auto": false,
     "reasons": [
-      "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request."
+      "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling."
     ],
     "actions": [
       {
         "type": "escalate",
         "mode": "human_review",
-        "detail": "Safety-typed dispute with a chat message classified as a threat: rider asked to exit at 21:42 [F3]; driver replied at 21:43 \"Sit down or I lock the doors.\" [F4], flagged by the threat keyword filter [F5]; driver's statement alleges an uncorroborated door-opening on the expressway and admits he did not stop until Bedok Mall [F6]. No gps/timeline or traffic fact exists to corroborate or refute the hazard [F1][F2]; SAFE-1 forbids auto-adjudication, so a human reviewer must weigh the chat against the statement and check for GPS/timeline traces of the alleged door attempt, the rider's condition, and whether the driver stopped on request."
+        "detail": "SAFE-1 screening: rider ask to alight at 21:42 (F3) answered one minute later by driver's \"Sit down or I lock the doors\" (F4), plus a filed confinement/fear-for-safety complaint and the driver's admission he did not stop until the destination (F6). Human review required; no automated ruling."
       }
     ],
     "what_would_change": []
@@ -1187,20 +1309,7 @@
       "claims": [
         {
           "id": "C1",
-          "assertion": "The driver's own in-app message at 21:43 reads \"Sit down or I lock the doors\", which the system tagged as a threat containing the keyword \"lock the door\" — i.e. intimidation directed at the passenger during the ride.",
-          "facts": [
-            "F4",
-            "F5"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "id": "C2",
-          "assertion": "The rider asked to be let out of the car at 21:42 (\"Please stop the car, I want to get out here\") and the driver's threatening reply followed one minute later, so the intimidation was a response to the rider's request to exit, not to any aggression by her.",
+          "assertion": "The driver's message to the rider was a threat: at 21:43, one minute after the rider asked to be let out, he wrote “Sit down or I lock the doors.” (F4), i.e. he told a passenger who had asked to exit that he would confine her in the vehicle.",
           "facts": [
             "F3",
             "F4"
@@ -1212,75 +1321,8 @@
           "void_reason": null
         },
         {
-          "id": "C3",
-          "assertion": "Because a threat/intimidation message appears in the chat record, this dispute must not be auto-adjudicated: the correct disposition is escalation to human review with a fact summary, not a fare ruling.",
-          "facts": [
-            "F4",
-            "F5"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "id": "C4",
-          "assertion": "The driver's written statement admits he refused to stop and continued to the destination after the rider asked to get out, which corroborates that she remained in a vehicle she had asked to leave.",
-          "facts": [
-            "F6",
-            "F3"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "id": "C5",
-          "assertion": "Both parties have clean 90-day dispute histories (rider 0 disputes / 0 upheld; driver 0 disputes / 0 upheld in 90 days), so no account flag is requested against the rider and the escalation should be decided on the chat record itself.",
-          "facts": [
-            "F7",
-            "F8"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "void": false,
-          "void_reason": null
-        }
-      ],
-      "weaknesses": [
-        "The driver's statement (F6) asserts the rider was drunk and tried to open the door on the expressway, which, if credited, recasts \"lock the doors\" as a safety instruction rather than a threat — and chat/statements are the only evidence here, with no GPS or timeline record showing the door attempt or the rider's state.",
-        "There is no safety recording, no incident timeline and no medical or third-party evidence: F1 and F2 show only normal route and duration (15.4 km actual vs 15.5 km optimal; 20.7 min vs 22 min estimated), so the GPS facts neither support nor contradict the threat claim.",
-        "The driver's profile is strong (F8: 5.8 years, 4.9 rating, 1204 trips, 0 disputes upheld), which the driver's side will use to argue the message was an isolated, justified instruction — though per the policy a profile fact can never decide the case alone.",
-        "No refund is legally computable here: the fare is a fixed RydeX quote with no fare facts in the file, so I cannot size any monetary remedy from a fare or GPS fact and seek escalation instead."
-      ],
-      "requested_outcome": {
-        "action": "escalate",
-        "amount": null
-      }
-    },
-    "driver": {
-      "side": "driver",
-      "claims": [
-        {
-          "id": "D1",
-          "assertion": "The rider's chat message is an in-ride request to be let out mid-trip ('Please stop the car, I want to get out here.'), i.e. the dispute is about how the driver handled an in-motion request, not about any overcharge — the GPS record shows the trip was operated on the optimal route and slightly under it (15.4 km actual vs 15.5 km optimal, -0%).",
-          "facts": [
-            "F3",
-            "F1"
-          ],
-          "policy": [
-            "RD-1"
-          ],
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "id": "D2",
-          "assertion": "The driver's message was a safety instruction to remain seated with the doors secured, not an act of violence or a physical confinement: the rider was in a moving vehicle and the driver states she tried to open the door on the expressway, so telling her to sit down addresses an immediate risk in transit.",
+          "id": "C2",
+          "assertion": "This is a first-person safety incident on a completed, in-person service: the rider reports she felt unsafe for the whole ride, and the driver's own written statement confirms he refused to stop and “did not stop until the destination” (F6), leaving her locked in a moving car after she asked to get out.",
           "facts": [
             "F4",
             "F6"
@@ -1292,25 +1334,126 @@
           "void_reason": null
         },
         {
-          "id": "D3",
-          "assertion": "The trip was completed normally and safely: door-to-door duration was 20.7 min against a 22 min estimate (-1.1 min), and there is no traffic incident or route anomaly record — no erratic driving or delay evidence exists on the face of the system records.",
+          "id": "C3",
+          "assertion": "The rider's request to be let out was clear and unambiguous and was made inside the trip window, 21:42 vs drop-off 21:55 (F3); the only reply on record is the driver's refusal-threat (F4), so nothing in the chat shows any rider conduct that could justify confinement.",
           "facts": [
-            "F2",
-            "F1"
+            "F3",
+            "F4",
+            "F5"
           ],
           "policy": [
-            "RD-1",
-            "SAFE-2"
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "C4",
+          "assertion": "The driver's explanation that the rider “tried to open the door on the expressway” appears only in his post-trip statement (F6), not in the chat, and no GPS, timeline or route record in this case shows a door-opening, a stop or any emergency (F1, F2) — the system records also show the trip ran 0.1 km short of optimal and 1.1 min faster than estimate, consistent with no emergency detour or intervention (F1, F2).",
+          "facts": [
+            "F1",
+            "F2",
+            "F6"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "C5",
+          "assertion": "Because the record contains an intimidation of a passenger and a rider's fear for her safety, the case must go to a person rather than be decided automatically, with the fact summary (F3–F6) handed over.",
+          "facts": [
+            "F3",
+            "F4",
+            "F5",
+            "F6"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "C6",
+          "assertion": "The rider's own record is clean — 520-day account, 4.8 rating, 0 disputes and 0 upheld in 90 days (F7) — which supports that her safety complaint is made in good faith; the driver's long tenure and 4.9 rating over 1204 trips (F8) do not rebut the timestamped chat record.",
+          "facts": [
+            "F7",
+            "F8"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        }
+      ],
+      "weaknesses": [
+        "The driver's statement (F6) alleges the rider was drunk and tried to open a car door on the expressway; if that is accepted, some physical intervention could be argued as safety-motivated. Note however it is a post-trip statement, not a chat message, and no GPS/timeline fact (F1, F2) corroborates any door incident.",
+        "There is no GPS or timeline evidence in this case file of the car doors actually being locked or of the vehicle being stationary/occupied against the rider's will — the confinement claim rests on the driver's own words (F4) plus the rider's complaint.",
+        "The driver did complete the trip normally (F1, F2: 15.4 km vs 15.5 km optimal, 20.7 min vs 22 min estimate), so the other side will argue the ride was uneventful; the route/duration data cannot speak to what was said or felt inside the car (F4).",
+        "The driver's clean 90-day history (F8: 0 disputes, 0 upheld) gives the other side a propensity argument, which is why the outcome is escalation rather than an automatic finding."
+      ],
+      "requested_outcome": {
+        "action": "escalate",
+        "amount": null
+      }
+    },
+    "driver": {
+      "side": "driver",
+      "claims": [
+        {
+          "id": "D1",
+          "assertion": "The rider's message at 21:42 (F3) — \"Please stop the car, I want to get out here\" — is not evidence of any threat by the driver; it is a request, and the only driver reply on record is F4 at 21:43: \"Sit down or I lock the doors.\"",
+          "facts": [
+            "F3",
+            "F4",
+            "F5"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "D2",
+          "assertion": "On the words actually recorded in F4, the driver's message is a safety instruction, not a threat, intimidation or harassment: it demands the rider sit down and states what the driver would do, but contains no threat of harm, no abuse, no unwanted advance and no demand; SAFE-1 requires the court to read the words, and the words here do not name any harm or consequence to the rider.",
+          "facts": [
+            "F4",
+            "F5"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "D3",
+          "assertion": "The chat record is complete and fully timestamped — 2 messages, every one timestamped (F5) — so there is no missing-message or missing-timestamp gap that could hide an unrecorded threat; the rider has produced no message of threat beyond F4, and F6 (the driver's own statement) records only that he told her to sit down for her own safety.",
+          "facts": [
+            "F3",
+            "F4",
+            "F5",
+            "F6"
+          ],
+          "policy": [
+            "SAFE-1"
           ],
           "void": false,
           "void_reason": null
         },
         {
           "id": "D4",
-          "assertion": "The keyword flag at 21:43 is produced by automated keyword matching on a single message and cannot by itself establish a genuine threat; the policy's own definition covers 'Threats and Intimidation' as a conduct pattern, and a lone instruction to sit down falls short of that pattern.",
+          "assertion": "The rider's whole complaint rests on one sentence (F4), and her own message (F3) shows she was already asking to alight mid-journey at 21:42; nothing in the record shows any physical act, any locked door event, or any second incident of intimidation by the driver.",
           "facts": [
+            "F3",
+            "F4",
             "F5",
-            "F4"
+            "F6"
           ],
           "policy": [
             "SAFE-1"
@@ -1320,7 +1463,45 @@
         },
         {
           "id": "D5",
-          "assertion": "The driver's account record is clean and long-standing — 5.8 years on platform, 4.9 rating, 1204 trips in 90 days, 0 disputes and 0 upheld — which is inconsistent with a rider-safety hazard and supports that no safety measure against him is warranted.",
+          "assertion": "There is no dangerous-driving, collision or injury allegation at all: the rider's complaint alleges only that she 'felt unsafe' (an emotional state, not an event), and the driver's statement (F6) asserts the opposite danger — that the rider tried to open the door on the expressway — so SAFE-2, which requires an accident, injury or dangerous-driving allegation, is not triggered by the complaint as filed.",
+          "facts": [
+            "F6"
+          ],
+          "policy": [
+            "SAFE-2"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "D6",
+          "assertion": "The driver's routing was impeccable and gives no independent ground for penalty: actual 15.4 km vs optimal 15.5 km (-0.1 km, -0%) and 20.7 min vs 22 min estimated (F1, F2), i.e. the ride was shorter and faster than the optimal route, so RD-1 is not violated and RD-2 yields zero refund.",
+          "facts": [
+            "F1",
+            "F2"
+          ],
+          "policy": [
+            "RD-1",
+            "RD-2"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "D7",
+          "assertion": "The fare of $32.86 is the fixed RydeX quote for Clarke Quay → Bedok Mall and no extra item, waiting fee, cancellation fee or unpublished charge is in issue, so FARE-1 gives no basis for any refund against the driver.",
+          "facts": [
+            "F1"
+          ],
+          "policy": [
+            "FARE-1"
+          ],
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "id": "D8",
+          "assertion": "The driver's record is clean and long-standing — 5.8 years on the platform, 4.9 rating, 1,204 trips in 90 days, 0 disputes and 0 upheld disputes in 90 days (F8) — so there is no 'repeated or severe breach' pattern to support flag_account under RD-6 against him.",
           "facts": [
             "F8"
           ],
@@ -1331,29 +1512,28 @@
           "void_reason": null
         },
         {
-          "id": "D6",
-          "assertion": "The rider's own account shows no prior disputes (0 in 90 days, rating 4.8), so there is also no pattern of unfounded complaints on either side; the case turns on the single 21:42–21:43 exchange, which the driver's statement explains, and no refund of the fixed $32.86 fare is justified because the trip was performed as quoted on the optimal route.",
+          "id": "D9",
+          "assertion": "The rider herself has a 1.4-year account, 4.8 rating and 0 disputes in 90 days (F7), so neither party's profile shows any history that would justify an account action against the driver.",
           "facts": [
             "F7",
-            "F1",
-            "F2"
+            "F8"
           ],
           "policy": [
-            "RD-2",
-            "FARE-1"
+            "RD-6"
           ],
           "void": false,
           "void_reason": null
         }
       ],
       "weaknesses": [
-        "F4 is verbatim a driver message containing a threat-classified phrase ('Sit down or I lock the doors.') and F5 confirms the threat keywords were detected, so the rider will argue this is a direct SAFE-1 trigger that must go to human escalation regardless of my safety rationale — I cannot make the flagged message disappear.",
-        "F6 is only the driver's own statement and is not corroborated by any GPS or timeline record of the rider attempting to open a door; under the system-records-win rule (F1, F2 alone show nothing unusual), the 'she tried to open the door on the expressway' account may be discounted, weakening D2.",
-        "The chat facts show the driver did not stop until Bedok Mall (F6 with F3), so on the face of the record he refused an explicit request to be let out mid-ride; policy RD-3(a) treats a passenger-named stop as a legitimate routing request, which the rider can invoke as evidence he did not comply.",
-        "I have no traffic/weather facts (tool returned none) and no fare facts to rebut the rider's account with objective corroboration, and I can only offer profile facts F7/F8 as background — the policy says profile facts cannot decide the case."
+        "The driver's own sentence is the weakest point: F4 (\"Sit down or I lock the doors\") is an implicit threat of confinement and reads badly, and the rider's complaint (and her 21:42 message F3) frames it as such; the judge may well treat F4 as intimidation under SAFE-1, in which case no automated ruling issues and the case goes to a person.",
+        "The driver did not stop when the rider asked to get out at 21:42 (F3); his statement (F6) admits he did not stop until the destination, which supports the rider's confinement narrative and is not contradicted by any gps fact (there is no stop fact in F1/F2).",
+        "F6 is only the driver's written statement, taken after the trip, and the policy (G11) treats driver statements about 'what really happened' as claims rather than evidence; the claim that the rider tried to open the door on the expressway (F6) has no independent gps, timeline or chat corroboration in the fact table, so the judge may not credit it against the rider's version.",
+        "The fact table contains no fact recording whether the doors were in fact locked — nothing in F1–F8 refutes the rider's 'locked in' complaint on that point, so the driver cannot prove denial of that act and must rely on the absence of any recorded lock event.",
+        "If the court instead reads F4 as a safety-justified instruction and issues no automated ruling, the alternative exposure is escalation, not the no_action the driver wants; SAFE-1 screening sends any threat/intimidation reading to a person, so a 'no_action' outcome is not guaranteed."
       ],
       "requested_outcome": {
-        "action": "no_action",
+        "action": "escalate",
         "amount": null
       }
     }
@@ -1364,41 +1544,10 @@
       "points": [
         {
           "target_claim_id": "D1",
-          "response": "Conceded only as to the absence of any overcharge: the GPS record does show 15.4 km actual vs 15.5 km optimal (F1), so I do not press RD-1 or any fare remedy — but that is irrelevant to a SAFE-1 safety dispute, and F3 still shows the rider asked to get out mid-ride at 21:42.",
-          "facts": [
-            "F1",
-            "F3"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "concede": true,
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "target_claim_id": "D3",
-          "response": "A normal distance and duration (F1, F2) says nothing about whether a threat was uttered; the rider's claim is about what was said and done to her inside the car, and F4/F5 record the flagged threat message, which SAFE-1 routes to escalation regardless of route or timing data.",
-          "facts": [
-            "F1",
-            "F2",
-            "F4",
-            "F5"
-          ],
-          "policy": [
-            "SAFE-1"
-          ],
-          "concede": false,
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "target_claim_id": "D4",
-          "response": "The keyword hit (F5) is not asked to stand alone: the underlying verbatim driver message \"Sit down or I lock the doors.\" (F4) is itself the conduct — a conditional threat of confinement, which the policy lists under Threats and Intimidation — and it was sent one minute after the rider asked to get out (F3), so it is a response to her request, not a neutral instruction.",
+          "response": "Agreed on the premise but not the conclusion: F3 shows the rider was asking to be let out, and the only recorded driver reply is F4; that pairing — a passenger asking to exit and being told she will be locked in — is precisely the pattern of intimidation SAFE-1 screens for.",
           "facts": [
             "F3",
-            "F4",
-            "F5"
+            "F4"
           ],
           "policy": [
             "SAFE-1"
@@ -1409,7 +1558,37 @@
         },
         {
           "target_claim_id": "D2",
-          "response": "The safety rationale rests entirely on the driver's own uncorroborated statement (F6); under the system-records-win rule there is no GPS, timeline or traffic fact in the file showing a door attempt or an expressway hazard to weigh against the verbatim message in F4, and the driver's own account admits he did not stop after the rider asked to get out (F3, F6).",
+          "response": "F4 names a concrete consequence to the rider — being locked in a moving car after she asked to get out (F3) — and SAFE-1 is screened by the judge reading the words, not by whether a harm noun appears; \"Sit down or I lock the doors\" is a conditional threat of confinement, which is exactly the species of conduct SAFE-1 lists as intimidation.",
+          "facts": [
+            "F3",
+            "F4"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "concede": false,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "D3",
+          "response": "The completeness of the record (F5) helps the rider: because the chat is complete and timestamped, nothing supports the driver's version, and his only explanation for the refusal to stop appears in F6, a post-trip statement made after he knew a complaint existed — which is a claim, not corroboration, and nothing in F1–F5 records any door incident.",
+          "facts": [
+            "F1",
+            "F2",
+            "F5",
+            "F6"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "concede": false,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "D4",
+          "response": "The absence of a recorded \"lock event\" cuts against the driver, not the rider: he admits in F6 that he \"did not stop until the destination,\" which is the confinement the rider complains of, and no lock fact exists in F1–F8 because the dataset contains no door-state field — the driver's inability to disprove it is not proof it did not happen.",
           "facts": [
             "F3",
             "F4",
@@ -1424,14 +1603,14 @@
         },
         {
           "target_claim_id": "D5",
-          "response": "The driver's clean record is background only (F8): the policy states profile facts can support a flag_account request but can never decide a case, so a 4.9 rating cannot neutralise a threat message that the system itself flagged (F5).",
+          "response": "We do not rely on SAFE-2 and do not concede the framing: the rider's complaint is a safety incident of a rider being confined in the vehicle, which is squarely SAFE-1, and the driver's counter-allegation in F6 that she tried to open a door on the expressway is itself an unrecorded claim with no GPS, timeline or chat support (F1, F2, F5).",
           "facts": [
-            "F4",
             "F5",
-            "F8"
+            "F6"
           ],
           "policy": [
-            "SAFE-1"
+            "SAFE-1",
+            "SAFE-2"
           ],
           "concede": false,
           "void": false,
@@ -1439,12 +1618,64 @@
         },
         {
           "target_claim_id": "D6",
-          "response": "I accept that both sides have no prior disputes (F7, F8) and that no fare refund is at stake because the fixed RydeX quote was consistent with the route run (F1, F2); my ask is therefore not money but that the flagged threat (F4, F5) be escalated to human review rather than disposed of as no_action.",
+          "response": "We never claimed a route deviation — the rider's brief does not rest on RD-1/RD-2 — so D6 is directed at a claim that does not exist; F1 and F2 are cited by us only to show the driver's own version of an emergency (F6) left no trace in the recorded drive.",
           "facts": [
             "F1",
-            "F2",
-            "F4",
-            "F5",
+            "F2"
+          ],
+          "policy": [
+            "RD-1",
+            "RD-2"
+          ],
+          "concede": true,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "D7",
+          "response": "Conceded as to fare: no refund is sought from the $32.86 fixed RydeX quote and we raise no FARE-1 item; the relief we seek is human review of the driver's conduct, not money.",
+          "facts": [
+            "F1"
+          ],
+          "policy": [
+            "FARE-1"
+          ],
+          "concede": true,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "D8",
+          "response": "We do not ask for flag_account and Do not rely on RD-6; the rider's request is escalation under SAFE-1, which turns on the words in F4, not on the driver's 90-day history (F8).",
+          "facts": [
+            "F8"
+          ],
+          "policy": [
+            "RD-6",
+            "SAFE-1"
+          ],
+          "concede": true,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "D9",
+          "response": "Conceded that neither profile constitutes an account-action ground; F7 is cited only to show the complaint is made in good faith by a rider with 0 disputes and 0 upheld in 90 days.",
+          "facts": [
+            "F7",
+            "F8"
+          ],
+          "policy": [
+            "RD-6"
+          ],
+          "concede": true,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "C6",
+          "response": "Withdrawn as unnecessary: C6's comparison of the two profiles adds nothing to the SAFE-1 screening, which F3–F6 already require on their own.",
+          "facts": [
             "F7",
             "F8"
           ],
@@ -1456,17 +1687,14 @@
           "void_reason": null
         }
       ],
-      "revised_outcome": {
-        "action": "escalate",
-        "amount": null
-      }
+      "revised_outcome": null
     },
     "driver": {
       "side": "driver",
       "points": [
         {
           "target_claim_id": "C1",
-          "response": "I do not dispute that F4 is verbatim and that F5 shows automated keyword matching; my point is that a keyword detection is not a finding of intimidation under SAFE-1, which speaks of 'Assault, harassment, or abuse of any kind … Threats and Intimidation' as a conduct pattern, and the same tool that produced F5 also produced only one single message across the whole 21:34–21:55 trip.",
+          "response": "F4 is one sentence — \"Sit down or I lock the doors\" — and it names no harm, no violence, no sexual advance and no penalty to the rider; it is an instruction to sit down plus a stated action, which is not intimidation on its face, and SAFE-1 reserves the characterisation of the words to the court rather than calling any one sentence a threat.",
           "facts": [
             "F4",
             "F5"
@@ -1480,9 +1708,8 @@
         },
         {
           "target_claim_id": "C2",
-          "response": "C2 assumes the rider's request caused the message, but the chat shows only two messages one minute apart (F3, F4) and no context explaining why she asked to exit; the driver's statement (F6) supplies that reason — an attempted door opening on the expressway — so the causal story is contested, not established.",
+          "response": "F6 says only that the driver told her to sit down \"for her own safety\" and did not stop until the destination; it does not say the doors were locked or that she was confined, and there is no fact in the record evidencing any locked door, so the leap from one message (F4) and one statement (F6) to \"locked in a moving car\" is unsupported.",
           "facts": [
-            "F3",
             "F4",
             "F6"
           ],
@@ -1495,37 +1722,59 @@
         },
         {
           "target_claim_id": "C3",
-          "response": "I concede that where a threat keyword appears in the chat record, SAFE-1 directs escalation rather than an automatic monetary ruling — I do not ask the judge to rule on the threat itself, only to record that the fare and route records show no overcharge or route violation supporting any refund.",
+          "response": "The complete, fully timestamped two-message record (F5, F3 at 21:42 and F4 at 21:43) shows the rider asked to alight on the move with no stated reason; it does not show why she wanted out, and F6 records the driver's account that she tried to open the door on the expressway — so the chat cannot establish that her request was one a driver was required to obey mid-carriageway.",
           "facts": [
+            "F3",
             "F4",
             "F5",
-            "F1",
-            "F2"
+            "F6"
           ],
           "policy": [
             "SAFE-1"
-          ],
-          "concede": true,
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "target_claim_id": "C4",
-          "response": "F6 does record that the driver continued to the destination after F3, but the same statement explains he did so for her own safety after an attempt to open the door on an expressway; SAFE-2 escalation covers exactly this situation and no clause makes continuing to a destination, by itself, a basis for a refund.",
-          "facts": [
-            "F6",
-            "F3"
-          ],
-          "policy": [
-            "SAFE-2"
           ],
           "concede": false,
           "void": false,
           "void_reason": null
         },
         {
+          "target_claim_id": "C4",
+          "response": "Concede the narrow point: F6 is a post-trip written statement and no gps fact (F1, F2) corroborates a door-opening or an emergency, so F6 alone cannot be treated as established — but by the same rule the rider's \"felt unsafe\" narrative in her complaint is also a statement with no system record behind it, and F1/F2 show the routing itself was flawless (15.4 km vs 15.5 km optimal, 20.7 min vs 22 min), which is all the driver needs against any routing or fare allegation under RD-1/RD-2 and FARE-1.",
+          "facts": [
+            "F1",
+            "F2",
+            "F6"
+          ],
+          "policy": [
+            "RD-1",
+            "RD-2",
+            "FARE-1"
+          ],
+          "concede": true,
+          "void": false,
+          "void_reason": null
+        },
+        {
           "target_claim_id": "C5",
-          "response": "I agree no flag is sought against the rider and that F7/F8 are background only; for symmetry the rider's clean record (F7) also means nothing is proved against the driver, whose record (F8: 5.8 years, 4.9, 1204 trips, 0 upheld) is inconsistent with the serious-safety-conduct finding C3 invites.",
+          "response": "The driver does not resist escalation — this is exactly what he asks for — but escalation must not be dressed up as a finding against him: SAFE-1 escalates so a person can read F3–F6, and the fact summary should record that F1/F2 show no route deviation, no excess distance and no fare irregularity, and that F8 shows 5.8 years on the platform, 4.9 rating, 1,204 trips and 0 disputes in 90 days.",
+          "facts": [
+            "F1",
+            "F2",
+            "F3",
+            "F4",
+            "F5",
+            "F6",
+            "F8"
+          ],
+          "policy": [
+            "SAFE-1"
+          ],
+          "concede": false,
+          "void": false,
+          "void_reason": null
+        },
+        {
+          "target_claim_id": "C6",
+          "response": "The rider's clean record (F7) is exactly as probative as the driver's (F8) and the policy bars profile facts from deciding anything; F8 additionally shows 0 disputes and 0 upheld disputes in 90 days across 1,204 trips, so there is no \"repeated or severe\" pattern that could support any flag_account against the driver under RD-6.",
           "facts": [
             "F7",
             "F8"
@@ -1534,22 +1783,6 @@
             "RD-6"
           ],
           "concede": false,
-          "void": false,
-          "void_reason": null
-        },
-        {
-          "target_claim_id": "D1",
-          "response": "I withdraw the framing of D1 insofar as it suggests the rider's exit request has no policy weight: RD-3(a) does treat a passenger-named stop as a legitimate routing request, so I no longer rely on the request itself being irrelevant — the operational record (F1, F2) still shows no deviation or overcharge in the ride as performed.",
-          "facts": [
-            "F3",
-            "F1",
-            "F2"
-          ],
-          "policy": [
-            "RD-3",
-            "RD-2"
-          ],
-          "concede": true,
           "void": false,
           "void_reason": null
         }
@@ -1563,20 +1796,20 @@
   "notices": [
     {
       "to": "rider",
-      "text": "We've finished the first look at your dispute. Because it involves safety, we can't decide it ourselves — it has gone to a RydeHELP human reviewer. No money changes hands on the trip itself: your fare stands and no refund is due.\n\nThe reviewer will look at the chat around the time you asked to get out, whether the driver stopped when asked, and the trip's GPS and timeline records. They will also see your account history, which is clean.\n\nIf you need medical help, call 995. To report anything else, use RydeHELP."
+      "text": "We've finished the first look at your dispute and are sending it to a Ryde human reviewer. Nothing is decided yet — no refund or account action has been taken.\n\nThe reviewer will look at the messages you exchanged during the trip, including your request to be let out and the reply you received, plus the driver's account of what happened between 21:42 and the end of the ride. They'll check that account against the in-app record.\n\nThe safety screen is flagged, so this gets human attention rather than an automated outcome. If you have anything else — what you saw, what the driver said, or what happened with the doors — you can add it to this case."
     },
     {
       "to": "driver",
-      "text": "We've finished the first look at this dispute. Because it involves safety, it has gone to a RydeHELP human reviewer. No fare action is taken on the completed trip — your earnings stand.\n\nThe reviewer will look at the chat around the time the rider asked to get out, whether you stopped when asked, and the trip's GPS and timeline records, alongside your statement. Your clean 90-day record is on file as background only. No flag is placed on your account at this stage.\n\nFor medical need, call 995. To report anything else, use RydeHELP."
+      "text": "We've finished the first look at this dispute and are sending it to a Ryde human reviewer. Nothing is decided yet — no payment or account action has been taken.\n\nThe reviewer will ask you for your account of the trip window from 21:42 to 21:55, and will check that account against the in-app record. The messages exchanged during the ride and the rider's complaint are part of what they'll consider.\n\nNo refund has been issued and no fare adjustment has been made — the route data shows no deviation and the fare was correct, so nothing is owed on that side. If you want to add anything about what happened in the car, you can send it to this case."
     }
   ],
   "precedent_id": null,
   "receipt": {
     "case_sha256": "5d99d2fe94bdb1f8",
-    "policy_sha256": "5d47a08176d6f41a",
-    "code_sha256": "15a598cd8227c400",
+    "policy_sha256": "55047a1dd798c068",
+    "code_sha256": "1e912719f75f0c94",
     "model": "deepseek:deepseek-chat",
-    "judge_prompt_sha256": "dd1fe9d8dfe49dac",
-    "issued_at": "2026-10-09T13:35:44+00:00"
+    "judge_prompt_sha256": "95da03c395aff07a",
+    "issued_at": "2026-10-09T19:46:55+00:00"
   }
 }

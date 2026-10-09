@@ -73,7 +73,7 @@
 ### A13. Ryde Code Of Conduct
 - URL：https://help.rydesharing.com/hc/en-us/articles/15395890865561 （更新 2026-06-15，访问 2026-09-28）
 - 摘录："Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures. Violations of these guidelines will result in immediate termination and legal action where applicable." / "Refusing or cancelling a trip without a valid reason at pick-up may result in account action."
-- 采用：SAFE-1（类别）、NS-3；威胁关键词表（数据层参数）的类别依据。
+- 采用：SAFE-1（类别）、NS-3；法庭安全筛查（SAFE-1）所用类别的依据。
 
 ### A14. Report a safety issue / I was involved in an accident / feedback about my driver
 - URL：https://help.rydesharing.com/hc/en-us/articles/51354502165913 ；…/900003838306 ；…/18230876398105 （均更新 2026-09-25，访问 2026-09-28）
@@ -227,4 +227,4 @@
 | RD | RD-5（A7）、RD-6（A10/A11）、RD-3(c) 的 $3 与 RydeTAXI 限制（A9）、RD-2 的"overcharge 属违规"（A10/A11） | RD-1（B1/B2/C2/C4/D1）、RD-2 公式（B5/B4/D3）、RD-3(a)(b)（B1/D1/C4/C2）、RD-3(c) 等待单位（B5/C6/B6）、RD-4（B1 + B7） | 绕路测量、路况匹配参数（数据层） | G1、G3、G4、G5、G6、G10 |
 | NS | NS-0、NS-1、NS-2、NS-4、NS-5、NS-6、NS-7（A1–A5、A10、A18、A16）、NS-3（A13/A16/A10） | NS-2 同构佐证（C1/C5）、NS-3（B1 r.25/B2） | 到达半径 200 m（数据层） | NS-5（无字段）、NS-8（Grab/Gojek，无 ETA 字段）、G2、G7 |
 | FARE | FARE-1（A8/A6/A9）、FARE-2（A8）、FARE-3（A15/A16） | FARE-1（B6） | — | FARE-3（无数据）、G9 |
-| SAFE | SAFE-1（A13）、SAFE-2（A14）、SAFE-3（A10/A12） | — | 关键词表（数据层参数） | SAFE-3（无数据） |
+| SAFE | SAFE-1（A13）、SAFE-2（A14）、SAFE-3（A10/A12） | — | —（是否构成威胁由法庭阅读判定，不用关键词表） | SAFE-3（无数据） |

@@ -4,40 +4,48 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:33:54.730547+00:00",
+ "ts": "2026-10-09T19:04:40.534845+00:00",
  "ok": true,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Dismiss the fare-refund request: RydeX is a fixed-quote service, so the extra distance did not change the fare; record the outcome and keep the fare unchanged.",
-  "confidence": 0.8,
+  "recommended_action": "Dismiss the fare-refund claim; the fixed RydeX quote was correctly applied and no recoverable item exists. Append a note of the RD-1 breach (unexplained route deviation) to T-2019 for pattern monitoring only; flag the driver's account for Ryde review given two upheld route-deviation disputes in the last 90 days.",
+  "confidence": 0.72,
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-4",
-   "FARE-1"
+   "RD-6",
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "exempt": false,
-    "reason": "GPS trace from 14:13:20 leaves the quoted polyline and runs north-east via the AYE corridor before rejoining the optimal route near the drop-off, adding distance; the driver's assertion of a GPS reroute supplies no traffic-incident or band-1/2 evidence for the replaced optimal segment, so RD-4 does not exempt it and it is an unexcused deviation under RD-1."
+    "finding": "counts",
+    "basis": [],
+    "reason": "GPS trace departs the quoted corridor substantially during the trip (e.g. loop north to ~1.3015/103.8371, hook back east to ~1.2953/103.8318, and the western bulge via ~1.2802/103.8271 and ~1.2872/103.8224), while the quoted route is 10.761 km. No traffic incident (traffic.incidents empty) and only band 4 (free-flow) bands, so no RD-4 exemption; chat is empty, so no RD-3 stop request and no RD-5 consent. Constitutes an unexplained off-route segment under RD-1 and a recordable breach; no monetary refund because RD-2's non-metered branch yields 0."
    }
   ],
   "rejected_claims": [
    {
     "id": "rider_refund_claim",
-    "reason": "The rider asks for the 'extra distance' to be refunded, but RydeX is a fixed-quote non-metered service (RD-2): distance does not affect the fare, and no toll/ERP, waiting fee, destination-edit fee or other add-on was charged (all 0.00), so the refundable amount under RD-2/FARE-1 is zero."
+    "reason": "RydeX is fixed-price (RD-2 non-metered branch). The 15.17 distance fare corresponds to the same 10.761 km the rider was quoted, and the breakdown contains no ERP/toll, waiting fee or edit-destination fee, so no overcharge exists to refund; the deviation is recorded as an RD-1 breach only."
+   },
+   {
+    "id": "driver_gps_reroute",
+    "reason": "A self-serving statement that the GPS rerouted him is not a 'reasonable cause' exemption; RD-4 requires a matching LTA traffic incident on the replaced optimal route, and traffic.incidents is empty (only band 4 bands)."
    }
   ],
-  "flag_account": false
+  "flag_account": true
  },
- "latency_s": 4.69,
- "input_tokens": 12976,
- "output_tokens": 919,
+ "latency_s": 7.11,
+ "input_tokens": 13580,
+ "output_tokens": 1385,
  "requests": 1,
  "llm_calls": 1
 }

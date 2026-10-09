@@ -78,8 +78,7 @@ class PrecedentHit(BaseModel):
 def features(table: FactTable) -> dict[str, float]:
     """Numeric feature vector from the fact values (same keys as FEATURES[dispute_type], missing -> 0)."""
     f: dict[str, float] = {}
-    threat = any((x.value or {}).get("threat") for x in table.facts)
-    f["threat"] = float(threat)
+    f["threat"] = float(table.dispute_type == "safety")   # a safety complaint; chat threats are the judge's reading, not a table feature
     if table.dispute_type in ("route_deviation", "safety"):
         dist = find(table, "excess_pct")
         detours = find_all(table, "extra_km", "start")
@@ -91,9 +90,8 @@ def features(table: FactTable) -> dict[str, float]:
         f["incident_on_route"] = float(any((x.value or {}).get("m_from_route") is not None
                                            and x.value["m_from_route"] <= 300 for x in find_all(table, "reported_at")))
         first = min((d.value["start"] for d in detours), default=None)
-        agreed = [x.value["ts"] for x in find_all(table, "ts", "flags") if x.value.get("from") == "rider"
-                  and "agreement" in x.value.get("flags", [])]
-        f["consent_before_detour"] = float(bool(first) and any(ts < first for ts in agreed))
+        rider_msgs = [x.value["ts"] for x in find_all(table, "ts", "idx") if x.value.get("from") == "rider" and x.value.get("ts")]
+        f["consent_before_detour"] = float(bool(first) and any(ts < first for ts in rider_msgs))   # a rider message before the detour (what it said is the judge's)
     if table.dispute_type == "no_show":
         near, within, cancel = find(table, "nearest_m"), find(table, "within_200m_s"), find(table, "s_after_accept")
         here, arrived = find(table, "driver_pressed_here_at"), find(table, "driver_arrived_at")

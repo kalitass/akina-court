@@ -194,20 +194,36 @@ def test_fare_reads_rates_file(monkeypatch, tmp_path):
     assert "2.2 min" in by_id(facts, "fare-wait").text
 
 
-def test_chat_numbering_and_flags():
+def test_chat_facts_are_verbatim_timestamped_and_unlabelled():
     facts = get_chat_facts(route_case())
     assert facts[0].text.startswith("Chat #1") and facts[1].text.startswith("Chat #2")
-    assert "request" in facts[0].value["flags"]                       # "ok if I take PIE?"
-    assert {"agreement", "request"} <= set(facts[1].value["flags"])   # "Sure. Can you stop at ..."
+    for f in facts:
+        assert "flags" not in (f.value or {}) and "[agreement]" not in f.text and "[request]" not in f.text and "[threat]" not in f.text
+    assert facts[0].value["from"] == "driver" and facts[0].value["ts"]
+    rec = by_id(facts, "chat-record")
+    assert rec.value["complete"] is True and rec.value["count"] == 2
+
+
+def test_chat_hint_word_is_a_locator_not_a_finding():
+    base = route_case()
+    case = base.model_copy(update={"chat": Case.model_validate(base.model_dump() | {
+        "chat": [{"ts": T0.isoformat(), "from": "driver", "text": "sit down or I lock the doors"},
+                 {"ts": (T0 + timedelta(seconds=30)).isoformat(), "from": "rider", "text": "I cannot find you at the pickup point."}]}).chat})
+    facts = get_chat_facts(case)
+    assert by_id(facts, "chat-1").value["keyword_hint"] == "lock the door"
+    assert by_id(facts, "chat-2").value["keyword_hint"] == "find you"          # the same hint on an ordinary line: the court reads it
+    assert not [f for f in facts if "threat" in (f.value or {})]              # no fact says "threat": that is the judge's finding
     assert not [f for f in facts if f.id.startswith("chat-threat")]
 
 
-def test_chat_threat_summary():
-    case = route_case().model_copy(update={"chat": Case.model_validate(route_case().model_dump() | {
-        "chat": [{"ts": T0.isoformat(), "from": "driver", "text": "sit down or I lock the doors"}]}).chat})
+def test_untimed_message_makes_the_record_incomplete():
+    base = route_case()
+    case = base.model_copy(update={"chat": Case.model_validate(base.model_dump() | {
+        "chat": [{"from": "rider", "text": "Sure, go ahead."}]}).chat})
     facts = get_chat_facts(case)
-    threat = by_id(facts, "chat-threat-1")
-    assert threat.value["threat"] is True and "lock the door" in threat.text
+    assert by_id(facts, "chat-1").value["ts"] is None and "time not recorded" in by_id(facts, "chat-1").text
+    rec = by_id(facts, "chat-record")
+    assert rec.value["complete"] is False and rec.value["untimed"] == 1
 
 
 def test_traffic_band_translation():
@@ -283,7 +299,7 @@ def test_platform_auto_arrival_counts_as_arrival_confirmation():
     cert = evaluate(case, build_fact_table(case))
     i = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(i)"))
     assert i.status == "pass" and "platform auto-arrival" in i.detail
-    assert cert.allowed == ["no_action"]
+    assert cert.allowed == ["no_action", "escalate"]
 
 
 def test_policy_params_override_wait_window_and_fee():
@@ -292,11 +308,11 @@ def test_policy_params_override_wait_window_and_fee():
     base = no_show_case(stop_offset_m=50, wait_s=240)        # 4 min inside the radius
     base = base.model_copy(update={"trip": base.trip.model_copy(update={"driver_pressed_here_at": base.trip.driver_arrived_at})})
     default = evaluate(base, build_fact_table(base))
-    assert default.grace == GRACE_S and default.fee == CANCEL_FEE and default.allowed == ["no_action"]    # 4 min > Ryde's 3 min
+    assert default.grace == GRACE_S and default.fee == CANCEL_FEE and default.allowed == ["no_action", "escalate"]    # 4 min > Ryde's 3 min
     stricter = base.model_copy(update={"policy_params": PolicyParams(free_wait_min=5, cancellation_fee=5.0)})
     cert = evaluate(stricter, build_fact_table(stricter))
     assert cert.grace == 300 and cert.fee == 5.0
-    assert cert.allowed == ["refund_full"] and "5.00" in cert.amount_formula                         # 4 min < the record's 5 min
+    assert cert.allowed == ["refund_full", "escalate"] and "5.00" in cert.amount_formula                         # 4 min < the record's 5 min
     assert any("parameters from the case record" in l for l in cert.lines())
 
 

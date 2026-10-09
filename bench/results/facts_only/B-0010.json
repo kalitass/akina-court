@@ -4,16 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:34:48.003156+00:00",
+ "ts": "2026-10-09T19:19:59.280898+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 4.22,
-  "recommended_action": "Refund SGD 4.22 (3.0 km × $1.41/km metered distance) by Ryde voucher within 30 days; note driver's RD-1 shortest-route breach; no account flag (route upheld count = 0).",
-  "confidence": 0.82,
+  "recommended_action": "Refund $4.22 (unexempt detour mileage 2.99 km × $1.41/km) to the rider's Ryde voucher; note the driver's RD-1 breach (shortest-and-most-direct-route duty) on file; no account flag.",
+  "confidence": 0.72,
   "cited_facts": [
    "F1",
    "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
@@ -24,43 +25,53 @@
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F17",
+   "F18"
   ],
   "cited_policy": [
-   "RD-1",
    "RD-2",
    "RD-3",
-   "RD-4"
+   "RD-4",
+   "RD-5",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F4",
-    "exempt": true,
-    "reason": "Rider named the stop (Paya Lebar Square, F9) and driver agreed before the deviation (F10 12:21 earlier than segment start 12:24), so the route change to reach the requested stop is covered by RD-3(a); the 4 min stationary period F2 coincides with the requested 3–4 min parcel stop."
-   },
-   {
-    "fact_id": "F1",
-    "exempt": false,
-    "reason": "Residual +3.5 km actual-vs-optimal excess [F1] is not explained by traffic: no incidents [F14] and only band-4 (30–39 km/h) readings [F12][F13], which do not meet RD-4(a)/(b); the unexempt portion therefore remains billable to the driver under RD-2."
+    "finding": "counts",
+    "basis": [
+     "F9",
+     "F10",
+     "F11",
+     "F13",
+     "F14",
+     "F15"
+    ],
+    "reason": "Rider named Paya Lebar Square as a stop, but the GPS record shows 4.63 km driven where the optimal route covers 1.64 km (+2.99 km, up to 731 m off route) — the consent in [F9]/[F10] (scoped by RD-5) covers 'a stop', not this route change, and RD-3(a) does not shelter the mileage. Traffic facts [F13][F14] are speed band 4 only, which is corroborative and cannot alone exempt under RD-4(b), and [F15] records no incident on the optimal route, so RD-4 does not apply. Segment counts; amount per RD-2 = 2.99 km × $1.41/km = $4.22."
    }
   ],
   "rejected_claims": [
    {
-    "id": "waiting_fee_refund",
-    "reason": "RydeTAXI metered waiting time is chargeable per RD-3(c) (F6 $1.04, 4.0 min at $0.26/min) for a rider-requested stop."
+    "id": "rider_claim_overcharge",
+    "reason": "Only the unexempt segment's extra mileage is refundable under RD-2; the map-matching residual between the 3.5 km billed excess [F1] and the 2.99 km segment [F4] is not refunded, and the base/time/platform components are the metered fare on the actual route."
    },
    {
-    "id": "full_fare_refund",
-    "reason": "Fare is metered and only the unexempt detour mileage is refundable under RD-2; the requested stop and its waiting time are legitimate."
+    "id": "driver_non_exempt_stop",
+    "reason": "Driver statement [F12] attributes all extra driving to the rider's requested stop, but under RD-5 consent is limited to the named stop; the GPS off-route segment [F4] shows additional unagreed mileage."
+   },
+   {
+    "id": "waiting_fee_refund",
+    "reason": "The $1.04 waiting charge [F6] is meter waiting time for the requested 4-minute stop (F2); RD-3(c) — RydeTAXI waiting time is chargeable and not refunded."
    }
   ],
   "flag_account": false
  },
- "latency_s": 6.29,
- "input_tokens": 8327,
- "output_tokens": 1364,
+ "latency_s": 6.54,
+ "input_tokens": 8953,
+ "output_tokens": 1445,
  "requests": 1,
  "llm_calls": 1
 }

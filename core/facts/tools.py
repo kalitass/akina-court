@@ -45,9 +45,12 @@ SPEED_BANDS: dict[int, tuple[int, Optional[int]]] = {
     5: (40, 49), 6: (50, 59), 7: (60, 69), 8: (70, None),
 }
 
-AGREEMENT_WORDS = ("ok", "okay", "sure", "yes", "yeah", "fine", "agreed", "agree", "alright", "go ahead", "no problem")
-REQUEST_WORDS = ("can you", "could you", "can i", "may i", "ok if", "okay if", "mind if", "please", "stop at", "stop by", "swing by", "wait", "drop me", "pick me", "change", "detour", "go via", "another route")
-THREAT_WORDS = ("threat", "threaten", "kill", "hurt", "hit you", "beat you", "punch", "slap", "lock the door", "lock you", "find you", "shut up", "idiot", "stupid", "harass")
+GPS_GAP_S = 120                 # a hole in the trace longer than this is an evidence gap, not "nothing happened"
+
+# Words that only LOCATE a message for the reader. They never label it: whether a line is agreement, a request or a
+# threat is a reading of its meaning, and readings belong to the court (advocates argue, the judge finds), not to code.
+THREAT_HINT_WORDS = ("threat", "threaten", "kill", "hurt", "hit you", "beat you", "punch", "slap", "lock the door", "lock you",
+                     "find you", "shut up", "idiot", "stupid", "harass", "regret")
 
 
 # ---------------------------------------------------------------------------
@@ -163,17 +166,15 @@ def _detours(points: list[GpsPoint], polyline: list[tuple[float, float]]) -> lis
     return out
 
 
-def _flags(text: str) -> list[str]:
+def keyword_hint(text: str) -> Optional[str]:
+    """The first threat-hint word in a text, or None. A locator for human and judge attention, never a finding."""
     low = text.lower()
-    found = []
-    # "ok" / "sure" count as agreement unless they open a permission question ("ok if I take PIE?")
-    if any(re.search(rf"\b{re.escape(w)}\b(?!\s+if\b)", low) for w in AGREEMENT_WORDS):
-        found.append("agreement")
-    if any(w in low for w in REQUEST_WORDS):
-        found.append("request")
-    if any(w in low for w in THREAT_WORDS):
-        found.append("threat")
-    return found
+    return next((w for w in THREAT_HINT_WORDS if w in low), None)
+
+
+def _gaps(points: list[GpsPoint]) -> list[tuple[GpsPoint, GpsPoint]]:
+    """Consecutive samples more than GPS_GAP_S apart: stretches of the trip the trace does not cover."""
+    return [(a, b) for a, b in zip(points, points[1:]) if _secs(a.ts, b.ts) > GPS_GAP_S]
 
 
 def _load_rates() -> tuple[dict, str]:
@@ -202,6 +203,14 @@ def get_route_facts(case: Case) -> list[Fact]:
     """
     trip, facts = case.trip, []
     pts = _track(case, trip.pickup_at, trip.dropoff_at)
+    if len(pts) < 2:
+        facts.append(Fact(id="gps-missing", source="gps",
+                          text="No GPS trace on record for the trip: route and distance cannot be measured.",
+                          value={"gps_missing": True, "points": len(pts)}))
+    for k, (a, b) in enumerate(_gaps(pts), 1):
+        facts.append(Fact(id=f"gps-gap-{k}", source="gps",
+                          text=f"GPS trace has no samples between {_t(a.ts, True)} and {_t(b.ts, True)} ({_dur(_secs(a.ts, b.ts))}): what happened in that stretch is not on record.",
+                          value={"gps_gap_s": round(_secs(a.ts, b.ts)), "gap_start": a.ts.isoformat(), "gap_end": b.ts.isoformat()}))
     if len(pts) >= 2:
         actual, optimal = _path_km(pts), case.route.total_km
         excess = round(actual - optimal, 2) or 0.0          # `or 0.0` turns -0.0 into 0.0
@@ -254,6 +263,14 @@ def get_no_show_facts(case: Case) -> list[Fact]:
     """
     trip, pk, facts = case.trip, case.trip.pickup, []
     pts = _track(case, trip.accepted_at, trip.cancelled_at)
+    if not pts:
+        facts.append(Fact(id="gps-missing", source="gps",
+                          text="No GPS trace on record between acceptance and cancellation: where the driver was cannot be measured.",
+                          value={"gps_missing": True, "points": 0}))
+    for k, (a, b) in enumerate(_gaps(pts), 1):
+        facts.append(Fact(id=f"gps-gap-{k}", source="gps",
+                          text=f"GPS trace has no samples between {_t(a.ts, True)} and {_t(b.ts, True)} ({_dur(_secs(a.ts, b.ts))}).",
+                          value={"gps_gap_s": round(_secs(a.ts, b.ts)), "gap_start": a.ts.isoformat(), "gap_end": b.ts.isoformat()}))
     if pts:
         dists = [_dist_pt(p, pk.lat, pk.lon) for p in pts]
         i_min = min(range(len(pts)), key=dists.__getitem__)
@@ -329,6 +346,12 @@ def get_no_show_facts(case: Case) -> list[Fact]:
                        "m_from_pickup_at_tap": None if d_tap is None else round(d_tap),
                        "within_200m_after_tap_s": round(cont)},
             ))
+        else:
+            facts.append(Fact(
+                id="tl-here", source="timeline",
+                text="Driver never tapped \"I'm Here\" (driver_pressed_here_at is null).",
+                value={"driver_pressed_here_at": None},
+            ))
         if trip.wait_started_at and trip.wait_expired_at:
             w = _secs(trip.wait_started_at, trip.wait_expired_at)
             facts.append(Fact(
@@ -337,12 +360,6 @@ def get_no_show_facts(case: Case) -> list[Fact]:
                       + (f"; fee applied {_t(trip.fee_applied_at, True)}." if trip.fee_applied_at else ".")),
                 value={"wait_started_at": trip.wait_started_at.isoformat(), "wait_expired_at": trip.wait_expired_at.isoformat(), "wait_window_s": round(w),
                        "fee_applied_at": trip.fee_applied_at.isoformat() if trip.fee_applied_at else None},
-            ))
-        else:
-            facts.append(Fact(
-                id="tl-here", source="timeline",
-                text="Driver never tapped \"I'm Here\" (driver_pressed_here_at is null).",
-                value={"driver_pressed_here_at": None},
             ))
     return facts
 
@@ -390,24 +407,30 @@ def get_fare_facts(case: Case) -> list[Fact]:
 
 
 def get_chat_facts(case: Case) -> list[Fact]:
-    """Chat facts: every in-app message verbatim, numbered, plus the driver's written statement (source: chat).
+    """Chat facts: every in-app message verbatim, numbered and timestamped, plus the driver's written statement (source: chat).
 
-    Each message is tagged with any of [agreement], [request], [threat] found by keyword
-    match; if a threat keyword appears anywhere, one extra summary fact names the message
-    (SAFE-1 trigger). User-submitted content: GEN-1 lets system records override it.
+    Code records who said what and when, and whether the record is complete (every message carries a time). What a
+    message MEANS — agreement, a request, a threat — is not computed here: the advocates argue it and the judge finds
+    it (RD-3, RD-5, SAFE-1). A threat-hint word only marks a line for attention (value["keyword_hint"]); it is not a
+    finding and no rule reads it. User-submitted content: GEN-1 lets system records override it.
     """
-    facts, threats = [], []
+    facts = []
     for i, m in enumerate(case.chat, 1):
-        flags = _flags(m.text)
-        tag = f" [{', '.join(flags)}]" if flags else ""
+        hint = keyword_hint(m.text)
+        when = _t(m.ts) if m.ts else "time not recorded"
         facts.append(Fact(id=f"chat-{i}", source="chat",
-                          text=f"Chat #{i} {_t(m.ts)} {m.sender}{' [call]' if m.kind == 'call' else ''}: “{m.text}”{tag}",
-                          value={"idx": i, "from": m.sender, "ts": m.ts.isoformat(), "flags": flags}))
-        if "threat" in flags:
-            threats.append((i, m))
+                          text=f"Chat #{i} {when} {m.sender}{' [call]' if m.kind == 'call' else ''}: “{m.text}”",
+                          value={"idx": i, "from": m.sender, "ts": m.ts.isoformat() if m.ts else None, "kind": m.kind,
+                                 **({"keyword_hint": hint} if hint else {})}))
+    untimed = sum(1 for m in case.chat if m.ts is None)
     if not case.chat:
         facts.append(Fact(id="chat-none", source="chat", text="No in-app chat messages between rider and driver.",
-                          value={"count": 0}))
+                          value={"count": 0, "complete": True, "untimed": 0}))
+    else:
+        facts.append(Fact(id="chat-record", source="chat",
+                          text=(f"Chat record: {len(case.chat)} message(s), every one timestamped." if not untimed else
+                                f"Chat record: {len(case.chat)} message(s), {untimed} without a timestamp — whether they came before or after the events in dispute is not on record."),
+                          value={"count": len(case.chat), "complete": untimed == 0, "untimed": untimed}))
     calls = [m for m in case.chat if m.kind == "call"]
     if calls:
         by = {s: sum(1 for m in calls if m.sender == s) for s in ("driver", "rider")}
@@ -415,17 +438,11 @@ def get_chat_facts(case: Case) -> list[Fact]:
         facts.append(Fact(id="chat-calls", source="chat",
                           text=f"Call attempts logged in the chat: driver {by['driver']}, rider {by['rider']}; messages sent: driver {replies['driver']}, rider {replies['rider']}.",
                           value={"calls_driver": by["driver"], "calls_rider": by["rider"], "messages_driver": replies["driver"], "messages_rider": replies["rider"]}))
-    for i, m in threats:
-        kw = next(w for w in THREAT_WORDS if w in m.text.lower())
-        facts.append(Fact(id=f"chat-threat-{i}", source="chat",
-                          text=f"Threat keywords detected in {m.sender} message #{i} at {_t(m.ts)} (“{kw}”).",
-                          value={"threat": True, "idx": i, "from": m.sender, "keyword": kw}))
     if case.driver_statement:
-        flags = _flags(case.driver_statement)
-        tag = f" [{', '.join(flags)}]" if flags else ""
+        hint = keyword_hint(case.driver_statement)
         facts.append(Fact(id="chat-driver-statement", source="chat",
-                          text=f"Driver statement: “{case.driver_statement}”{tag}",
-                          value={"from": "driver", "flags": flags}))
+                          text=f"Driver statement (written after the trip, not part of the chat): “{case.driver_statement}”",
+                          value={"from": "driver", "statement": True, **({"keyword_hint": hint} if hint else {})}))
     return facts
 
 

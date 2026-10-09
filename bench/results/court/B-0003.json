@@ -4,15 +4,16 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:37:51.841544+00:00",
+ "ts": "2026-10-09T19:46:58.188056+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 7.26,
-  "recommended_action": "Issue a Ryde voucher of $7.26 (RD-2 meter-unit refund for the unexempted 5.15 km deviation) to the rider and log the driver's RD-1 breach on the trip record; no account flag on the current record.",
-  "confidence": 0.86,
+  "recommended_action": "Uphold the route-deviation claim: issue the rider a Ryde voucher for $7.26 (RD-2), the meter distance attributable to the unexempted 14:27–14:37 segment; record the RD-1 breach on the driver's file but take no account action (RD-6 threshold not met).",
+  "confidence": 0.9,
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -21,9 +22,11 @@
    "F8",
    "F9",
    "F10",
+   "F11",
    "F12",
+   "F13",
    "F14",
-   "F15"
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -32,41 +35,53 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Off-route segment 14:27-14:37 adding 5.15 km. Not exempt under RD-5: the driver's route-change request (14:29) and the rider's agreement (14:30) both came after the segment began at 14:27 [F7][F8][F3][RD-5]. Not exempt under RD-4: no incident on the replaced optimal stretch [F12] and AYE band 4 (30-39 km/h) is neither band 1-2 severe congestion nor sufficient alone [F10][RD-4]. Not an RD-3 rider-named stop [F7][RD-3]. Falls to RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8",
+     "F9",
+     "F10"
+    ],
+    "reason": "The driver named the West Coast Highway routing only at 14:29 [F7] and the rider's \"Sure, go ahead.\" came at 14:30 [F8], both after the segment began at 14:27 [F3]; the chat record is complete and fully timestamped [F9], so RD-5's 'before the segment started' test fails and the record holds no rider agreement before 14:27 — the finding is counts, not undetermined. The driver's post-trip assertion of oral agreement [F10] is not a rider message and is no consent (RD-5, G11). No traffic exemption applies: no incident near the route [F13] and only band 4 / band 5 speeds [F11][F12], which cannot exempt standing alone (RD-4). No rider-named stop exists (RD-3)."
+   },
+   {
+    "fact_id": "F3",
+    "finding": "counts",
+    "basis": [
+     "F6"
+    ],
+    "reason": "RD-3 is not engaged: no stop was measured within the 14:27–14:37 segment, no rider message names a place, and no waiting fee was charged (waiting $0.00) [F6], so the extra kilometres of the segment are not excused as a rider-requested stop [RD-3]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted only in frame: the trip is RydeTAXI so excess mileage flows into the fare [F6][RD-2], but recovery is limited to the unexempted segment's meter units (5.15 km), not the +5.9 km / +69% headline total; the $8.35 excess-distance billing is not the refundable figure [F1][F4][F3][RD-2]."
+    "id": "C8",
+    "reason": "The request for an account-review flag fails on its own terms: the driver's 90-day profile shows route disputes upheld = 0 and only 1 upheld dispute of any type [F16], so RD-6's route_disputes_upheld_90d ≥ 1 condition is not met; a profile fact also cannot alone decide the case [RD-6]. The rider advocate withdrew this claim in rebuttal."
    },
    {
-    "id": "C6",
-    "reason": "RD-6 requires route_disputes_upheld_90d of at least 1; the driver's single upheld dispute is not a route dispute (F15, route: 0), so the repeated-breach trigger is not met and no account flag is warranted [F15][RD-6]."
-   },
-   {
-    "id": "D2",
-    "reason": "The bare fact of the exchange is accepted [F7][F8][F9], but it does not exempt the segment: RD-5 requires the agreement to precede leaving the optimal route, and 14:30 post-dates the 14:27 segment start [F8][F3][RD-5]."
+    "id": "D1",
+    "reason": "The driver advocate's framing that the 14:30 \"Sure, go ahead.\" [F8] could bear on the earlier part of the segment is withdrawn and, in any event, fails RD-5's 'before the segment started' test because the segment began at 14:27 [F3] and the reply came at 14:30 [F8]; RD-2 therefore refunds the segment's extra kilometres [F3][F4][RD-2]."
    },
    {
     "id": "D4",
-    "reason": "Accepted and applied: no qualifying incident [F12] and band 4 alone cannot exempt [F10], so there is no RD-4 exemption; the segment is charged to the driver under RD-2 [F3][RD-4]."
+    "reason": "The congestion evidence is at most corroborative and cannot exempt the segment: no incident is recorded near the route [F13] and the bands are 4 and 5 [F11][F12], not band 1 or 2, so RD-4(b) standing alone does not exempt [RD-4]."
    },
    {
     "id": "D7",
-    "reason": "Accepted as to the account action: with route_disputes_upheld_90d = 0 (the upheld dispute not being a route dispute) [F15], RD-6's repeated-breach condition fails and no flag_account issues [RD-6]; the driver's rating and trip volume are profile facts that do not decide the deviation itself [F15][RD-1]."
+    "reason": "The driver's position that no flag should attach is accepted only as to the account action: the profile shows route disputes upheld = 0 [F16], so RD-6's threshold is not met and no flag_account follows; this does not disturb the substantive RD-1/RD-2 finding [F3][RD-1][RD-2]."
    },
    {
-    "id": "D8",
-    "reason": "The rider's 90-day record of 2 disputes with 0 upheld is a profile fact [F14]; profiles never decide a case, and the outcome turns on the GPS segment and the traffic record [F3][F12][RD-1]."
+    "id": "C3",
+    "reason": "Reliance on F10 as anything other than the driver's own after-the-fact assertion is rejected: it is not a rider message and cannot be consent under RD-5/G11; the driver advocate also withdrew reliance on it [F10][RD-5]."
    }
   ],
   "flag_account": false
@@ -74,10 +89,11 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 7.26,
-  "recommended_action": "Issue a Ryde voucher of $7.26 (RD-2 meter-unit refund for the unexempted 5.15 km deviation) to the rider and log the driver's RD-1 breach on the trip record; no account flag on the current record.",
-  "confidence": 0.86,
+  "recommended_action": "Uphold the route-deviation claim: issue the rider a Ryde voucher for $7.26 (RD-2), the meter distance attributable to the unexempted 14:27–14:37 segment; record the RD-1 breach on the driver's file but take no account action (RD-6 threshold not met).",
+  "confidence": 0.9,
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -86,9 +102,11 @@
    "F8",
    "F9",
    "F10",
+   "F11",
    "F12",
+   "F13",
    "F14",
-   "F15"
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -97,41 +115,53 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Off-route segment 14:27-14:37 adding 5.15 km. Not exempt under RD-5: the driver's route-change request (14:29) and the rider's agreement (14:30) both came after the segment began at 14:27 [F7][F8][F3][RD-5]. Not exempt under RD-4: no incident on the replaced optimal stretch [F12] and AYE band 4 (30-39 km/h) is neither band 1-2 severe congestion nor sufficient alone [F10][RD-4]. Not an RD-3 rider-named stop [F7][RD-3]. Falls to RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8",
+     "F9",
+     "F10"
+    ],
+    "reason": "The driver named the West Coast Highway routing only at 14:29 [F7] and the rider's \"Sure, go ahead.\" came at 14:30 [F8], both after the segment began at 14:27 [F3]; the chat record is complete and fully timestamped [F9], so RD-5's 'before the segment started' test fails and the record holds no rider agreement before 14:27 — the finding is counts, not undetermined. The driver's post-trip assertion of oral agreement [F10] is not a rider message and is no consent (RD-5, G11). No traffic exemption applies: no incident near the route [F13] and only band 4 / band 5 speeds [F11][F12], which cannot exempt standing alone (RD-4). No rider-named stop exists (RD-3)."
+   },
+   {
+    "fact_id": "F3",
+    "finding": "counts",
+    "basis": [
+     "F6"
+    ],
+    "reason": "RD-3 is not engaged: no stop was measured within the 14:27–14:37 segment, no rider message names a place, and no waiting fee was charged (waiting $0.00) [F6], so the extra kilometres of the segment are not excused as a rider-requested stop [RD-3]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted only in frame: the trip is RydeTAXI so excess mileage flows into the fare [F6][RD-2], but recovery is limited to the unexempted segment's meter units (5.15 km), not the +5.9 km / +69% headline total; the $8.35 excess-distance billing is not the refundable figure [F1][F4][F3][RD-2]."
+    "id": "C8",
+    "reason": "The request for an account-review flag fails on its own terms: the driver's 90-day profile shows route disputes upheld = 0 and only 1 upheld dispute of any type [F16], so RD-6's route_disputes_upheld_90d ≥ 1 condition is not met; a profile fact also cannot alone decide the case [RD-6]. The rider advocate withdrew this claim in rebuttal."
    },
    {
-    "id": "C6",
-    "reason": "RD-6 requires route_disputes_upheld_90d of at least 1; the driver's single upheld dispute is not a route dispute (F15, route: 0), so the repeated-breach trigger is not met and no account flag is warranted [F15][RD-6]."
-   },
-   {
-    "id": "D2",
-    "reason": "The bare fact of the exchange is accepted [F7][F8][F9], but it does not exempt the segment: RD-5 requires the agreement to precede leaving the optimal route, and 14:30 post-dates the 14:27 segment start [F8][F3][RD-5]."
+    "id": "D1",
+    "reason": "The driver advocate's framing that the 14:30 \"Sure, go ahead.\" [F8] could bear on the earlier part of the segment is withdrawn and, in any event, fails RD-5's 'before the segment started' test because the segment began at 14:27 [F3] and the reply came at 14:30 [F8]; RD-2 therefore refunds the segment's extra kilometres [F3][F4][RD-2]."
    },
    {
     "id": "D4",
-    "reason": "Accepted and applied: no qualifying incident [F12] and band 4 alone cannot exempt [F10], so there is no RD-4 exemption; the segment is charged to the driver under RD-2 [F3][RD-4]."
+    "reason": "The congestion evidence is at most corroborative and cannot exempt the segment: no incident is recorded near the route [F13] and the bands are 4 and 5 [F11][F12], not band 1 or 2, so RD-4(b) standing alone does not exempt [RD-4]."
    },
    {
     "id": "D7",
-    "reason": "Accepted as to the account action: with route_disputes_upheld_90d = 0 (the upheld dispute not being a route dispute) [F15], RD-6's repeated-breach condition fails and no flag_account issues [RD-6]; the driver's rating and trip volume are profile facts that do not decide the deviation itself [F15][RD-1]."
+    "reason": "The driver's position that no flag should attach is accepted only as to the account action: the profile shows route disputes upheld = 0 [F16], so RD-6's threshold is not met and no flag_account follows; this does not disturb the substantive RD-1/RD-2 finding [F3][RD-1][RD-2]."
    },
    {
-    "id": "D8",
-    "reason": "The rider's 90-day record of 2 disputes with 0 upheld is a profile fact [F14]; profiles never decide a case, and the outcome turns on the GPS segment and the traffic record [F3][F12][RD-1]."
+    "id": "C3",
+    "reason": "Reliance on F10 as anything other than the driver's own after-the-fact assertion is rejected: it is not a rider message and cannot be consent under RD-5/G11; the driver advocate also withdrew reliance on it [F10][RD-5]."
    }
   ],
   "flag_account": false
@@ -140,12 +170,12 @@
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0003.record.json",
- "latency_s": 27.33,
- "input_tokens": 96413,
- "output_tokens": 7852,
- "requests": 10,
+ "latency_s": 24.64,
+ "input_tokens": 89191,
+ "output_tokens": 7866,
+ "requests": 9,
  "llm_calls": 6
 }

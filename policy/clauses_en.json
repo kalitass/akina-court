@@ -1,896 +1,930 @@
 [
- {
-  "id": "PREMISE",
-  "group": "premise",
-  "title": "Ryde fare model premise",
-  "rule_en": "Non-metered services (RydeX / XL / LUXE / FLASH / POOL / PET): the fare is quoted once at booking from the pick-up and drop-off points, and distance changes during the trip do not change it; after the trip only published surcharges may be added (ERP/tolls, $5 waiting fee, $3 edit-destination fee, cancellation fee). RydeTAXI: charged by the meter of the taxi company that owns the taxi (\"Key in the fare as indicated on your meter\"); LTA publishes the meter structure as distance units (every 400 m / 350 m) plus waiting-time units (every 45 s), so detour distance goes straight into the fare. The \"extra charge\" in the RD group is therefore computed differently per service type (see RD-2).",
-  "citable": false,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A7",
-    "what": "Ryde Help Centre: suggested route articles (driver and rider side)",
-    "quote": "The trip fare is fixed based on pick-up and drop-off points."
-   },
-   {
-    "id": "A8",
-    "what": "Ryde Help Centre: ERP/toll overcharge; surcharges",
-    "quote": "Fares quoted for our services are generally fixed, except for RydeTAXI."
-   },
-   {
-    "id": "A18",
-    "what": "Ryde Help Centre: RydeTAXI meter and other confirmed facts",
-    "quote": "all fees for Standard and/or Premium taxis follow that of the respective taxi company"
-   },
-   {
-    "id": "B5",
-    "what": "LTA: Taxi Fares and Payment Methods (meter structure)",
-    "quote": "26 cents every 400m (1km - 10km) 26 cents every 350m (above 10km) 26 cents for every 45 sec of waiting time"
-   },
-   {
-    "id": "B6",
-    "what": "PTC: Point-to-point transport fares",
-    "quote": "Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company"
-   }
-  ],
-  "notes_en": "Section 0 of the policy. It is a premise for the RD and FARE groups, not a clause the judge cites.",
-  "summary_en": "Fixed-fare services never change price with distance; RydeTAXI runs on the taxi meter, so detour kilometres cost money. That is why detours are refunded differently."
- },
- {
-  "id": "RD-1",
-  "group": "route_deviation",
-  "title": "driver must take the direct route",
-  "rule_en": "Every \"off-route segment\" in the fact table (a stretch that leaves the optimal route and adds distance; gps-detour-* facts) is one detour, and each is reviewed separately under RD-3 / RD-4 / RD-5; a segment that no clause excuses is an unexcused detour segment. This clause sets no percentage or absolute-kilometre threshold: the driver's duty is to take the shortest and most direct route in the absence of reasonable cause, so any unexplained deviation breaches that duty. The fact tool's discarding of matched noise under 0.2 km is a data-layer parameter (core/facts/tools.py), not a policy threshold.",
-  "citable": true,
-  "source_kind": "Derived from",
-  "sources": [
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
-    "quote": "in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger ... by the shortest and most direct route"
-   },
-   {
-    "id": "B2",
-    "what": "LTA vocational licence demerit points schedule, item 16 (3 points)",
-    "quote": "Failing, without reasonable cause, to proceed to destination named by a passenger by shortest and most direct route | Rule 23(1)(c) PSVC | 3"
-   },
-   {
-    "id": "C2",
-    "what": "Grab SG driver Code of Conduct",
-    "quote": "ensure that the shortest and most direct route is taken"
-   },
-   {
-    "id": "C4",
-    "what": "CDG Zig Help Centre: choosing a preferred route",
-    "quote": "the driver is obligated to follow the most direct route ... in accordance with the Road Traffic Act"
-   },
-   {
-    "id": "D1",
-    "what": "NYC TLC Rules Chapter 80, s.80-16(a)(2)",
-    "quote": "shortest reasonable route"
-   },
-   {
-    "id": "A7",
-    "what": "Ryde Help Centre: suggested route articles",
-    "quote": "you may decide to take the fastest or most efficient route based on your GPS"
-   }
-  ],
-  "notes_en": "Ryde itself only says the driver may take the fastest or most efficient route by GPS (A7) and publishes no detour threshold (gap G1).",
-  "summary_en": "Any unexplained stretch off the shortest route is a detour. No percentage or kilometre threshold: the driver's duty is the most direct route."
- },
- {
-  "id": "RD-2",
-  "group": "route_deviation",
-  "title": "refund for extra kilometres",
-  "rule_en": "An unexcused detour segment exists. RydeTAXI: refund_partial, amount = sum of the unexcused segments' extra_km x this trip's per-kilometre rate (fare.distance_fare / fare.distance_km), rounded to the cent; only distance units are refunded, stop waiting time is handled under RD-3, and the distance difference outside the unexcused segments (fare-excess minus the sum of the segments, a map-matching residual of 0.25 km or less) is not refunded. Non-metered services: the fare is a fixed price unaffected by distance, so only ERP/tolls incurred on the unexcused segments and any unpublished item the driver added manually after the trip are refunded (folded into FARE-1). Refundable amount of 0: no_action, but the driver's breach of the RD-1 duty is recorded.",
-  "citable": true,
-  "source_kind": "Derived from",
-  "sources": [
-   {
-    "id": "B5",
-    "what": "LTA: Taxi Fares and Payment Methods (meter accumulates by distance unit)",
-    "quote": "26 cents every 400m (1km - 10km)"
-   },
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
-    "quote": "by the shortest and most direct route"
-   },
-   {
-    "id": "B4",
-    "what": "LTA news release: enforcement against errant taxi drivers (12/21 demerit points for fares above the meter)",
-    "quote": "Collected a fare that is less than $20 above the metered fare $500 12"
-   },
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards",
-    "quote": "Drivers who are found to have overcharged riders ... may face account suspension"
-   },
-   {
-    "id": "A11",
-    "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
-    "quote": "Overcharging of additional fees"
-   },
-   {
-    "id": "D3",
-    "what": "Uber: upfront price changes / final fare higher than estimate",
-    "quote": "We are happy to review these cases if you feel you were overcharged."
-   },
-   {
-    "id": "A8",
-    "what": "Ryde Help Centre: ERP/toll charged as incurred",
-    "quote": "there may be additional charges such as tolls that could occur during your trip"
-   },
-   {
-    "id": "B6",
-    "what": "PTC: additional fees must be published",
-    "quote": "additional stop charge, waiting time charge and other fees must be published"
-   }
-  ],
-  "notes_en": "The refund formula itself is not published by Ryde (gap G5); it is derived from the LTA meter structure. The Ryde first-hand parts are only that overcharging is a violation (A10/A11) and that ERP is charged as incurred (A8).",
-  "summary_en": "On a metered taxi, the extra kilometres of an unexcused detour are refunded at the trip's per-km rate. On a fixed fare, only the tolls incurred on the detour."
- },
- {
-  "id": "RD-3",
-  "group": "route_deviation",
-  "title": "rider-requested stop",
-  "rule_en": "A stop or route change requested by the rider (proposed in chat and accepted by the driver, or an in-app edit-destination / add-stop request accepted by the driver). (a) The rider named the place, or did not name one but the driver's chosen stop lies along the optimal route (no gps-detour-* segment): the segment is not a detour. (b) The rider did not name a place, the driver chose one that produces an off-route segment and did not tell the rider that place beforehand: the segment's extra_km is not excused by the rider's stop request (the rider agreed to \"a stop\", not to that route change; the scope of consent is judged under RD-5), while the stop duration is still handled under (c). (c) Stop duration: RydeTAXI charges meter waiting-time units as recorded (fact fare-wait), not refunded; non-metered services: the only waiting fee Ryde publishes is the $5 at the pick-up point, there is no published charge for stops during the trip, so none may be charged; when an in-app destination change takes effect only the published $3.00 is added (RydeTAXI / multi-stop / POOL do not support in-app destination changes and can only agree one with the driver in chat).",
-  "citable": true,
-  "source_kind": "Derived from",
-  "sources": [
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c): duty runs to the destination named by the passenger",
-    "quote": "proceed to the destination named by a passenger"
-   },
-   {
-    "id": "D1",
-    "what": "NYC TLC Rules Chapter 80, s.80-16(a)(1)",
-    "quote": "comply with all reasonable and lawful routing requests of the Passenger"
-   },
-   {
-    "id": "C4",
-    "what": "CDG Zig Help Centre: metered bookings",
-    "quote": "passengers have the option to select the route upon boarding"
-   },
-   {
-    "id": "C2",
-    "what": "Grab SG driver Code of Conduct",
-    "quote": "Changing route without passenger's permission"
-   },
-   {
-    "id": "B5",
-    "what": "LTA: taxi meter waiting-time unit",
-    "quote": "26 cents for every 45 sec of waiting time"
-   },
-   {
-    "id": "C6",
-    "what": "ComfortDelGro Taxi fares",
-    "quote": "Every 45 seconds of waiting or less"
-   },
-   {
-    "id": "A18",
-    "what": "Ryde Help Centre: RydeTAXI is charged by the meter",
-    "quote": "Key in the fare as indicated on your meter."
-   },
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee (only the $5 pick-up waiting fee is published)",
-    "quote": "Riders may be charged a Waiting Time Fee of $5 at the end of the trip"
-   },
-   {
-    "id": "B6",
-    "what": "PTC: Point-to-point transport fares",
-    "quote": "waiting time charge and other fees must be published"
-   },
-   {
-    "id": "A9",
-    "what": "Ryde Help Centre: edit destination fee; RydeTAXI / POOL / multi-stop excluded",
-    "quote": "a $3.00 add/edit destination fee will apply"
-   }
-  ],
-  "notes_en": "(a) and (b) are derived; (c) mixes Ryde first-hand text (A1, A9, A18) with a derivation from B6. Whether in-trip stops on a non-metered trip may be charged at all is gap G6.",
-  "summary_en": "A stop the rider asked for is not a detour. If the driver chose a far-off stop without telling the rider, that extra distance still counts."
- },
- {
-  "id": "RD-4",
-  "group": "route_deviation",
-  "title": "reroute justified by traffic or an incident",
-  "rule_en": "The driver claims a reroute because of a road closure, accident or severe congestion (\"reasonable cause\"): a traffic fact must support it, and the support must concern the stretch of the optimal route that was replaced. (a) traffic-incident-*: an LTA DataMall incident (Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic or another DataMall type) lies on the optimal route (m_from_route within the 300 m data-layer matching radius), its reported_at is earlier than the start of that detour segment and it is still listed within the trip window: the segment is excused, no_action (for that segment). (b) traffic-band-*: a road on the optimal route recorded at speed band 1 or 2 (LTA definitions 0 < 9 km/h and 10 < 19 km/h) with a time window covering the segment: counts as support for (a); whether a band alone is enough to excuse a segment awaits Ryde's confirmation (gap G3), and the MVP does not excuse on a band alone. (c) No (a): the segment is handled under RD-2.",
-  "citable": true,
-  "source_kind": "Derived from",
-  "sources": [
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c): the reasonable-cause exception",
-    "quote": "in the absence of any reasonable cause to do otherwise"
-   },
-   {
-    "id": "B7",
-    "what": "LTA DataMall API User Guide v6.9: speed bands and traffic incidents",
-    "quote": "SpeedBand ... 1 - indicates speed range from 0 < 9 2 - indicates speed range from 10 < 19"
-   },
-   {
-    "id": "A7",
-    "what": "Ryde Help Centre: suggested route articles",
-    "quote": "you may decide to take the fastest or most efficient route based on your GPS"
-   }
-  ],
-  "notes_en": "Ryde only allows drivers to take the fastest or most efficient route by GPS (A7) and says nothing about how a reroute is evidenced.",
-  "summary_en": "A reroute is excused only when an LTA-reported incident sat on the route before the detour began. A slow-speed band alone is not enough."
- },
- {
-  "id": "RD-5",
-  "group": "route_deviation",
-  "title": "rider agreed to the route beforehand",
-  "rule_en": "The chat log shows the driver proposed the route change before leaving the optimal route and the rider explicitly agreed: the segment matching that route change is not a detour (no_action for that segment). \"Before\" means the timestamp of the rider's consent message is earlier than the start of that gps-detour-* segment. If the driver informed the rider only after rerouting, the rider did not reply, or the consent does not cover that segment (for example agreeing only to \"take the PIE\", not to a trip to a distant convenience store): the segment is not treated as agreed.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A7",
-    "what": "Ryde Help Centre: Can I suggest my preferred route to the driver?",
-    "quote": "reach a mutual agreement before you go"
-   },
-   {
-    "id": "C2",
-    "what": "Grab SG driver Code of Conduct",
-    "quote": "Discuss and agree with the user before taking an alternative route"
-   }
-  ],
-  "notes_en": "That informing the rider after the reroute does not count as consent is a direct inference from \"before you go\" (A7) and \"before taking\" (C2).",
-  "summary_en": "If the driver proposed the route in chat and the rider agreed before leaving it, that stretch is not a detour. Agreement after the fact does not count."
- },
- {
-  "id": "RD-6",
-  "group": "route_deviation",
-  "title": "repeat offender: account flag",
-  "rule_en": "The case is upheld against the driver (an RD-2 refund above 0, or an RD-1 breach recorded) and the profile shows route_disputes_upheld_90d >= 1 (an upheld route-deviation dispute already in the last 90 days, so this case makes it \"repeated\"): the ruling adds flag_account (referral to Ryde account review). Profile facts may only ground this added action; they may not on their own decide that the detour in this case is established.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards",
-    "quote": "Repeated or severe breaches may lead to permanent suspension from the Ryde platform"
-   },
-   {
-    "id": "A11",
-    "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
-    "quote": "Unusual trip patterns"
-   },
-   {
-    "id": "B2",
-    "what": "LTA vocational licence demerit points schedule (3 points per detour)",
-    "quote": "Failing, without reasonable cause, to proceed to destination named by a passenger by shortest and most direct route | 3"
-   },
-   {
-    "id": "B4",
-    "what": "LTA news release: 6 points suspends, 21 points revokes a vocational licence",
-    "quote": "an accumulation of 6 demerit points or more would result in the suspension of the vocational licence, while 21 demerit points or more would result in the revocation"
-   }
-  ],
-  "notes_en": "How \"repeated\" is counted and the 90-day window are not published by Ryde (gap G4); B2/B4 are the LTA sanction scale, cited as derivation.",
-  "summary_en": "A driver with an upheld route dispute in the last 90 days gets an account-review flag on top of the ruling. History alone never decides the case."
- },
- {
-  "id": "NS-0",
-  "group": "no_show",
-  "title": "when a cancellation fee applies",
-  "rule_en": "The $6.61 cancellation fee can stand only in one of the two situations Ryde publishes, branching on cancelled_by; the other NS clauses are reached only through this one. cancelled_by = rider: on-demand trips see NS-4, advance bookings see NS-5. cancelled_by = driver and the driver claims a rider no-show: NS-1 / NS-2; the driver cancels for another reason: NS-3. A waiting-fee dispute after a completed trip: NS-6. The cancellation policy applies to all services except RydeTAXI; the dispute deadline and refund form are in NS-7.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee",
-    "quote": "Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses \"I'm Here\", waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip"
-   },
-   {
-    "id": "A18",
-    "what": "Ryde Help Centre: cancellation policy scope",
-    "quote": "Cancellation Policy applies to all Service Types* ... *All services except RydeTAXI"
-   },
-   {
-    "id": "A16",
-    "what": "Ryde Terms of Use",
-    "quote": "If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "The $6.61 cancellation fee exists only in the two situations Ryde publishes. This clause routes the case to the right one."
- },
- {
-  "id": "NS-1",
-  "group": "no_show",
-  "title": "driver waited 3 min at pickup after \"I'm Here\"",
-  "rule_en": "The driver cancelled for a rider no-show and all of the following hold: (i) the driver pressed \"I'm Here\"; (ii) at the press and throughout the wait, GPS places the driver at the pick-up point (gps-nearest within_200m is true; 200 m is a data-layer parameter, see gap G2); (iii) the driver waited at the pick-up point for more than 3 minutes (at least 3:01; gps-within within_200m_s > 180). Then the rider's $6.61 cancellation fee stands ($4.50 of it goes to the driver), no_action.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee",
-    "quote": "The driver presses \"I'm Here\", waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)"
-   },
-   {
-    "id": "A3",
-    "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
-    "quote": "Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"
-   },
-   {
-    "id": "A2",
-    "what": "Ryde Help Centre: Cancellation and Waiting Time Policy (driver side)",
-    "quote": "Driver will receive a Cancellation Fee of $4.50* if: Rider cancels after 3 minutes of matching."
-   },
-   {
-    "id": "A5",
-    "what": "Ryde Help Centre: How the Cancellation Fee works",
-    "quote": "Drivers will receive a $4.50 cancellation fee automatically if they cancel after >3 minutes of waiting."
-   }
-  ],
-  "notes_en": "Ryde does not publish the distance that counts as \"at the pick-up location\" (gap G2).",
-  "summary_en": "The fee stands if the driver tapped I'm Here while at the pick-up point and waited there more than 3 minutes."
- },
- {
-  "id": "NS-2",
-  "group": "no_show",
-  "title": "no-show not proven: fee refunded",
-  "rule_en": "The driver cancelled for a rider no-show but any one of NS-1 (i)(ii)(iii) fails (no \"I'm Here\" press; GPS shows the driver never entered the pick-up radius or was outside it when pressing \"I'm Here\"; waited 3 minutes or less inside the radius): the $6.61 cancellation fee is refunded in full, refund_full. If the driver pressed \"I'm Here\" while GPS shows them away from the pick-up point (tl-here has a value and gps-nearest.within_200m is false): flag_account is added (Ryde lists abuse of the cancellation and waiting buttons as fraud).",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A3",
-    "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
-    "quote": "Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled."
-   },
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards (fraud list)",
-    "quote": "Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees ... Abuse of Cancellation and Waiting Fee Policy"
-   },
-   {
-    "id": "A11",
-    "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
-    "quote": "Abuse of the cancellation and waiting time button"
-   },
-   {
-    "id": "C1",
-    "what": "Grab SG cancellation policy (same structure)",
-    "quote": "You will not be charged the $4 cancellation fee if any of the above are not fulfilled."
-   },
-   {
-    "id": "C5",
-    "what": "ComfortDelGro Taxi cancellation policy 2025 (same structure)",
-    "quote": "Is at the pick-up location according to GPS data Has waited more than 5 mins"
-   }
-  ],
-  "notes_en": "A3 calls the $6.61 a \"Waiting Time Fee\"; sources.md records this as a Ryde typo (the $6.61 is the cancellation fee). C1/C5 are cited only to show the same rule shape at other operators.",
-  "summary_en": "If any of those three things is missing, the fee is refunded. Tapping I'm Here while away from the pick-up also flags the driver's account."
- },
- {
-  "id": "NS-3",
-  "group": "no_show",
-  "title": "driver cancelled: no fee",
-  "rule_en": "The driver cancelled without claiming a rider no-show (or claimed one but NS-1 is not met): the rider owes no cancellation fee; if one was charged, refund_full. On the driver's side the cancellation counts toward the cancellation rate; a rate above 17.5% leads Ryde to suspend the account (an account action, not this case's ruling; flag_account may be added).",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A13",
-    "what": "Ryde Code of Conduct",
-    "quote": "Refusing or cancelling a trip without a valid reason at pick-up may result in account action."
-   },
-   {
-    "id": "A16",
-    "what": "Ryde Terms of Use: cancellation terms for partners",
-    "quote": "the cancellation shall be based on acceptable cancellation reasons as shown in the Application"
-   },
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards",
-    "quote": "Cancellation Rate (CR) > 17.5%"
-   },
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.25",
-    "quote": "No taxi driver shall, without reasonable excuse, refuse to hire out his taxi or convey any passenger"
-   },
-   {
-    "id": "B2",
-    "what": "LTA demerit points schedule, item 10 (6 points, taxis)",
-    "quote": "Refusing, without reasonable excuse, to hire out taxi or to convey passenger | Rule 25 PSVC | 6"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "When the driver cancels for any other reason, the rider pays nothing."
- },
- {
-  "id": "NS-4",
-  "group": "no_show",
-  "title": "3-minute free-cancel window",
-  "rule_en": "On-demand trip cancelled by the rider: within 3 minutes of matching (3:00 or less), no fee; more than 3 minutes after matching, the $6.61 cancellation fee stands, no_action. Ryde has not published a \"free cancellation if the driver is later than the ETA\" rule (see NS-8), so the driver not having arrived yet is not a ground for a free cancellation; the rider's remedy is the manual appeal under NS-7.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee",
-    "quote": "All cancellations made within 3 minutes of matching are not chargeable."
-   },
-   {
-    "id": "A2",
-    "what": "Ryde Help Centre: Cancellation and Waiting Time Policy (driver side)",
-    "quote": "Rider cancels after 3 minutes of matching."
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "A rider may cancel free within 3 minutes of matching; after that the fee applies. A late driver is not a free-cancel reason at Ryde."
- },
- {
-  "id": "NS-5",
-  "group": "no_show",
-  "title": "advance-booking cancellation (not in this data)",
-  "rule_en": "Advance bookings: the rider cancels more than 15 minutes before the scheduled time, no fee; cancels within 15 minutes, the cancellation fee stands; if the driver accepted the booking only after the 15-minute mark before the scheduled time, the rider has a 3-minute free-cancellation period from matching.",
-  "citable": false,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee (advance bookings)",
-    "quote": "All cancellations made > 15 minutes before the scheduled trip time are not chargeable ... If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period"
-   }
-  ],
-  "notes_en": "Informational: the dataset has no advance-booking field, so the judge may not cite it.",
-  "summary_en": "Advance bookings: free cancellation more than 15 minutes before the scheduled time. Not in this data set."
- },
- {
-  "id": "NS-6",
-  "group": "no_show",
-  "title": "waiting-fee conditions",
-  "rule_en": "The $5.00 waiting fee stands only if: the driver pressed \"I'm Here\"; GPS places the driver at the pick-up point (as in NS-1 (ii)); the rider boarded after a wait of more than 3 minutes and the trip was completed; and the driver pressed the waiting-fee button during the trip (at drop-off). If any condition fails: fee_waived (the $5.00 is refunded).",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee",
-    "quote": "Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses \"I'm Here\", waits for > 3 minutes for the rider to board, and continues the trip"
-   },
-   {
-    "id": "A3",
-    "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
-    "quote": "Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"
-   },
-   {
-    "id": "A5",
-    "what": "Ryde Help Centre: How the Waiting Fee works",
-    "quote": "Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off."
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "The $5 waiting fee needs I'm Here at the pick-up, a wait over 3 minutes, a completed trip, and the fee button tapped during the trip."
- },
- {
-  "id": "NS-7",
-  "group": "no_show",
-  "title": "30-day dispute window",
-  "rule_en": "A cancellation-fee or waiting-fee dispute must be raised within 30 days of the trip; later, no_action. An upheld refund is issued as a Ryde voucher (cancellation fee $6.61 / waiting fee $5.00), not in cash; Ryde keeps final discretion over refunds, so the court's ruling is a recommendation.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A4",
-    "what": "Ryde Help Centre: Cancellation Fee / Waiting Fee Waiver Request",
-    "quote": "submit a fee waiver request via RydeHELP in our app within 30 days of the trip ... This voucher is non-refundable and cannot be exchanged for cash"
-   },
-   {
-    "id": "A16",
-    "what": "Ryde Terms of Use",
-    "quote": "Ryde reserves its absolute discretion to any refunds to you and such refunds may be credited to the payment card you used for the journey, or to your RydeCoins wallet"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Disputes must be raised within 30 days. Refunds are Ryde vouchers, not cash, and Ryde keeps the final say."
- },
- {
-  "id": "NS-8",
-  "group": "no_show",
-  "title": "driver-late free cancel (no such Ryde rule)",
-  "rule_en": "Other operators' rule: if the driver has still not arrived more than 5 minutes after the ETA shown in the app, the rider may cancel for free (Grab additionally waives the fee if the driver does not arrive within 3 minutes after the first-shown ETA).",
-  "citable": false,
-  "source_kind": "Derived from",
-  "sources": [
-   {
-    "id": "C1",
-    "what": "Grab SG cancellation policy",
-    "quote": "if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee"
-   },
-   {
-    "id": "C3",
-    "what": "Gojek SG cancellation and waiting fees",
-    "quote": "If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived"
-   }
-  ],
-  "notes_en": "Informational: Ryde has no such rule and the case files have no ETA field (gap G7). Listed so the judge can see the rule exists elsewhere, never cited.",
-  "summary_en": "Grab and Gojek waive the fee when the driver is 5 minutes past ETA. Ryde has no such rule, so the court cannot apply it."
- },
- {
-  "id": "FARE-1",
-  "group": "fare",
-  "title": "fixed fare: only published extras",
-  "rule_en": "For non-metered services the final fare = the fare quoted at booking + published surcharges (ERP/tolls, $5 waiting fee, $3 edit-destination fee, $6.61 cancellation fee, platform fee $1.25/$1.47). Any added item that is unpublished or does not meet its governing clause: that item is refunded, refund_partial.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A8",
-    "what": "Ryde Help Centre: ERP/toll overcharge; surcharges",
-    "quote": "Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls"
-   },
-   {
-    "id": "A6",
-    "what": "Ryde Help Centre: Service Fee / Platform Fee (two tiers)",
-    "quote": "First Tier Platform Fee: $1.25 (including GST) for fares $18 and below. Second Tier Platform Fee: $1.47 (including GST) for fares above $18."
-   },
-   {
-    "id": "A9",
-    "what": "Ryde Help Centre: edit destination fee",
-    "quote": "a $3.00 add/edit destination fee will apply"
-   },
-   {
-    "id": "B6",
-    "what": "PTC: Point-to-point transport fares",
-    "quote": "this amount must be provided upfront to the commuter prior to the booking ... additional stop charge, waiting time charge and other fees must be published"
-   }
-  ],
-  "notes_en": "The list of published surcharges is Ryde first-hand; the rule that an unpublished item cannot be charged is derived from the PTC requirement (B6).",
-  "summary_en": "A fixed fare may only grow by published extras: tolls, the $5 waiting fee, the $3 destination change, the cancellation fee, the platform fee. Anything else is refunded."
- },
- {
-  "id": "FARE-2",
-  "group": "fare",
-  "title": "toll overcharge",
-  "rule_en": "ERP/tolls charged exceed the sum of gantry charges due on the actual route in that time band: refund the difference, refund_partial; if the ERP difference comes from an unexcused detour segment it is folded into RD-2. Not triggered when the dataset has no tolls field.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A8",
-    "what": "Ryde Help Centre: I was overcharged for ERP/toll",
-    "quote": "Surcharges such as toll charges, overtime fees and valet parking fees are excluded from the base fare. You will be charged for such additional fees at the end of the trip."
-   }
-  ],
-  "notes_en": "The gantry verification method is not published by Ryde (gap G9). None of the six cases has a tolls field, so this clause never fires in the demo.",
-  "summary_en": "Tolls charged above what the actual route incurred are refunded."
- },
- {
-  "id": "FARE-3",
-  "group": "fare",
-  "title": "cleaning-fee claim (not in this data)",
-  "rule_en": "A driver's cleaning-fee claim stands only with: photo evidence (at least one photo showing the licence plate), professional cleaning within 24 hours of the incident, submission through the app within 48 hours of the trip, and a receipt; caps: food/drinks $40, bodily fluids/stains $120, vomit $200. Any missing condition: fee_waived.",
-  "citable": false,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A15",
-    "what": "Ryde Help Centre: My Rider Made a Mess (cleaning fee)",
-    "quote": "Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours ... At least one photo must show the vehicle's car plate number"
-   },
-   {
-    "id": "A16",
-    "what": "Ryde Terms of Use",
-    "quote": "cleaning fee of up to S$200"
-   }
-  ],
-  "notes_en": "Informational: the dataset has no cleaning-fee claim data, so the judge may not cite it.",
-  "summary_en": "Cleaning-fee claims need photos, professional cleaning within 24 h and a receipt within 48 h, capped at $200. Not in this data set."
- },
- {
-  "id": "SAFE-1",
-  "group": "safety",
-  "title": "threat or harassment: human review",
-  "rule_en": "Threats, intimidation, harassment, sexual harassment or personal attacks appear in the chat log, the complaint or the driver's statement (fact chat-threat-*; keyword list is a data-layer parameter in core/facts/tools.py): no automatic ruling, escalate, and a fact summary is output for human handling.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A13",
-    "what": "Ryde Code of Conduct",
-    "quote": "Assault, harassment, or abuse of any kind will not be tolerated ... This includes ... Threats and Intimidation, Unwanted Sexual Advances ... Violations of these guidelines will result in immediate termination and legal action where applicable"
-   }
-  ],
-  "notes_en": "The categories are Ryde's; the court's refusal to rule automatically is enforced in code.",
-  "summary_en": "Threats, harassment or abuse in the chat or statements: the court does not rule. The case goes to a human with a fact summary."
- },
- {
-  "id": "SAFE-2",
-  "group": "safety",
-  "title": "accident or dangerous driving: human review",
-  "rule_en": "The case involves a traffic accident, personal injury or an allegation of dangerous driving: escalate; the summary notes the 995 / driver's commercial insurance / RydeHELP reporting paths.",
-  "citable": true,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A14",
-    "what": "Ryde Help Centre: Report a safety issue / I was involved in an accident",
-    "quote": "If you're in need of medical assistance, please call 995 ... You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP."
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Accidents, injury or dangerous driving: the court does not rule. The summary names the 995 and insurance paths."
- },
- {
-  "id": "SAFE-3",
-  "group": "safety",
-  "title": "trip completed without the rider (fraud)",
-  "rule_en": "GPS and the timeline show the trip was \"completed\" and charged without the rider on board: refund_full and flag_account (Ryde defines this as fraud).",
-  "citable": false,
-  "source_kind": "Ryde first-hand",
-  "sources": [
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards (fraud list)",
-    "quote": "Completing trips without the rider onboard"
-   },
-   {
-    "id": "A12",
-    "what": "Ryde Help Centre: I completed a trip without picking up the rider",
-    "quote": "If your rider has been charged for a trip that you could not cancel, please let us know."
-   }
-  ],
-  "notes_en": "Informational: none of the six cases has this situation, so the judge does not rule on it.",
-  "summary_en": "A trip completed without the rider on board is fraud: full refund and an account flag. Not in this data set."
- },
- {
-  "id": "G1",
-  "group": "gap",
-  "title": "Detour threshold and noise tolerance",
-  "rule_en": "Missing: a quantitative detour threshold (percentage / absolute km) and a noise tolerance, needed to separate real detours from map-matching error. Current: no policy threshold (RD-1); a 0.2 km data-layer noise tolerance (core/facts/tools.py). Missing evidence: Ryde, LTA, PTC, Grab, Gojek and CDG publish no quantitative threshold (B1, C2, C4, D1 say only \"shortest and most direct\"; Uber D3 says only \"significantly\").",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "B1",
-    "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
-    "quote": "shortest and most direct route"
-   },
-   {
-    "id": "C2",
-    "what": "Grab SG driver Code of Conduct",
-    "quote": "shortest and most direct route"
-   },
-   {
-    "id": "C4",
-    "what": "CDG Zig Help Centre",
-    "quote": "most direct route"
-   },
-   {
-    "id": "D1",
-    "what": "NYC TLC Rules Chapter 80",
-    "quote": "shortest reasonable route"
-   },
-   {
-    "id": "D3",
-    "what": "Uber: upfront price changes",
-    "quote": "the route or duration of the trip changes significantly"
-   }
-  ],
-  "notes_en": "Sources listed show what was searched and found wanting, not a basis for a rule.",
-  "summary_en": "Missing: a quantitative detour threshold (percentage / absolute km) and a noise tolerance, needed to separate real detours from map-matching error."
- },
- {
-  "id": "G2",
-  "group": "gap",
-  "title": "Pick-up GPS radius",
-  "rule_en": "Missing: the radius behind \"at the pick-up location according to GPS data\", needed for element (ii) of NS-1 / NS-2 / NS-6. Current: 200 m (data-layer parameter); Ryde should state the arrival rule its app uses. Missing evidence: Ryde A3, Grab C1 and CDG C5 give no distance; a press report puts Tada at about 500 m (C7, secondary source); GPS.gov gives only 4.9 m accuracy (D5).",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "A3",
-    "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
-    "quote": "Is at the pick-up location according to GPS data"
-   },
-   {
-    "id": "C1",
-    "what": "Grab SG cancellation policy",
-    "quote": "Is at the pick-up location according to GPS data"
-   },
-   {
-    "id": "C5",
-    "what": "ComfortDelGro Taxi cancellation policy 2025",
-    "quote": "Is at the pick-up location according to GPS data"
-   },
-   {
-    "id": "C7",
-    "what": "Tada (secondary: Mothership report)",
-    "quote": "within about 500m of the location"
-   },
-   {
-    "id": "D5",
-    "what": "GPS.gov: GPS accuracy",
-    "quote": "accurate to within a 4.9 m (16 ft.) radius under open sky"
-   }
-  ],
-  "notes_en": "C7's 500 m is an \"en route\" test, not an \"arrived\" test, and is a secondary source.",
-  "summary_en": "Missing: the radius behind \"at the pick-up location according to GPS data\", needed for element (ii) of NS-1 / NS-2 / NS-6."
- },
- {
-  "id": "G3",
-  "group": "gap",
-  "title": "Congestion band and traffic match radius",
-  "rule_en": "Missing: the speed-band threshold for \"severe congestion\" and the radius for matching traffic records to the route; needed to decide whether RD-4 (b) can excuse a segment on its own. Current: band 2 or lower counts only as support (RD-4); 300 m matching (data-layer parameter). Missing evidence: LTA only defines band ranges (B7), not \"congestion\"; the OneMotoring legend has no km/h threshold.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "B7",
-    "what": "LTA DataMall API User Guide v6.9",
-    "quote": "1 - indicates speed range from 0 < 9 2 - indicates speed range from 10 < 19"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: the speed-band threshold for \"severe congestion\" and the radius for matching traffic records to the route; needed to decide whether RD-4 (b) can excuse a segment on its own."
- },
- {
-  "id": "G4",
-  "group": "gap",
-  "title": "Counting repeated violations",
-  "rule_en": "Missing: how \"repeated\" violations are counted and over what time window, needed for RD-6's flag_account. Current: at least 1 upheld case in the last 90 days plus this case (RD-6); the profile field itself uses a 90-day window (spec s.1.3). Missing evidence: Ryde A10 says only \"Repeated or severe\"; ratings use the \"last 100 trips\" but the violation window is unpublished; LTA demerit accumulation (B4) is the official sanction scale, not this system's ruling.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "A10",
-    "what": "Ryde Help Centre: Driver Performance and Community Standards",
-    "quote": "Repeated or severe breaches may lead to permanent suspension"
-   },
-   {
-    "id": "B4",
-    "what": "LTA news release: demerit point accumulation",
-    "quote": "an accumulation of 6 demerit points or more would result in the suspension of the vocational licence"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: how \"repeated\" violations are counted and over what time window, needed for RD-6's flag_account."
- },
- {
-  "id": "G5",
-  "group": "gap",
-  "title": "Detour refund formula",
-  "rule_en": "Missing: the detour refund formula, needed for the RD-2 amount. Current: unexcused segments' extra_km x per-kilometre rate (distance units only). Missing evidence: Ryde has no fare-review clause (searches for longer route / detour / fare review / fare adjustment found nothing); the formula is derived from the LTA meter structure B5.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "A7",
-    "what": "Ryde Help Centre: route articles (no detour refund article found)",
-    "quote": ""
-   },
-   {
-    "id": "B5",
-    "what": "LTA: Taxi Fares and Payment Methods (meter structure)",
-    "quote": "26 cents every 400m (1km - 10km)"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: the detour refund formula, needed for the RD-2 amount."
- },
- {
-  "id": "G6",
-  "group": "gap",
-  "title": "Charging for in-trip stops",
-  "rule_en": "Missing: whether stops during a non-metered trip may be charged (RD-3 (c)). Current: not chargeable (Ryde publishes only the $5 pick-up waiting fee; PTC requires surcharges to be published). Missing evidence: Ryde has no explanation of in-trip waiting fees (searches for stop / multiple stops / waiting during trip found nothing).",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee",
-    "quote": "Waiting Time Fee of $5 at the end of the trip"
-   },
-   {
-    "id": "A18",
-    "what": "Ryde Help Centre: in-trip waiting fee not found",
-    "quote": ""
-   },
-   {
-    "id": "B6",
-    "what": "PTC: Point-to-point transport fares",
-    "quote": "waiting time charge and other fees must be published"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: whether stops during a non-metered trip may be charged (RD-3 (c))."
- },
- {
-  "id": "G7",
-  "group": "gap",
-  "title": "Free cancel when driver is late",
-  "rule_en": "Missing: free cancellation when the driver is later than the ETA, a rider-side fairness rule (NS-8). Current: not adopted (Ryde has no such rule and the case files have no ETA field). Missing evidence: Grab C1 and Gojek C3 have it; Ryde A1 does not.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "C1",
-    "what": "Grab SG cancellation policy",
-    "quote": "if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee"
-   },
-   {
-    "id": "C3",
-    "what": "Gojek SG cancellation and waiting fees",
-    "quote": "If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived"
-   },
-   {
-    "id": "A1",
-    "what": "Ryde Help Centre: Cancellation and Waiting Fee (no ETA rule)",
-    "quote": ""
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: free cancellation when the driver is later than the ETA, a rider-side fairness rule (NS-8)."
- },
- {
-  "id": "G8",
-  "group": "gap",
-  "title": "Judge confidence threshold",
-  "rule_en": "Missing: the judge confidence threshold below which the case goes to a human (core/verify.py). Current: 0.70. Missing evidence: spec s.5.4 / s.5.6 only require a threshold and set no value.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "E",
-    "what": "this system's design, implemented in core/verify.py and core/policy_engine.py",
-    "quote": ""
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: the judge confidence threshold below which the case goes to a human (core/verify.py)."
- },
- {
-  "id": "G9",
-  "group": "gap",
-  "title": "ERP gantry verification",
-  "rule_en": "Missing: a method to verify ERP gantry charges (FARE-2). Current: look up the gantry table for the actual route and time band. Missing evidence: Ryde A8 gives no verification method; the dataset has no tolls field.",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "A8",
-    "what": "Ryde Help Centre: I was overcharged for ERP/toll",
-    "quote": "there may be additional charges such as tolls that could occur during your trip"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: a method to verify ERP gantry charges (FARE-2)."
- },
- {
-  "id": "G10",
-  "group": "gap",
-  "title": "RydeTAXI unit rate",
-  "rule_en": "Missing: RydeTAXI unit rates, needed for RD-2's per-kilometre rate. Current: data/rates.json assumes $1.41/km and $0.26/min (not the LTA meter unit of 26 cents per 400 m). Missing evidence: Ryde does not publish unit rates; the real rate should come from the owning taxi company's meter (B5, B6, A18).",
-  "citable": false,
-  "source_kind": "Gap: no source",
-  "sources": [
-   {
-    "id": "B5",
-    "what": "LTA: Taxi Fares and Payment Methods",
-    "quote": "26 cents every 400m (1km - 10km)"
-   },
-   {
-    "id": "B6",
-    "what": "PTC: Point-to-point transport fares",
-    "quote": "Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company"
-   },
-   {
-    "id": "A18",
-    "what": "Ryde Help Centre: RydeTAXI meter",
-    "quote": "all fees for Standard and/or Premium taxis follow that of the respective taxi company"
-   }
-  ],
-  "notes_en": "",
-  "summary_en": "Missing: RydeTAXI unit rates, needed for RD-2's per-kilometre rate."
- }
+  {
+    "id": "PREMISE",
+    "group": "premise",
+    "title": "Ryde fare model premise",
+    "rule_en": "Non-metered services (RydeX / XL / LUXE / FLASH / POOL / PET): the fare is quoted once at booking from the pick-up and drop-off points, and distance changes during the trip do not change it; after the trip only published surcharges may be added (ERP/tolls, $5 waiting fee, $3 edit-destination fee, cancellation fee). RydeTAXI: charged by the meter of the taxi company that owns the taxi (\"Key in the fare as indicated on your meter\"); LTA publishes the meter structure as distance units (every 400 m / 350 m) plus waiting-time units (every 45 s), so detour distance goes straight into the fare. The \"extra charge\" in the RD group is therefore computed differently per service type (see RD-2).",
+    "citable": false,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: suggested route articles (driver and rider side)",
+        "quote": "The trip fare is fixed based on pick-up and drop-off points."
+      },
+      {
+        "id": "A8",
+        "what": "Ryde Help Centre: ERP/toll overcharge; surcharges",
+        "quote": "Fares quoted for our services are generally fixed, except for RydeTAXI."
+      },
+      {
+        "id": "A18",
+        "what": "Ryde Help Centre: RydeTAXI meter and other confirmed facts",
+        "quote": "all fees for Standard and/or Premium taxis follow that of the respective taxi company"
+      },
+      {
+        "id": "B5",
+        "what": "LTA: Taxi Fares and Payment Methods (meter structure)",
+        "quote": "26 cents every 400m (1km - 10km) 26 cents every 350m (above 10km) 26 cents for every 45 sec of waiting time"
+      },
+      {
+        "id": "B6",
+        "what": "PTC: Point-to-point transport fares",
+        "quote": "Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company"
+      }
+    ],
+    "notes_en": "Section 0 of the policy. It is a premise for the RD and FARE groups, not a clause the judge cites.",
+    "summary_en": "Fixed-fare services never change price with distance; RydeTAXI runs on the taxi meter, so detour kilometres cost money. That is why detours are refunded differently."
+  },
+  {
+    "id": "RD-1",
+    "group": "route_deviation",
+    "title": "driver must take the direct route",
+    "rule_en": "Every \"off-route segment\" in the fact table (a stretch that leaves the optimal route and adds distance; gps-detour-* facts) is one detour, and each is reviewed separately under RD-3 / RD-4 / RD-5; a segment that no clause excuses is an unexcused detour segment. This clause sets no percentage or absolute-kilometre threshold: the driver's duty is to take the shortest and most direct route in the absence of reasonable cause, so any unexplained deviation breaches that duty. The fact tool's discarding of matched noise under 0.2 km is a data-layer parameter (core/facts/tools.py), not a policy threshold.",
+    "citable": true,
+    "source_kind": "Derived from",
+    "sources": [
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
+        "quote": "in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger ... by the shortest and most direct route"
+      },
+      {
+        "id": "B2",
+        "what": "LTA vocational licence demerit points schedule, item 16 (3 points)",
+        "quote": "Failing, without reasonable cause, to proceed to destination named by a passenger by shortest and most direct route | Rule 23(1)(c) PSVC | 3"
+      },
+      {
+        "id": "C2",
+        "what": "Grab SG driver Code of Conduct",
+        "quote": "ensure that the shortest and most direct route is taken"
+      },
+      {
+        "id": "C4",
+        "what": "CDG Zig Help Centre: choosing a preferred route",
+        "quote": "the driver is obligated to follow the most direct route ... in accordance with the Road Traffic Act"
+      },
+      {
+        "id": "D1",
+        "what": "NYC TLC Rules Chapter 80, s.80-16(a)(2)",
+        "quote": "shortest reasonable route"
+      },
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: suggested route articles",
+        "quote": "you may decide to take the fastest or most efficient route based on your GPS"
+      }
+    ],
+    "notes_en": "Ryde itself only says the driver may take the fastest or most efficient route by GPS (A7) and publishes no detour threshold (gap G1).",
+    "summary_en": "Any unexplained stretch off the shortest route is a detour. No percentage or kilometre threshold: the driver's duty is the most direct route."
+  },
+  {
+    "id": "RD-2",
+    "group": "route_deviation",
+    "title": "refund for extra kilometres",
+    "rule_en": "An unexcused detour segment exists. RydeTAXI: refund_partial, amount = sum of the unexcused segments' extra_km x this trip's per-kilometre rate (fare.distance_fare / fare.distance_km), rounded to the cent; only distance units are refunded, stop waiting time is handled under RD-3, and the distance difference outside the unexcused segments (fare-excess minus the sum of the segments, a map-matching residual of 0.25 km or less) is not refunded. Non-metered services: the fare is a fixed price unaffected by distance, so only ERP/tolls incurred on the unexcused segments and any unpublished item the driver added manually after the trip are refunded (folded into FARE-1). Refundable amount of 0: no_action, but the driver's breach of the RD-1 duty is recorded.",
+    "citable": true,
+    "source_kind": "Derived from",
+    "sources": [
+      {
+        "id": "B5",
+        "what": "LTA: Taxi Fares and Payment Methods (meter accumulates by distance unit)",
+        "quote": "26 cents every 400m (1km - 10km)"
+      },
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
+        "quote": "by the shortest and most direct route"
+      },
+      {
+        "id": "B4",
+        "what": "LTA news release: enforcement against errant taxi drivers (12/21 demerit points for fares above the meter)",
+        "quote": "Collected a fare that is less than $20 above the metered fare $500 12"
+      },
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards",
+        "quote": "Drivers who are found to have overcharged riders ... may face account suspension"
+      },
+      {
+        "id": "A11",
+        "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
+        "quote": "Overcharging of additional fees"
+      },
+      {
+        "id": "D3",
+        "what": "Uber: upfront price changes / final fare higher than estimate",
+        "quote": "We are happy to review these cases if you feel you were overcharged."
+      },
+      {
+        "id": "A8",
+        "what": "Ryde Help Centre: ERP/toll charged as incurred",
+        "quote": "there may be additional charges such as tolls that could occur during your trip"
+      },
+      {
+        "id": "B6",
+        "what": "PTC: additional fees must be published",
+        "quote": "additional stop charge, waiting time charge and other fees must be published"
+      }
+    ],
+    "notes_en": "The refund formula itself is not published by Ryde (gap G5); it is derived from the LTA meter structure. The Ryde first-hand parts are only that overcharging is a violation (A10/A11) and that ERP is charged as incurred (A8).",
+    "summary_en": "On a metered taxi, the extra kilometres of an unexcused detour are refunded at the trip's per-km rate. On a fixed fare, only the tolls incurred on the detour."
+  },
+  {
+    "id": "RD-3",
+    "group": "route_deviation",
+    "title": "rider-requested stop",
+    "rule_en": "A stop or route change requested by the rider (proposed in chat and accepted by the driver, or an in-app edit-destination / add-stop request accepted by the driver). (a) The rider named the place, or did not name one but the driver's chosen stop lies along the optimal route (no gps-detour-* segment): the segment is not a detour. (b) The rider did not name a place, the driver chose one that produces an off-route segment and did not tell the rider that place beforehand: the segment's extra_km is not excused by the rider's stop request (the rider agreed to \"a stop\", not to that route change; the scope of consent is judged under RD-5), while the stop duration is still handled under (c). (c) Stop duration: RydeTAXI charges meter waiting-time units as recorded (fact fare-wait), not refunded; non-metered services: the only waiting fee Ryde publishes is the $5 at the pick-up point, there is no published charge for stops during the trip, so none may be charged; when an in-app destination change takes effect only the published $3.00 is added (RydeTAXI / multi-stop / POOL do not support in-app destination changes and can only agree one with the driver in chat).",
+    "citable": true,
+    "source_kind": "Derived from",
+    "sources": [
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c): duty runs to the destination named by the passenger",
+        "quote": "proceed to the destination named by a passenger"
+      },
+      {
+        "id": "D1",
+        "what": "NYC TLC Rules Chapter 80, s.80-16(a)(1)",
+        "quote": "comply with all reasonable and lawful routing requests of the Passenger"
+      },
+      {
+        "id": "C4",
+        "what": "CDG Zig Help Centre: metered bookings",
+        "quote": "passengers have the option to select the route upon boarding"
+      },
+      {
+        "id": "C2",
+        "what": "Grab SG driver Code of Conduct",
+        "quote": "Changing route without passenger's permission"
+      },
+      {
+        "id": "B5",
+        "what": "LTA: taxi meter waiting-time unit",
+        "quote": "26 cents for every 45 sec of waiting time"
+      },
+      {
+        "id": "C6",
+        "what": "ComfortDelGro Taxi fares",
+        "quote": "Every 45 seconds of waiting or less"
+      },
+      {
+        "id": "A18",
+        "what": "Ryde Help Centre: RydeTAXI is charged by the meter",
+        "quote": "Key in the fare as indicated on your meter."
+      },
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee (only the $5 pick-up waiting fee is published)",
+        "quote": "Riders may be charged a Waiting Time Fee of $5 at the end of the trip"
+      },
+      {
+        "id": "B6",
+        "what": "PTC: Point-to-point transport fares",
+        "quote": "waiting time charge and other fees must be published"
+      },
+      {
+        "id": "A9",
+        "what": "Ryde Help Centre: edit destination fee; RydeTAXI / POOL / multi-stop excluded",
+        "quote": "a $3.00 add/edit destination fee will apply"
+      }
+    ],
+    "notes_en": "(a) and (b) are derived; (c) mixes Ryde first-hand text (A1, A9, A18) with a derivation from B6. Whether in-trip stops on a non-metered trip may be charged at all is gap G6.",
+    "summary_en": "A stop the rider asked for is not a detour. If the driver chose a far-off stop without telling the rider, that extra distance still counts."
+  },
+  {
+    "id": "RD-4",
+    "group": "route_deviation",
+    "title": "reroute justified by traffic or an incident",
+    "rule_en": "The driver claims a reroute because of a road closure, accident or severe congestion (\"reasonable cause\"): a traffic fact must support it, and the support must concern the stretch of the optimal route that was replaced. (a) traffic-incident-*: an LTA DataMall incident (Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic or another DataMall type) lies on the optimal route (m_from_route within the 300 m data-layer matching radius), its reported_at is earlier than the start of that detour segment and it is still listed within the trip window: the segment is excused, no_action (for that segment). (b) traffic-band-*: a road on the optimal route recorded at speed band 1 or 2 (LTA definitions 0 < 9 km/h and 10 < 19 km/h) with a time window covering the segment: counts as support for (a); whether a band alone is enough to excuse a segment awaits Ryde's confirmation (gap G3), and the MVP does not excuse on a band alone. (c) No (a): the segment is handled under RD-2.",
+    "citable": true,
+    "source_kind": "Derived from",
+    "sources": [
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c): the reasonable-cause exception",
+        "quote": "in the absence of any reasonable cause to do otherwise"
+      },
+      {
+        "id": "B7",
+        "what": "LTA DataMall API User Guide v6.9: speed bands and traffic incidents",
+        "quote": "SpeedBand ... 1 - indicates speed range from 0 < 9 2 - indicates speed range from 10 < 19"
+      },
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: suggested route articles",
+        "quote": "you may decide to take the fastest or most efficient route based on your GPS"
+      }
+    ],
+    "notes_en": "Ryde only allows drivers to take the fastest or most efficient route by GPS (A7) and says nothing about how a reroute is evidenced.",
+    "summary_en": "A reroute is excused only when an LTA-reported incident sat on the route before the detour began. A slow-speed band alone is not enough."
+  },
+  {
+    "id": "RD-5",
+    "group": "route_deviation",
+    "title": "rider agreed to the route beforehand",
+    "rule_en": "The chat log shows the driver proposed the route change before leaving the optimal route and the rider explicitly agreed: the segment matching that route change is not a detour (no_action for that segment). \"Before\" means the timestamp of the rider's consent message is earlier than the start of that gps-detour-* segment. If the driver informed the rider only after rerouting, the rider did not reply, or the consent does not cover that segment (for example agreeing only to \"take the PIE\", not to a trip to a distant convenience store): the segment is not treated as agreed. Consent must be the rider's own message: a driver's statement that the rider agreed verbally is a claim, not consent (G11). Whether a message agrees, and to which stretch, is the court's reading of its words; when the chat record cannot settle it (a message without a timestamp, a record not imported) the judge finds undetermined and the case goes to a person (G12).",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: Can I suggest my preferred route to the driver?",
+        "quote": "reach a mutual agreement before you go"
+      },
+      {
+        "id": "C2",
+        "what": "Grab SG driver Code of Conduct",
+        "quote": "Discuss and agree with the user before taking an alternative route"
+      }
+    ],
+    "notes_en": "That informing the rider after the reroute does not count as consent is a direct inference from \"before you go\" (A7) and \"before taking\" (C2).",
+    "summary_en": "If the driver proposed the route in chat and the rider agreed before leaving it, that stretch is not a detour. Agreement after the fact does not count."
+  },
+  {
+    "id": "RD-6",
+    "group": "route_deviation",
+    "title": "repeat offender: account flag",
+    "rule_en": "The case is upheld against the driver (an RD-2 refund above 0, or an RD-1 breach recorded) and the profile shows route_disputes_upheld_90d >= 1 (an upheld route-deviation dispute already in the last 90 days, so this case makes it \"repeated\"): the ruling adds flag_account (referral to Ryde account review). Profile facts may only ground this added action; they may not on their own decide that the detour in this case is established.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards",
+        "quote": "Repeated or severe breaches may lead to permanent suspension from the Ryde platform"
+      },
+      {
+        "id": "A11",
+        "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
+        "quote": "Unusual trip patterns"
+      },
+      {
+        "id": "B2",
+        "what": "LTA vocational licence demerit points schedule (3 points per detour)",
+        "quote": "Failing, without reasonable cause, to proceed to destination named by a passenger by shortest and most direct route | 3"
+      },
+      {
+        "id": "B4",
+        "what": "LTA news release: 6 points suspends, 21 points revokes a vocational licence",
+        "quote": "an accumulation of 6 demerit points or more would result in the suspension of the vocational licence, while 21 demerit points or more would result in the revocation"
+      }
+    ],
+    "notes_en": "How \"repeated\" is counted and the 90-day window are not published by Ryde (gap G4); B2/B4 are the LTA sanction scale, cited as derivation.",
+    "summary_en": "A driver with an upheld route dispute in the last 90 days gets an account-review flag on top of the ruling. History alone never decides the case."
+  },
+  {
+    "id": "NS-0",
+    "group": "no_show",
+    "title": "when a cancellation fee applies",
+    "rule_en": "The $6.61 cancellation fee can stand only in one of the two situations Ryde publishes, branching on cancelled_by; the other NS clauses are reached only through this one. cancelled_by = rider: on-demand trips see NS-4, advance bookings see NS-5. cancelled_by = driver and the driver claims a rider no-show: NS-1 / NS-2; the driver cancels for another reason: NS-3. A waiting-fee dispute after a completed trip: NS-6. The cancellation policy applies to all services except RydeTAXI; the dispute deadline and refund form are in NS-7.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee",
+        "quote": "Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses \"I'm Here\", waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip"
+      },
+      {
+        "id": "A18",
+        "what": "Ryde Help Centre: cancellation policy scope",
+        "quote": "Cancellation Policy applies to all Service Types* ... *All services except RydeTAXI"
+      },
+      {
+        "id": "A16",
+        "what": "Ryde Terms of Use",
+        "quote": "If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "The $6.61 cancellation fee exists only in the two situations Ryde publishes. This clause routes the case to the right one."
+  },
+  {
+    "id": "NS-1",
+    "group": "no_show",
+    "title": "driver waited 3 min at pickup after \"I'm Here\"",
+    "rule_en": "The driver cancelled for a rider no-show and all of the following hold: (i) the driver pressed \"I'm Here\"; (ii) at the press and throughout the wait, GPS places the driver at the pick-up point (gps-nearest within_200m is true; 200 m is a data-layer parameter, see gap G2); (iii) the driver waited at the pick-up point for more than 3 minutes (at least 3:01; gps-within within_200m_s > 180). Then the rider's $6.61 cancellation fee stands ($4.50 of it goes to the driver), no_action.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee",
+        "quote": "The driver presses \"I'm Here\", waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)"
+      },
+      {
+        "id": "A3",
+        "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
+        "quote": "Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"
+      },
+      {
+        "id": "A2",
+        "what": "Ryde Help Centre: Cancellation and Waiting Time Policy (driver side)",
+        "quote": "Driver will receive a Cancellation Fee of $4.50* if: Rider cancels after 3 minutes of matching."
+      },
+      {
+        "id": "A5",
+        "what": "Ryde Help Centre: How the Cancellation Fee works",
+        "quote": "Drivers will receive a $4.50 cancellation fee automatically if they cancel after >3 minutes of waiting."
+      }
+    ],
+    "notes_en": "Ryde does not publish the distance that counts as \"at the pick-up location\" (gap G2).",
+    "summary_en": "The fee stands if the driver tapped I'm Here while at the pick-up point and waited there more than 3 minutes."
+  },
+  {
+    "id": "NS-2",
+    "group": "no_show",
+    "title": "no-show not proven: fee refunded",
+    "rule_en": "The driver cancelled for a rider no-show but any one of NS-1 (i)(ii)(iii) fails (no \"I'm Here\" press; GPS shows the driver never entered the pick-up radius or was outside it when pressing \"I'm Here\"; waited 3 minutes or less inside the radius): the $6.61 cancellation fee is refunded in full, refund_full. If the driver pressed \"I'm Here\" while GPS shows them away from the pick-up point (tl-here has a value and gps-nearest.within_200m is false): flag_account is added (Ryde lists abuse of the cancellation and waiting buttons as fraud).",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A3",
+        "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
+        "quote": "Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled."
+      },
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards (fraud list)",
+        "quote": "Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees ... Abuse of Cancellation and Waiting Fee Policy"
+      },
+      {
+        "id": "A11",
+        "what": "Ryde Help Centre: SMS/email about irregular trip behaviour",
+        "quote": "Abuse of the cancellation and waiting time button"
+      },
+      {
+        "id": "C1",
+        "what": "Grab SG cancellation policy (same structure)",
+        "quote": "You will not be charged the $4 cancellation fee if any of the above are not fulfilled."
+      },
+      {
+        "id": "C5",
+        "what": "ComfortDelGro Taxi cancellation policy 2025 (same structure)",
+        "quote": "Is at the pick-up location according to GPS data Has waited more than 5 mins"
+      }
+    ],
+    "notes_en": "A3 calls the $6.61 a \"Waiting Time Fee\"; sources.md records this as a Ryde typo (the $6.61 is the cancellation fee). C1/C5 are cited only to show the same rule shape at other operators.",
+    "summary_en": "If any of those three things is missing, the fee is refunded. Tapping I'm Here while away from the pick-up also flags the driver's account."
+  },
+  {
+    "id": "NS-3",
+    "group": "no_show",
+    "title": "driver cancelled: no fee",
+    "rule_en": "The driver cancelled without claiming a rider no-show (or claimed one but NS-1 is not met): the rider owes no cancellation fee; if one was charged, refund_full. On the driver's side the cancellation counts toward the cancellation rate; a rate above 17.5% leads Ryde to suspend the account (an account action, not this case's ruling; flag_account may be added).",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A13",
+        "what": "Ryde Code of Conduct",
+        "quote": "Refusing or cancelling a trip without a valid reason at pick-up may result in account action."
+      },
+      {
+        "id": "A16",
+        "what": "Ryde Terms of Use: cancellation terms for partners",
+        "quote": "the cancellation shall be based on acceptable cancellation reasons as shown in the Application"
+      },
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards",
+        "quote": "Cancellation Rate (CR) > 17.5%"
+      },
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.25",
+        "quote": "No taxi driver shall, without reasonable excuse, refuse to hire out his taxi or convey any passenger"
+      },
+      {
+        "id": "B2",
+        "what": "LTA demerit points schedule, item 10 (6 points, taxis)",
+        "quote": "Refusing, without reasonable excuse, to hire out taxi or to convey passenger | Rule 25 PSVC | 6"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "When the driver cancels for any other reason, the rider pays nothing."
+  },
+  {
+    "id": "NS-4",
+    "group": "no_show",
+    "title": "3-minute free-cancel window",
+    "rule_en": "On-demand trip cancelled by the rider: within 3 minutes of matching (3:00 or less), no fee; more than 3 minutes after matching, the $6.61 cancellation fee stands, no_action. Ryde has not published a \"free cancellation if the driver is later than the ETA\" rule (see NS-8), so the driver not having arrived yet is not a ground for a free cancellation; the rider's remedy is the manual appeal under NS-7.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee",
+        "quote": "All cancellations made within 3 minutes of matching are not chargeable."
+      },
+      {
+        "id": "A2",
+        "what": "Ryde Help Centre: Cancellation and Waiting Time Policy (driver side)",
+        "quote": "Rider cancels after 3 minutes of matching."
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "A rider may cancel free within 3 minutes of matching; after that the fee applies. A late driver is not a free-cancel reason at Ryde."
+  },
+  {
+    "id": "NS-5",
+    "group": "no_show",
+    "title": "advance-booking cancellation (not in this data)",
+    "rule_en": "Advance bookings: the rider cancels more than 15 minutes before the scheduled time, no fee; cancels within 15 minutes, the cancellation fee stands; if the driver accepted the booking only after the 15-minute mark before the scheduled time, the rider has a 3-minute free-cancellation period from matching.",
+    "citable": false,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee (advance bookings)",
+        "quote": "All cancellations made > 15 minutes before the scheduled trip time are not chargeable ... If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period"
+      }
+    ],
+    "notes_en": "Informational: the dataset has no advance-booking field, so the judge may not cite it.",
+    "summary_en": "Advance bookings: free cancellation more than 15 minutes before the scheduled time. Not in this data set."
+  },
+  {
+    "id": "NS-6",
+    "group": "no_show",
+    "title": "waiting-fee conditions",
+    "rule_en": "The $5.00 waiting fee stands only if: the driver pressed \"I'm Here\"; GPS places the driver at the pick-up point (as in NS-1 (ii)); the rider boarded after a wait of more than 3 minutes and the trip was completed; and the driver pressed the waiting-fee button during the trip (at drop-off). If any condition fails: fee_waived (the $5.00 is refunded).",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee",
+        "quote": "Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses \"I'm Here\", waits for > 3 minutes for the rider to board, and continues the trip"
+      },
+      {
+        "id": "A3",
+        "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
+        "quote": "Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"
+      },
+      {
+        "id": "A5",
+        "what": "Ryde Help Centre: How the Waiting Fee works",
+        "quote": "Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off."
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "The $5 waiting fee needs I'm Here at the pick-up, a wait over 3 minutes, a completed trip, and the fee button tapped during the trip."
+  },
+  {
+    "id": "NS-7",
+    "group": "no_show",
+    "title": "30-day dispute window",
+    "rule_en": "A cancellation-fee or waiting-fee dispute must be raised within 30 days of the trip; later, no_action. An upheld refund is issued as a Ryde voucher (cancellation fee $6.61 / waiting fee $5.00), not in cash; Ryde keeps final discretion over refunds, so the court's ruling is a recommendation.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A4",
+        "what": "Ryde Help Centre: Cancellation Fee / Waiting Fee Waiver Request",
+        "quote": "submit a fee waiver request via RydeHELP in our app within 30 days of the trip ... This voucher is non-refundable and cannot be exchanged for cash"
+      },
+      {
+        "id": "A16",
+        "what": "Ryde Terms of Use",
+        "quote": "Ryde reserves its absolute discretion to any refunds to you and such refunds may be credited to the payment card you used for the journey, or to your RydeCoins wallet"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Disputes must be raised within 30 days. Refunds are Ryde vouchers, not cash, and Ryde keeps the final say."
+  },
+  {
+    "id": "NS-8",
+    "group": "no_show",
+    "title": "driver-late free cancel (no such Ryde rule)",
+    "rule_en": "Other operators' rule: if the driver has still not arrived more than 5 minutes after the ETA shown in the app, the rider may cancel for free (Grab additionally waives the fee if the driver does not arrive within 3 minutes after the first-shown ETA).",
+    "citable": false,
+    "source_kind": "Derived from",
+    "sources": [
+      {
+        "id": "C1",
+        "what": "Grab SG cancellation policy",
+        "quote": "if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee"
+      },
+      {
+        "id": "C3",
+        "what": "Gojek SG cancellation and waiting fees",
+        "quote": "If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived"
+      }
+    ],
+    "notes_en": "Informational: Ryde has no such rule and the case files have no ETA field (gap G7). Listed so the judge can see the rule exists elsewhere, never cited.",
+    "summary_en": "Grab and Gojek waive the fee when the driver is 5 minutes past ETA. Ryde has no such rule, so the court cannot apply it."
+  },
+  {
+    "id": "FARE-1",
+    "group": "fare",
+    "title": "fixed fare: only published extras",
+    "rule_en": "For non-metered services the final fare = the fare quoted at booking + published surcharges (ERP/tolls, $5 waiting fee, $3 edit-destination fee, $6.61 cancellation fee, platform fee $1.25/$1.47). Any added item that is unpublished or does not meet its governing clause: that item is refunded, refund_partial.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A8",
+        "what": "Ryde Help Centre: ERP/toll overcharge; surcharges",
+        "quote": "Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls"
+      },
+      {
+        "id": "A6",
+        "what": "Ryde Help Centre: Service Fee / Platform Fee (two tiers)",
+        "quote": "First Tier Platform Fee: $1.25 (including GST) for fares $18 and below. Second Tier Platform Fee: $1.47 (including GST) for fares above $18."
+      },
+      {
+        "id": "A9",
+        "what": "Ryde Help Centre: edit destination fee",
+        "quote": "a $3.00 add/edit destination fee will apply"
+      },
+      {
+        "id": "B6",
+        "what": "PTC: Point-to-point transport fares",
+        "quote": "this amount must be provided upfront to the commuter prior to the booking ... additional stop charge, waiting time charge and other fees must be published"
+      }
+    ],
+    "notes_en": "The list of published surcharges is Ryde first-hand; the rule that an unpublished item cannot be charged is derived from the PTC requirement (B6).",
+    "summary_en": "A fixed fare may only grow by published extras: tolls, the $5 waiting fee, the $3 destination change, the cancellation fee, the platform fee. Anything else is refunded."
+  },
+  {
+    "id": "FARE-2",
+    "group": "fare",
+    "title": "toll overcharge",
+    "rule_en": "ERP/tolls charged exceed the sum of gantry charges due on the actual route in that time band: refund the difference, refund_partial; if the ERP difference comes from an unexcused detour segment it is folded into RD-2. Not triggered when the dataset has no tolls field.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A8",
+        "what": "Ryde Help Centre: I was overcharged for ERP/toll",
+        "quote": "Surcharges such as toll charges, overtime fees and valet parking fees are excluded from the base fare. You will be charged for such additional fees at the end of the trip."
+      }
+    ],
+    "notes_en": "The gantry verification method is not published by Ryde (gap G9). None of the six cases has a tolls field, so this clause never fires in the demo.",
+    "summary_en": "Tolls charged above what the actual route incurred are refunded."
+  },
+  {
+    "id": "FARE-3",
+    "group": "fare",
+    "title": "cleaning-fee claim (not in this data)",
+    "rule_en": "A driver's cleaning-fee claim stands only with: photo evidence (at least one photo showing the licence plate), professional cleaning within 24 hours of the incident, submission through the app within 48 hours of the trip, and a receipt; caps: food/drinks $40, bodily fluids/stains $120, vomit $200. Any missing condition: fee_waived.",
+    "citable": false,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A15",
+        "what": "Ryde Help Centre: My Rider Made a Mess (cleaning fee)",
+        "quote": "Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours ... At least one photo must show the vehicle's car plate number"
+      },
+      {
+        "id": "A16",
+        "what": "Ryde Terms of Use",
+        "quote": "cleaning fee of up to S$200"
+      }
+    ],
+    "notes_en": "Informational: the dataset has no cleaning-fee claim data, so the judge may not cite it.",
+    "summary_en": "Cleaning-fee claims need photos, professional cleaning within 24 h and a receipt within 48 h, capped at $200. Not in this data set."
+  },
+  {
+    "id": "SAFE-1",
+    "group": "safety",
+    "title": "threat or harassment: human review",
+    "rule_en": "Threats, intimidation, harassment, sexual harassment or personal attacks appear in the chat log, the complaint or the driver's statement (whether they do is the court's reading of the words, recorded in Ruling.safety_concern; code does not read meaning, it only marks lines that contain a hint word for the reader): no automatic ruling, escalate, and a fact summary is output for human handling. The judge screens every case for this, with or without a hint word.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A13",
+        "what": "Ryde Code of Conduct",
+        "quote": "Assault, harassment, or abuse of any kind will not be tolerated ... This includes ... Threats and Intimidation, Unwanted Sexual Advances ... Violations of these guidelines will result in immediate termination and legal action where applicable"
+      }
+    ],
+    "notes_en": "The categories are Ryde's; the court's refusal to rule automatically is enforced in code.",
+    "summary_en": "Threats, intimidation or harassment in the chat, complaint or statement, as read by the court: never ruled automatically."
+  },
+  {
+    "id": "SAFE-2",
+    "group": "safety",
+    "title": "accident or dangerous driving: human review",
+    "rule_en": "The case involves a traffic accident, personal injury or an allegation of dangerous driving: escalate; the summary notes the 995 / driver's commercial insurance / RydeHELP reporting paths.",
+    "citable": true,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A14",
+        "what": "Ryde Help Centre: Report a safety issue / I was involved in an accident",
+        "quote": "If you're in need of medical assistance, please call 995 ... You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP."
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Accidents, injury or dangerous driving: the court does not rule. The summary names the 995 and insurance paths."
+  },
+  {
+    "id": "SAFE-3",
+    "group": "safety",
+    "title": "trip completed without the rider (fraud)",
+    "rule_en": "GPS and the timeline show the trip was \"completed\" and charged without the rider on board: refund_full and flag_account (Ryde defines this as fraud).",
+    "citable": false,
+    "source_kind": "Ryde first-hand",
+    "sources": [
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards (fraud list)",
+        "quote": "Completing trips without the rider onboard"
+      },
+      {
+        "id": "A12",
+        "what": "Ryde Help Centre: I completed a trip without picking up the rider",
+        "quote": "If your rider has been charged for a trip that you could not cancel, please let us know."
+      }
+    ],
+    "notes_en": "Informational: none of the six cases has this situation, so the judge does not rule on it.",
+    "summary_en": "A trip completed without the rider on board is fraud: full refund and an account flag. Not in this data set."
+  },
+  {
+    "id": "G1",
+    "group": "gap",
+    "title": "Detour threshold and noise tolerance",
+    "rule_en": "Missing: a quantitative detour threshold (percentage / absolute km) and a noise tolerance, needed to separate real detours from map-matching error. Current: no policy threshold (RD-1); a 0.2 km data-layer noise tolerance (core/facts/tools.py). Missing evidence: Ryde, LTA, PTC, Grab, Gojek and CDG publish no quantitative threshold (B1, C2, C4, D1 say only \"shortest and most direct\"; Uber D3 says only \"significantly\").",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "B1",
+        "what": "Road Traffic (Public Service Vehicles) Rules r.23(1)(c)",
+        "quote": "shortest and most direct route"
+      },
+      {
+        "id": "C2",
+        "what": "Grab SG driver Code of Conduct",
+        "quote": "shortest and most direct route"
+      },
+      {
+        "id": "C4",
+        "what": "CDG Zig Help Centre",
+        "quote": "most direct route"
+      },
+      {
+        "id": "D1",
+        "what": "NYC TLC Rules Chapter 80",
+        "quote": "shortest reasonable route"
+      },
+      {
+        "id": "D3",
+        "what": "Uber: upfront price changes",
+        "quote": "the route or duration of the trip changes significantly"
+      }
+    ],
+    "notes_en": "Sources listed show what was searched and found wanting, not a basis for a rule.",
+    "summary_en": "Missing: a quantitative detour threshold (percentage / absolute km) and a noise tolerance, needed to separate real detours from map-matching error."
+  },
+  {
+    "id": "G2",
+    "group": "gap",
+    "title": "Pick-up GPS radius",
+    "rule_en": "Missing: the radius behind \"at the pick-up location according to GPS data\", needed for element (ii) of NS-1 / NS-2 / NS-6. Current: 200 m (data-layer parameter); Ryde should state the arrival rule its app uses. Missing evidence: Ryde A3, Grab C1 and CDG C5 give no distance; a press report puts Tada at about 500 m (C7, secondary source); GPS.gov gives only 4.9 m accuracy (D5).",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A3",
+        "what": "Ryde Help Centre: driver indicated arrival but has not arrived",
+        "quote": "Is at the pick-up location according to GPS data"
+      },
+      {
+        "id": "C1",
+        "what": "Grab SG cancellation policy",
+        "quote": "Is at the pick-up location according to GPS data"
+      },
+      {
+        "id": "C5",
+        "what": "ComfortDelGro Taxi cancellation policy 2025",
+        "quote": "Is at the pick-up location according to GPS data"
+      },
+      {
+        "id": "C7",
+        "what": "Tada (secondary: Mothership report)",
+        "quote": "within about 500m of the location"
+      },
+      {
+        "id": "D5",
+        "what": "GPS.gov: GPS accuracy",
+        "quote": "accurate to within a 4.9 m (16 ft.) radius under open sky"
+      }
+    ],
+    "notes_en": "C7's 500 m is an \"en route\" test, not an \"arrived\" test, and is a secondary source.",
+    "summary_en": "Missing: the radius behind \"at the pick-up location according to GPS data\", needed for element (ii) of NS-1 / NS-2 / NS-6."
+  },
+  {
+    "id": "G3",
+    "group": "gap",
+    "title": "Congestion band and traffic match radius",
+    "rule_en": "Missing: the speed-band threshold for \"severe congestion\" and the radius for matching traffic records to the route; needed to decide whether RD-4 (b) can excuse a segment on its own. Current: band 2 or lower counts only as support (RD-4); 300 m matching (data-layer parameter). Missing evidence: LTA only defines band ranges (B7), not \"congestion\"; the OneMotoring legend has no km/h threshold.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "B7",
+        "what": "LTA DataMall API User Guide v6.9",
+        "quote": "1 - indicates speed range from 0 < 9 2 - indicates speed range from 10 < 19"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: the speed-band threshold for \"severe congestion\" and the radius for matching traffic records to the route; needed to decide whether RD-4 (b) can excuse a segment on its own."
+  },
+  {
+    "id": "G4",
+    "group": "gap",
+    "title": "Counting repeated violations",
+    "rule_en": "Missing: how \"repeated\" violations are counted and over what time window, needed for RD-6's flag_account. Current: at least 1 upheld case in the last 90 days plus this case (RD-6); the profile field itself uses a 90-day window (spec s.1.3). Missing evidence: Ryde A10 says only \"Repeated or severe\"; ratings use the \"last 100 trips\" but the violation window is unpublished; LTA demerit accumulation (B4) is the official sanction scale, not this system's ruling.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A10",
+        "what": "Ryde Help Centre: Driver Performance and Community Standards",
+        "quote": "Repeated or severe breaches may lead to permanent suspension"
+      },
+      {
+        "id": "B4",
+        "what": "LTA news release: demerit point accumulation",
+        "quote": "an accumulation of 6 demerit points or more would result in the suspension of the vocational licence"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: how \"repeated\" violations are counted and over what time window, needed for RD-6's flag_account."
+  },
+  {
+    "id": "G5",
+    "group": "gap",
+    "title": "Detour refund formula",
+    "rule_en": "Missing: the detour refund formula, needed for the RD-2 amount. Current: unexcused segments' extra_km x per-kilometre rate (distance units only). Missing evidence: Ryde has no fare-review clause (searches for longer route / detour / fare review / fare adjustment found nothing); the formula is derived from the LTA meter structure B5.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: route articles (no detour refund article found)",
+        "quote": ""
+      },
+      {
+        "id": "B5",
+        "what": "LTA: Taxi Fares and Payment Methods (meter structure)",
+        "quote": "26 cents every 400m (1km - 10km)"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: the detour refund formula, needed for the RD-2 amount."
+  },
+  {
+    "id": "G6",
+    "group": "gap",
+    "title": "Charging for in-trip stops",
+    "rule_en": "Missing: whether stops during a non-metered trip may be charged (RD-3 (c)). Current: not chargeable (Ryde publishes only the $5 pick-up waiting fee; PTC requires surcharges to be published). Missing evidence: Ryde has no explanation of in-trip waiting fees (searches for stop / multiple stops / waiting during trip found nothing).",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee",
+        "quote": "Waiting Time Fee of $5 at the end of the trip"
+      },
+      {
+        "id": "A18",
+        "what": "Ryde Help Centre: in-trip waiting fee not found",
+        "quote": ""
+      },
+      {
+        "id": "B6",
+        "what": "PTC: Point-to-point transport fares",
+        "quote": "waiting time charge and other fees must be published"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: whether stops during a non-metered trip may be charged (RD-3 (c))."
+  },
+  {
+    "id": "G7",
+    "group": "gap",
+    "title": "Free cancel when driver is late",
+    "rule_en": "Missing: free cancellation when the driver is later than the ETA, a rider-side fairness rule (NS-8). Current: not adopted (Ryde has no such rule and the case files have no ETA field). Missing evidence: Grab C1 and Gojek C3 have it; Ryde A1 does not.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "C1",
+        "what": "Grab SG cancellation policy",
+        "quote": "if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee"
+      },
+      {
+        "id": "C3",
+        "what": "Gojek SG cancellation and waiting fees",
+        "quote": "If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived"
+      },
+      {
+        "id": "A1",
+        "what": "Ryde Help Centre: Cancellation and Waiting Fee (no ETA rule)",
+        "quote": ""
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: free cancellation when the driver is later than the ETA, a rider-side fairness rule (NS-8)."
+  },
+  {
+    "id": "G8",
+    "group": "gap",
+    "title": "Judge confidence threshold",
+    "rule_en": "Missing: the judge confidence threshold below which the case goes to a human (core/verify.py). Current: 0.70. Missing evidence: spec s.5.4 / s.5.6 only require a threshold and set no value.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "E",
+        "what": "this system's design, implemented in core/verify.py and core/policy_engine.py",
+        "quote": ""
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: the judge confidence threshold below which the case goes to a human (core/verify.py)."
+  },
+  {
+    "id": "G9",
+    "group": "gap",
+    "title": "ERP gantry verification",
+    "rule_en": "Missing: a method to verify ERP gantry charges (FARE-2). Current: look up the gantry table for the actual route and time band. Missing evidence: Ryde A8 gives no verification method; the dataset has no tolls field.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A8",
+        "what": "Ryde Help Centre: I was overcharged for ERP/toll",
+        "quote": "there may be additional charges such as tolls that could occur during your trip"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: a method to verify ERP gantry charges (FARE-2)."
+  },
+  {
+    "id": "G11",
+    "group": "gap",
+    "title": "Verbal or unrecorded consent",
+    "rule_en": "Missing: whether consent given only verbally, or claimed only in the driver's statement, can satisfy RD-5. Current: not accepted — a consent claim that appears only in the driver's statement is not consent; when the judge cannot settle it from the chat the case goes to a person. Missing evidence: Ryde A7 says only \"reach a mutual agreement before you go\" and does not say how an agreement must be recorded.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "A7",
+        "what": "Ryde Help Centre: Can I suggest my preferred route to the driver?",
+        "quote": "reach a mutual agreement before you go"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: whether verbal consent counts; current rule: it does not, a person decides."
+  },
+  {
+    "id": "G12",
+    "group": "gap",
+    "title": "Missing evidence",
+    "rule_en": "Missing: what to do when the evidence a clause needs is absent — no GPS trace or a hole in it, messages without timestamps, a metered trip with no distance fare on record. Current: no ruling; the case goes to a person with a note of what is missing, and the gap is never read in either party's favour. Missing evidence: Ryde publishes no rule; this is the system's rule pending Ryde's confirmation.",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "E",
+        "what": "this system's design, implemented in core/facts/tools.py and core/policy_engine.py",
+        "quote": ""
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: a rule for absent evidence; current rule: no ruling, a person decides, the gap favours no one."
+  },
+  {
+    "id": "G10",
+    "group": "gap",
+    "title": "RydeTAXI unit rate",
+    "rule_en": "Missing: RydeTAXI unit rates, needed for RD-2's per-kilometre rate. Current: data/rates.json assumes $1.41/km and $0.26/min (not the LTA meter unit of 26 cents per 400 m). Missing evidence: Ryde does not publish unit rates; the real rate should come from the owning taxi company's meter (B5, B6, A18).",
+    "citable": false,
+    "source_kind": "Gap: no source",
+    "sources": [
+      {
+        "id": "B5",
+        "what": "LTA: Taxi Fares and Payment Methods",
+        "quote": "26 cents every 400m (1km - 10km)"
+      },
+      {
+        "id": "B6",
+        "what": "PTC: Point-to-point transport fares",
+        "quote": "Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company"
+      },
+      {
+        "id": "A18",
+        "what": "Ryde Help Centre: RydeTAXI meter",
+        "quote": "all fees for Standard and/or Premium taxis follow that of the respective taxi company"
+      }
+    ],
+    "notes_en": "",
+    "summary_en": "Missing: RydeTAXI unit rates, needed for RD-2's per-kilometre rate."
+  }
 ]

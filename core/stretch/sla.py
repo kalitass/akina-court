@@ -61,8 +61,8 @@ def route(ruling: Ruling, dispute_type: DisputeType, signals: Iterable[Signal] =
     `eligibility` is CaseRecord.eligibility ({"auto": bool, "reasons": [...]}) from the policy certificate;
     when the certificate says the case is not eligible for automation it goes to review regardless of confidence."""
     sigs = list(signals)
-    if dispute_type == "safety" or any(s.code == "CHAT_THREAT" for s in sigs):
-        return _route("urgent_safety", "safety dispute / threat keyword (SAFE-1): human reviewer within 2 h")
+    if dispute_type == "safety" or getattr(ruling, "safety_concern", "none") != "none":
+        return _route("urgent_safety", "safety dispute / judge recorded a safety concern (SAFE-1): human reviewer within 2 h")
     if ruling.escalate or ruling.ruling == "escalate":
         return _route("review_24h", f"escalated by verify: {ruling.escalation_reason or 'no reason recorded'}")
     if eligibility is not None and eligibility.get("auto") is False:

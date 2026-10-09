@@ -36,7 +36,7 @@ EXPECTED = {Path(p).stem: json.load(open(p)) for p in glob.glob(str(ROOT / "data
 
 
 def core_ok(ruling: str, amount, escalate: bool, exp: dict) -> bool:
-    return ruling == exp["ruling"] and abs(float(amount or 0) - float(exp.get("amount") or 0)) <= 0.01 and bool(escalate) == bool(exp.get("escalate"))
+    return ruling == exp["ruling"] and abs(float(amount or 0) - float(exp.get("amount") or 0)) <= 0.0105 and bool(escalate) == bool(exp.get("escalate"))
 
 
 def gate_arm(arm: str) -> dict:

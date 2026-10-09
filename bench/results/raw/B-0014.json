@@ -4,13 +4,13 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:33:45.852384+00:00",
+ "ts": "2026-10-09T19:04:27.528617+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 5.79,
-  "recommended_action": "Issue Ryde voucher of $5.79 to rider (metered-extra-distance refund for the unexempted mid-trip detour); + flag_account",
-  "confidence": 0.72,
+  "amount": 17.62,
+  "recommended_action": "Issue a Ryde voucher of S$17.62 (metered-distance overcharge for the non-exempt detour) within the 30-day window; keep the toll/ERP and time-fare components as metered.",
+  "confidence": 0.63,
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -18,32 +18,41 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "exempt": false,
-    "reason": "Off-route segment 21:46:45–22:13:45: GPS departs the quoted C2/PIE alignment near (1.32017,103.87862) and runs ~6–8 km through the western perpendicular, with a reversal/overshoot to ~103.930 before rejoining, adding ≈1.5 km of driven distance. No RD-4 exemption: the sole Accident incident lies ON the quoted alignment the driver actually used (m_from_route ≈ 0), and the only band overlapping the quoted corridor is band 4 (30–39 km/h), not band 1/2. No RD-3/RD-5 exemption: no chat routing request or pre-departure agreement exists (chat only greets at 21:33/21:34; detour starts ~21:46). RD-1 duty breached; unexempted under RD-2 → metered extra distance refundable."
+    "finding": "exempt",
+    "basis": [],
+    "reason": "Optimal-route segment along the KPE from ≈1.3010,103.8769 to ≈1.3358,103.9401 is the route the driver abandoned; LTA incident 'Accident on Kallang Paya Lebar Expressway (towards Tampines Mall)' at 1.31532,103.87453, reported_at 2026-10-02T21:26:00 (before the segment start) and within the trip window. RD-4(a) is satisfied → no_action for this segment."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "basis": [],
+    "reason": "Trace deviates from the quoted ECP/airport corridor (`1.3224,103.8876` onward, KPE link SYN-0009) between ≈21:47 and ≈21:49, running east to the PIE corridor from `1.3254,103.8713` out to `1.3287,103.8635` and back, rejoining near `1.3232,103.8847`. The incident is behind and west of the deviation (RD-4 not met — the alternative route is not shown affected), the alternative PIE link at that point is not band ≤ 2 in a way measurable on the blocked section, and no chat consent precedes the deviation (RD-5 fails; messages are 21:33–21:34 only, and 不可引用 G11 excludes a driver's verbal-consent claim). Non-exempt under RD-1; extra km enters RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The driver claims a KPE accident forced his diversion, but the LTA incident at (1.31532,103.87453) is located on the quoted route he actually drove, not on any substituted section of the optimal route (RD-4(a) requires the traffic record to justify the replaced segment)."
+    "id": "driver_statement_1",
+    "reason": "The claim that the extra distance was 'unavoidable' covers only the accident-affected KPE stretch (granted as exempt under RD-4(a)); the later eastward PIE deviation at 21:47–21:49 is not on or near the incident and is not exempt."
    },
    {
-    "id": "chat_agreement",
-    "reason": "RD-5 requires the driver to propose the route change and the rider to agree BEFORE leaving the optimal route; the chat contains only pickup greetings (21:33/21:34), none of them a routing agreement, and the detour starts ~21:46."
+    "id": "driver_statement_2",
+    "reason": "Implied rider consent to routing: no rider message in the chat agrees to any route change before the deviation (RD-5); an unrecorded/verbal consent claim cannot be accepted (G11)."
    }
   ],
   "flag_account": false
  },
- "latency_s": 8.81,
- "input_tokens": 15078,
- "output_tokens": 1636,
+ "latency_s": 9.81,
+ "input_tokens": 15682,
+ "output_tokens": 1856,
  "requests": 1,
  "llm_calls": 1
 }

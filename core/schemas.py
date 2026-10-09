@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ----------------------------------------------------------------------------
 # 1. Case: raw evidence for one dispute (spec 1.3). Loaded from data/cases/*.json
@@ -121,7 +121,7 @@ class Fare(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    ts: datetime
+    ts: Optional[datetime] = None                    # None = the record carries no timestamp (an evidence gap, never silently "before")
     sender: Party = Field(alias="from")
     text: str
     kind: Literal["message", "call"] = "message"     # "call": a call attempt logged in the chat (text = outcome)
@@ -245,10 +245,31 @@ class RejectedClaim(BaseModel):
     reason: str
 
 
+Finding = Literal["exempt", "counts", "undetermined"]
+
+
 class SegmentFinding(BaseModel):
+    """The judge's reading of one off-route segment. Code settles what it can measure (RD-4 incident); the meaning of
+    what was said (RD-3 / RD-5) is the judge's, and it may be undetermined — then the case goes to a person."""
     fact_id: str                                  # the gps off-route segment fact, e.g. "F5"
-    exempt: bool                                  # True = RD-3/RD-4/RD-5 exempts it, False = counts toward RD-2
+    finding: Finding                              # exempt = RD-3/RD-4/RD-5 excuses it; counts = refundable under RD-2; undetermined = evidence does not settle it
+    basis: list[str] = []                         # the chat / statement fact ids the finding rests on (code checks they exist, who wrote them and when)
     reason: str                                   # one clause-cited sentence
+
+    @model_validator(mode="before")
+    @classmethod
+    def _from_legacy(cls, v):
+        """Records written before findings had three values stored exempt: true/false."""
+        if isinstance(v, dict) and "finding" not in v and "exempt" in v:
+            v = dict(v); v["finding"] = "exempt" if v.pop("exempt") else "counts"
+        return v
+
+    @property
+    def exempt(self) -> Optional[bool]:
+        return {"exempt": True, "counts": False}.get(self.finding)
+
+
+SafetyConcern = Literal["none", "suspected", "confirmed"]
 
 
 class Ruling(BaseModel):
@@ -262,6 +283,9 @@ class Ruling(BaseModel):
     rejected_claims: list[RejectedClaim] = []
     flag_account: bool = False                    # structured account-flag decision; the only thing actions / checks read
     segment_findings: list[SegmentFinding] = []   # route cases: one entry per off-route segment fact (drives the map colours)
+    safety_concern: SafetyConcern = "none"        # the judge's reading of every message, statement and complaint (SAFE-1 / SAFE-2); never a keyword
+    safety_basis: list[str] = []                  # fact ids that raised the concern
+    evidence_gap: Optional[str] = None            # what is missing when the judge cannot decide (one sentence) — a ground for escalate
     escalate: bool = False
     escalation_reason: Optional[str] = None
 

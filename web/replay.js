@@ -64,9 +64,13 @@ function compact(c, ft, run){
     chat: (c.chat||[]).map(m => ({ t:sec(m.ts), from:m.sender || m.from, text:m.text })),
     driver_statement: c.driver_statement || '', profiles: c.profiles || {},
     facts: ft.facts, events: run ? run.events : [], ruling: run ? run.ruling : null, notices: run ? (run.notices||[]) : [],
-    exempt: run && run.ruling && run.ruling.segment_findings ? run.ruling.segment_findings.filter(f => f.exempt).map(f => f.fact_id) : null,
+    exempt: run && run.ruling && run.ruling.segment_findings ? run.ruling.segment_findings.filter(f => fState(f) === true).map(f => f.fact_id) : null,
   };
 }
+// a finding is three-valued: exempt (true) / counts (false) / undetermined (null); records written before that stored exempt: bool
+function fState(f){ return f.finding ? (f.finding === 'exempt' ? true : f.finding === 'counts' ? false : null) : (f.exempt == null ? null : !!f.exempt); }
+function fWord(f){ const st = fState(f); return st === null ? 'undetermined' : st ? (SHOW ? 'excused' : 'exempt') : (SHOW ? 'not excused' : 'not exempt'); }
+function fCls(f){ const st = fState(f); return st === null ? 'und' : st ? 'amb' : 'red'; }
 const C = compact(caseJ, factsJ, runJ);
 const MODE = C.type === 'no_show' ? 'no_show' : C.type === 'safety' ? 'safety' : 'route';
 const T = C.trip;
@@ -91,7 +95,9 @@ function factLabel(f){
   if ('cancelled_at' in v) return 'cancellation ' + (v.s_after_accept != null ? Math.round(v.s_after_accept) + ' s after matching' : 'time');
   if ('driver_arrived_at' in v) return v.driver_arrived_at ? 'recorded arrival' : 'no arrival recorded';
   if (v.signal) return 'signal: ' + String(v.signal).toLowerCase().replace(/_/g, ' ');
-  if (v.threat) return 'threat keyword in chat';
+  if (v.gps_missing) return 'no GPS trace on record';
+  if ('gps_gap_s' in v) return 'hole in the GPS trace';
+  if ('complete' in v && 'count' in v) return v.count ? 'chat record' : 'no chat';
   if (src === 'chat') return v.idx != null ? (v.from + "'s message " + (v.ts ? hm(isoSec(v.ts)) : '')) : (v.from + "'s statement");
   if (src === 'fare') return 'excess_amount' in v ? 'excess distance billed' : 'waiting_fee' in v && !('total' in v) ? 'waiting fee' : 'surge_multiplier' in v && Object.keys(v).length === 1 ? 'surge' : 'cancellation_fee' in v && Object.keys(v).length === 1 ? 'cancellation fee charged' : 'fare breakdown';
   if (src === 'traffic') return v.road_name ? ROAD(v.road_name) + (v.severe ? ' congestion' : ' traffic') : (v.type ? String(v.type).toLowerCase() + ' report' + (v.reported_at ? ' ' + hm(isoSec(v.reported_at)) : '') : 'traffic record');
@@ -322,7 +328,7 @@ function buildMarkers(){
 // the judge decides exemption: recolour segments live
 function applyFindings(findings){
   if (!findings || !findings.length) return;
-  for (const f of findings) { const s = segs.find(x => x.id === f.fact_id); if (!s) continue; s.exempt = !!f.exempt; }
+  for (const f of findings) { const s = segs.find(x => x.id === f.fact_id); if (!s) continue; s.exempt = fState(f); }
   for (const s of segs) { const wrap = segM[s.id] && segM[s.id].getElement().firstChild; const lab = wrap && wrap.firstChild; if (lab) { lab.className = `seglab ${segCls(s)}`; lab.textContent = `${segName(s.id)} · +${s.km.toFixed(2)} km · ${segWord(s)}`; } }
   document.querySelectorAll('#scrubMarks .range[data-seg], #scrubMarks .lbl[data-seg]').forEach(e => { const s = segs.find(x => x.id === e.dataset.seg); if (!s) return; if (e.classList.contains('range')) e.className = 'range ' + segCls(s); else e.style.color = segColor(s); });
   document.querySelectorAll('.segword').forEach(e => { const s = segs.find(x => x.id === e.dataset.seg); if (s) e.textContent = segWord(s); });
@@ -411,7 +417,7 @@ $('toCourt').onclick = () => { playing = false; $('play').textContent = '↻ Rep
   for (const k of ticks.sort((a,b) => a.pr - b.pr)) { const x = pct(k.t)/100*W; const e = el('div', 'tick ' + k.cls, `<b>${k.lbl}</b>`); e.style.left = pct(k.t) + '%'; e.title = k.lbl; const w = k.lbl.length * 6.2 + 6; const left = k.cls === 'end' ? x - w : x; if (placed.some(([a,b]) => left < b + 8 && left + w > a - 8)) e.querySelector('b').style.display = 'none'; else placed.push([left, left + w]); M.appendChild(e); }
   for (const s of segs) { const e = el('div', 'range ' + segCls(s)); e.dataset.seg = s.id; e.style.left = pct(s.s)+'%'; e.style.width = (pct(s.e)-pct(s.s))+'%'; e.title = segName(s.id); M.appendChild(e); const l = el('div','lbl',segShort(s.id)); l.dataset.seg = s.id; l.style.left = pct((s.s+s.e)/2)+'%'; l.style.color = segColor(s); M.appendChild(l); }
   for (const s of stops) { const e = el('div', 'range stop'); e.style.left = pct(s.s)+'%'; e.style.width = (pct(s.e)-pct(s.s))+'%'; M.appendChild(e); }
-  for (const m of C.chat) { if (m.t < t0 || m.t > t1) continue; const e = el('div', 'chat ' + (m.from==='driver'?'d':'') + (flagsOf(m).includes('threat') ? ' threat':'')); e.style.left = pct(m.t)+'%'; e.title = `${hm(m.t)} ${m.from}: ${m.text}`; M.appendChild(e); }
+  for (const m of C.chat) { if (m.t < t0 || m.t > t1) continue; const e = el('div', 'chat ' + (m.from==='driver'?'d':'') + (flagsOf(m).includes('safety concern') ? ' threat':'')); e.style.left = pct(m.t)+'%'; e.title = `${hm(m.t)} ${m.from}: ${m.text}`; M.appendChild(e); }
   let drag = false; const at = e => { const r = S.getBoundingClientRect(); return t0 + Math.min(1, Math.max(0, (e.clientX - r.left)/r.width)) * (t1 - t0); };
   S.addEventListener('pointerdown', e => { drag = true; S.setPointerCapture(e.pointerId); setTime(at(e), true); });
   S.addEventListener('pointermove', e => { if (drag) setTime(at(e), true); });
@@ -421,24 +427,29 @@ addEventListener('keydown', e => { if (e.target.tagName === 'SELECT' || e.target
 
 // ---------------- feed / bubbles ----------------
 const feedEl = $('feed');
+// what the judge read that code could not: a safety concern, an evidence gap
+function judgeNotes(r){ const out = []; if (r.safety_concern && r.safety_concern !== 'none') out.push(`<div><span class="seglab red" style="animation:none">safety concern · ${esc(r.safety_concern)}</span><span>${(r.safety_basis||[]).map(b=>cite(b)).join(', ') || 'no basis listed'}</span></div>`); if (r.evidence_gap) out.push(`<div><span class="seglab und" style="animation:none">evidence gap</span><span>${esc(r.evidence_gap)}</span></div>`); return out.length ? `<div class="segf">${out.join('')}</div>` : ''; }
 function setPill(cls, txt){ const p = $('pill'); p.className = 'pill ' + cls; p.querySelector('span').textContent = txt; }
-function flagsOf(m){ const f = C.facts.find(x => x.source === 'chat' && x.value && x.value.ts && isoSec(x.value.ts) === m.t && x.value.from === m.from); return f && f.value.flags || []; }
+// nothing in the fact table labels a message; a red mark appears only when the judge's safety screen named this line (safety_basis).
+// a hint word is shown as a neutral note: it only tells the reader (and the judge) to read the line in context.
+function flagsOf(m){ const f = C.facts.find(x => x.source === 'chat' && x.value && x.value.ts && isoSec(x.value.ts) === m.t && x.value.from === m.from); if (!f) return [];
+  const concern = C.ruling && C.ruling.safety_concern && C.ruling.safety_concern !== 'none'; const basis = (concern && C.ruling.safety_basis) || []; const out = []; if (basis.includes(f.id)) out.push('safety concern'); else if (f.value.keyword_hint) out.push('hint word · judge reads it'); return out; }
 function feedAdd(fe){
   const emp = feedEl.querySelector('.empty'); if (emp) emp.remove();
   const it = el('div', 'fitem'); it.dataset.key = fe.t + fe.kind + (fe.html.text || fe.html);
-  if (fe.kind === 'chat') { const m = fe.html, fl = flagsOf(m), threat = fl.includes('threat'); it.classList.toggle('right', m.from === 'driver');
-    it.innerHTML = `<div class="t">${hm(m.t)}</div><div class="c"><div class="bub ${esc(m.from)}${threat?' threat':''}"><span class="who">${esc(m.from)}</span>${esc(m.text)}${fl.length?`<div class="flags">${fl.map(x=>`<span class="badge ${x==='threat'?'red':x==='agreement'?'green':'blue'}">${esc(x)}</span>`).join('')}</div>`:''}</div></div>`; }
+  if (fe.kind === 'chat') { const m = fe.html, fl = flagsOf(m), threat = fl.includes('safety concern'); it.classList.toggle('right', m.from === 'driver');
+    it.innerHTML = `<div class="t">${hm(m.t)}</div><div class="c"><div class="bub ${esc(m.from)}${threat?' threat':''}"><span class="who">${esc(m.from)}</span>${esc(m.text)}${fl.length?`<div class="flags">${fl.map(x=>`<span class="badge ${x==='safety concern'?'red':'blue'}">${esc(x)}</span>`).join('')}</div>`:''}</div></div>`; }
   else it.innerHTML = `<div class="t">${hm(fe.t)}</div><div class="c"><div class="sys ${fe.cls||''}">${fe.html}</div></div>`;
   feedEl.appendChild(it); feedEl.scrollTop = feedEl.scrollHeight;
 }
 function feedRemove(fe){ const key = fe.t + fe.kind + (fe.html.text || fe.html); for (const x of feedEl.children) if (x.dataset.key === key) { x.remove(); break; } }
 function bubble(m){
-  const fl = flagsOf(m), threat = fl.includes('threat');
+  const fl = flagsOf(m), threat = fl.includes('safety concern');
   const inCar = MODE !== 'no_show' && PICK && m.t >= PICK;
   const at = m.from === 'driver' || inCar ? posAt(m.t).p : pickupLL;
   const pp = map.project(at), leftSide = (pp.y < HUD_B() + 40 && pp.x - 250 < HUD_R) || pp.x < (innerWidth - panelW()) / 2;
   const up = at === pickupLL ? -52 : -28;
-  const b = mk(`<div class="mbub ${esc(m.from)}${threat?' threat':''}"><span class="w">${esc(m.from)}${threat?' · threat detected':''}</span>${esc(m.text)}</div>`, { anchor: leftSide ? 'bottom-left' : 'bottom-right', offset: leftSide ? [22,up] : [-22,up] }).setLngLat(at).addTo(map);
+  const b = mk(`<div class="mbub ${esc(m.from)}${threat?' threat':''}"><span class="w">${esc(m.from)}${threat?' · safety concern':''}</span>${esc(m.text)}</div>`, { anchor: leftSide ? 'bottom-left' : 'bottom-right', offset: leftSide ? [22,up] : [-22,up] }).setLngLat(at).addTo(map);
   b.getElement().style.zIndex = 6;
   const life = Math.max(3500, Math.min(7000, 2500 + m.text.length * 40));
   setTimeout(() => { b.getElement().firstChild.classList.add('out'); setTimeout(() => b.remove(), 500); }, life);
@@ -545,7 +556,7 @@ function renderEvent(e, inst){
       break; }
     case 'ruling': { const r = e.ruling || (RECORD && RECORD.ruling) || {}; const esc_ = r.ruling === 'escalate'; const sf = r.segment_findings || [];
       applyFindings(sf);
-      w.innerHTML = head(e) + `<div class="ruling"><div class="head"><div><div class="out">${/Proposed/i.test(e.title) ? 'Proposed ruling' : 'Ruling'}</div><div class="amt">${r.amount != null ? '$' + (+r.amount).toFixed(2) : esc(OUT[r.ruling]||r.ruling||'')}${r.amount != null ? `<small>${esc(OUT[r.ruling]||r.ruling)}</small>` : ''}</div></div><div class="conf">model confidence<b>${r.confidence != null ? (+r.confidence).toFixed(2) : '—'}</b><div class="bar"><i data-w="${Math.round((+r.confidence||0)*100)}%"></i></div></div></div>${sf.length ? `<div class="segf">${sf.map(f => `<div><span class="seglab ${f.exempt?'amb':'red'}" style="animation:none">${esc(f.fact_id)} · ${f.exempt?'exempt':'not exempt'}</span><span>${cite(f.reason||'')}</span></div>`).join('')}</div>` : ''}<div class="body">${(r.reasoning||'').split(/\n\n+/).map(p => `<p>${cite(p)}</p>`).join('')}</div><div class="act ${esc_?'esc':''}"><b>${esc_?'Action':'Remedy'}:</b> ${cite(r.recommended_action||'')}</div>${(r.rejected_claims||[]).length ? `<div class="rej"><div style="border:0;padding-top:0;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase">Claims rejected</div>${r.rejected_claims.map(c => `<div><b>${esc(c.id)}</b> · ${cite(c.reason)}</div>`).join('')}</div>` : ''}</div>`;
+      w.innerHTML = head(e) + `<div class="ruling"><div class="head"><div><div class="out">${/Proposed/i.test(e.title) ? 'Proposed ruling' : 'Ruling'}</div><div class="amt">${r.amount != null ? '$' + (+r.amount).toFixed(2) : esc(OUT[r.ruling]||r.ruling||'')}${r.amount != null ? `<small>${esc(OUT[r.ruling]||r.ruling)}</small>` : ''}</div></div><div class="conf">model confidence<b>${r.confidence != null ? (+r.confidence).toFixed(2) : '—'}</b><div class="bar"><i data-w="${Math.round((+r.confidence||0)*100)}%"></i></div></div></div>${sf.length ? `<div class="segf">${sf.map(f => `<div><span class="seglab ${fCls(f)}" style="animation:none">${esc(f.fact_id)} · ${fWord(f)}</span><span>${cite(f.reason||'')}${(f.basis||[]).length?` <small>(rests on ${f.basis.map(b=>cite(b)).join(', ')})</small>`:''}</span></div>`).join('')}</div>` : ''}${judgeNotes(r)}<div class="body">${(r.reasoning||'').split(/\n\n+/).map(p => `<p>${cite(p)}</p>`).join('')}</div><div class="act ${esc_?'esc':''}"><b>${esc_?'Action':'Remedy'}:</b> ${cite(r.recommended_action||'')}</div>${(r.rejected_claims||[]).length ? `<div class="rej"><div style="border:0;padding-top:0;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase">Claims rejected</div>${r.rejected_claims.map(c => `<div><b>${esc(c.id)}</b> · ${cite(c.reason)}</div>`).join('')}</div>` : ''}</div>`;
       setTimeout(() => { const b = w.querySelector('.bar i'); if (b) b.style.width = b.dataset.w; }, inst ? 0 : 400);
       break; }
     case 'summary': w.innerHTML = head(e, 'Final') + `<div class="card" style="font-size:12.5px;line-height:1.5">${cite((e.title||'').replace(/^Final:\s*/, ''))}<div style="margin-top:6px;color:var(--muted);font-size:11px">${cite(e.body||'')}</div></div>`; break;
@@ -585,7 +596,7 @@ function renderShow(e, inst){
       if (/Fact table built/i.test(e.title)) {
         const pick = []; const seen = new Set(); const add = f => { if (f && !seen.has(f.id) && pick.length < 5) { seen.add(f.id); pick.push(f); } };
         for (const f of C.facts) if (f.source === 'gps' || f.source === 'timeline') add(f);
-        for (const f of C.facts) if (f.value && f.value.threat) add(f);
+        for (const f of C.facts) if (f.value && (f.value.gps_missing || 'gps_gap_s' in f.value)) add(f);
         for (const f of C.facts) if (f.source === 'fare' && f.value && ('excess_amount' in f.value || ('cancellation_fee' in f.value && Object.keys(f.value).length === 1))) add(f);
         const w = card(e, `Evidence computed by code · ${C.facts.length} facts, no AI involved`, `<div class="card">${pick.map(f => `<div class="line geo-line" data-id="${esc(f.id)}" title="${esc(f.id)}">${esc(clip(f.text, 150))}</div>`).join('')}<div class="line muted">+ ${C.facts.length - pick.length} more (fare lines, chat, traffic, weather, history). The advocates may only argue from these.</div></div>`);
         if (!inst) pick.forEach((f, i) => setTimeout(() => flashFact(f.id), 160 * i)); return w; }
@@ -624,7 +635,7 @@ function renderShow(e, inst){
       return card(e, null, `<div class="card">${lines.map(l => `<div class="line">${cite(l)}</div>`).join('')}</div>`); }
     case 'ruling': { const r = e.ruling || (RECORD && RECORD.ruling) || {}; const esc_ = r.ruling === 'escalate'; const sf = r.segment_findings || []; applyFindings(sf);
       const paras = (r.reasoning||'').split(/\n\n+/).filter(Boolean);
-      const w = card(e, /Proposed/i.test(e.title) ? 'Judge proposes a ruling' : 'Ruling', `<div class="ruling"><div class="head"><div><div class="out">${/Proposed/i.test(e.title) ? 'Proposed ruling · not yet verified' : 'Ruling'}</div><div class="amt">${r.amount != null ? '$' + (+r.amount).toFixed(2) : esc(OUTW[r.ruling]||r.ruling||'')}${r.amount != null ? `<small>${esc(OUTW[r.ruling]||r.ruling)}</small>` : ''}</div></div><div class="conf" style="font-size:11px">${/Proposed/i.test(e.title) ? 'awaiting code check' : ''}</div></div>${sf.length ? `<div class="segf">${sf.map(f => `<div><span class="seglab ${f.exempt?'amb':'red'}" style="animation:none">${esc(segName(f.fact_id))} · ${f.exempt?'excused':'not excused'}</span><span>${cite(clip(f.reason||'', 170))}</span></div>`).join('')}</div>` : ''}<div class="body"><p>${cite(clip(paras[0] || '', 340))}</p>${paras.length > 1 || (paras[0]||'').length > 340 ? more('full reasoning', paras.map(p => `<p>${cite(p)}</p>`).join('')) : ''}</div><div class="act ${esc_?'esc':''}"><b>${esc_?'Action':'Remedy'}:</b> ${cite(stripIds(r.recommended_action||''))}</div>${(r.rejected_claims||[]).length ? `<div class="rej">${more(`${r.rejected_claims.length} claim${r.rejected_claims.length>1?'s':''} rejected`, r.rejected_claims.map(c => `<div>${cite(clip(c.reason, 200))}</div>`).join(''))}</div>` : ''}</div>`);
+      const w = card(e, /Proposed/i.test(e.title) ? 'Judge proposes a ruling' : 'Ruling', `<div class="ruling"><div class="head"><div><div class="out">${/Proposed/i.test(e.title) ? 'Proposed ruling · not yet verified' : 'Ruling'}</div><div class="amt">${r.amount != null ? '$' + (+r.amount).toFixed(2) : esc(OUTW[r.ruling]||r.ruling||'')}${r.amount != null ? `<small>${esc(OUTW[r.ruling]||r.ruling)}</small>` : ''}</div></div><div class="conf" style="font-size:11px">${/Proposed/i.test(e.title) ? 'awaiting code check' : ''}</div></div>${sf.length ? `<div class="segf">${sf.map(f => `<div><span class="seglab ${fCls(f)}" style="animation:none">${esc(segName(f.fact_id))} · ${fWord(f)}</span><span>${cite(clip(f.reason||'', 170))}</span></div>`).join('')}</div>` : ''}${judgeNotes(r)}<div class="body"><p>${cite(clip(paras[0] || '', 340))}</p>${paras.length > 1 || (paras[0]||'').length > 340 ? more('full reasoning', paras.map(p => `<p>${cite(p)}</p>`).join('')) : ''}</div><div class="act ${esc_?'esc':''}"><b>${esc_?'Action':'Remedy'}:</b> ${cite(stripIds(r.recommended_action||''))}</div>${(r.rejected_claims||[]).length ? `<div class="rej">${more(`${r.rejected_claims.length} claim${r.rejected_claims.length>1?'s':''} rejected`, r.rejected_claims.map(c => `<div>${cite(clip(c.reason, 200))}</div>`).join(''))}</div>` : ''}</div>`);
       setTimeout(() => { const b = w.querySelector('.bar i'); if (b) b.style.width = b.dataset.w; }, inst ? 0 : 400); return w; }
     case 'summary': return null;
     case 'notify': { if (/Notices sent/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(body); return card(e, 'Plain-language notices to both parties', ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join('')); }

@@ -4,26 +4,29 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:39:09.535201+00:00",
+ "ts": "2026-10-09T19:48:04.252785+00:00",
  "ok": true,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no fare change: the off-route segment is the route to the rider-named Paya Lebar Square stop and is exempt under RD-3(a); the $1.04 meter waiting charge stands under RD-3(c). No account action against the driver (route_disputes_upheld_90d = 0, RD-6 not met).",
-  "confidence": 0.78,
+  "recommended_action": "Close the route-deviation dispute: the only off-route segment is the rider-named Paya Lebar Square stop, exempt under RD-3(a); uphold the metered fare as charged. No refund, no account action.",
+  "confidence": 0.82,
   "cited_facts": [
    "F1",
    "F2",
    "F4",
+   "F5",
    "F6",
-   "F7",
    "F8",
    "F9",
    "F10",
+   "F11",
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F16",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
@@ -31,58 +34,55 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F4",
-    "exempt": true,
-    "reason": "Rider named the place (\"Can you stop at Paya Lebar Square\", 12:20, F9) and the driver accepted at 12:21 before the segment began at 12:24 (F10), and the car did stop there (stationary 12:28–12:32, F2). Under RD-3(a) the whole segment driven to reach a rider-named stop is not a detour; its extra km (2.99 km) are exempt in full. RD-3(b) is inapplicable because the place was named, and RD-5 is unnecessary. No RD-4 exemption applies anyway (F12–F14)."
+    "finding": "exempt",
+    "basis": [
+     "F9",
+     "F10",
+     "F11",
+     "F2"
+    ],
+    "reason": "The rider's own timestamped message (12:20) named Paya Lebar Square as a specific place and the driver accepted it (12:21), both before the segment started at 12:24; the car stopped there for 4 min 0 s [F2][F9][F10][F11]. A rider-named place the car reaches is exempt in full, including the way there [RD-3(a)]; the scope of the rider's consent covers the routing to that named destination, which was not an unnamed corridor [RD-5]. No RD-4 incident exists and band 4 is not severe congestion [F13][F14][F15][RD-4]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Correct that RD-2's metered branch applies (F8, RD-2), but it does not follow that the deviation is refundable: the only off-route segment is the route to the rider-named stop and is exempt under RD-3(a) (F9, F10, F2, F4, RD-3)."
+    "reason": "The +3.5 km / +22% figure is the aggregate trip total, not a deviation finding [F1]; RD-1 requires each off-route segment to be examined individually, and the only segment GPS isolates [F4] is the routing to the place the rider named herself [F9], exempt in full under RD-3(a)."
    },
    {
     "id": "C2",
-    "reason": "The +3.5 km trip-level and 2.99 km segment excesses are accurate (F1, F4, RD-1), but extra km on a segment driven to a rider-named stop are not a detour and are exempt in full (F9, F2, RD-3)."
+    "reason": "The single off-route segment [F4] is the execution of the rider's own named stop, sent at 12:20 and accepted at 12:21, before the segment began at 12:24 [F9][F10][F11][F4]; it is therefore not an unexempted segment under RD-1/RD-3(a)."
    },
    {
     "id": "C3",
-    "reason": "The rider's authorisation was a stop at a NAMED place, and RD-3(a) treats the whole segment driven to reach that named place as exempt — the consent scope question in RD-5 (an unnamed driver-proposed route) does not arise here (F9, F10, F2, F4, RD-3, RD-5)."
+    "reason": "RD-3(a) exempts a rider-named place at which the car stops; the rider named Paya Lebar Square [F9][F10] and the car stopped there for 4 min 0 s [F2]. RD-3(b) is about stops the driver chooses without naming them, which is not this case, and RD-5 is satisfied by the rider's own message, not by the driver's statement [F9][F10][F12]."
    },
    {
     "id": "C4",
-    "reason": "The 4 min 0 s stationarity matches the stop (F2, F9), but the segment 12:24–12:35 brackets the stop and is the approach to and resumption from the named place, not unexplained driving (F2, F4, RD-3)."
+    "reason": "Correct that RD-4(a) is not met and band 4 cannot exempt alone [F13][F14][F15][RD-4], but the segment is exempt under RD-3(a) as a rider-named stop, so the absence of a traffic excuse does not create a refund."
    },
    {
     "id": "C5",
-    "reason": "Correct that no RD-4 exemption applies (F12, F13, F14, RD-4), but the segment is exempt on the separate RD-3(a) ground of a rider-named stop (F9, F2, RD-3)."
+    "reason": "The RD-2 calculation applies only to non-exempt extra_km; the sole segment's 2.99 km [F4] is exempt under RD-3(a) as a rider-named stop, so the refundable mileage is 0 km × $1.4102/km = $0.00 [F4][F8][RD-2]."
    },
    {
     "id": "C6",
-    "reason": "The arithmetic 2.99 km × $1.41 = $4.22 is right (F4, F8, RD-2), but the trace limit is Σ extra_km of NON-exempt segments, and this segment is exempt (F9, F2, RD-3), so the refundable amount is $0.00."
+    "reason": "Correct on the waiting charge — RydeTAXI meter waiting time is not refundable [F6][F8][RD-3(c)] — but it does not support any mileage refund; the stop it relates to is itself exempt [F2][F9][RD-3(a)]."
    },
    {
     "id": "C7",
-    "reason": "Correct and undisturbed: the $1.04 is metered stop time for the rider's own errand and is kept under RD-3(c) (F2, F6, F9, RD-3)."
+    "reason": "RD-6 requires an established breach (RD-2 refund > 0 or a recorded RD-1 violation) plus a prior upheld route dispute in 90 days; route_disputes_upheld_90d = 0 [F18], and the case is not established against the driver, so no flag_account attaches. The rider advocate withdrew this claim."
    },
    {
-    "id": "C8",
-    "reason": "No fault is found against the driver here, and RD-6's 'repeated' condition requires route_disputes_upheld_90d ≥ 1, which the profile shows as 0 (F17, RD-6)."
-   },
-   {
-    "id": "D4",
-    "reason": "The $4.22 figure is not the refund: since the segment is exempt under RD-3(a), no extra_km are refundable (F4, F9, RD-3, RD-2)."
-   },
-   {
-    "id": "D5",
-    "reason": "The ~0.5 km residual carve-out is moot: with the segment exempt, both the 2.99 km and the billed `excess (F1, F4, F5) yield a refund of $0.00 under RD-2."
+    "id": "D6",
+    "reason": "Correct that there is no repeated-route-deviation history and no basis for flag_account [F18][RD-6], but profile facts cannot decide the case either way; the outcome rests on RD-3(a) exemption of the rider-named stop [F9][F10][F2]."
    }
   ],
   "flag_account": false
@@ -90,21 +90,24 @@
  "pre_verify_ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no fare change: the off-route segment is the route to the rider-named Paya Lebar Square stop and is exempt under RD-3(a); the $1.04 meter waiting charge stands under RD-3(c). No account action against the driver (route_disputes_upheld_90d = 0, RD-6 not met).",
-  "confidence": 0.78,
+  "recommended_action": "Close the route-deviation dispute: the only off-route segment is the rider-named Paya Lebar Square stop, exempt under RD-3(a); uphold the metered fare as charged. No refund, no account action.",
+  "confidence": 0.82,
   "cited_facts": [
    "F1",
    "F2",
    "F4",
+   "F5",
    "F6",
-   "F7",
    "F8",
    "F9",
    "F10",
+   "F11",
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F16",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
@@ -112,72 +115,69 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F4",
-    "exempt": true,
-    "reason": "Rider named the place (\"Can you stop at Paya Lebar Square\", 12:20, F9) and the driver accepted at 12:21 before the segment began at 12:24 (F10), and the car did stop there (stationary 12:28–12:32, F2). Under RD-3(a) the whole segment driven to reach a rider-named stop is not a detour; its extra km (2.99 km) are exempt in full. RD-3(b) is inapplicable because the place was named, and RD-5 is unnecessary. No RD-4 exemption applies anyway (F12–F14)."
+    "finding": "exempt",
+    "basis": [
+     "F9",
+     "F10",
+     "F11",
+     "F2"
+    ],
+    "reason": "The rider's own timestamped message (12:20) named Paya Lebar Square as a specific place and the driver accepted it (12:21), both before the segment started at 12:24; the car stopped there for 4 min 0 s [F2][F9][F10][F11]. A rider-named place the car reaches is exempt in full, including the way there [RD-3(a)]; the scope of the rider's consent covers the routing to that named destination, which was not an unnamed corridor [RD-5]. No RD-4 incident exists and band 4 is not severe congestion [F13][F14][F15][RD-4]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Correct that RD-2's metered branch applies (F8, RD-2), but it does not follow that the deviation is refundable: the only off-route segment is the route to the rider-named stop and is exempt under RD-3(a) (F9, F10, F2, F4, RD-3)."
+    "reason": "The +3.5 km / +22% figure is the aggregate trip total, not a deviation finding [F1]; RD-1 requires each off-route segment to be examined individually, and the only segment GPS isolates [F4] is the routing to the place the rider named herself [F9], exempt in full under RD-3(a)."
    },
    {
     "id": "C2",
-    "reason": "The +3.5 km trip-level and 2.99 km segment excesses are accurate (F1, F4, RD-1), but extra km on a segment driven to a rider-named stop are not a detour and are exempt in full (F9, F2, RD-3)."
+    "reason": "The single off-route segment [F4] is the execution of the rider's own named stop, sent at 12:20 and accepted at 12:21, before the segment began at 12:24 [F9][F10][F11][F4]; it is therefore not an unexempted segment under RD-1/RD-3(a)."
    },
    {
     "id": "C3",
-    "reason": "The rider's authorisation was a stop at a NAMED place, and RD-3(a) treats the whole segment driven to reach that named place as exempt — the consent scope question in RD-5 (an unnamed driver-proposed route) does not arise here (F9, F10, F2, F4, RD-3, RD-5)."
+    "reason": "RD-3(a) exempts a rider-named place at which the car stops; the rider named Paya Lebar Square [F9][F10] and the car stopped there for 4 min 0 s [F2]. RD-3(b) is about stops the driver chooses without naming them, which is not this case, and RD-5 is satisfied by the rider's own message, not by the driver's statement [F9][F10][F12]."
    },
    {
     "id": "C4",
-    "reason": "The 4 min 0 s stationarity matches the stop (F2, F9), but the segment 12:24–12:35 brackets the stop and is the approach to and resumption from the named place, not unexplained driving (F2, F4, RD-3)."
+    "reason": "Correct that RD-4(a) is not met and band 4 cannot exempt alone [F13][F14][F15][RD-4], but the segment is exempt under RD-3(a) as a rider-named stop, so the absence of a traffic excuse does not create a refund."
    },
    {
     "id": "C5",
-    "reason": "Correct that no RD-4 exemption applies (F12, F13, F14, RD-4), but the segment is exempt on the separate RD-3(a) ground of a rider-named stop (F9, F2, RD-3)."
+    "reason": "The RD-2 calculation applies only to non-exempt extra_km; the sole segment's 2.99 km [F4] is exempt under RD-3(a) as a rider-named stop, so the refundable mileage is 0 km × $1.4102/km = $0.00 [F4][F8][RD-2]."
    },
    {
     "id": "C6",
-    "reason": "The arithmetic 2.99 km × $1.41 = $4.22 is right (F4, F8, RD-2), but the trace limit is Σ extra_km of NON-exempt segments, and this segment is exempt (F9, F2, RD-3), so the refundable amount is $0.00."
+    "reason": "Correct on the waiting charge — RydeTAXI meter waiting time is not refundable [F6][F8][RD-3(c)] — but it does not support any mileage refund; the stop it relates to is itself exempt [F2][F9][RD-3(a)]."
    },
    {
     "id": "C7",
-    "reason": "Correct and undisturbed: the $1.04 is metered stop time for the rider's own errand and is kept under RD-3(c) (F2, F6, F9, RD-3)."
+    "reason": "RD-6 requires an established breach (RD-2 refund > 0 or a recorded RD-1 violation) plus a prior upheld route dispute in 90 days; route_disputes_upheld_90d = 0 [F18], and the case is not established against the driver, so no flag_account attaches. The rider advocate withdrew this claim."
    },
    {
-    "id": "C8",
-    "reason": "No fault is found against the driver here, and RD-6's 'repeated' condition requires route_disputes_upheld_90d ≥ 1, which the profile shows as 0 (F17, RD-6)."
-   },
-   {
-    "id": "D4",
-    "reason": "The $4.22 figure is not the refund: since the segment is exempt under RD-3(a), no extra_km are refundable (F4, F9, RD-3, RD-2)."
-   },
-   {
-    "id": "D5",
-    "reason": "The ~0.5 km residual carve-out is moot: with the segment exempt, both the 2.99 km and the billed `excess (F1, F4, F5) yield a refund of $0.00 under RD-2."
+    "id": "D6",
+    "reason": "Correct that there is no repeated-route-deviation history and no basis for flag_account [F18][RD-6], but profile facts cannot decide the case either way; the outcome rests on RD-3(a) exemption of the rider-named stop [F9][F10][F2]."
    }
   ],
   "flag_account": false
  },
  "status": "resolved",
- "events": 28,
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.78 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0010.record.json",
- "latency_s": 25.64,
- "input_tokens": 105766,
- "output_tokens": 7113,
- "requests": 11,
+ "latency_s": 22.16,
+ "input_tokens": 97677,
+ "output_tokens": 6756,
+ "requests": 10,
  "llm_calls": 6
 }

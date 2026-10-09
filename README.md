@@ -8,17 +8,17 @@ Team **Akina Court** (named after Mount Akina, the pass where speed is everythin
 
 ## Results at a glance
 
-3 core agents · 3 dispute categories · 6 runnable demo cases on real Singapore roads · 49-case benchmark · 4 systems compared · 392 case-system runs · 52 automated tests.
+3 core agents · 3 dispute categories · 6 runnable demo cases on real Singapore roads · 49-case benchmark · 4 systems compared · 196 case-system runs · 72 automated tests.
 
 | | Raw LLM, one call | Facts by code, one call | Judge + policy check | Full court |
 |---|---|---|---|---|
-| Exact core decision (outcome + amount + escalation) | 55.1% | 75.5% | 98.0% | **49/49** |
-| Wrongful refunds | 24% | 32% | 0% | **0%** |
-| Core decision wrong **and executed** | 21 cases | 12 | 0 | **0** |
-| Cleared for automatic execution | – | – | 40/49 | **41/49** |
-| Invalid citations (fact ids + clause ids) | 4 / 206 | 0 / 755 | 0 / 799 | **0 / 874** |
-| Identity-swap invariance | 81.6% | 91.8% | – | **100%** |
-| Mean time per case | 5.9 s | 5.3 s | 7.4 s | 23.9 s |
+| Exact core decision (outcome + amount + escalation) | 55.1% | 81.6% | 100% | **49/49** |
+| Wrongful refunds | 25% | 38% | 0% | **0%** |
+| Core decision wrong **and executed** | 19 cases | 9 | 0 | **0** |
+| Cleared for automatic execution | – | – | 42/49 | **42/49** |
+| Invalid citations (fact ids + clause ids) | 16 / 220 | 1 / 802 | 0 / 892 | **0 / 961** |
+| Identity-swap invariance | not yet re-run on this version (previous version: 81.6% / 91.8% / – / 100%, archived) | | | |
+| Mean time per case | 6.7 s | 5.8 s | 8.8 s | 23.0 s |
 
 Synthetic data, one model (DeepSeek-chat), reference answers derived from the written policy: these numbers measure **policy conformance**, not human-ops accuracy. Ablations, per-case tables and caveats are on the results page.
 
@@ -28,9 +28,9 @@ A rider says the driver took the long way; the driver says the road was closed. 
 
 ## How it works: three agents inside two layers of code
 
-1. **Code computes the facts.** GPS vs the optimal OneMap route, each off-route segment with its extra kilometres, stops, who tapped what and when, fare lines, LTA speed bands and incidents, weather, both histories → a numbered fact table, identical on every run (`core/facts/tools.py`). Then 21 sourced policy clauses run as predicates — applies / does not apply / left to the judge — producing the allowed outcomes and the amount formula (`core/policy_engine.py`).
+1. **Code computes the facts.** GPS vs the optimal OneMap route, each off-route segment with its extra kilometres, stops, who tapped what and when, fare lines, LTA speed bands and incidents, weather, both histories → a numbered fact table, identical on every run (`core/facts/tools.py`). Both parties' words are copied verbatim with their times and nothing more: what a message *means* (did the rider agree, is this a threat) is never computed by code — the advocates argue it and the judge finds it, and may find it undetermined. Missing evidence (no GPS trace, a hole in it, an untimed message, a metered trip without a distance fare) is itself a fact and never reads as "nothing happened". Then 21 sourced policy clauses run as predicates — applies / does not apply / left to the judge — producing the allowed outcomes and the amount formula; escalating to a person is always among them (`core/policy_engine.py`).
 2. **Three agents argue (Pydantic AI, DeepSeek-chat via the DeepSeek API).** The **Rider Advocate** and **Driver Advocate** read facts through logged tool calls, write a brief each (claims citing fact ids and clause ids) and rebut each other point by point, append-only. The **Judge** reads both verified briefs, the policy trace and the open questions, and rules only on those questions (`core/agents/`). Every tool call, brief, rebuttal point and check is one event on an SSE stream: **inter-agent communication is observable** in the court UI.
-3. **Code decides what may execute.** Every citation must resolve to a real fact and clause; the outcome must be one the policy allows; the amount must match the formula to the cent; an account flag exists only as a structured field, never as free text. Pass → refund paid as a Ryde voucher. Fail → human review queue with the reason (`core/verify.py`, `core/orchestrate.py`). Account actions always go to a human.
+3. **Code decides what may execute.** Every citation must resolve to a real fact and clause; the outcome must be one the policy allows; the amount must match the formula to the cent; an account flag exists only as a structured field, never as free text. The judge's reading of a message is checked for form, not re-read: an exempt segment must rest on a rider message that exists and was sent before the segment; a driver's statement that the rider agreed verbally is not consent. Pass → refund paid as a Ryde voucher. Fail → human review queue with the reason. A judge who records a safety concern, an undetermined finding or an evidence gap sends the case to a person and code never turns that back into a ruling (`core/verify.py`, `core/orchestrate.py`). Account actions always go to a human.
 
 ## Evidence by judging dimension
 
@@ -50,10 +50,10 @@ A rider says the driver took the long way; the driver says the road was closed. 
 ## Where the numbers come from
 
 - Model: requested id deepseek-chat via the DeepSeek API (pydantic-ai client); the API reports serving deepseek-flash in the 2026-10-09 audit sample. One model for all four systems.
-- Runs: 2026-10-09 13:33 to 14:19 UTC; 392 stored case-system runs, 1,179 recorded model calls, 16.2 M input tokens; every run file carries model id, timestamp, latency and API-reported usage.
+- Runs: 2026-10-09 19:03 to 19:52 UTC (the last of several batches that day, after the court stopped labelling chat by keyword; earlier batches are archived); 196 stored case-system runs, 499 recorded model calls, 6.7 M input tokens; every run file carries model id, timestamp, latency and API-reported usage.
 - Cases: 49 synthetic scenarios (26 route deviation, 18 no-show, 5 safety), reference answers derived clause by clause from the written policy.
 - Inputs: raw JSON with GPS every 30 s + policy; code-computed fact table + policy; judge with the policy trace + check; full court (advocates, rebuttal, judge, check).
-- Audit sample: 20 fresh runs (5 cases × 4 systems, 74 HTTP calls) keep the exact requests, the raw responses, DeepSeek trace ids and system fingerprints: bench/results/audit_sample/. Against the reference: full court 5/5, judge + check 5/5, facts by code 5/5, raw LLM 3/5.
+- Audit sample: 20 fresh runs (5 cases × 4 systems, 70 HTTP calls) keep the exact requests, the raw responses, DeepSeek trace ids and system fingerprints: bench/results/audit_sample/. Against the reference: full court 5/5, judge + check 5/5, facts by code 4/5, raw LLM 3/5.
 - Verify: python bench/provenance.py --hashes recomputes the table from the run files; the replay page's Run live re-runs any case (needs a DEEPSEEK_API_KEY). Method and limits: the section below.
 
 "Match" means agreement with the policy-derived reference: a policy-conformance measure, not production accuracy; the data is synthetic and one model was used. Full method and limits: below.
@@ -64,7 +64,7 @@ A rider says the driver took the long way; the driver says the road was closed. 
 1. `.venv/bin/python bench/provenance.py --hashes` recomputes the table above and prints a sha256 per run file.
 2. Open any run file, e.g. `bench/results/court/B-0024.json`: parsed ruling, the judge's ruling before verification, verifier lines, tokens, latency, event count. Its companion `B-0024.record.json` holds the full event log of that hearing (every tool call with the fact ids it returned, both briefs, rebuttal points, the judge's ruling, every check) plus facts, certificate, eligibility and notices.
 3. On a local copy with `DEEPSEEK_API_KEY` set, re-run any case live from the replay page (`Run live`) or the CLI (`scripts/run_case.py C-0001`): the same model, the same prompts, a fresh ruling with a fresh receipt. Benchmark cases: `bench/run_bench.py --cases B-0007 --arms raw,court --force`.
-4. Compare with the provider's usage dashboard for 2026-10-09 13:33–14:19 UTC: the token totals above should match the account's usage for that window.
+4. Compare with the provider's usage dashboard for 2026-10-09 19:03–19:52 UTC: the token totals above should match the account's usage for that window.
 5. Open `bench/results/audit_sample/court/B-0001/calls/01.json` to read, verbatim, what the rider's advocate was asked and what the model answered, with the provider's trace id.
 
 ### Scoring rule, stated plainly
@@ -84,13 +84,13 @@ Each claim made on the landing page maps to code, data or a page. Paths are rela
 |---|---|---|
 | Facts are computed by code, never asked of the model | all cases | `core/facts/tools.py` · `/api/cases/C-0001/facts` |
 | The policy runs as code and fixes allowed outcomes and the amount formula | 21 clauses | `core/policy_engine.py` · `/policy.html` · `policy/sources.md` |
-| Advocates can only cite facts they read and clauses that exist; invalid claims are struck | 0 invalid citations in 874 (court arm) | `core/verify.py` · `/replay.html?case=C-0001&run=C-0001~fake_fact&phase=court` |
-| Unsupported rulings cannot execute; account flags and safety always go to a person | 0 wrong core decisions executed in 49 cases and repeat runs | `core/orchestrate.py` · `/replay.html?case=C-0001&run=C-0001~wrong_amount&phase=court` · `/ops.html` |
+| Advocates can only cite facts they read and clauses that exist; invalid claims are struck | 0 invalid citations in 961 (court arm) | `core/verify.py` · `/replay.html?case=C-0001&run=C-0001~fake_fact&phase=court` |
+| Unsupported rulings cannot execute; account flags and safety always go to a person | 0 wrong core decisions executed in 49 cases | `core/orchestrate.py` · `/replay.html?case=C-0001&run=C-0001~wrong_amount&phase=court` · `/ops.html` |
 | Inter-agent communication is observable and replayable | every run | `runs/*.json`, `bench/results/court/*.record.json` · `/replay.html?case=C-0001&phase=court&mode=expert` |
-| Four systems compared on 49 synthetic cases, with a judge-only ablation | 392 case-system runs, 1,179 model calls | `bench/results/summary.md` · `bench/results/gate_ablation.json` · `/report.html` |
+| Four systems compared on 49 synthetic cases, with a judge-only ablation | 196 case-system runs, 499 model calls | `bench/results/summary.md` · `bench/results/gate_ablation.json` · `/report.html` |
 | Rulings are reproducible: case, policy, code and model fingerprints | every run stored by the service | `core/receipt.py` · `/receipt.html?run=C-0001` (rendered) · `/api/runs/C-0001/receipt` (JSON) |
 | Benchmark provenance: model ids, time window, token counts, full-capture audit sample | 49 cases × 4 systems | this README (Where the numbers come from) · `bench/provenance.py --hashes` · `bench/results/audit_sample/` |
-| Automated tests | 56 tests, no API key needed | `tests/` · `requirements.lock` |
+| Automated tests | 72 tests, no API key needed | `tests/` · `requirements.lock` |
 
 Machine-readable summary with denominators and caveats: `web/submission.json`.
 
@@ -111,7 +111,7 @@ Result: cancellation charge upheld (`no_action`), as the sample's own "Expected 
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt     # or: pip install -r requirements.lock
 cp .env.example .env                       # DEEPSEEK_API_KEY (only needed for live runs)
 scripts/dev.sh                             # http://localhost:8000
-.venv/bin/python -m pytest -q              # 56 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
+.venv/bin/python -m pytest -q              # 72 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
 ```
 
 No key needed to browse: `runs/` ships the six demo rulings and eight pre-recorded audits (fault injection, counterfactuals); the replay page plays them back. A key is needed only for **Run live**; the public demo site runs without one, so there the button is disabled and every case plays back a stored run. CLI: `scripts/run_case.py C-0001` (or `all`) compares a fresh run with `data/expected/`. Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Docker: `deploy/`.

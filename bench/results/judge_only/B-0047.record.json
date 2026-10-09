@@ -40,16 +40,18 @@
     "source": "chat",
     "text": "No in-app chat messages between rider and driver.",
     "value": {
-     "count": 0
+     "count": 0,
+     "complete": true,
+     "untimed": 0
     }
    },
    {
     "id": "F4",
     "source": "chat",
-    "text": "Driver statement: “I made small talk. Nothing inappropriate happened.”",
+    "text": "Driver statement (written after the trip, not part of the chat): “I made small talk. Nothing inappropriate happened.”",
     "value": {
      "from": "driver",
-     "flags": []
+     "statement": true
     }
    },
    {
@@ -86,7 +88,7 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-09T13:37:07.044056Z",
+   "ts": "2026-10-09T19:46:43.616246Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
@@ -100,12 +102,12 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-09T13:37:07.076630Z",
+   "ts": "2026-10-09T19:46:43.633919Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "facts",
    "title": "Fact table built: 6 facts (code, no LLM)",
-   "body": "F1 [gps] Actual distance 17.2 km vs optimal route 17.3 km: -0.1 km (-0%).\nF2 [gps] Trip duration 25.9 min vs estimated 24 min (+2.3 min).\nF3 [chat] No in-app chat messages between rider and driver.\nF4 [chat] Driver statement: “I made small talk. Nothing inappropriate happened.”\nF5 [profile] Rider: account age 1392 d (3.8 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF6 [profile] Driver: account age 1656 d (4.5 y), rating 4.86, 659 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
+   "body": "F1 [gps] Actual distance 17.2 km vs optimal route 17.3 km: -0.1 km (-0%).\nF2 [gps] Trip duration 25.9 min vs estimated 24 min (+2.3 min).\nF3 [chat] No in-app chat messages between rider and driver.\nF4 [chat] Driver statement (written after the trip, not part of the chat): “I made small talk. Nothing inappropriate happened.”\nF5 [profile] Rider: account age 1392 d (3.8 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF6 [profile] Driver: account age 1656 d (4.5 y), rating 4.86, 659 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -114,24 +116,24 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-09T13:37:07.076678Z",
+   "ts": "2026-10-09T19:46:43.633954Z",
    "elapsed": "00:00.0",
    "actor": "verify",
    "kind": "check",
    "title": "Policy execution trace (code): outcome fully determined by code",
-   "body": "✗ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (no evidence)\nallowed outcomes: escalate",
+   "body": "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)\nallowed outcomes: escalate",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": null,
    "certificate": [
-    "✗ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (no evidence)",
+    "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
     "allowed outcomes: escalate"
    ]
   },
   {
    "seq": 4,
-   "ts": "2026-10-09T13:37:07.076692Z",
+   "ts": "2026-10-09T19:46:43.633965Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "brief",
@@ -155,21 +157,21 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-09T13:37:11.730175Z",
-   "elapsed": "00:04.7",
+   "ts": "2026-10-09T19:46:49.962567Z",
+   "elapsed": "00:06.3",
    "actor": "judge",
    "kind": "ruling",
    "title": "Proposed ruling: escalate (model confidence 0.90)",
-   "body": "The dispute type is safety and the rider alleges harassment — repeated comments about her body and a request for her number, which she says left her feeling harassed and unsafe [F3][F4]. Under SAFE-1, allegations of harassment/sexual advances in a case are not auto-adjudicated; the matter is escalated to a human reviewer with a factual summary. No in-app chat exists to corroborate the exchange [F3], and the driver denies any inappropriate conduct [F4], so the factual dispute cannot be resolved on the written record; the trace shows the threat-keyword check is ✗ (no threat language), but SAFE-1 is triggered by the harassment allegation itself, so this remains an escalate case rather than a fare ruling [SAFE-1]. Because the case is escalated, no monetary amount is computed and the fare question is left untouched [RD-2].\n\nFor the human reviewer: the trip was RydeX, Woodlands Civic Centre → Punggol Waterway Point, quoted 17.3 km / 24 min, pickup 22:29, drop-off 22:54, fixed fare charged $35.84 [F1][F2]. Actual distance 17.2 km is 0.1 km below the optimal route, so there is no route-deviation issue to examine [F1]. Duration exceeded the estimate by 2.3 min only [F2], consistent with normal traffic variation. Rider profile: 3.8-year account, 4.8 rating, no prior disputes or upheld disputes in 90 days [F5]. Driver profile: 4.5-year account, 4.86 rating, 659 trips in 90 days, no prior disputes [F6]. Facts to check: whether any contact details were exchanged (no chat record [F3]); the rider's timestamped account of the remarks; the driver's response [F4]; and any audio or in-app record for the 22:29–22:54 window. Profile facts are context only and do not decide anything [F5][F6][SAFE-1].",
+   "body": "The case is filed as a safety dispute: the rider complains that the driver made comments about her body and asked for her number, and that she felt harassed and unsafe [F-complaint][SAFE-1]. The trace marks this as a safety incident with no automatic ruling and limits the allowed outcome to escalate, so I do not weigh the fare at all [SAFE-1]. SAFE-1 expressly covers harassment and unwanted sexual advances, and whether the words were said and how they are characterised is a reading question for a person, not for me [SAFE-1].\n\nThe in-app record cannot settle the dispute: there are no chat messages between rider and driver during the trip [F3], and the only driver-side account is a post-trip statement asserting that \"nothing inappropriate happened\" [F4]. That statement is a claim written after the trip, not contemporaneous evidence, and under the policy a driver's assertion cannot substitute for the record (cf. RD-5, G11); it is also silent on the specific allegation, so it neither confirms nor refutes it [F3][F4][SAFE-1].\n\nRoute and fare facts are not in issue and give no reason to doubt the trip itself: actual distance 17.2 km versus an optimal 17.3 km (-0.1 km, -0%) and duration 25.9 min versus 24 min estimated [F1][F2]. The fare of $35.84 is a fixed RydeX quote, and no unmetreable overcharge is pleaded, so no FARE-1 adjustment is triggered and no refund amount can be computed from any gps or fare fact [F1][F2][FARE-1]. Both profiles are clean (rider 4.8 with no disputes; driver 4.86 with 659 trips and no disputes), which cannot decide anything on its own and, in particular, cannot be used to disbelieve the rider [F5][F6].\n\nBecause a safety allegation is on the record and the only counter-evidence is the driver's own untestable statement, the matter must go to a human reviewer rather than be decided here [F3][F4][SAFE-1]. If a ground-level review ever confirms the conduct, the reviewer should note the reporting paths (995 for medical assistance, driver's commercial motor insurance for injury claims, RydeHELP) [SAFE-2].",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "escalate",
     "amount": null,
-    "recommended_action": "Route to RydeHELP human review: obtain the rider's detailed account and the driver's response, check any non-in-app contact, and apply the Code of Conduct process; do not auto-adjudicate the fare.",
+    "recommended_action": "Send to a Ryde human reviewer (safety/trust & safety) with the complaint text, the driver's post-trip statement and the fact table; contact the rider for a statement (time, what was said, whether a number was requested, whether they felt unsafe continuing the trip) and put the driver account under review pending the outcome.",
     "confidence": 0.9,
-    "reasoning": "The dispute type is safety and the rider alleges harassment — repeated comments about her body and a request for her number, which she says left her feeling harassed and unsafe [F3][F4]. Under SAFE-1, allegations of harassment/sexual advances in a case are not auto-adjudicated; the matter is escalated to a human reviewer with a factual summary. No in-app chat exists to corroborate the exchange [F3], and the driver denies any inappropriate conduct [F4], so the factual dispute cannot be resolved on the written record; the trace shows the threat-keyword check is ✗ (no threat language), but SAFE-1 is triggered by the harassment allegation itself, so this remains an escalate case rather than a fare ruling [SAFE-1]. Because the case is escalated, no monetary amount is computed and the fare question is left untouched [RD-2].\n\nFor the human reviewer: the trip was RydeX, Woodlands Civic Centre → Punggol Waterway Point, quoted 17.3 km / 24 min, pickup 22:29, drop-off 22:54, fixed fare charged $35.84 [F1][F2]. Actual distance 17.2 km is 0.1 km below the optimal route, so there is no route-deviation issue to examine [F1]. Duration exceeded the estimate by 2.3 min only [F2], consistent with normal traffic variation. Rider profile: 3.8-year account, 4.8 rating, no prior disputes or upheld disputes in 90 days [F5]. Driver profile: 4.5-year account, 4.86 rating, 659 trips in 90 days, no prior disputes [F6]. Facts to check: whether any contact details were exchanged (no chat record [F3]); the rider's timestamped account of the remarks; the driver's response [F4]; and any audio or in-app record for the 22:29–22:54 window. Profile facts are context only and do not decide anything [F5][F6][SAFE-1].",
+    "reasoning": "The case is filed as a safety dispute: the rider complains that the driver made comments about her body and asked for her number, and that she felt harassed and unsafe [F-complaint][SAFE-1]. The trace marks this as a safety incident with no automatic ruling and limits the allowed outcome to escalate, so I do not weigh the fare at all [SAFE-1]. SAFE-1 expressly covers harassment and unwanted sexual advances, and whether the words were said and how they are characterised is a reading question for a person, not for me [SAFE-1].\n\nThe in-app record cannot settle the dispute: there are no chat messages between rider and driver during the trip [F3], and the only driver-side account is a post-trip statement asserting that \"nothing inappropriate happened\" [F4]. That statement is a claim written after the trip, not contemporaneous evidence, and under the policy a driver's assertion cannot substitute for the record (cf. RD-5, G11); it is also silent on the specific allegation, so it neither confirms nor refutes it [F3][F4][SAFE-1].\n\nRoute and fare facts are not in issue and give no reason to doubt the trip itself: actual distance 17.2 km versus an optimal 17.3 km (-0.1 km, -0%) and duration 25.9 min versus 24 min estimated [F1][F2]. The fare of $35.84 is a fixed RydeX quote, and no unmetreable overcharge is pleaded, so no FARE-1 adjustment is triggered and no refund amount can be computed from any gps or fare fact [F1][F2][FARE-1]. Both profiles are clean (rider 4.8 with no disputes; driver 4.86 with 659 trips and no disputes), which cannot decide anything on its own and, in particular, cannot be used to disbelieve the rider [F5][F6].\n\nBecause a safety allegation is on the record and the only counter-evidence is the driver's own untestable statement, the matter must go to a human reviewer rather than be decided here [F3][F4][SAFE-1]. If a ground-level review ever confirms the conduct, the reviewer should note the reporting paths (995 for medical assistance, driver's commercial motor insurance for injury claims, RydeHELP) [SAFE-2].",
     "cited_facts": [
      "F1",
      "F2",
@@ -180,41 +182,57 @@
     ],
     "cited_policy": [
      "SAFE-1",
-     "RD-2"
+     "SAFE-2",
+     "FARE-1"
     ],
-    "rejected_claims": [],
+    "rejected_claims": [
+     {
+      "id": "C1",
+      "reason": "The rider side requested no_action, i.e. that the safety allegation be dismissed. It cannot be sustained on this record: there is no in-app chat [F3] and the only denial is the driver's own post-trip statement [F4], which under RD-5/G11 cannot substitute for the record and which does not address the specific allegation; a safety complaint under SAFE-1 permits no automatic ruling."
+     },
+     {
+      "id": "D1",
+      "reason": "The driver side requested no_action, relying on the clean profile [F6] and the post-trip denial [F4]. Profile facts never decide a case on their own, and a driver's untestable assertion of 'small talk' [F4] does not rebut a harassment complaint that the chat record [F3] cannot cover, so SAFE-1 requires escalation rather than a dismissal."
+     }
+    ],
     "flag_account": false,
     "segment_findings": [],
+    "safety_concern": "suspected",
+    "safety_basis": [
+     "F3",
+     "F4"
+    ],
+    "evidence_gap": "No in-app chat during the trip [F3]; the driver's only account is a post-trip statement [F4]; the rider's complaint text is the sole source of the allegation, with no time, location, quoted words, or corroborating record (no in-trip audio/report, no other passenger). A statement from the rider (what was said, when, whether a number was requested) and from the driver on the specific allegation is required.",
     "escalate": true,
-    "escalation_reason": "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6]."
+    "escalation_reason": "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2]."
    },
    "certificate": null
   },
   {
    "seq": 6,
-   "ts": "2026-10-09T13:37:11.730226Z",
-   "elapsed": "00:04.7",
+   "ts": "2026-10-09T19:46:49.962601Z",
+   "elapsed": "00:06.3",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "HARD: safety case / threat keyword present → escalate (SAFE-1)",
+   "body": "HARD: complaint filed as a safety incident → escalate (SAFE-1 / SAFE-2)",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": null,
    "certificate": [
-    "✗ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (no evidence)",
+    "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
     "allowed outcomes: escalate"
    ]
   },
   {
    "seq": 7,
-   "ts": "2026-10-09T13:37:11.730231Z",
-   "elapsed": "00:04.7",
+   "ts": "2026-10-09T19:46:49.962605Z",
+   "elapsed": "00:06.3",
    "actor": "verify",
    "kind": "escalate",
    "title": "Routed to human review",
-   "body": "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6].",
+   "body": "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2].",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -223,12 +241,12 @@
   },
   {
    "seq": 8,
-   "ts": "2026-10-09T13:37:14.034673Z",
-   "elapsed": "00:07.0",
+   "ts": "2026-10-09T19:46:51.434896Z",
+   "elapsed": "00:07.8",
    "actor": "system",
    "kind": "notify",
    "title": "Notices sent to rider and driver",
-   "body": "RIDER: Thanks for flagging this — we've sent your case to a RydeHELP human reviewer. Because it's a safety concern, we don't decide these automatically.\n\nThe reviewer will ask for your account of what was said, in your own words, along with when it happened. They'll also look at the driver's response, whether any contact details were exchanged, and any in-app or audio record from your trip.\n\nNo fare ruling has been made, so nothing is charged or refunded at this stage. Your account is in good standing and this report doesn't affect it.\n\nA separate notice tells you when to expect the reviewer to be in touch.\n\nDRIVER: We're writing about a rider report from one of your trips. Because it involves a safety concern, we've sent it to a RydeHELP human reviewer rather than deciding it automatically.\n\nThe reviewer will look at the rider's account of the trip, your response, whether any contact details were exchanged, and any in-app or audio record from that ride.\n\nNo decision has been made, and the fare for the trip is not being adjusted at this stage. Your account stays active while this is reviewed.\n\nA separate notice tells you when to expect the reviewer to be in touch.",
+   "body": "RIDER: Your report has been escalated to a Ryde human reviewer in our trust and safety team — no decision has been made yet.\n\nWhat the reviewer will look at: your complaint, the driver's post-trip statement, and the trip record. We'll also contact you for a short statement covering the time, what was said, whether a number was requested, and whether you felt unsafe continuing the trip.\n\nNothing is decided by this notice. Practical notes if they help: 995 for medical help, and the driver's commercial motor insurance for any injury claim.\n\nDRIVER: Your account is under review while a Ryde human reviewer in trust and safety looks into a complaint raised about this trip. No decision has been made yet.\n\nWhat the reviewer will consider: the complaint, your post-trip statement, and the trip record (distance, duration and the fixed quoted fare are not in dispute).\n\nWhile the review is open, keep using Ryde as normal unless we tell you otherwise. We'll be in touch about the outcome.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -239,9 +257,9 @@
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to RydeHELP human review: obtain the rider's detailed account and the driver's response, check any non-in-app contact, and apply the Code of Conduct process; do not auto-adjudicate the fare.",
+  "recommended_action": "Send to a Ryde human reviewer (safety/trust & safety) with the complaint text, the driver's post-trip statement and the fact table; contact the rider for a statement (time, what was said, whether a number was requested, whether they felt unsafe continuing the trip) and put the driver account under review pending the outcome.",
   "confidence": 0.9,
-  "reasoning": "The dispute type is safety and the rider alleges harassment — repeated comments about her body and a request for her number, which she says left her feeling harassed and unsafe [F3][F4]. Under SAFE-1, allegations of harassment/sexual advances in a case are not auto-adjudicated; the matter is escalated to a human reviewer with a factual summary. No in-app chat exists to corroborate the exchange [F3], and the driver denies any inappropriate conduct [F4], so the factual dispute cannot be resolved on the written record; the trace shows the threat-keyword check is ✗ (no threat language), but SAFE-1 is triggered by the harassment allegation itself, so this remains an escalate case rather than a fare ruling [SAFE-1]. Because the case is escalated, no monetary amount is computed and the fare question is left untouched [RD-2].\n\nFor the human reviewer: the trip was RydeX, Woodlands Civic Centre → Punggol Waterway Point, quoted 17.3 km / 24 min, pickup 22:29, drop-off 22:54, fixed fare charged $35.84 [F1][F2]. Actual distance 17.2 km is 0.1 km below the optimal route, so there is no route-deviation issue to examine [F1]. Duration exceeded the estimate by 2.3 min only [F2], consistent with normal traffic variation. Rider profile: 3.8-year account, 4.8 rating, no prior disputes or upheld disputes in 90 days [F5]. Driver profile: 4.5-year account, 4.86 rating, 659 trips in 90 days, no prior disputes [F6]. Facts to check: whether any contact details were exchanged (no chat record [F3]); the rider's timestamped account of the remarks; the driver's response [F4]; and any audio or in-app record for the 22:29–22:54 window. Profile facts are context only and do not decide anything [F5][F6][SAFE-1].",
+  "reasoning": "The case is filed as a safety dispute: the rider complains that the driver made comments about her body and asked for her number, and that she felt harassed and unsafe [F-complaint][SAFE-1]. The trace marks this as a safety incident with no automatic ruling and limits the allowed outcome to escalate, so I do not weigh the fare at all [SAFE-1]. SAFE-1 expressly covers harassment and unwanted sexual advances, and whether the words were said and how they are characterised is a reading question for a person, not for me [SAFE-1].\n\nThe in-app record cannot settle the dispute: there are no chat messages between rider and driver during the trip [F3], and the only driver-side account is a post-trip statement asserting that \"nothing inappropriate happened\" [F4]. That statement is a claim written after the trip, not contemporaneous evidence, and under the policy a driver's assertion cannot substitute for the record (cf. RD-5, G11); it is also silent on the specific allegation, so it neither confirms nor refutes it [F3][F4][SAFE-1].\n\nRoute and fare facts are not in issue and give no reason to doubt the trip itself: actual distance 17.2 km versus an optimal 17.3 km (-0.1 km, -0%) and duration 25.9 min versus 24 min estimated [F1][F2]. The fare of $35.84 is a fixed RydeX quote, and no unmetreable overcharge is pleaded, so no FARE-1 adjustment is triggered and no refund amount can be computed from any gps or fare fact [F1][F2][FARE-1]. Both profiles are clean (rider 4.8 with no disputes; driver 4.86 with 659 trips and no disputes), which cannot decide anything on its own and, in particular, cannot be used to disbelieve the rider [F5][F6].\n\nBecause a safety allegation is on the record and the only counter-evidence is the driver's own untestable statement, the matter must go to a human reviewer rather than be decided here [F3][F4][SAFE-1]. If a ground-level review ever confirms the conduct, the reviewer should note the reporting paths (995 for medical assistance, driver's commercial motor insurance for injury claims, RydeHELP) [SAFE-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -252,20 +270,36 @@
   ],
   "cited_policy": [
    "SAFE-1",
-   "RD-2"
+   "SAFE-2",
+   "FARE-1"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "The rider side requested no_action, i.e. that the safety allegation be dismissed. It cannot be sustained on this record: there is no in-app chat [F3] and the only denial is the driver's own post-trip statement [F4], which under RD-5/G11 cannot substitute for the record and which does not address the specific allegation; a safety complaint under SAFE-1 permits no automatic ruling."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver side requested no_action, relying on the clean profile [F6] and the post-trip denial [F4]. Profile facts never decide a case on their own, and a driver's untestable assertion of 'small talk' [F4] does not rebut a harassment complaint that the chat record [F3] cannot cover, so SAFE-1 requires escalation rather than a dismissal."
+   }
+  ],
   "flag_account": false,
   "segment_findings": [],
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "F3",
+   "F4"
+  ],
+  "evidence_gap": "No in-app chat during the trip [F3]; the driver's only account is a post-trip statement [F4]; the rider's complaint text is the sole source of the allegation, with no time, location, quoted words, or corroborating record (no in-trip audio/report, no other passenger). A statement from the rider (what was said, when, whether a number was requested) and from the driver on the specific allegation is required.",
   "escalate": true,
-  "escalation_reason": "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6]."
+  "escalation_reason": "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2]."
  },
  "proposed_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to RydeHELP human review: obtain the rider's detailed account and the driver's response, check any non-in-app contact, and apply the Code of Conduct process; do not auto-adjudicate the fare.",
+  "recommended_action": "Send to a Ryde human reviewer (safety/trust & safety) with the complaint text, the driver's post-trip statement and the fact table; contact the rider for a statement (time, what was said, whether a number was requested, whether they felt unsafe continuing the trip) and put the driver account under review pending the outcome.",
   "confidence": 0.9,
-  "reasoning": "The dispute type is safety and the rider alleges harassment — repeated comments about her body and a request for her number, which she says left her feeling harassed and unsafe [F3][F4]. Under SAFE-1, allegations of harassment/sexual advances in a case are not auto-adjudicated; the matter is escalated to a human reviewer with a factual summary. No in-app chat exists to corroborate the exchange [F3], and the driver denies any inappropriate conduct [F4], so the factual dispute cannot be resolved on the written record; the trace shows the threat-keyword check is ✗ (no threat language), but SAFE-1 is triggered by the harassment allegation itself, so this remains an escalate case rather than a fare ruling [SAFE-1]. Because the case is escalated, no monetary amount is computed and the fare question is left untouched [RD-2].\n\nFor the human reviewer: the trip was RydeX, Woodlands Civic Centre → Punggol Waterway Point, quoted 17.3 km / 24 min, pickup 22:29, drop-off 22:54, fixed fare charged $35.84 [F1][F2]. Actual distance 17.2 km is 0.1 km below the optimal route, so there is no route-deviation issue to examine [F1]. Duration exceeded the estimate by 2.3 min only [F2], consistent with normal traffic variation. Rider profile: 3.8-year account, 4.8 rating, no prior disputes or upheld disputes in 90 days [F5]. Driver profile: 4.5-year account, 4.86 rating, 659 trips in 90 days, no prior disputes [F6]. Facts to check: whether any contact details were exchanged (no chat record [F3]); the rider's timestamped account of the remarks; the driver's response [F4]; and any audio or in-app record for the 22:29–22:54 window. Profile facts are context only and do not decide anything [F5][F6][SAFE-1].",
+  "reasoning": "The case is filed as a safety dispute: the rider complains that the driver made comments about her body and asked for her number, and that she felt harassed and unsafe [F-complaint][SAFE-1]. The trace marks this as a safety incident with no automatic ruling and limits the allowed outcome to escalate, so I do not weigh the fare at all [SAFE-1]. SAFE-1 expressly covers harassment and unwanted sexual advances, and whether the words were said and how they are characterised is a reading question for a person, not for me [SAFE-1].\n\nThe in-app record cannot settle the dispute: there are no chat messages between rider and driver during the trip [F3], and the only driver-side account is a post-trip statement asserting that \"nothing inappropriate happened\" [F4]. That statement is a claim written after the trip, not contemporaneous evidence, and under the policy a driver's assertion cannot substitute for the record (cf. RD-5, G11); it is also silent on the specific allegation, so it neither confirms nor refutes it [F3][F4][SAFE-1].\n\nRoute and fare facts are not in issue and give no reason to doubt the trip itself: actual distance 17.2 km versus an optimal 17.3 km (-0.1 km, -0%) and duration 25.9 min versus 24 min estimated [F1][F2]. The fare of $35.84 is a fixed RydeX quote, and no unmetreable overcharge is pleaded, so no FARE-1 adjustment is triggered and no refund amount can be computed from any gps or fare fact [F1][F2][FARE-1]. Both profiles are clean (rider 4.8 with no disputes; driver 4.86 with 659 trips and no disputes), which cannot decide anything on its own and, in particular, cannot be used to disbelieve the rider [F5][F6].\n\nBecause a safety allegation is on the record and the only counter-evidence is the driver's own untestable statement, the matter must go to a human reviewer rather than be decided here [F3][F4][SAFE-1]. If a ground-level review ever confirms the conduct, the reviewer should note the reporting paths (995 for medical assistance, driver's commercial motor insurance for injury claims, RydeHELP) [SAFE-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -276,28 +310,44 @@
   ],
   "cited_policy": [
    "SAFE-1",
-   "RD-2"
+   "SAFE-2",
+   "FARE-1"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "The rider side requested no_action, i.e. that the safety allegation be dismissed. It cannot be sustained on this record: there is no in-app chat [F3] and the only denial is the driver's own post-trip statement [F4], which under RD-5/G11 cannot substitute for the record and which does not address the specific allegation; a safety complaint under SAFE-1 permits no automatic ruling."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver side requested no_action, relying on the clean profile [F6] and the post-trip denial [F4]. Profile facts never decide a case on their own, and a driver's untestable assertion of 'small talk' [F4] does not rebut a harassment complaint that the chat record [F3] cannot cover, so SAFE-1 requires escalation rather than a dismissal."
+   }
+  ],
   "flag_account": false,
   "segment_findings": [],
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "F3",
+   "F4"
+  ],
+  "evidence_gap": "No in-app chat during the trip [F3]; the driver's only account is a post-trip statement [F4]; the rider's complaint text is the sole source of the allegation, with no time, location, quoted words, or corroborating record (no in-trip audio/report, no other passenger). A statement from the rider (what was said, when, whether a number was requested) and from the driver on the specific allegation is required.",
   "escalate": true,
-  "escalation_reason": "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6]."
+  "escalation_reason": "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2]."
  },
  "certificate": [
-  "✗ SAFE-1 threat / intimidation language present [case] threat keyword table (core/facts/tools.py) (no evidence)",
+  "✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)",
   "allowed outcomes: escalate"
  ],
  "eligibility": {
   "auto": false,
   "reasons": [
-   "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6]."
+   "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2]."
   ],
   "actions": [
    {
     "type": "escalate",
     "mode": "human_review",
-    "detail": "Safety dispute: rider alleges harassment/sexual advances by the driver (body comments, request for her number) [F3][F4]. SAFE-1 bars automatic adjudication of harassment allegations; the record is uncorroborated (no in-app chat [F3]) and contested by the driver [F4]. Refer to a human reviewer with the trip details [F1][F2] and profiles [F5][F6]."
+    "detail": "Rider complaint of harassment and an unwanted request for her number during the trip (safety dispute; SAFE-1). The in-app chat is empty [F3] and the only driver account is a post-trip denial that does not address the specific allegation [F4], so the record cannot settle what was said. No automatic ruling is permitted on a safety incident; a human reviewer must take a statement from both parties and decide, with the rider informed of the 995 / commercial-insurance / RydeHELP paths if the allegation is confirmed [SAFE-2]."
    }
   ],
   "what_would_change": []
@@ -330,20 +380,20 @@
  "notices": [
   {
    "to": "rider",
-   "text": "Thanks for flagging this — we've sent your case to a RydeHELP human reviewer. Because it's a safety concern, we don't decide these automatically.\n\nThe reviewer will ask for your account of what was said, in your own words, along with when it happened. They'll also look at the driver's response, whether any contact details were exchanged, and any in-app or audio record from your trip.\n\nNo fare ruling has been made, so nothing is charged or refunded at this stage. Your account is in good standing and this report doesn't affect it.\n\nA separate notice tells you when to expect the reviewer to be in touch."
+   "text": "Your report has been escalated to a Ryde human reviewer in our trust and safety team — no decision has been made yet.\n\nWhat the reviewer will look at: your complaint, the driver's post-trip statement, and the trip record. We'll also contact you for a short statement covering the time, what was said, whether a number was requested, and whether you felt unsafe continuing the trip.\n\nNothing is decided by this notice. Practical notes if they help: 995 for medical help, and the driver's commercial motor insurance for any injury claim."
   },
   {
    "to": "driver",
-   "text": "We're writing about a rider report from one of your trips. Because it involves a safety concern, we've sent it to a RydeHELP human reviewer rather than deciding it automatically.\n\nThe reviewer will look at the rider's account of the trip, your response, whether any contact details were exchanged, and any in-app or audio record from that ride.\n\nNo decision has been made, and the fare for the trip is not being adjusted at this stage. Your account stays active while this is reviewed.\n\nA separate notice tells you when to expect the reviewer to be in touch."
+   "text": "Your account is under review while a Ryde human reviewer in trust and safety looks into a complaint raised about this trip. No decision has been made yet.\n\nWhat the reviewer will consider: the complaint, your post-trip statement, and the trip record (distance, duration and the fixed quoted fare are not in dispute).\n\nWhile the review is open, keep using Ryde as normal unless we tell you otherwise. We'll be in touch about the outcome."
   }
  ],
  "precedent_id": null,
  "receipt": {
   "case_sha256": "a3e4cd22aa661bf3",
-  "policy_sha256": "5d47a08176d6f41a",
-  "code_sha256": "15a598cd8227c400",
+  "policy_sha256": "55047a1dd798c068",
+  "code_sha256": "1e912719f75f0c94",
   "model": "deepseek:deepseek-chat",
-  "judge_prompt_sha256": "828c7dddb5a9f42b",
-  "issued_at": "2026-10-09T13:37:14+00:00"
+  "judge_prompt_sha256": "c37a306f42200bbe",
+  "issued_at": "2026-10-09T19:46:51+00:00"
  }
 }

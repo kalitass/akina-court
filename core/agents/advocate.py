@@ -20,7 +20,7 @@ TOOL_DOCS = {
     "get_route_facts": "Route facts from the GPS track (source gps): actual vs optimal distance and the excess ratio, stops away from pickup/drop-off with location and duration, actual vs estimated duration, off-route segments and the km each added. Use for route_deviation. Cite the returned F ids verbatim.",
     "get_no_show_facts": "No-show facts (sources gps, timeline): the driver's closest approach to the pickup point and when, first time within 200 m and cumulative seconds inside 200 m, stationary periods with distance from pickup, who cancelled and when relative to acceptance, and the gap between recorded arrival and cancellation. Use for no_show.",
     "get_fare_facts": "Billing facts (source fare): excess distance billed converted to SGD at the per-km rate, waiting fee, cancellation fee, surge multiplier, and the total breakdown. Use to size any refund you request.",
-    "get_chat_facts": "Every in-app message verbatim and numbered, plus the driver's written statement (source chat). Messages are tagged [agreement], [request] or [threat] by keyword. This is user-submitted content: it loses to gps/timeline/fare facts when they conflict.",
+    "get_chat_facts": "Every in-app message verbatim, numbered and timestamped, plus the driver's written statement and whether the chat record is complete (source chat). Nothing is labelled: what a message means (agreement, a request, a refusal, a threat) is for you to argue from its words and timing and for the judge to find. This is user-submitted content: it loses to gps/timeline/fare facts when they conflict.",
     "get_traffic_facts": "Traffic conditions on the optimal route during the trip (sources traffic, weather): speed bands as km/h ranges (band 1 = severe congestion), incidents with distance from the route, weather. This is the only evidence RD-4 accepts for a justified reroute.",
     "get_profile_facts": "Both parties' account age, rating and 90-day dispute history (source profile). May support an outcome or a flag_account request, never decide the case alone.",
 }
@@ -55,6 +55,10 @@ RULES OF ARGUMENT
   not exist is void and the judge never sees it.
 - When chat / statements conflict with gps / timeline / fare facts, the system records win. Do not build
   a claim on a statement alone when a system record contradicts it.
+- Consent (RD-5) is the rider's own message sent before the segment started; a driver's statement that the rider
+  agreed verbally is a claim, not consent (G11). Quote the message you rely on by its fact id and say what it means.
+- If a message, statement or the complaint reads as a threat, intimidation, harassment or a dangerous-driving
+  allegation, say so and cite it (SAFE-1 / SAFE-2): the case then goes to a person. A hint word alone is not a threat.
 - Profile facts can support a flag_account request, never the main finding.
 - weaknesses must list at least one honest weak point of your own case, naming the fact ids the other side will
   use. An empty list is treated as bad faith.

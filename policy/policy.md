@@ -5,7 +5,7 @@
 > 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：
 > - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；
 > - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；
-> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、威胁关键词表）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。
+> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、GPS 断档与聊天记录完整性检查）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。
 > 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节"待 Ryde 确认的规则空缺"。条款行含"不可引用"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。
 
 ## 0. 前提：Ryde 的车费模型
@@ -38,7 +38,7 @@
 (c) 无 (a) → 该段按 RD-2 处理。
 <sub>来源：派生自 B1 r.23(1)(c) 的"reasonable cause"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9："SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19"；Traffic Incidents 数据集）；Ryde 只允许司机"按 GPS 选最快或最高效路线"（A7）、未规定举证方式。</sub>
 
-**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定"之前"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意"走 PIE"，不含去远处便利店）→ 该段不视为同意。
+**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定"之前"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意"走 PIE"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中"乘客口头同意了"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时，法官判 `undetermined`，案件转人工（G12）。
 <sub>来源：Ryde 一手 A7（"reach a mutual agreement before you go"）；派生自 C2（Grab："Discuss and agree with the user before taking an alternative route"，"Changing route without passenger's permission"列为违规）。"改道后告知不算同意"是 "before you go" / "before taking" 的直接推论。</sub>
 
 **RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为"repeated"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。
@@ -96,7 +96,7 @@
 
 ## 4. SAFE — 安全事件
 
-**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（事实表 `chat-threat-*`，关键词表为数据层参数，`core/facts/tools.py`） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。
+**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（是否构成由法庭阅读原文判定，记录于 `Ruling.safety_concern`；代码不判定语义，只在事实值里标出含提示词的句子供阅读） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。每个案件法官都须做此筛查，不以提示词命中为前提。
 <sub>来源：Ryde 一手 A13（Code of Conduct："Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable"；"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures"）。</sub>
 
 **SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。
@@ -135,4 +135,6 @@
 | G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |
 | G8 | Judge 置信度阈值 0.70 | 置信度不足时转人工（`core/verify.py`） | 0.70 | spec §5.4/§5.6 只要求有阈值，未定值 |
 | G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |
+| G11 | 口头 / 未记录的同意是否可接受 | RD-5：司机常称乘客"口头同意了" | 不接受：仅见于司机陈述的同意主张不构成同意；法官无法从聊天记录判定时转人工 | Ryde A7 只说 "reach a mutual agreement before you go"，未说明同意须以何种形式留痕 |
+| G12 | 证据缺失时的处理（GPS 缺失或断档、消息无时间戳、计价器行程无里程费） | RD-1/RD-2/RD-5/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利 | Ryde 无相应规定；本系统规则，待 Ryde 确认 |
 | G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |

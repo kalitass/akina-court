@@ -4,26 +4,27 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T14:18:36.381820+00:00",
+ "ts": "2026-10-09T19:49:39.079291+00:00",
  "ok": true,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case as no_action; no refund is due, since the only off-route segment was covered by the rider's prior agreement to the named Bedok South Avenue 3 route.",
-  "confidence": 0.82,
+  "recommended_action": "Close the fare-dispute as not upheld: the sole off-route segment was a driver-proposed, rider-agreed reroute via Bedok South Avenue 3 (F7/F8, agreed 23:03, before the 23:06 segment start), so no refund is due; note the driver's 2 upheld route disputes in 90 days (F16) for monitoring only — no account action because no segment was found non-exempt.",
+  "confidence": 0.75,
   "cited_facts": [
    "F1",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F12",
    "F13",
-   "F15"
+   "F15",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -31,63 +32,84 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": true,
-    "reason": "Driver named the route before leaving the optimal route ('go round via Bedok South Avenue 3') at 23:03 [F7] and the rider agreed at 23:03 [F8], both before the segment start at 23:06 [F3], and the segment matches the named corridor, so the segment is exempt under RD-5. RD-4 is not reached: no qualifying incident on the replaced stretch [F12] and band 4 speeds do not exempt [F10][F11] under RD-4(a)/(b), and RD-4(c)'s referral to RD-2 is displaced by the RD-5 exemption [RD-4][RD-5]. RD-3 does not apply: no rider-requested stop [RD-3]."
+    "finding": "exempt",
+    "basis": [
+     "F7",
+     "F8",
+     "F9"
+    ],
+    "reason": "The driver named the road before leaving the optimal route ('go round via Bedok South Avenue 3', 23:03) [F7] and the rider replied 'Sure, go ahead.' at 23:03 [F8] — a rider message sent before the segment started at 23:06 [F3], with a complete timestamped chat record [F9]. The exchange ties itself to the next off-route segment by timing, so this segment IS the named route; the extra 2.96 km and up to 974 m off the optimal route [F3] are not evidence of a different destination, and no stop far off that road or second detour after rejoining appears. Exempt under RD-5 (and RD-3(a) as a rider-accepted, rider-named place), so no extra_km is refundable under RD-2 [RD-5][RD-3][RD-2]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "RD-1 merely identifies the off-route segment [F3][F1]; it does not establish that the segment is unexcused, since RD-5 exempts a segment the driver named in advance and the rider agreed to [F7][F8][F3][RD-1][RD-5]."
+    "reason": "The deviation measured in [F1][F3] is explained: RD-5 exempts the segment where the rider agreed, before the segment began [F3], to the route the driver named [F7][F8]. RD-1's 'unexplained deviation' premise therefore fails [RD-1][RD-5]."
    },
    {
-    "id": "C4",
-    "reason": "RD-5's timing test compares the rider's agreement timestamp with the segment start: 23:03 [F8] precedes 23:06 [F3], so the consent is 'before you go' and the segment is exempt; the messages are not post-deviation [F7][F8][F3][RD-5]."
-   },
-   {
-    "id": "C5",
-    "reason": "The RD-4 analysis is not reached: the driver claims no RD-4 exemption [F12][F13], and the RD-5 prior agreement exempts the segment irrespective of the absence of an incident [F12] or the band 4 readings [F10][F11][RD-4][RD-5]."
-   },
-   {
-    "id": "C6",
-    "reason": "Nothing in the system records contradicts the agreement itself; the chat timestamps [F7][F8] are system records, and RD-5 does not require the driver's stated traffic reason to be corroborated once the rider agreed before the turn-off [F9][F12][F7][F8][RD-5][RD-4]."
-   },
-   {
-    "id": "C7",
-    "reason": "RD-6 requires a positive RD-2 refund or a recorded RD-1 breach; with the sole segment exempt [F3][F7][F8] neither condition is met, so the driver's 2 prior upheld route disputes [F15] give no basis for flag_account [F15][F3][RD-6][RD-2][RD-1][RD-5]."
+    "id": "C2",
+    "reason": "The meter arithmetic [F6] is right, but RD-2 bites only on unexempt segments; here the single segment is exempt under RD-5, so the refundable distance base is zero [F3][F8][RD-2][RD-5]."
    },
    {
     "id": "C3",
-    "reason": "The arithmetic of $4.17 (= 2.96 km × $34.84 ÷ 24.7 km, [F3][F4][F6]) is only relevant for unexempted segments; RD-2 sums non-exempt segments only, and this segment is exempt, so the sum is $0.00 [F3][F4][F6][RD-2][RD-5]."
+    "reason": "The rider's agreement in [F8] answers the exact proposal in [F7] and was sent before the 23:06 segment start [F3]; RD-5 does not cap consent by kilometres, and extra km / distance from the optimal route is not evidence of a different destination [F3][F7][F8][RD-5]."
+   },
+   {
+    "id": "C5",
+    "reason": "The $4.45 billed excess [F4] is a billing arithmetic figure, not an entitlement; with the only segment exempt, no extra_km is chargeable to the driver, and F1's 3.2 km excess vs F3's 2.96 km leaves ~0.24 km residue RD-2 does not refund [F1][F3][F4][RD-2]."
+   },
+   {
+    "id": "C4",
+    "reason": "Conceded by the driver advocate and correct on the record — band 4 and no incident [F11][F13] means RD-4(a) is unavailable and RD-4(b) gives no standalone exemption [RD-4]; but the driver's exemption rests on rider consent [F8], not on RD-4, so this does not create a refund [RD-5]."
+   },
+   {
+    "id": "C6",
+    "reason": "RD-6's flag_account requires a non-exempt segment or a recorded RD-1 breach; none exists here, and a profile fact alone cannot decide the case or trigger the flag [F15][F16][RD-6]."
+   },
+   {
+    "id": "D4",
+    "reason": "Band 4 (30–39 km/h) on East Coast Parkway [F11] is outside the band 1–2 range and no incident is recorded [F13], so it is not 'reasonable cause' — but the segment is exempt on rider consent [F8], not on traffic [RD-4][RD-5]."
+   },
+   {
+    "id": "D2",
+    "reason": "Not adopted as framed: RD-3(a) has no measured stop here, so the exemption rests on RD-5 rider consent to the driver's named route [F7][F8][F3][RD-3][RD-5]."
+   },
+   {
+    "id": "D5",
+    "reason": "Not applied: since the segment is exempt under RD-5, no part of the $4.45 or the 2.96 km residue question arises for refund [F3][F4][RD-2][RD-5]."
    }
   ],
   "flag_account": false
  },
  "pre_verify_ruling": {
   "ruling": "no_action",
-  "amount": 0.0,
-  "recommended_action": "Close the case as no_action; no refund is due, since the only off-route segment was covered by the rider's prior agreement to the named Bedok South Avenue 3 route.",
-  "confidence": 0.82,
+  "amount": null,
+  "recommended_action": "Close the fare-dispute as not upheld: the sole off-route segment was a driver-proposed, rider-agreed reroute via Bedok South Avenue 3 (F7/F8, agreed 23:03, before the 23:06 segment start), so no refund is due; note the driver's 2 upheld route disputes in 90 days (F16) for monitoring only — no account action because no segment was found non-exempt.",
+  "confidence": 0.75,
   "cited_facts": [
    "F1",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F12",
    "F13",
-   "F15"
+   "F15",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -95,55 +117,75 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": true,
-    "reason": "Driver named the route before leaving the optimal route ('go round via Bedok South Avenue 3') at 23:03 [F7] and the rider agreed at 23:03 [F8], both before the segment start at 23:06 [F3], and the segment matches the named corridor, so the segment is exempt under RD-5. RD-4 is not reached: no qualifying incident on the replaced stretch [F12] and band 4 speeds do not exempt [F10][F11] under RD-4(a)/(b), and RD-4(c)'s referral to RD-2 is displaced by the RD-5 exemption [RD-4][RD-5]. RD-3 does not apply: no rider-requested stop [RD-3]."
+    "finding": "exempt",
+    "basis": [
+     "F7",
+     "F8",
+     "F9"
+    ],
+    "reason": "The driver named the road before leaving the optimal route ('go round via Bedok South Avenue 3', 23:03) [F7] and the rider replied 'Sure, go ahead.' at 23:03 [F8] — a rider message sent before the segment started at 23:06 [F3], with a complete timestamped chat record [F9]. The exchange ties itself to the next off-route segment by timing, so this segment IS the named route; the extra 2.96 km and up to 974 m off the optimal route [F3] are not evidence of a different destination, and no stop far off that road or second detour after rejoining appears. Exempt under RD-5 (and RD-3(a) as a rider-accepted, rider-named place), so no extra_km is refundable under RD-2 [RD-5][RD-3][RD-2]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "RD-1 merely identifies the off-route segment [F3][F1]; it does not establish that the segment is unexcused, since RD-5 exempts a segment the driver named in advance and the rider agreed to [F7][F8][F3][RD-1][RD-5]."
+    "reason": "The deviation measured in [F1][F3] is explained: RD-5 exempts the segment where the rider agreed, before the segment began [F3], to the route the driver named [F7][F8]. RD-1's 'unexplained deviation' premise therefore fails [RD-1][RD-5]."
    },
    {
-    "id": "C4",
-    "reason": "RD-5's timing test compares the rider's agreement timestamp with the segment start: 23:03 [F8] precedes 23:06 [F3], so the consent is 'before you go' and the segment is exempt; the messages are not post-deviation [F7][F8][F3][RD-5]."
-   },
-   {
-    "id": "C5",
-    "reason": "The RD-4 analysis is not reached: the driver claims no RD-4 exemption [F12][F13], and the RD-5 prior agreement exempts the segment irrespective of the absence of an incident [F12] or the band 4 readings [F10][F11][RD-4][RD-5]."
-   },
-   {
-    "id": "C6",
-    "reason": "Nothing in the system records contradicts the agreement itself; the chat timestamps [F7][F8] are system records, and RD-5 does not require the driver's stated traffic reason to be corroborated once the rider agreed before the turn-off [F9][F12][F7][F8][RD-5][RD-4]."
-   },
-   {
-    "id": "C7",
-    "reason": "RD-6 requires a positive RD-2 refund or a recorded RD-1 breach; with the sole segment exempt [F3][F7][F8] neither condition is met, so the driver's 2 prior upheld route disputes [F15] give no basis for flag_account [F15][F3][RD-6][RD-2][RD-1][RD-5]."
+    "id": "C2",
+    "reason": "The meter arithmetic [F6] is right, but RD-2 bites only on unexempt segments; here the single segment is exempt under RD-5, so the refundable distance base is zero [F3][F8][RD-2][RD-5]."
    },
    {
     "id": "C3",
-    "reason": "The arithmetic of $4.17 (= 2.96 km × $34.84 ÷ 24.7 km, [F3][F4][F6]) is only relevant for unexempted segments; RD-2 sums non-exempt segments only, and this segment is exempt, so the sum is $0.00 [F3][F4][F6][RD-2][RD-5]."
+    "reason": "The rider's agreement in [F8] answers the exact proposal in [F7] and was sent before the 23:06 segment start [F3]; RD-5 does not cap consent by kilometres, and extra km / distance from the optimal route is not evidence of a different destination [F3][F7][F8][RD-5]."
+   },
+   {
+    "id": "C5",
+    "reason": "The $4.45 billed excess [F4] is a billing arithmetic figure, not an entitlement; with the only segment exempt, no extra_km is chargeable to the driver, and F1's 3.2 km excess vs F3's 2.96 km leaves ~0.24 km residue RD-2 does not refund [F1][F3][F4][RD-2]."
+   },
+   {
+    "id": "C4",
+    "reason": "Conceded by the driver advocate and correct on the record — band 4 and no incident [F11][F13] means RD-4(a) is unavailable and RD-4(b) gives no standalone exemption [RD-4]; but the driver's exemption rests on rider consent [F8], not on RD-4, so this does not create a refund [RD-5]."
+   },
+   {
+    "id": "C6",
+    "reason": "RD-6's flag_account requires a non-exempt segment or a recorded RD-1 breach; none exists here, and a profile fact alone cannot decide the case or trigger the flag [F15][F16][RD-6]."
+   },
+   {
+    "id": "D4",
+    "reason": "Band 4 (30–39 km/h) on East Coast Parkway [F11] is outside the band 1–2 range and no incident is recorded [F13], so it is not 'reasonable cause' — but the segment is exempt on rider consent [F8], not on traffic [RD-4][RD-5]."
+   },
+   {
+    "id": "D2",
+    "reason": "Not adopted as framed: RD-3(a) has no measured stop here, so the exemption rests on RD-5 rider consent to the driver's named route [F7][F8][F3][RD-3][RD-5]."
+   },
+   {
+    "id": "D5",
+    "reason": "Not applied: since the segment is exempt under RD-5, no part of the $4.45 or the 2.96 km residue question arises for refund [F3][F4][RD-2][RD-5]."
    }
   ],
   "flag_account": false
  },
  "status": "resolved",
- "events": 26,
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.75 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0023.record.json",
- "latency_s": 22.65,
- "input_tokens": 82069,
- "output_tokens": 6841,
- "requests": 9,
+ "latency_s": 25.49,
+ "input_tokens": 101270,
+ "output_tokens": 7797,
+ "requests": 10,
  "llm_calls": 6
 }

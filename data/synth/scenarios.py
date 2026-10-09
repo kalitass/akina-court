@@ -10,7 +10,7 @@
 
 Ground truth is DERIVED, not typed: every generated case is run through core.facts.tools.build_fact_table and
 core.policy_engine.evaluate; the mechanical slots (segment exists, incident on the replaced stretch, consent timing,
-I'm Here tap, 200 m radius, 180 s grace, threat keyword) come from the engine, the interpretive slots (does the
+I'm Here tap, 200 m radius, 180 s grace) come from the engine, the interpretive slots (did the rider agree, does the
 rider's consent / stop request cover this segment) are filled from what the scenario injected, and the two must
 agree or the generator aborts. Deterministic for a fixed SEED and a warm OneMap cache.
 """
@@ -36,7 +36,7 @@ from build_cases import (LOC, ROADS, SGT, Congestion, Stop, along_km, approach_t
 from fare import cancellation_fare, distance_km, fixed_fare, load_rates, metered_fare, slice_gps  # noqa: E402
 from route_provider import haversine_m  # noqa: E402
 
-from core.facts.tools import _flags, build_fact_table  # noqa: E402
+from core.facts.tools import build_fact_table  # noqa: E402
 from core.policy_engine import evaluate, expected_amount  # noqa: E402
 from core.schemas import Case  # noqa: E402
 
@@ -72,7 +72,7 @@ CONGESTION_LEN_KM = 0.45
 OFFSET_CANDIDATES = [(1, 1000), (-1, 1000), (1, 1500), (-1, 1500), (1, 700), (-1, 700), (1, 2000), (-1, 2000)]
 SPAN_CANDIDATES = [(1.0, 1.0), (1.5, 1.5), (0.7, 0.7), (2.0, 2.0), (1.0, 2.0), (2.0, 1.0)]
 
-# chat lines whose keyword flags were checked against core.facts.tools._flags (asserted again at build time)
+# ordinary pickup chatter; what any line means is for the court to read, nothing is labelled
 INNOCUOUS = [("rider", "Hi, I am at the main entrance in a blue shirt."),
              ("driver", "Arriving in 2 min, white Honda Vezel.")]
 
@@ -199,11 +199,6 @@ def after_tap_s(gps, P, tap: datetime, end: datetime) -> int:
     return t
 
 
-def flagged(text, want: set) -> None:
-    got = set(_flags(text))
-    assert got == want, f"chat line {text!r} flags {sorted(got)} != intended {sorted(want)}"
-
-
 # ----------------------------------------------------------------------------------------------- scenario list
 
 def R(name, pair, **kw):
@@ -285,7 +280,7 @@ SCENARIOS = [
     R("rd_consent_before_prior", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}], consent="before", prior=2,
       hard="consent exempts the segment, so RD-6 is NOT triggered despite 2 priors -> no_action, no flag"),
     R("rd_threat_in_chat", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.40, 0.55)}], threat="driver",
-      hard="route dispute whose chat contains a threat keyword -> SAFE-1 overrides: escalate, no refund computed"),
+      hard="route dispute whose chat holds an intimidating driver message -> the judge's safety screen (SAFE-1) overrides: escalate, no refund computed"),
     R("rd_consent_before_light", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], consent="before", weather="light", incident="decoy_far",
       hard="consent exempts; the decoy incident is irrelevant noise"),
     # ---- no-show ----------------------------------------------------------------------------------------------
@@ -320,24 +315,24 @@ SCENARIOS = [
     N("ns_rider_cancel_400s_driver_waiting", ("Raffles Place", "Sentosa Beach Station"), by="rider", cancel_s=400, driver="at_pickup",
       hard="driver was parked at the pin for minutes; rider cancels at 400 s -> fee stands"),
     N("ns_threat_in_chat", ("Bugis Junction", "Jurong East MRT"), by="driver", park_m=40, wait_s=240, here=True, chat="threat",
-      hard="no-show facts favour the driver, but the chat holds a threat keyword -> escalate"),
+      hard="no-show facts favour the driver, but the chat holds an intimidating driver message -> safety screen: escalate"),
     N("ns_rider_cancel_100s_bad_profile", ("Marina Bay Sands", "Tampines Mall"), by="rider", cancel_s=100, driver="en_route", prior_ns=2,
       hard="rider has 2 upheld no-show disputes; still inside grace -> refund"),
     N("ns_wait_4min_180m", ("Clarke Quay", "Sentosa Beach Station"), by="driver", park_m=180, wait_s=240, here=True,
       hard="parked 180 m from the pin (inside the 200 m radius), rider says 'not at the entrance' -> fee stands"),
     # ---- safety ------------------------------------------------------------------------------------------------
     S("safe_driver_threat", ("Clarke Quay", "Bedok Mall"), chat="driver_threat",
-      hard="SAFE-1 keyword 'lock the door' from the driver -> escalate"),
+      hard="SAFE-1: driver threatens to lock the rider in -> escalate"),
     S("safe_rider_threat", ("Tampines Mall", "Changi Airport T3"), chat="rider_threat", service="RydeTAXI",
-      hard="SAFE-1 keyword from the rider; the driver filed -> escalate, no refund"),
+      hard="SAFE-1: rider threatens the driver; the driver filed -> escalate, no refund"),
     S("safe_innocuous_chat_dangerous_driving", ("Jurong East MRT", "NUS"), chat="innocuous",
-      hard="no keyword in chat; the complaint alleges dangerous driving -> SAFE-2 escalate"),
+      hard="innocuous chat; the complaint alleges dangerous driving -> SAFE-2 escalate"),
     S("safe_no_chat_harassment", ("Woodlands Civic Centre", "Punggol Waterway Point"), chat="none", weather="heavy",
       hard="no chat at all; harassment alleged in the statement -> escalate (SAFE-1 via type)"),
     S("safe_keyword_only_in_statement", ("NUS", "Raffles Place"), chat="innocuous", statement_threat=True,
-      hard="the only threat word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
+      hard="the only hint word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
     R("rd_keyword_trap_find_you", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], threat="trap",
-      hard="route dispute; rider wrote 'I'll find you at the lobby' which hits the threat keyword 'find you' -> the deterministic rule escalates"),
+      hard="route dispute; rider wrote 'I'll find you at the lobby' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour"),
 ]
 
 
@@ -498,47 +493,38 @@ def build_route(spec, rates, rp, idx, rng):
         road = detour_road[0]
         ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
         yes = "Sure, go ahead."
-        flagged(ask, {"request"}); flagged(yes, {"agreement"})
         chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
     elif consent == "request_only":
         t_req = seg_start[0] - timedelta(seconds=200)
         ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {detour_road[0]}?"
-        flagged(ask, {"request"})
         chat_lines += [(t_req, "driver", ask)]
     elif consent == "scope_other":
         t_req = seg_start[0] - timedelta(seconds=240)
         ask = "Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty."
         yes = "Sure, no problem."
-        flagged(ask, {"request"}); flagged(yes, {"agreement"})
         chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=35), "rider", yes)]
     if spec["stop"] == "named":
         stop_place = spec["loops"][0]["place"]
         t_req = seg_start[0] - timedelta(seconds=240)
         ask = f"Can you stop at {stop_place}? I need to grab a parcel, 3-4 minutes."
         okm = "Ok"
-        flagged(ask, {"request"}); flagged(okm, {"agreement"})
         chat_lines += [(t_req, "rider", ask), (t_req + timedelta(seconds=30), "driver", okm)]
     elif spec["stop"] == "unnamed":
         t_req = seg_start[0] - timedelta(seconds=240)
         ask = "Can you stop at a 7-Eleven on the way? Just need 2 minutes."
         okm = "Ok"
-        flagged(ask, {"request"}); flagged(okm, {"agreement"})
         chat_lines += [(t_req, "rider", ask), (t_req + timedelta(seconds=30), "driver", okm)]
     if spec["threat"] == "driver":
         t = pickup_at + timedelta(seconds=total_s // 2)
         chat_lines += [(t, "rider", "Why are we going this way? This is not the route on the app."),
                        (t + timedelta(seconds=45), "driver", "Shut up and let me drive.")]
-        flagged("Shut up and let me drive.", {"threat"})
     elif spec["threat"] == "trap":
         t = accepted + timedelta(seconds=60)
         line = "I'll find you at the lobby, I am in a red jacket."
-        flagged(line, {"threat"})
         chat_lines += [(t, "rider", line)]
     if not chat_lines and rng.random() < 0.5:
         t = accepted + timedelta(seconds=50)
         chat_lines += [(t, INNOCUOUS[0][0], INNOCUOUS[0][1]), (t + timedelta(seconds=30), INNOCUOUS[1][0], INNOCUOUS[1][1])]
-        for _, _, txt in chat_lines:
-            flagged(txt, set())
     chat_lines.sort(key=lambda x: x[0])
     for t, _, _ in chat_lines:
         assert accepted <= t <= dropoff_at, f"{spec['name']}: chat at {t} outside the trip"
@@ -589,7 +575,6 @@ def build_route(spec, rates, rp, idx, rng):
         dstmt = "The rider asked for a 7-Eleven stop. I went to the one I know and waited."
     if not found:
         dstmt = "I followed the app route exactly. The meter is what it is; it was raining and traffic was slow."
-    flagged(dstmt, set(_flags(dstmt)) - {"threat"})  # statements must never carry a threat keyword
     prior = spec["prior"]
     r_prof = (rng.randint(120, 1500), round(rng.uniform(4.5, 5.0), 1), rng.randint(0, 2), 0, 0, 0)
     d_dis = max(prior, rng.randint(0, 2))
@@ -692,7 +677,6 @@ def build_noshow(spec, rates, rp, idx, rng):
             chat_lines = [(park_at + timedelta(seconds=30), "driver", f"I'm here, {plate}."),
                           (park_at + timedelta(seconds=120), "rider", "2 min, coming"),
                           (cancelled - timedelta(seconds=20), "driver", "Hurry up or I will find you and you will regret it.")]
-            flagged(chat_lines[-1][2], {"threat"})
             statement = "The driver threatened me in the chat and then cancelled and charged me $6.61."
             dstmt = "I waited more than 4 minutes. The rider kept saying 2 minutes. I cancelled as a no-show."
         elif not spec["here"]:
@@ -730,8 +714,6 @@ def build_noshow(spec, rates, rp, idx, rng):
             gps = build_trajectory(poly, accepted, cancel_s, seed=spec["seed"])
             chat_lines = [(accepted + timedelta(seconds=40), "rider", "How long will you be?"),
                           (accepted + timedelta(seconds=70), "driver", "About 5 min, traffic")] if cancel_s > 120 else []
-            for _, _, txt in chat_lines:
-                flagged(txt, set())
             statement = (f"The driver was still far away after {cancel_s // 60} minutes so I cancelled and booked another ride, and got charged $6.61."
                          if cancel_s > 180 else f"I cancelled within {cancel_s // 60} minutes because the driver was nowhere near, and still got charged $6.61.")
             dstmt = "I was on my way when the rider cancelled."
@@ -803,21 +785,17 @@ def build_safety(spec, rates, rp, idx, rng):
     if kind == "driver_threat":
         chat_lines = [(mid, "rider", "Please stop the car, I want to get out here."),
                       (mid + timedelta(seconds=60), "driver", "Sit down or I lock the doors.")]
-        flagged(chat_lines[1][2], {"threat"})
         statement = "The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride."
         dstmt = "The rider tried to open the door while we were moving. I told her to sit down for her own safety."
     elif kind == "rider_threat":
         chat_lines = [(mid, "driver", "Please do not smoke in the car."),
                       (mid + timedelta(seconds=40), "rider", "Say that again and I will punch you.")]
-        flagged(chat_lines[1][2], {"threat"})
         filed_by = "driver"
         statement = "The passenger threatened to punch me when I asked him not to smoke. I want this reported."
         dstmt = "The passenger threatened to punch me when I asked him not to smoke. I want this reported."
     elif kind == "innocuous":
         chat_lines = [(accepted + timedelta(seconds=50), INNOCUOUS[0][0], INNOCUOUS[0][1]),
                       (accepted + timedelta(seconds=80), INNOCUOUS[1][0], INNOCUOUS[1][1])]
-        for _, _, txt in chat_lines:
-            flagged(txt, set())
         statement = "The driver was speeding and braking hard the whole way, overtaking on the shoulder. I was scared and felt unsafe."
         dstmt = "I drove normally. The rider was on the phone the whole trip and never complained to me."
         if spec.get("statement_threat"):
@@ -855,13 +833,17 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
     lines = cert.lines()
     kind = cert.dispute_type
     if kind == "safety":
-        threat = any((f.value or {}).get("threat") for f in table.facts)
-        cited = ["SAFE-1"] if threat else ["SAFE-1", "SAFE-2"]
-        why = ("Threat keyword in the chat triggers SAFE-1: no automatic ruling, escalate with a fact summary."
-               if threat else "Safety ticket without a keyword hit: SAFE-1/SAFE-2 still forbid an automatic ruling -> escalate.")
-        if case.dispute.type != "safety":
-            why = f"{case.dispute.type} dispute, but a chat message hits the threat keyword table -> SAFE-1 overrides every other clause: escalate."
+        threat_chat = spec.get("chat") in ("driver_threat", "rider_threat")
+        cited = ["SAFE-1"] if threat_chat else ["SAFE-1", "SAFE-2"]
+        why = ("Safety complaint whose chat holds a threat: SAFE-1 forbids an automatic ruling -> escalate with a fact summary for the reviewer."
+               if threat_chat else "Complaint filed as a safety incident: SAFE-1/SAFE-2 forbid an automatic ruling -> escalate with a fact summary for the reviewer.")
         return {"ruling": "escalate", "amount": None, "cited_policy": cited, "escalate": True, "rationale": why,
+                "flag_account": False, "_cert": lines}
+    if spec.get("threat") == "driver" or spec.get("chat") == "threat":
+        # the chat holds a line any reader takes as intimidation ("Shut up and let me drive", "you will regret it"):
+        # the court's safety screen (SAFE-1) sends it to a person. Not a keyword rule: the reference is the scenario's intent.
+        why = f"{case.dispute.type} dispute, but the chat holds an intimidating message; the judge's safety screen (SAFE-1) overrides every other clause: escalate."
+        return {"ruling": "escalate", "amount": None, "cited_policy": ["SAFE-1"], "escalate": True, "rationale": why,
                 "flag_account": False, "_cert": lines}
     if kind == "no_show":
         ruling = cert.allowed[0]
@@ -904,9 +886,9 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
     cited = ["RD-1", "RD-2"] if seg_ids else ["RD-1"]
     if any(p.clause == "RD-4" and p.status == "pass" for p in cert.predicates):
         cited.append("RD-4")
-    if any(p.clause == "RD-5" and p.status == "judge" for p in cert.predicates):
-        cited.append("RD-5")
-    if any(p.clause == "RD-3" and p.status == "judge" for p in cert.predicates):
+    if spec["consent"] != "none" and any(p.clause == "RD-5" and p.status == "judge" for p in cert.predicates):
+        cited.append("RD-5")    # the chat holds a route exchange the judge had to read
+    if spec["stop"] != "none" and any(p.clause == "RD-3" and p.status == "judge" for p in cert.predicates):
         cited.append("RD-3")
     if flag:
         cited.append("RD-6")

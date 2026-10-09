@@ -15,6 +15,7 @@ import glob
 import json
 import sys
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "bench"))
@@ -34,8 +35,10 @@ def run_files() -> list[dict]:
     return rows
 
 
-def audit() -> dict:
+def audit() -> Optional[dict]:
     base = ROOT / "bench" / "results" / "audit_sample"
+    if not (base / "manifest.json").exists():
+        return None
     m = json.loads((base / "manifest.json").read_text())
     expected = {p.stem: json.loads(p.read_text()) for p in (ROOT / "data" / "bench" / "expected").glob("*.json")}
     matched, n = {}, {}
@@ -110,11 +113,13 @@ def build() -> dict:
              "value": f"{ct['invalid_citations'] + ct['invalid_fact_citations']} of {cites_ct:,} ({ct['fact_citations']} fact ids, {ct['citations']} clause ids)",
              "comparator": f"raw call: {raw['invalid_citations'] + raw['invalid_fact_citations']} of {cites_raw}, {raw['invalid_fact_citations']} invented fact ids",
              "scope": "court arm", "evidence_url": "/report.html"},
-            {"name": "identity-swap invariance",
-             "value": f"{ct['swap_invariance']*100:.0f}%", "comparator": f"raw call {raw['swap_invariance']*100:.1f}%",
-             "scope": "rider and driver histories swapped", "evidence_url": "/report.html"},
-            {"name": "same ruling on repeat",
-             "value": f"{ct['pass_all_repeats']*100:.1f}%", "scope": f"{ct['repeats']} runs of every case, full court", "evidence_url": "/report.html"},
+            *([{"name": "identity-swap invariance",
+                "value": f"{ct['swap_invariance']*100:.0f}%", "comparator": f"raw call {raw['swap_invariance']*100:.1f}%",
+                "scope": "rider and driver histories swapped", "evidence_url": "/report.html"}] if ct.get("swap_invariance") is not None else
+              [{"name": "identity-swap invariance", "value": "not yet re-run on this version", "evidence_url": "/report.html"}]),
+            *([{"name": "same ruling on repeat",
+                "value": f"{ct['pass_all_repeats']*100:.1f}%", "scope": f"{ct['repeats']} runs of every case, full court", "evidence_url": "/report.html"}] if ct.get("pass_all_repeats") is not None else
+              [{"name": "same ruling on repeat", "value": "not yet re-run on this version", "evidence_url": "/report.html"}]),
             {"name": "latency and cost",
              "value": f"{ct['latency_mean_s']} s mean, p95 {ct['latency_p95_s']} s, {ct['llm_calls_mean']:.0f} model calls, about {ct['input_tokens_mean']/1000:.0f}k input tokens per case",
              "comparator": f"raw single call {raw['latency_mean_s']} s, {raw['llm_calls_mean']:.0f} call", "evidence_url": "/report.html"},
@@ -139,8 +144,8 @@ def build() -> dict:
         "demo_video": None,
         "codebuddy_evidence": "conversation screenshots and a development reflection attached to the submission",
         "provenance": {
-            "requested_model": au["requested_model"], "api": "DeepSeek API (pydantic-ai)",
-            "api_reported_model_in_audit_sample": au["provider_model_reported"],
+            "requested_model": (au or {}).get("requested_model", "deepseek-chat"), "api": "DeepSeek API (pydantic-ai)",
+            "api_reported_model_in_audit_sample": (au or {}).get("provider_model_reported"),
             "benchmark_window_utc": window,
             "stored_runs": len(rows), "recorded_model_calls": sum(r["llm_calls"] for r in rows),
             "input_tokens_total": sum(r["input_tokens"] for r in rows),

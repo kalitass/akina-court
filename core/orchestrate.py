@@ -119,6 +119,8 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     replay(hooks.events, log.emit)
     cert = evaluate(case, table)
     judge_items = [f"{p.clause} for {p.subject}: {p.element} — {p.detail}" for p in cert.predicates if p.status == "judge"]
+    if cert.insufficient:
+        judge_items.append(f"EVIDENCE: {cert.insufficient} — the only outcome is escalate; state what is missing in evidence_gap")
     log.emit("verify", "check", "Policy execution trace (code): " + (f"{len(judge_items)} element(s) left to the judge" if judge_items else "outcome fully determined by code"),
              "\n".join(cert.lines()), certificate=cert.lines())
 
@@ -199,18 +201,21 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     if "wrong_amount" in inject and raw.amount:
         raw = raw.model_copy(update={"amount": round(raw.amount + 1.0, 2)})
     if "flip_finding" in inject and raw.segment_findings:
-        sf = raw.segment_findings[0].model_copy(update={"exempt": not raw.segment_findings[0].exempt, "reason": "(demo) finding flipped"})
+        f0 = raw.segment_findings[0]
+        sf = f0.model_copy(update={"finding": "counts" if f0.finding == "exempt" else "exempt", "reason": "(demo) finding flipped"})
         raw = raw.model_copy(update={"segment_findings": [sf] + raw.segment_findings[1:]})
     if not err and "flip_finding" not in inject and "wrong_amount" not in inject:
-        ok_c, why_c = check_ruling(cert, raw)
+        ok_c, why_c = check_ruling(cert, raw)   # an escalate with a real ground (safety, open question, missing evidence) passes; one without is sent back once
         if not ok_c:   # one self-correction against the certificate: the judge sees exactly where it contradicts the code
             log.emit("verify", "check", "Ruling contradicts the policy certificate — returned to judge once", "\n".join(why_c), ruling=raw)
             jr3, err3 = await _staged(judge.run(
                 "Your ruling is inconsistent with the policy execution trace (computed by code):\n- " + "\n- ".join(why_c)
                 + "\nThe trace is binding on ✓/✗ elements and on the amount formula. Re-issue the Ruling so that: the outcome is in the allowed set; "
                   "segment findings agree with every code-settled segment; the amount equals the formula to the cent; flag_account is "
-                  "recommended only when the trace requires it. If you believe the trace is wrong, keep your outcome and explain why — the case "
-                  "will then go to human review.", message_history=jr.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
+                  "recommended only when the trace requires it. If the record does not let you decide a ? element, rule escalate with "
+                  "that ground (safety_concern, an undetermined finding on a ? segment, or the specific missing fact in evidence_gap); "
+                  "elements marked ✓/✗ are settled and are not grounds. A person then decides.",
+                  message_history=jr.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
             if not err3 and not citation_problems(jr3.output, table, clause_ids):
                 raw = jr3.output
     log.emit("judge", "ruling", f"Proposed ruling: {raw.ruling}" + (f" ${raw.amount:.2f}" if raw.amount else "") + f" (model confidence {raw.confidence:.2f})",

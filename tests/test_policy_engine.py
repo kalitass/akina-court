@@ -21,9 +21,18 @@ def load(cid):
     return case, exp
 
 
+def basis_for(cert, fid):
+    """Rider messages on record before the segment started: what an exempt finding must rest on."""
+    start = cert.segments[fid].get("start")
+    return [b for b, m in cert.chat_index.items() if m["from"] == "rider" and not m["statement"] and m["ts"] and start and m["ts"] < start]
+
+
 def ruling_from_expected(cid, exp, cert):
-    findings = [SegmentFinding(fact_id=f, exempt=e, reason="ref") for f, e in EXEMPT.get(cid, {}).items()]
-    return Ruling(ruling=exp["ruling"], amount=exp.get("amount"), recommended_action="x" + (" + flag_account" if cert.flag_required else ""), flag_account=bool(cert.flag_required),
+    findings = [SegmentFinding(fact_id=f, finding="exempt" if e else "counts", basis=basis_for(cert, f) if e else [], reason="ref")
+                for f, e in EXEMPT.get(cid, {}).items()]
+    upheld = any(f.finding == "counts" for f in findings) or any(sg["exempt"] is False for sg in cert.segments.values())
+    flag = bool(cert.flag_required) if cert.flag_required is not None else bool(cert.flag_conditional and upheld)
+    return Ruling(ruling=exp["ruling"], amount=exp.get("amount"), recommended_action="x" + (" + flag_account" if flag else ""), flag_account=flag,
                   confidence=0.9, reasoning="[F1][RD-1]", cited_facts=["F1"], cited_policy=exp["cited_policy"],
                   segment_findings=findings, escalate=exp["escalate"])
 
@@ -55,7 +64,7 @@ def test_flipped_code_settled_finding_is_blocked():
     case, exp = load("C-0003")
     table = build_fact_table(case); cert = evaluate(case, table)
     r = ruling_from_expected("C-0003", exp, cert).model_copy(update={"ruling": "refund_partial", "amount": 1.18,
-                                                                        "segment_findings": [SegmentFinding(fact_id="F3", exempt=False, reason="x")]})
+                                                                        "segment_findings": [SegmentFinding(fact_id="F3", finding="counts", reason="x")]})
     ok, why = check_ruling(cert, r)
     assert not ok and any("contradicts code" in w for w in why)
 
@@ -69,9 +78,10 @@ def test_fake_citation_escalates():
 
 
 @pytest.mark.parametrize("name,base,allowed", [
-    ("swap_profiles", "C-0001", ["refund_partial", "no_action"]), ("heavy_rain", "C-0001", ["refund_partial", "no_action"]),
-    ("grace_179", "C-0005", ["refund_full"]), ("grace_181", "C-0005", ["no_action"]),
-    ("no_consent", "C-0001", ["refund_partial"]), ("metered_to_fixed", "C-0001", ["no_action"]),
+    ("swap_profiles", "C-0001", ["refund_partial", "no_action", "escalate"]), ("heavy_rain", "C-0001", ["refund_partial", "no_action", "escalate"]),
+    ("grace_179", "C-0005", ["refund_full", "escalate"]), ("grace_181", "C-0005", ["no_action", "escalate"]),
+    ("no_consent", "C-0001", ["refund_partial", "no_action", "escalate"]),   # the driver's messages and statement remain: the judge reads them (and finds no consent)
+    ("metered_to_fixed", "C-0001", ["no_action", "escalate"]),
 ])
 def test_counterfactuals_move_only_where_the_clause_says(name, base, allowed):
     case, _ = load(base)

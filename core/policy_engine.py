@@ -3,15 +3,19 @@
 Each predicate is three-state:
     pass     the facts satisfy the clause element (evidence ids listed)
     fail     the facts contradict it
-    judge    the element is interpretive (scope of a rider's consent, whether "a 7-Eleven on the way" covers a
-             2.8 km route change) — the Judge decides it and must say so in Ruling.segment_findings
+    judge    the element is a reading of what people said or meant (did the rider agree, and to what; is a message
+             a threat) — the Judge decides it and must say so in Ruling.segment_findings / safety_concern
 
-From the predicates the engine derives the ALLOWED outcomes and the exact amount formula. core.verify then checks the
-Judge's ruling against this certificate: a ruling outside the allowed set, an amount off by more than $0.01, or a
-required predicate left undecided → the case is not eligible for automation and is routed to human review.
+Three layers, kept apart on purpose:
+    evidence   (code)   who said what and when; GPS, fare and time arithmetic; whether the record is complete
+    judgement  (court)  what the words meant: consent and its scope, safety concern — may be "undetermined"
+    check      (code)   the judgement is well-formed: it rests on facts that exist, were written by the right party,
+                        and came before the segment; the amount follows the formula; what may execute automatically
 
-This is the "code locks, judge explains" firewall: mechanical elements are decided by code, interpretive elements
-by the judge, and the two must agree.
+From the predicates the engine derives the ALLOWED outcomes and the exact amount formula. "escalate" is always
+allowed: a judge who cannot decide, or who reads a safety concern, sends the case to a person and code never
+overrides that. Missing evidence (no GPS, a hole in the trace, untimed messages) is itself a finding — "cannot be
+measured" — and never a silent ruling for either side.
 """
 from __future__ import annotations
 
@@ -65,6 +69,8 @@ class Certificate:
     grace: int = GRACE_S                                    # free-wait window (s) this case was evaluated with
     flag_conditional: bool = False                          # route: flag iff the judge finds ≥1 non-exempt segment
     mechanical: bool = True                                 # True = outcome fully determined by code
+    insufficient: Optional[str] = None                      # evidence the question needs but the record lacks → only escalate
+    chat_index: dict = field(default_factory=dict)          # chat fact id -> {"from", "ts", "statement"} for the basis check
 
     def what_would_change(self) -> list[str]:
         """Deterministic 'what would change this ruling' sentences, derived from the failed / passed predicates."""
@@ -85,7 +91,7 @@ class Certificate:
                 if sg["exempt"] is False:
                     out.append(f"Had an LTA incident been recorded on the stretch {fid} replaced, before it started, RD-4 would exempt it (−${sg['extra_km'] * (self.rate_per_km or 0):.2f}).")
                 if sg["exempt"] is None:
-                    out.append(f"{fid}: if the judge finds the rider's agreement covered this route, it is exempt; otherwise ${sg['extra_km'] * (self.rate_per_km or 0):.2f} is refunded.")
+                    out.append(f"{fid}: if the judge finds the rider agreed to this route or named this stop beforehand, it is exempt; if not, ${sg['extra_km'] * (self.rate_per_km or 0):.2f} is refunded; if the record cannot settle it, a person decides.")
             if self.flag_required is False and any(p.clause == "RD-6" for p in self.predicates):
                 out.append("Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag.")
         return out
@@ -98,6 +104,8 @@ class Certificate:
         if self.dispute_type == "no_show" and (self.fee != CANCEL_FEE or self.grace != GRACE_S):
             out.append(f"parameters from the case record: cancellation fee ${self.fee:.2f}, free wait {self.grace / 60:g} min "
                        f"(read these wherever the NS clauses say ${CANCEL_FEE:.2f} / {GRACE_S // 60} min)")
+        if self.insufficient:
+            out.append(f"evidence insufficient: {self.insufficient}")
         out.append(f"allowed outcomes: {', '.join(self.allowed) or '—'}" + (f"; amount = {self.amount_formula}" if self.amount_formula else ""))
         if self.flag_conditional:
             out.append("flag_account required: only if a segment is found non-exempt (RD-6 prior upheld dispute on file)")
@@ -139,74 +147,95 @@ def _incident_on_stretch(case: Case, inc: dict, lo_km: float, hi_km: float) -> b
     return d <= NEAR_ROUTE_M and (lo_km - 0.3) <= along <= (hi_km + 0.3)
 
 
+def _chat_index(vals: dict[str, dict]) -> dict[str, dict]:
+    return {fid: {"from": v.get("from"), "ts": v.get("ts"), "statement": bool(v.get("statement"))}
+            for fid, v in vals.items() if ("idx" in v and "from" in v) or v.get("statement")}
+
+
 def evaluate_route(case: Case, table: FactTable) -> Certificate:
     vals = _vals(table)
     cert = Certificate(dispute_type="route_deviation")
+    cert.chat_index = _chat_index(vals)
     segs = {fid: v for fid, v in vals.items() if "extra_km" in v and "start" in v}
     fare = next((v for v in vals.values() if "total" in v and "base_fare" in v), {})
     metered = case.trip.service_type == "RydeTAXI"
     rate = (fare["distance_fare"] / fare["distance_km"]) if (metered and fare.get("distance_km")) else None   # exact; rounded once
     cert.rate_per_km = rate
     incidents = [(fid, v) for fid, v in vals.items() if "reported_at" in v]
-    chats = [(fid, v) for fid, v in vals.items() if "flags" in v and "idx" in v]
+    messages = [(fid, v) for fid, v in vals.items() if "idx" in v and "from" in v]
+    record = next((v for v in vals.values() if "complete" in v and "count" in v), {"complete": True, "count": 0})
+    statement = next((fid for fid, v in vals.items() if v.get("statement")), None)
+    # ---- evidence sufficiency: the route question needs a trace that covers the trip
+    missing = [fid for fid, v in vals.items() if v.get("gps_missing")]
+    gaps = [fid for fid, v in vals.items() if "gps_gap_s" in v]
+    if missing or gaps:
+        what = "no GPS trace for the trip" if missing else f"GPS trace has {len(gaps)} hole(s) longer than 2 min; an off-route stretch inside a hole cannot be measured"
+        cert.predicates.append(Predicate("RD-1", "GPS trace covers the trip", "case", "fail", missing + gaps, what))
+        cert.insufficient = what
+        cert.allowed = ["escalate"]
+        cert.mechanical = False
+        return cert
     if not segs:
-        cert.predicates.append(Predicate("RD-1", "off-route segment exists", "case", "fail", [], "no off-route segment measured"))
-        cert.allowed = ["no_action"]
+        cert.predicates.append(Predicate("RD-1", "off-route segment exists", "case", "fail", [], "no off-route segment measured (trace follows the quoted route)"))
+        cert.allowed = ["no_action", "escalate"]
         return cert
     cert.predicates.append(Predicate("RD-1", "off-route segment(s) exist", "case", "pass", list(segs), f"{len(segs)} segment(s)"))
+    comm_ids = [fid for fid, _ in messages] + ([statement] if statement else [])
     for fid, seg in segs.items():
         start = _ts(seg["start"])
         lo, hi = _segment_replaced_stretch(case, seg)
-        # RD-4: an incident on the replaced stretch, reported before the segment started
+        # RD-4: an incident on the replaced stretch, reported before the segment started — measurable, so code settles it
         rd4 = [iid for iid, inc in incidents if _ts(inc["reported_at"]) < start and _incident_on_stretch(case, inc, lo, hi)]
         if rd4:
             cert.predicates.append(Predicate("RD-4", "(a) incident on the replaced stretch, reported before the detour", fid, "pass", rd4,
                                              f"incident within {NEAR_ROUTE_M} m of optimal km {lo:.1f}–{hi:.1f}"))
-        else:
-            cert.predicates.append(Predicate("RD-4", "(a) incident on the replaced stretch, reported before the detour", fid, "fail", [iid for iid, _ in incidents],
-                                             "no qualifying incident (speed band alone does not exempt)"))
-        # RD-5: a driver request + rider agreement before the segment start → scope is for the judge (moot if RD-4 settled it)
-        agree = [cid for cid, c in chats if "agreement" in c["flags"] and c.get("from") == "rider" and _ts(c["ts"]) < start]
-        req = [cid for cid, c in chats if "request" in c["flags"] and c.get("from") == "driver" and _ts(c["ts"]) < start]
-        stop_req = [cid for cid, c in chats if "request" in c["flags"] and c.get("from") == "rider" and _ts(c["ts"]) < start]
-        if rd4:
-            cert.predicates.append(Predicate("RD-5", "consent scope", fid, "n/a", agree + req, "not needed: RD-4 already exempts this segment"))
-            cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "n/a", stop_req, "not needed: RD-4 already exempts this segment"))
-        else:
-            if agree and req:
-                texts = "; ".join(f"{cid}: {table_text(table, cid)}" for cid in req + agree)
-                cert.predicates.append(Predicate("RD-5", "rider agreed to a route change before the detour; scope of consent", fid, "judge", req + agree,
-                                                 f"RULE: if the driver named a road/area/route before leaving and the rider agreed, this segment is exempt (exempt=true) "
-                                                 f"unless it plainly goes somewhere other than what was named. Evidence — {texts}"))
-            else:
-                cert.predicates.append(Predicate("RD-5", "rider agreed to a route change before the detour", fid, "fail", agree + req, "no prior driver request + rider agreement"))
-            if stop_req:
-                stop_ids = [sid for sid, v in vals.items() if "duration_s" in v and "m_from_pickup" in v and seg["start"] <= v.get("start", "") <= seg["end"]]
-                texts = "; ".join(f"{cid}: {table_text(table, cid)}" for cid in stop_req + stop_ids)
-                cert.predicates.append(Predicate("RD-3", "rider-requested stop; whether it named this location", fid, "judge", stop_req + stop_ids,
-                                                 f"RULE (RD-3(a)): if the rider NAMED a specific place and the car stopped there, the WHOLE segment driven to reach it is exempt "
-                                                 f"(exempt=true: a rider-named stop is not a detour, its extra km are not refundable; only the waiting fee rules apply). "
-                                                 f"If the rider named no place ('a 7-Eleven on the way'), the driver's choice of a far location is NOT exempt (exempt=false). Evidence — {texts}"))
-            else:
-                cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "fail", [], "no rider stop request before the segment"))
-        if rd4:
-            cert.segments[fid] = {"exempt": True, "extra_km": seg["extra_km"], "why": f"RD-4 via {', '.join(rd4)}"}
-        elif (agree and req) or stop_req:
-            cert.segments[fid] = {"exempt": None, "extra_km": seg["extra_km"], "why": "judge decides RD-5/RD-3 scope"}
-            cert.mechanical = False
-        else:
-            cert.segments[fid] = {"exempt": False, "extra_km": seg["extra_km"], "why": "no exemption candidate"}
-    definite_bad = [f for f, s in cert.segments.items() if s["exempt"] is False]
-    undecided = [f for f, s in cert.segments.items() if s["exempt"] is None]
+            cert.predicates.append(Predicate("RD-5", "consent scope", fid, "n/a", [], "not needed: RD-4 already exempts this segment"))
+            cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "n/a", [], "not needed: RD-4 already exempts this segment"))
+            cert.segments[fid] = {"exempt": True, "extra_km": seg["extra_km"], "start": seg["start"], "why": f"RD-4 via {', '.join(rd4)}"}
+            continue
+        cert.predicates.append(Predicate("RD-4", "(a) incident on the replaced stretch, reported before the detour", fid, "fail", [iid for iid, _ in incidents],
+                                         "no qualifying incident (speed band alone does not exempt)"))
+        # RD-5 / RD-3: whether the rider agreed to this route, or named this stop, is a reading of what was said.
+        # Code only establishes WHETHER there is anything to read and whether it is timed.
+        before = [cid for cid, c in messages if c.get("ts") and _ts(c["ts"]) < start]
+        untimed = [cid for cid, c in messages if not c.get("ts")]
+        if not comm_ids:
+            cert.predicates.append(Predicate("RD-5", "rider agreed to this route before the detour", fid, "fail", [], "no chat message and no driver statement on record: nothing to read as consent"))
+            cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "fail", [], "no chat message on record"))
+            cert.segments[fid] = {"exempt": False, "extra_km": seg["extra_km"], "start": seg["start"], "why": "no communication on record"}
+            continue
+        stop_ids = [sid for sid, v in vals.items() if "duration_s" in v and "m_from_pickup" in v and seg["start"] <= v.get("start", "") <= seg["end"]]
+        texts = "; ".join(f"{cid}: {table_text(table, cid)}" for cid in before + untimed + ([statement] if statement else []))
+        timing = ("" if record.get("complete", True) else f" {len(untimed)} message(s) carry no time: if the finding turns on them, it is undetermined.")
+        cert.predicates.append(Predicate("RD-5", "rider agreed to this route before the detour; scope of that agreement", fid, "judge", before + untimed + ([statement] if statement else []),
+                                         f"RULE: exempt if a RIDER message sent before {start:%H:%M:%S} agrees to a road / area / route the driver named: this segment IS that route "
+                                         f"(the exchange ties itself to the next off-route segment by timing; you have no road geometry and need none), unless the record shows a different destination "
+                                         f"(a stop far off that road, a second detour after rejoining). Extra km or distance from the optimal route are not such evidence — a named alternative road is off the optimal route by definition. "
+                                         f"A driver's claim of agreement that appears only in his statement is not consent (G11); when the chat record is complete and holds no rider agreement before the segment, the finding is counts, not undetermined. "
+                                         f"Undetermined is only for a message whose meaning or timing the record cannot settle.{timing} Evidence — {texts}"))
+        cert.predicates.append(Predicate("RD-3", "rider-requested stop; whether the rider named this place", fid, "judge", before + stop_ids,
+                                         f"RULE (RD-3(a)): exempt if a RIDER message before the segment named a specific place and the car stopped there (the whole way there is exempt; "
+                                         f"how long the stop lasted or how far the place was does not reduce it). "
+                                         f"A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts."
+                                         + (f" Stops in this segment: {', '.join(stop_ids)}." if stop_ids else " No stop measured in this segment.")))
+        cert.segments[fid] = {"exempt": None, "extra_km": seg["extra_km"], "start": seg["start"], "why": "judge reads RD-5 / RD-3 from the chat and statement"}
+        cert.mechanical = False
+    definite_bad = [f for f, sg in cert.segments.items() if sg["exempt"] is False]
+    undecided = [f for f, sg in cert.segments.items() if sg["exempt"] is None]
     if not metered:
         cert.predicates.append(Predicate("RD-2", "metered service (detour km enters the fare)", "case", "fail", [], f"{case.trip.service_type} is a fixed fare"))
-        cert.allowed = ["no_action"]
-    elif definite_bad:
-        cert.allowed = ["refund_partial"]
-    elif undecided:
-        cert.allowed = ["refund_partial", "no_action"]
+        cert.allowed = ["no_action", "escalate"]
+    elif metered and rate is None:
+        cert.predicates.append(Predicate("RD-2", "per-km rate derivable from the fare record", "case", "fail", [], "metered trip but the fare record has no distance / distance fare: refund cannot be computed"))
+        cert.insufficient = "metered trip without a distance fare on record: the RD-2 amount cannot be computed"
+        cert.allowed = ["escalate"]
+        cert.mechanical = False
+    elif definite_bad and not undecided:
+        cert.allowed = ["refund_partial", "escalate"]
+    elif definite_bad or undecided:
+        cert.allowed = ["refund_partial", "no_action", "escalate"]
     else:
-        cert.allowed = ["no_action"]
+        cert.allowed = ["no_action", "escalate"]
     if metered and rate:
         cert.amount_formula = f"Σ extra_km of non-exempt segments × ${rate:.4f}/km (distance_fare ÷ distance_km), rounded to cents"
     drv = next((v for v in vals.values() if v.get("party") == "driver"), {})
@@ -215,13 +244,14 @@ def evaluate_route(case: Case, table: FactTable) -> Certificate:
                                      "pass" if prior else "fail", [f for f, v in vals.items() if v.get("party") == "driver"],
                                      f"route_disputes_upheld_90d = {drv.get('route_disputes_upheld_90d', 0)}"))
     # RD-6 needs the case UPHELD (≥1 non-exempt segment). Definite → known now; undecided → depends on the judge's findings.
-    cert.flag_required = bool(prior) if definite_bad else (None if (undecided and prior) else False)
-    cert.flag_conditional = bool(undecided and prior and not definite_bad)
+    cert.flag_required = bool(prior) if (definite_bad and not undecided) else (None if (undecided and prior) else False)
+    cert.flag_conditional = bool(undecided and prior)
     return cert
 
 
-def expected_amount(cert: Certificate, findings: dict[str, bool]) -> Optional[float]:
-    """Amount implied by the certificate once the judge's segment findings fill the undecided slots."""
+def expected_amount(cert: Certificate, findings: dict[str, Optional[bool]]) -> Optional[float]:
+    """Amount implied by the certificate once the judge's segment findings fill the undecided slots.
+    None when a slot is missing or undetermined: then no amount can execute."""
     if cert.rate_per_km is None:
         return None
     total = 0.0
@@ -246,16 +276,28 @@ def evaluate_no_show(case: Case, table: FactTable) -> Certificate:
     here = next(((f, v) for f, v in vals.items() if "driver_pressed_here_at" in v), (None, {}))
     cancel_id = next((f for f, v in vals.items() if "s_after_accept" in v), None)
     by = cancel.get("cancelled_by")
+    cert.chat_index = _chat_index(vals)
     cert.predicates.append(Predicate("NS-0", "who cancelled", "case", "pass", [cancel_id] if cancel_id else [], f"cancelled_by = {by}"))
+    if not cancel_id:
+        cert.insufficient = "no cancellation on the timeline: who cancelled and when is not on record"
+        cert.predicates.append(Predicate("NS-0", "cancellation on record", "case", "fail", [], cert.insufficient))
+        cert.allowed = ["escalate"]; cert.mechanical = False
+        return cert
     if by == "rider":
         late = cancel.get("s_after_accept", 0) > G
         cert.predicates.append(Predicate("NS-4", f"rider cancelled more than {GM:g} min after matching", "case", "pass" if late else "fail",
                                          [cancel_id], f"{cancel.get('s_after_accept')} s after acceptance"))
-        cert.allowed = ["no_action"] if late else ["refund_full"]
+        cert.allowed = ["no_action", "escalate"] if late else ["refund_full", "escalate"]
         cert.amount_formula = None if late else f"cancellation fee ${FEE:.2f}"
         cert.flag_required = False
         return cert
-    # driver cancelled as rider no-show → NS-1 three elements
+    # driver cancelled as rider no-show → NS-1 three elements; they need the driver's trace
+    missing = [f for f, v in vals.items() if v.get("gps_missing")]
+    if missing:
+        cert.insufficient = "no GPS trace between acceptance and cancellation: where the driver waited cannot be measured"
+        cert.predicates.append(Predicate("NS-1", "GPS trace covers the wait", "case", "fail", missing, cert.insufficient))
+        cert.allowed = ["escalate"]; cert.mechanical = False
+        return cert
     i_ok = bool(here[1].get("driver_pressed_here_at"))
     d_tap = here[1].get("m_from_pickup_at_tap")
     ii_ok = d_tap is not None and d_tap <= PICKUP_RADIUS_M
@@ -269,9 +311,9 @@ def evaluate_no_show(case: Case, table: FactTable) -> Certificate:
     cert.predicates.append(Predicate("NS-1", f"(iii) stayed at the pickup > {GM:g} min after the tap, until cancelling", "case", "pass" if iii_ok else "fail",
                                      [here[0]] if here[0] else [], f"{cont} s continuously inside the radius after the tap"))
     if i_ok and ii_ok and iii_ok:
-        cert.allowed = ["no_action"]; cert.flag_required = False
+        cert.allowed = ["no_action", "escalate"]; cert.flag_required = False
     else:
-        cert.allowed = ["refund_full"]; cert.amount_formula = f"cancellation fee ${FEE:.2f}"
+        cert.allowed = ["refund_full", "escalate"]; cert.amount_formula = f"cancellation fee ${FEE:.2f}"
         cert.flag_required = bool(i_ok and not ii_ok)
         cert.predicates.append(Predicate("NS-2", "tapped I'm Here while not at pickup → flag_account", "case",
                                          "pass" if cert.flag_required else "fail", [x for x in (here[0], near[0]) if x], "fake arrival tap" if cert.flag_required else "no fake tap"))
@@ -281,43 +323,115 @@ def evaluate_no_show(case: Case, table: FactTable) -> Certificate:
 # --------------------------------------------------------------------------- safety
 
 def evaluate_safety(case: Case, table: FactTable) -> Certificate:
+    """A complaint filed as a safety incident: never ruled automatically, whatever the chat says."""
     vals = _vals(table)
     cert = Certificate(dispute_type="safety")
-    threats = [f for f, v in vals.items() if v.get("threat")]
-    cert.predicates.append(Predicate("SAFE-1", "threat / intimidation language present", "case", "pass" if threats else "fail", threats,
-                                     "threat keyword table (core/facts/tools.py)"))
+    cert.chat_index = _chat_index(vals)
+    cert.predicates.append(Predicate("SAFE-1", "complaint filed as a safety incident", "case", "pass", [], "no automatic ruling; the judge writes a factual summary for the reviewer"))
     cert.allowed = ["escalate"]
     cert.flag_required = None
+    cert.mechanical = False
     return cert
 
 
-def evaluate(case: Case, table: FactTable) -> Certificate:
+def safety_screen_item(table: FactTable) -> Predicate:
+    """Every case: the judge reads every message, statement and the complaint for threats, intimidation, harassment or
+    dangerous driving (SAFE-1 / SAFE-2). Code cannot read meaning; it only points at lines a hint word marks."""
     vals = _vals(table)
-    if table.dispute_type == "safety" or any(v.get("threat") for v in vals.values()):
+    hinted = [fid for fid, v in vals.items() if v.get("keyword_hint")]
+    note = (f"hint word in {', '.join(hinted)} — a locator, not a finding; read it in context" if hinted
+            else "no hint word; read the messages anyway, a threat needs no keyword")
+    return Predicate("SAFE-1", "safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint", "case",
+                     "judge", hinted, f"answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. {note}")
+
+
+def evaluate(case: Case, table: FactTable) -> Certificate:
+    if table.dispute_type == "safety":
         return evaluate_safety(case, table)
-    if table.dispute_type == "no_show":
-        return evaluate_no_show(case, table)
-    return evaluate_route(case, table)
+    cert = evaluate_no_show(case, table) if table.dispute_type == "no_show" else evaluate_route(case, table)
+    cert.predicates.append(safety_screen_item(table))
+    if "escalate" not in cert.allowed:
+        cert.allowed.append("escalate")
+    return cert
 
 
 # --------------------------------------------------------------------------- eligibility
 
+def escalate_grounds(ruling: Ruling) -> list[str]:
+    """The judge-stated grounds on which an escalate stands on its own: code records them and never overrides them."""
+    g = []
+    if ruling.safety_concern != "none":
+        g.append(f"safety concern {ruling.safety_concern} ({', '.join(ruling.safety_basis) or 'no basis listed'})")
+    und = [sf.fact_id for sf in ruling.segment_findings if sf.finding == "undetermined"]
+    if und:
+        g.append(f"segment finding undetermined for {', '.join(und)}")
+    if ruling.evidence_gap:
+        g.append(f"evidence gap: {ruling.evidence_gap}")
+    return g
+
+
 def check_ruling(cert: Certificate, ruling: Ruling) -> tuple[bool, list[str]]:
-    """Is the judge's ruling consistent with the certificate? (eligible_for_automation, reasons)."""
+    """Is the judge's ruling consistent with the certificate? (eligible_for_automation, reasons).
+
+    An escalate is never inconsistent: it executes nothing. Everything else must sit inside what code measured."""
     reasons = []
+    if ruling.ruling == "escalate" or ruling.escalate:
+        # An escalate executes nothing, but it must rest on a ground the trace leaves open: a safety concern, an
+        # undetermined finding on a segment code did NOT settle, or missing evidence. "Undetermined" on a code-settled
+        # segment, or a gap in a case the trace settles end to end, is not a ground — the judge is asked once more.
+        if cert.allowed == ["escalate"] or cert.insufficient or ruling.safety_concern != "none":
+            return True, []
+        settled = {fid for fid, sg in cert.segments.items() if sg["exempt"] is not None}
+        bad_und = [sf.fact_id for sf in ruling.segment_findings if sf.finding == "undetermined" and sf.fact_id in settled]
+        open_und = [sf.fact_id for sf in ruling.segment_findings if sf.finding == "undetermined" and sf.fact_id not in settled]
+        for fid in bad_und:
+            reasons.append(f"finding undetermined for {fid}, but the trace settled that segment ({cert.segments[fid]['why']}): not a ground to escalate")
+        if not open_und and not bad_und and not ruling.evidence_gap:
+            reasons.append("escalate without a ground: no safety concern, no undetermined finding, no evidence gap")
+        elif not open_und and not bad_und and ruling.evidence_gap and cert.mechanical:
+            reasons.append("escalate on an evidence gap, but the trace settles this case end to end from the record: name the missing fact a clause needs, record a safety concern, or rule as the trace allows")
+        return (not reasons), reasons
+    if cert.insufficient:
+        reasons.append(f"evidence insufficient ({cert.insufficient}) → only escalate")
     if ruling.ruling not in cert.allowed:
         reasons.append(f"ruling {ruling.ruling} not in allowed {cert.allowed}")
+    if ruling.safety_concern != "none":
+        reasons.append(f"safety concern {ruling.safety_concern} recorded by the judge but the ruling is not escalate")
     if cert.dispute_type == "route_deviation" and cert.segments:
-        findings = {sf.fact_id: sf.exempt for sf in ruling.segment_findings}
-        for fid, s in cert.segments.items():
-            if fid not in findings:
+        findings = {sf.fact_id: sf for sf in ruling.segment_findings}
+        for fid, sg in cert.segments.items():
+            sf = findings.get(fid)
+            if sf is None:
                 reasons.append(f"judge gave no finding for segment {fid}")
-            elif s["exempt"] is not None and findings[fid] != s["exempt"]:
-                reasons.append(f"judge finding for {fid} ({'exempt' if findings[fid] else 'not exempt'}) contradicts code ({s['why']})")
-        amt = expected_amount(cert, findings)
+                continue
+            if sg["exempt"] is not None and sf.exempt != sg["exempt"]:
+                reasons.append(f"judge finding for {fid} ({sf.finding}) contradicts code ({sg['why']})")
+                continue
+            if sf.finding == "undetermined":
+                reasons.append(f"segment {fid} undetermined → a person decides (escalate)")
+                continue
+            if sg["exempt"] is None and sf.finding == "exempt":
+                # form check on the judge's reading: it must be an RD-3 / RD-5 reading (RD-4 is settled by code, and the
+                # trace said no incident qualifies) resting on a rider message that exists and came before the segment
+                if "RD-4" in (sf.reason or "") and not any(c in (sf.reason or "") for c in ("RD-5", "RD-3")):
+                    reasons.append(f"exempt finding for {fid} rests on RD-4, which the trace settled against this segment")
+                    continue
+                basis = [b for b in sf.basis if b in cert.chat_index]
+                if not basis:
+                    reasons.append(f"exempt finding for {fid} rests on no chat fact (basis empty or not a message)")
+                else:
+                    seg_start = sg.get("start")
+                    rider_before = [b for b in basis if cert.chat_index[b]["from"] == "rider" and not cert.chat_index[b]["statement"]
+                                    and cert.chat_index[b]["ts"] and (seg_start is None or cert.chat_index[b]["ts"] < seg_start)]
+                    only_statement = all(cert.chat_index[b]["statement"] for b in basis)
+                    if only_statement:
+                        reasons.append(f"exempt finding for {fid} rests only on the driver's statement — not consent (G11)")
+                    elif not rider_before:
+                        reasons.append(f"exempt finding for {fid} cites no rider message sent before the segment started")
+        amt = expected_amount(cert, {fid: sf.exempt for fid, sf in findings.items()})
         if ruling.ruling == "refund_partial":
             if amt is None:
-                reasons.append("amount undeterminable: a segment finding is missing")
+                reasons.append("amount undeterminable: a segment finding is missing or undetermined")
             elif amt <= 0:
                 reasons.append("refund_partial but every segment is exempt → amount would be 0")
             elif ruling.amount is None or abs(ruling.amount - amt) > 0.011:
@@ -330,9 +444,9 @@ def check_ruling(cert: Certificate, ruling: Ruling) -> tuple[bool, list[str]]:
     flag_required = cert.flag_required
     if cert.flag_conditional and cert.dispute_type == "route_deviation":
         findings = {sf.fact_id: sf.exempt for sf in ruling.segment_findings}
-        upheld = any((s["exempt"] if s["exempt"] is not None else findings.get(fid)) is False for fid, s in cert.segments.items())
+        upheld = any((sg["exempt"] if sg["exempt"] is not None else findings.get(fid)) is False for fid, sg in cert.segments.items())
         flag_required = upheld
-    if flag_required is not None and ruling.ruling != "escalate":
+    if flag_required is not None:
         has_flag = bool(getattr(ruling, "flag_account", False))   # structured field only: free text never creates an account action
         if flag_required and not has_flag:
             reasons.append("flag_account required by the certificate but not recommended")

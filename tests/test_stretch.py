@@ -178,7 +178,7 @@ def test_fraud_signals_per_fixture():
         "C-0002": {("REPEAT_OFFENDER", "driver")},
         "C-0004": {("ARRIVAL_LOCATION_MISMATCH", "driver"), ("WAIT_CLAIM_UNSUPPORTED", "driver"), ("JAM_CLAIM_UNSUPPORTED", "driver")},
         "C-0005": {("SERIAL_COMPLAINANT", "rider")},
-        "C-0006": {("CHAT_THREAT", "driver")},
+        "C-0006": set(),                 # threats are the judge's reading (SAFE-1 screen), not a code signal
     }
     for cid, want in expect.items():
         if not (RUNS / f"{cid}.json").exists():
@@ -208,8 +208,6 @@ def test_fraud_as_facts_legal_sources_and_safe_values():
     for f in facts:
         assert set(f.value) == {"signal", "signal_party", "severity", "evidence"}   # never trips verify / policy_engine sniffing
         assert "threat" not in f.value and "nearest_m" not in f.value and "party" not in f.value
-    threat_facts = fraud.as_facts(fraud.detect(record("C-0006").facts))
-    assert threat_facts == []                                                   # CHAT_THREAT not duplicated
     ev = fraud.event(sigs)
     assert ev.actor == "verify" and ev.kind == "check" and "3 signal(s)" in ev.title and ev.seq == 0
     assert "no bad-faith signal" in fraud.event([]).body
@@ -235,8 +233,8 @@ def test_fraud_facts_do_not_change_verify_outcome():
 
 def test_sla_route_rules():
     assert sla.route(_ruling("no_action"), "safety").queue == "urgent_safety"
-    threat = [fraud.Signal(code="CHAT_THREAT", party="driver", severity="high", evidence=["F5"], text="t")]
-    assert sla.route(_ruling("no_action"), "route_deviation", threat).queue == "urgent_safety"
+    concern = _ruling("escalate", escalate=True).model_copy(update={"safety_concern": "suspected", "safety_basis": ["F5"]})
+    assert sla.route(concern, "route_deviation").queue == "urgent_safety"      # the judge's reading, not a keyword
     assert sla.route(_ruling("escalate", escalate=True), "no_show").queue == "review_24h"
     assert sla.route(_ruling("no_action", conf=0.72), "no_show").queue == "auto_resolve"   # confidence is diagnostic only
     assert sla.route(_ruling("refund_full", amount=45.0), "route_deviation").queue == "review_24h"
@@ -258,7 +256,7 @@ def test_sla_routes_fixtures_as_expected():
         sigs = fraud.detect(rec.facts)
         r = sla.route(rec.ruling, rec.facts.dispute_type, sigs, rec.eligibility)
         ru = rec.ruling
-        if rec.facts.dispute_type == "safety" or any(s.code == "CHAT_THREAT" for s in sigs):
+        if rec.facts.dispute_type == "safety" or ru.safety_concern != "none":
             want = "urgent_safety"
         elif (ru.escalate or (rec.eligibility or {}).get("auto") is False or ru.confidence < sla.AUTO_CONFIDENCE
               or (ru.amount or 0) > sla.AUTO_CAP_SGD or ru.flag_account

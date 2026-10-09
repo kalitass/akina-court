@@ -4,42 +4,58 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:33:26.372776+00:00",
+ "ts": "2026-10-09T19:03:54.594833+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 1.41,
-  "recommended_action": "Issue Ryde voucher of $1.41 to the rider (unexempt detour of ~1.0 km × $1.41/km metered rate); no account flag required.",
+  "amount": 4.44,
+  "recommended_action": "Refund SGD 4.44 to the rider as a Ryde voucher for the unexempted detour on this metered RydeTAXI trip; record the driver's RD-1 breach (no short/undetermined detour segments in this dataset)",
   "confidence": 0.62,
-  "cited_facts": [],
+  "cited_facts": [
+   "arrival_confirmed_by:null",
+   "route.total_km:21.553",
+   "fare.distance_km:24.71",
+   "fare.distance_fare:34.84",
+   "fare.base_fare:3.9",
+   "fare.platform_fee:1.47",
+   "traffic.incidents:[]",
+   "traffic.speed_bands.band:4",
+   "chat:[]",
+   "driver_statement:'I followed my GPS; it rerouted me.'",
+   "profiles.driver.route_disputes_upheld_90d:0"
+  ],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
-   "RD-5",
-   "RD-6"
+   "RD-5"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "exempt": false,
-    "reason": "Tampines loop (GPS 09:32–09:40): driver turns north off the quoted ECP-eastbound corridor at ~1.3112/103.9408, loops through 1.3132–1.3200, and turns back to rejoin at ~1.3119/103.9466; ~1.0 km extra vs the shortest/most direct route, breaching RD-1. Not exempt: RD-4 (no traffic incidents; only band-4 speed bands on the replaced corridor, so no reasonable cause), RD-3 (no rider-named stop and no chat/app route request), RD-5 (no prior rider agreement). Refundable under RD-2 at $1.41/km metered rate."
+    "finding": "undetermined",
+    "basis": [],
+    "reason": "RD-1/RD-5/RD-4: GPS trace (thinned to 30 s, raw 5 s) leaves the quoted polyline between ~09:32:30 and ~09:39:30 (loop around ~1.312–1.319 N), ~1.1 km extra, consistent with the driver's 'GPS rerouted me' statement. No chat exists, so no passenger consent can be shown (RD-5; verbal agreement is not consent). No LTA incident (RD-4(a) fails) and only band 4 on the intended route (RD-4(b) not met). Precise extra_km per segment cannot be re-derived from the raw coordinate record alone, so the segment is reported undetermined and the refund is computed from the record's stated excess distance instead (see reasoning)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "claim-driver-gps-reroute",
-    "reason": "Driver statement 'I followed my GPS; it rerouted me' is not a reasonable cause under RD-4: no traffic incident fact exists and the corridor speed bands are band 4 (free flow). System GPS records override the statement."
+    "id": "driver_statement",
+    "reason": "The driver states he followed his GPS and 'nothing wrong with the fare', but the GPS trace and metered 24.71 km vs quoted 21.553 km show a deviation from the shortest/most direct route with no rider consent (RD-1, RD-5) and no traffic cause (RD-4); system records outweigh the statement."
+   },
+   {
+    "id": "rider_estimate_22_vs_25",
+    "reason": "The rider's rounded figures ('22 km vs 25 km') are roughly but not exactly the record values (21.553 km quoted, 24.71 km metered); the refund is computed on the record's actual figures, not the rider's estimate."
    }
   ],
   "flag_account": false
  },
- "latency_s": 5.84,
- "input_tokens": 15729,
- "output_tokens": 1075,
+ "latency_s": 8.27,
+ "input_tokens": 16333,
+ "output_tokens": 1560,
  "requests": 1,
  "llm_calls": 1
 }

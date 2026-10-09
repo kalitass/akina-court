@@ -4,26 +4,30 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:34:51.874430+00:00",
+ "ts": "2026-10-09T19:20:04.014679+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 5.3,
-  "recommended_action": "Refund $5.30 to the rider's Ryde voucher (excess metered distance on the unexempted off-route segment); note the driver's RD-1 shortest-route breach on file.",
-  "confidence": 0.85,
+  "amount": 4.47,
+  "recommended_action": "Refund the metered overcharge for the unexempt off-route segment as Ryde voucher; retain the $1.08 waiting time (meter waiting unit) — do not add + flag_account.",
+  "confidence": 0.82,
   "cited_facts": [
    "F1",
    "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
+   "F8",
    "F9",
    "F10",
    "F11",
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
@@ -39,25 +43,43 @@
   "segment_findings": [
    {
     "fact_id": "F4",
-    "exempt": false,
-    "reason": "Off-route segment 17:37–17:50 (+3.17 km, up to 1172 m off the optimal route). The rider's stop request [F9] named no location and the driver chose the store himself without prior notice [F11], so under RD-3(b) the extra distance is not exempted; the 17:33 'Ok' [F10] does not cover this route change (RD-5). No RD-4 exemption: no traffic incident [F14] and only band-4 speeds [F12][F13], which cannot exempt alone (RD-4(b)). Refund the metered overage per RD-2."
+    "finding": "counts",
+    "basis": [
+     "F9",
+     "F10",
+     "F12"
+    ],
+    "reason": "RD-1: off-route segment 17:37–17:50 adds 3.17 km (5.85 km vs 2.68 km optimal), well beyond matching noise. Not exempt under RD-4: F15 shows no traffic incident and F13/F14 are speed-band facts only (RD-4(b), G3). Not exempt under RD-3: rider named no place for the 7-Eleven [F9] and the driver picked an off-route one without telling the rider beforehand [F12], so the extra km exceeds the consent to 'a stop' (RD-3(b)); no pre-detour rider consent message exists (RD-5, G11)."
+   },
+   {
+    "fact_id": "stop-17:41-17:45",
+    "finding": "exempt",
+    "basis": [
+     "F9",
+     "F10"
+    ],
+    "reason": "RD-3(c): the ~4 min stationary stop is part of the rider-requested stop accepted by the driver [F9][F10]; on RydeTAXI the stop duration is metered waiting time and is chargeable (F6), so the $1.08 waiting fee is not refunded — only the segment's extra mileage is."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F11",
-    "reason": "Driver's statement that he simply went to a 7-Eleven he knew does not exempt the deviation: under RD-3(b)/RD-5 the rider consented only to a stop 'on the way', not to an unnamed store that forced a 3.17 km off-route detour."
+    "id": "F12",
+    "reason": "Driver's post-trip claim that the rider asked for the stop is a claim, not consent to the routing; under G11/RD-5 only a rider message sent before the detour counts, and the chat shows the rider named no location, so the driver's chosen off-route 7-Eleven is not exempted (RD-3(b))."
    },
    {
-    "id": "F6",
-    "reason": "Claim to refund the $1.08 waiting charge fails: for RydeTAXI, meter waiting time for the passenger-requested stop is legitimately charged (RD-3(c)) and is not refunded."
+    "id": "F13",
+    "reason": "PIE speed band 4 during the window does not show congestion on the replaced optimal-route stretch; band 4 is also not band 1–2, and a band fact alone cannot exempt a segment (RD-4(b), G3)."
+   },
+   {
+    "id": "F14",
+    "reason": "Same as F13 for the Central Expressway; no incident corroboration (F15), so no RD-4 exemption."
    }
   ],
   "flag_account": false
  },
- "latency_s": 5.48,
- "input_tokens": 8319,
- "output_tokens": 1220,
+ "latency_s": 7.09,
+ "input_tokens": 8945,
+ "output_tokens": 1586,
  "requests": 1,
  "llm_calls": 1
 }

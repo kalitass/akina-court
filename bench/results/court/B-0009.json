@@ -4,15 +4,16 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:39:01.060343+00:00",
+ "ts": "2026-10-09T19:47:45.661970+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 10.36,
-  "recommended_action": "Refund $10.36 (voucher) to the rider for the unexempted off-route segment on this RydeTAXI trip; no account flag.",
+  "recommended_action": "Issue a Ryde voucher refund of $10.36 for the unexempt off-route segment's excess mileage units; no account flag (RD-6 condition not met).",
   "confidence": 0.86,
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -20,6 +21,8 @@
    "F7",
    "F8",
    "F9",
+   "F10",
+   "F11",
    "F12",
    "F13",
    "F15"
@@ -30,50 +33,41 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Off-route segment 09:12–09:26 adding 7.35 km. RD-4(a) not met: no traffic incident on the replaced optimal stretch [F12]; the AYE speed-band 2 record [F9] is corroborative only under RD-4(b) and its window ends at the segment's start. No rider-requested stop or driver-named route agreed in advance — no chat at all [F7] — so RD-3 and RD-5 do not apply. Handled as an unexempted deviation under RD-4(c) and priced under RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "No rider message exists before 09:12:10 — the chat record is completely empty [F7] — so no consent to any named route can be shown, and the driver's post-trip statement that he went round the AYE is the kind of verbal-agreement claim G11 and RD-5 refuse to treat as consent [F8][RD-5]. RD-4 gives no relief: no traffic incident was recorded on the replaced optimal stretch, and a band-2 speed reading alone is corroboration only [F12][F9][RD-4][RD-4(b)]. The segment is therefore unexempt and refundable under RD-2."
    }
   ],
   "rejected_claims": [
    {
     "id": "D2",
-    "reason": "Reasonable-cause exemption fails: RD-4(a) requires a located traffic incident on the replaced stretch, and none was recorded [F12]; the AYE band-2 record [F9] is corroboration only under RD-4(b) and is not sufficient alone, and heavy rain [F13] is not a listed reasonable cause [RD-4]."
+    "reason": "RD-4(a) requires a traffic-incident fact on the replaced optimal stretch reported before the detour; the trace marks this element ✗ and F12 records no incident near the route during the trip window, while F9 is only a speed-band reading and F8 is the driver's own after-the-fact statement, not a traffic fact [F9][F12][F8][RD-4]."
    },
    {
     "id": "D3",
-    "reason": "The driver's own concession that the reroute rests on the congestion band alone is fatal: RD-4(b) does not exempt on a band record, and RD-4(c) then treats the segment as unexempted [F9][F12][RD-4]."
+    "reason": "This claim concedes the decisive point: RD-4(b) makes a band reading corroborative only and RD-4(c) routes a no-incident segment back to RD-2, and F10/F11 show the alternative corridors at band 4, so the 09:12–09:26 segment is unexempt [F9][F10][F11][F12][RD-4][RD-2]."
    },
    {
     "id": "D4",
-    "reason": "Silence cuts against the driver, not for him: RD-5 exempts only where the driver raised the route change before leaving the optimal route and the rider agreed; there were no messages at all [F7], so no such prior agreement exists [RD-5]."
-   },
-   {
-    "id": "D5",
-    "reason": "The claimed cap is irrelevant because its premise (exemption) fails; with the segment unexempted, the $10.36 figure is the refund itself, not merely a ceiling [F3][F6][RD-2]."
+    "reason": "RD-4 lists no weather exception; F13's heavy rain (18.5 mm) cannot exempt the segment, and the diversion ran 09:12–09:26 after the only band-2 record expired at 09:12 [F13][F9][F3][RD-4]."
    },
    {
     "id": "D6",
-    "reason": "Correct that no unpublished add-on was charged [F5][F6], but the claim is not about add-ons; on a metered RydeTAXI trip the unexempted segment's extra distance itself enters the meter and is refundable under RD-2 [F3][F6][RD-2]."
-   },
-   {
-    "id": "D7",
-    "reason": "Accepted and applied: zero upheld route disputes in 90 days [F15] means RD-6's repeated-breach condition is not met, so no route-based account flag attaches [RD-6]. No contrary finding is made."
+    "reason": "Correctly conceded against the driver: F8 is a bare verbal-agreement assertion and, with F7 showing an empty chat record, nothing satisfies RD-5's requirement of a rider message sent before the segment started [F8][F7][RD-5]."
    },
    {
     "id": "C6",
-    "reason": "The rider's clean 90-day record [F14] is a profile fact and cannot decide the case either way; the finding rests on the GPS segment and fare records, not on the rider's history [RD-1]."
-   },
-   {
-    "id": "C7",
-    "reason": "Not pressed and not applied: the driver's single upheld dispute is not a route dispute and route_disputes_upheld_90d = 0 [F15], so RD-6's flag precondition fails [RD-6]."
+    "reason": "The rider's own concession is correct and applied: F15 shows 0 route disputes upheld in 90 days, so RD-6's repeated-breach condition for a flag_account is not met on the profile [F15][RD-6]."
    }
   ],
   "flag_account": false
@@ -81,10 +75,11 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 10.36,
-  "recommended_action": "Refund $10.36 (voucher) to the rider for the unexempted off-route segment on this RydeTAXI trip; no account flag.",
+  "recommended_action": "Issue a Ryde voucher refund of $10.36 for the unexempt off-route segment's excess mileage units; no account flag (RD-6 condition not met).",
   "confidence": 0.86,
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -92,6 +87,8 @@
    "F7",
    "F8",
    "F9",
+   "F10",
+   "F11",
    "F12",
    "F13",
    "F15"
@@ -102,64 +99,55 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Off-route segment 09:12–09:26 adding 7.35 km. RD-4(a) not met: no traffic incident on the replaced optimal stretch [F12]; the AYE speed-band 2 record [F9] is corroborative only under RD-4(b) and its window ends at the segment's start. No rider-requested stop or driver-named route agreed in advance — no chat at all [F7] — so RD-3 and RD-5 do not apply. Handled as an unexempted deviation under RD-4(c) and priced under RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "No rider message exists before 09:12:10 — the chat record is completely empty [F7] — so no consent to any named route can be shown, and the driver's post-trip statement that he went round the AYE is the kind of verbal-agreement claim G11 and RD-5 refuse to treat as consent [F8][RD-5]. RD-4 gives no relief: no traffic incident was recorded on the replaced optimal stretch, and a band-2 speed reading alone is corroboration only [F12][F9][RD-4][RD-4(b)]. The segment is therefore unexempt and refundable under RD-2."
    }
   ],
   "rejected_claims": [
    {
     "id": "D2",
-    "reason": "Reasonable-cause exemption fails: RD-4(a) requires a located traffic incident on the replaced stretch, and none was recorded [F12]; the AYE band-2 record [F9] is corroboration only under RD-4(b) and is not sufficient alone, and heavy rain [F13] is not a listed reasonable cause [RD-4]."
+    "reason": "RD-4(a) requires a traffic-incident fact on the replaced optimal stretch reported before the detour; the trace marks this element ✗ and F12 records no incident near the route during the trip window, while F9 is only a speed-band reading and F8 is the driver's own after-the-fact statement, not a traffic fact [F9][F12][F8][RD-4]."
    },
    {
     "id": "D3",
-    "reason": "The driver's own concession that the reroute rests on the congestion band alone is fatal: RD-4(b) does not exempt on a band record, and RD-4(c) then treats the segment as unexempted [F9][F12][RD-4]."
+    "reason": "This claim concedes the decisive point: RD-4(b) makes a band reading corroborative only and RD-4(c) routes a no-incident segment back to RD-2, and F10/F11 show the alternative corridors at band 4, so the 09:12–09:26 segment is unexempt [F9][F10][F11][F12][RD-4][RD-2]."
    },
    {
     "id": "D4",
-    "reason": "Silence cuts against the driver, not for him: RD-5 exempts only where the driver raised the route change before leaving the optimal route and the rider agreed; there were no messages at all [F7], so no such prior agreement exists [RD-5]."
-   },
-   {
-    "id": "D5",
-    "reason": "The claimed cap is irrelevant because its premise (exemption) fails; with the segment unexempted, the $10.36 figure is the refund itself, not merely a ceiling [F3][F6][RD-2]."
+    "reason": "RD-4 lists no weather exception; F13's heavy rain (18.5 mm) cannot exempt the segment, and the diversion ran 09:12–09:26 after the only band-2 record expired at 09:12 [F13][F9][F3][RD-4]."
    },
    {
     "id": "D6",
-    "reason": "Correct that no unpublished add-on was charged [F5][F6], but the claim is not about add-ons; on a metered RydeTAXI trip the unexempted segment's extra distance itself enters the meter and is refundable under RD-2 [F3][F6][RD-2]."
-   },
-   {
-    "id": "D7",
-    "reason": "Accepted and applied: zero upheld route disputes in 90 days [F15] means RD-6's repeated-breach condition is not met, so no route-based account flag attaches [RD-6]. No contrary finding is made."
+    "reason": "Correctly conceded against the driver: F8 is a bare verbal-agreement assertion and, with F7 showing an empty chat record, nothing satisfies RD-5's requirement of a rider message sent before the segment started [F8][F7][RD-5]."
    },
    {
     "id": "C6",
-    "reason": "The rider's clean 90-day record [F14] is a profile fact and cannot decide the case either way; the finding rests on the GPS segment and fare records, not on the rider's history [RD-1]."
-   },
-   {
-    "id": "C7",
-    "reason": "Not pressed and not applied: the driver's single upheld dispute is not a route dispute and route_disputes_upheld_90d = 0 [F15], so RD-6's flag precondition fails [RD-6]."
+    "reason": "The rider's own concession is correct and applied: F15 shows 0 route disputes upheld in 90 days, so RD-6's repeated-breach condition for a flag_account is not met on the profile [F15][RD-6]."
    }
   ],
   "flag_account": false
  },
  "status": "resolved",
- "events": 27,
+ "events": 26,
  "void_claims": 0,
  "verify_lines": [
   "✓ ruling consistent with the policy certificate\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0009.record.json",
- "latency_s": 20.74,
- "input_tokens": 90551,
- "output_tokens": 6170,
- "requests": 10,
+ "latency_s": 22.0,
+ "input_tokens": 86836,
+ "output_tokens": 6865,
+ "requests": 9,
  "llm_calls": 6
 }

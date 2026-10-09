@@ -4,13 +4,13 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:33:40.693186+00:00",
+ "ts": "2026-10-09T19:04:19.709349+00:00",
  "ok": true,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 2.86,
-  "recommended_action": "Refund S$2.86 (voucher) to the rider for the unexempted detour mileage under RD-2; recognise the Clementi Mall stop as rider-requested and the metered waiting charge as legitimately payable; send the driver's account for review under RD-6 (+ flag_account).",
-  "confidence": 0.68,
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Refer to RydeHELP manual review: re-extract the full GPS trace and reconcile the 14-minute stationary block and the post-Yuhua deviation, then recompute the metered-distance overcharge on the unexempted segment(s).",
+  "confidence": 0.35,
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -18,32 +18,39 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "FARE-2"
   ],
-  "escalate": false,
+  "escalate": true,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "exempt": false,
-    "reason": "Out-and-back spur from the quoted route to Clementi Mall (GPS 14:23:45–14:27:45: stationary at 1.31492,103.76412, then 1.3129,103.7636 → 1.3124,103.7660 → 1.3117,103.7677 → 1.3091,103.7663 → 1.3070,103.7640, rejoining the AYE path) — about 2.0 km of extra mileage. The rider's stop request (RD-3(a)) makes the stop itself no deviation, but the route change to reach it was neither pre-agreed in chat (RD-5) nor justified by any traffic incident on the replaced route, and the road-speed bands present (AYE band 4, Jurong Town Hall Road band 5) do not meet the band-1/band-2 corroboration of RD-4(b). Hence unexempted under RD-1/RD-4(c), refundable per RD-2."
+    "finding": "undetermined",
+    "basis": [],
+    "reason": "Clementi-area deviation. Chat at 14:17:00 (rider asks to stop at Clementi Mall) and driver 'Ok' at 14:17:30 constitute passenger-named-stop consent under RD-3(a)/RD-5, so the off-route distance to the named stop is exempt if it matches the detour. But the trace is thinned to 30 s (0.2 km noise) and shows ~14 min stationary near Clementi (14:23:15–14:27:45) against the rider's stated '3-4 minutes', and the route polyline does not reach the stop at all. On this record the segment cannot be measured or delimited (RD-2/G12); not exempt per se — requires human verification."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "undetermined",
+    "basis": [],
+    "reason": "Deviation after the stop. Thin GPS puts the vehicle outside the 0.2 km corridor of the quoted route from ~14:28:15 to 14:30:15 (Clementi Rd → Commonwealth Ave West → Toh Tuck), i.e. a leg back up north-west before re-joining near AYE. No chat message covers or consents to any route change beyond the named stop (RD-5), and no traffic incident or band 1-2 on the replaced segment supports a 'reasonable cause' exemption (RD-4(a)/(b)); the AYE band 4 window is on the quoted route and cannot exempt it. The size and existence of this extra mileage cannot be confirmed at 30 s sampling (G12), so the segment is undetermined → escalate."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_overcharge_claim_for_stop",
-    "reason": "The Clementi Mall stop was explicitly requested by the rider and accepted by the driver before the deviation (chat 14:17:00/14:17:30), so the stop itself is exempt under RD-3(a) and the metered waiting charge S$1.04 is payable under RD-3(c)."
+    "id": "rider_overcharge_claim",
+    "reason": "Directionally plausible — the metered fare implies 10.55 km / 16.25 min against a 8.569 km quote, and the trace shows an unexplained stationary block and a post-stop deviation — but the thinned GPS (30 s, 50 m resolution) makes the extra mileage uncertain and the deviation legs unattributable. Claim neither upheld nor dismissed."
    },
    {
-    "id": "driver_statement_full_defence",
-    "reason": "The driver's statement only explains the stop; it does not justify the ~2.0 km out-and-back route change visible in the GPS trace, which remains an unexempted deviation under RD-1/RD-4."
+    "id": "driver_statement",
+    "reason": "Consistent with the chat as to the Clementi stop, but it does not account for the ~14 min stationary period or the post-stop deviation seen in the trace, and a driver's account of verbal agreement cannot supply RD-5 consent (G11)."
    }
   ],
-  "flag_account": true
+  "flag_account": false
  },
- "latency_s": 6.71,
- "input_tokens": 12315,
- "output_tokens": 1307,
+ "latency_s": 8.7,
+ "input_tokens": 12919,
+ "output_tokens": 1726,
  "requests": 1,
  "llm_calls": 1
 }

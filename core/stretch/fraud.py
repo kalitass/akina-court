@@ -115,17 +115,13 @@ def detect(table: FactTable, case: Optional[Case] = None) -> list[Signal]:
                               text=(f"{party.title()} profile: {v['disputes_90d']} disputes in 90 d, none upheld ({pf.id}) — "
                                     f"frequent unsuccessful disputes; context only.")))
 
-    # 5. threat keywords (already a chat fact; repeated here so the screen is complete)
-    for tf in find_all(table, "threat"):
-        if tf.value.get("threat") and tf.value.get("from") in ("rider", "driver"):
-            out.append(Signal(code="CHAT_THREAT", party=tf.value["from"], severity="high", evidence=[tf.id],
-                              text=f"Threat keyword “{tf.value.get('keyword', '?')}” in {tf.value['from']} message ({tf.id}) — SAFE-1."))
+    # (threats are not screened here: whether a message is a threat is the judge's reading — SAFE-1 safety screen)
     return out
 
 
 def as_facts(signals: list[Signal]) -> list[Fact]:
     """Signal facts with temporary ids ("fraud-<code>"); the caller renumbers (core.stretch.renumber).
-    CHAT_THREAT is not rendered: the chat-threat fact already exists and duplicating it would double-count SAFE-1."""
+    """
     out = []
     for s in signals:
         src = SOURCE_OF.get(s.code)

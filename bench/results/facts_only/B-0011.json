@@ -4,19 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:34:50.622579+00:00",
+ "ts": "2026-10-09T19:20:01.556627+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 2.4,
-  "recommended_action": "Refund S$2.40 (1.70 km unexempted detour × S$1.41/km) to the rider as a Ryde voucher; keep the S$1.04 metered waiting charge; and send the driver's account for review as a repeat route-deviation offender + flag_account",
-  "confidence": 0.8,
+  "recommended_action": "Refund $2.40 (1.70 km of unbilled detour on the metered RydeTAXI fare) as a Ryde voucher, and record the driver's RD-1 violation for route deviation; send the driver's account for review (RD-6).",
+  "confidence": 0.82,
   "cited_facts": [
    "F1",
    "F2",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F8",
    "F9",
    "F10",
@@ -24,7 +25,9 @@
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F16",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
@@ -39,34 +42,41 @@
   "segment_findings": [
    {
     "fact_id": "F4",
-    "exempt": false,
-    "reason": "Segment 14:21–14:30 drove 3.80 km vs 2.10 km optimal, +1.70 km. The rider's stop request (F9) named Clementi Mall and the driver agreed before the detour (F10), so under RD-3(a)/RD-5 the diversion needed to reach that named stop is not a deviation — but nothing in the chat authorises the additional off-route mileage: the segment's extra_km far exceeds any plausible stop access, and the driver's route change was never put to the rider before leaving the optimal route (RD-5). Driver's congestion claim fails RD-4: F14 records no traffic incident on the replaced optimal segment, and band 4 (F12) / band 5 (F13) are not band 1–2 and in any case are corroborative only (RD-4(b)). Segment therefore unexempted: 1.70 km × $1.41/km = $2.40 (RD-2)."
-   },
-   {
-    "fact_id": "F2",
-    "exempt": false,
-    "reason": "4 min 0 s stationary at (1.3149, 103.7641), 3,159 m from pickup and 2,452 m from drop-off — this is the rider-requested Clementi Mall stop (F9/F10/F11), not a deviation segment. Not exemptible as routing, but the stop time is chargeable on RydeTAXI per RD-3(c): metered waiting units stand, no refund of $1.04 (F6)."
+    "finding": "counts",
+    "basis": [
+     "F9",
+     "F10",
+     "F15",
+     "F13",
+     "F14",
+     "F16"
+    ],
+    "reason": "Rider's stop request at Clementi Mall [F9] with driver's advance agreement [F10] is an exempt stop request under RD-3(a)/RD-5, so the 4 min dwell is the rider's request (metered waiting per RD-3(c)). However the route change itself has no reasonable cause: F15 records no traffic incident on the optimal route, so RD-4(a) is not met; F13/F14 are only speed-band records and per RD-4(b) cannot exempt on their own (and neither lies on the substituted optimal segment); F16 light rain is not a reasonable cause. The segment is therefore unexempted under RD-1/RD-4(c) and its 1.70 km extra is refundable."
    }
   ],
   "rejected_claims": [
    {
-    "id": "stop-exemption-full",
-    "reason": "The rider's Clementi Mall request (F9/F10) covers only the access to that named stop (RD-3(a)); it does not authorise the 1.70 km of extra off-route mileage in F4, and no pre-departure route-change agreement covering that segment appears in chat (RD-5)."
+    "id": "F6",
+    "reason": "4 min metered waiting time on a RydeTAXI trip is chargeable on the meter and non-refundable per RD-3(c); it is not the $5 pick-up waiting fee of NS-6."
    },
    {
-    "id": "traffic-excuse",
-    "reason": "F14: no traffic incident near the route in the trip window; F12 band 4 and F13 band 5 are not band 1–2 and speed bands only corroborate under RD-4(b), so RD-4 exemption fails."
+    "id": "F7",
+    "reason": "No surge was applied (1.0×), so the fare increase cannot be attributed to surge."
    },
    {
-    "id": "waiting-fee-refund",
-    "reason": "F6 waiting charge follows metered waiting units on a RydeTAXI trip, which RD-3(c) expressly says is not refunded; arrival/departure timestamps in F2 show a genuine 4-minute stop, not an unperformed wait."
+    "id": "F8",
+    "reason": "Platform fee $1.47 is a published additional charge under FARE-1 and is not refundable."
+   },
+   {
+    "id": "F12",
+    "reason": "Driver's post-trip statement that the rider asked for the stop is consistent with the chat [F9], which is itself in evidence; the statement is not relied on for any consent beyond the chat."
    }
   ],
   "flag_account": true
  },
- "latency_s": 7.4,
- "input_tokens": 8329,
- "output_tokens": 1564,
+ "latency_s": 6.6,
+ "input_tokens": 8955,
+ "output_tokens": 1563,
  "requests": 1,
  "llm_calls": 1
 }

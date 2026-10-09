@@ -38,11 +38,17 @@ COMMON_RULES = """RULES
 - reasoning: short paragraphs with the arithmetic for any amount. confidence 0-1.
 - System records (gps / timeline / fare) override statements (chat / complaint / driver statement) when they
   conflict. Profile facts never decide a case alone. These are rules of procedure, not clauses: never cite them.
-- SAFETY: if the dispute type is safety, or any chat message contains a threat / intimidation keyword (threat, threaten, kill, hurt, hit you, beat you, punch, slap, lock the door,
-  lock you, find you, shut up, idiot, stupid, harass),
-  do NOT rule: ruling = "escalate", escalate = true, reasoning = factual summary for a human reviewer.
+- SAFETY SCREEN, every case: read every chat message, the driver's statement and the complaint. If any of it is a
+  threat, intimidation, harassment, a sexual remark or a dangerous-driving allegation (SAFE-1, SAFE-2), or the dispute
+  type is safety, do NOT rule: ruling = "escalate", escalate = true, safety_concern = "suspected" or "confirmed" with
+  safety_basis, reasoning = factual summary for a human reviewer. Read words in context: a pickup arrangement is not a
+  threat, and a threat needs no particular keyword.
+- Consent (RD-5) is the rider's own message sent before the detour began; a driver's statement that the rider agreed
+  verbally is a claim, not consent (G11). Missing evidence (no GPS, untimed messages) never favours either side:
+  rule escalate and say what is missing in evidence_gap.
 - segment_findings: for route_deviation cases, one entry per off-route segment you identify (fact_id = the fact id
-  if you were given one, else "seg1", "seg2" ...), exempt true/false, reason with clause ids. Empty otherwise.
+  if you were given one, else "seg1", "seg2" ...), finding = "exempt" / "counts" / "undetermined", basis = the chat
+  fact ids relied on (if you were given ids), reason with clause ids. Empty otherwise. Undetermined → escalate.
 
 OUTPUT: a Ruling. English.
 

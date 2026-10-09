@@ -70,7 +70,7 @@ SCENARIO = {
     "rd_consent_before_prior": "Detour · consent beforehand, driver has history",
     "rd_threat_in_chat": "Detour · threat language in chat",
     "rd_consent_before_light": "Detour · brief consent beforehand",
-    "rd_keyword_trap_find_you": "Detour · pickup chat trips the threat keyword",
+    "rd_keyword_trap_find_you": "Detour · pickup chat contains a threat hint word (ordinary message)",
     "ns_fake_here_far": "No-show · \"I'm Here\" tapped 600 m away",
     "ns_wait_2min": "No-show · driver waited only 2 min",
     "ns_wait_4min": "No-show · driver waited 4 min",
@@ -93,7 +93,7 @@ SCENARIO = {
     "safe_rider_threat": "Safety · rider threat in chat",
     "safe_innocuous_chat_dangerous_driving": "Safety · dangerous driving alleged, chat clean",
     "safe_no_chat_harassment": "Safety · harassment alleged, no chat",
-    "safe_keyword_only_in_statement": "Safety · threat word only in driver's statement",
+    "safe_keyword_only_in_statement": "Safety · hint word only in driver's statement",
 }
 
 ID_RE = re.compile(r"\b((?:RD|NS|SAFE|FARE)-\d+)(\([a-z]\)|\s\((?:i|ii|iii|iv)\))?")
@@ -158,20 +158,16 @@ def plain_reason(reason: str, rec: dict) -> str:
     """One line, <=140 chars, plain language, no ids. Pattern-based; falls back to a stripped clip of the reason."""
     low = reason.lower()
     dtype = rec["dispute"]["type"]
-    keyword_hit = ("keyword" in low or "flagged" in low or "threat" in low) and ("chat" in low or "message" in low)
+    if low.startswith("safety concern"):
+        return "The judge read a threat or intimidation in the chat or statements → human review (safety)"
+    if "segment finding undetermined" in low:
+        return "The judge could not settle from the record whether the rider agreed to the route → a person decides"
+    if low.startswith("evidence gap") or "evidence insufficient" in low:
+        return "Evidence the policy needs is missing from the record → a person decides"
     if "harass" in low or "sexual" in low:
         return "Harassment alleged in a safety complaint → policy forbids automatic ruling"
     if "dangerous driving" in low:
-        if "statement" in low and ("keyword" in low or "flagged" in low):
-            return "Safety complaint; threat word in the driver's own statement → human review"
         return "Dangerous driving alleged; no telematics to confirm or refute → safety review"
-    if keyword_hit:
-        m = re.search(r"\b(driver|rider)(?:'s)?(?: in-app)?(?: chat)?(?: message)?(?: #\d+)?(?: at \d\d:\d\d)?\s+(?:contains|wrote|message)", low)
-        m = m or re.search(r"\bin (driver|rider)(?:'s)? chat", low)
-        who = (m.group(1) + "'s") if m else "the"
-        q = re.search(r'["\u201c]([^"\u201d]{3,40})["\u201d]', reason)
-        kw = f' ("{q.group(1)}")' if q else ""
-        return f"Threat keyword in {who} chat{kw} → policy forbids automatic ruling"
     if dtype == "safety":
         return "Safety complaint → policy forbids automatic ruling"
     # fallback: strip parenthetical ids, bracketed ids and bare ids, then clip
@@ -336,7 +332,7 @@ def page(rows: list[dict], f: dict, model: str) -> str:
     pct_auto = round(100 * N / f["total"]) if f["total"] else 0
     pct_h = 100 - pct_auto
     all_safety = human and all(any(c.startswith("SAFE-") for c in (r["ruling"].get("cited_policy") or [])) for r in human)
-    human_note = ("Every one is a safety complaint or a threat-language hit; the policy allows only human review for those."
+    human_note = ("Every one is a safety complaint or a message the judge read as a threat; the policy allows only human review for those."
                   if all_safety else "Each one was stopped by the policy check or escalated by the judge.")
     fl_types = sorted({TYPE_LABEL.get(r["type"], r["type"]).lower() for r in flagged})
     flag_note = (f"Proposed in {', '.join(fl_types)} cases (repeat offenders, false \"I'm Here\" taps)." if flagged

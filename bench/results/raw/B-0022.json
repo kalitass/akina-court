@@ -4,12 +4,12 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:34:01.213612+00:00",
+ "ts": "2026-10-09T19:04:47.685383+00:00",
  "ok": true,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.09,
-  "recommended_action": "Refund S$4.09 in Ryde vouchers (RydeTAXI metered-distance overcharge for the unexempted petrol-station detour per RD-2; no waiting-time adjustment as fare already includes it).",
+  "amount": 6.32,
+  "recommended_action": "Refund S$6.32 (voucher) to the rider: 4.48 extra km on the unexempted western detour (21:46:40–21:50:40, a petrol stop on no known route, requested only 3 minutes after the driver had passed the corridor) at the metered rate $1.41/km, plus the 0.95 km eastern backtrack to the Woodlands/Yishun side (21:47:40–21:48:40, no rider message at all + driver's own statement admits the route change) at $1.41/km. No waiting element (fare.waiting_fee = 0). No account flag (RD-6 not met: route_disputes_upheld_90d = 0). Remind the driver that any route change requires the rider's explicit prior agreement to that change.",
   "confidence": 0.72,
   "cited_facts": [],
   "cited_policy": [
@@ -24,44 +24,36 @@
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "gps-detour-1",
-    "exempt": false,
-    "reason": "Latent west-east loop off the SLE east of Woodlands (21:37–21:39: trace via 1.4276,103.7964 / 1.4264,103.7984 / 1.4242,103.7965 vs quoted route via 1.4275,103.7958 → 1.4169,103.8034) adds ~1.0 km. RD-5: the driver's petrol-stop request came at 21:43:35, after this segment began, so the rider's 21:44:10 consent does not cover it; RD-4: no traffic incident and no band 1–2 on the replaced route. Unexempted per RD-1/RD-2."
+    "fact_id": "seg1",
+    "finding": "counts",
+    "basis": [
+     "chat-1",
+     "chat-2"
+    ],
+    "reason": "Western loop on Woodlands/Yishun petrol-station row, 21:46:40–21:50:40: (1.393443,103.829972)→(1.394332,103.832667)→(1.395986,103.831237)→(1.398267,103.828914)→(1.400844,103.827746)→(1.400512,103.827859)→(1.397636,103.829391)→(1.395869,103.831575), rejoining the corridor at (1.394674,103.83408): ~4.8 km travelled for ~0.31 km of route progress. Driver asked at 21:43:35 for a station 'just ahead' and rider answered 'Sure, no problem.' at 21:44:10, i.e. before the segment started, so the RD-5 timing test is met — but the rider agreed to pulling in at a station just ahead, not to this ~4.8 km loop to the Woodlands petrol stations, and at 21:43:35 the trace was on the TPE corridor with no such station on the quoted route. Under RD-3(b) the scope of the stop request does not exempt this route change; RD-4 gives no relief (no traffic-incident-*; bands 4 and 5 on the driven corridor). Extra ≈ 4.48 km, chargeable under RD-1/RD-2 at the metered rate."
    },
    {
-    "fact_id": "gps-detour-2",
-    "exempt": false,
-    "reason": "Same loop repeated 21:47–21:50 around 1.3943,103.8327 / 1.4005,103.8279 off the TPE alignment, adding ~1.1 km over the quoted route. The rider agreed only to a 'quick petrol stop', not to a route change (RD-3(b)/RD-5); the stop was never made and the agreed location was not named. No RD-4 traffic justification (incidents empty; bands 4–5 only). Unexempted per RD-1/RD-2."
-   },
-   {
-    "fact_id": "gps-detour-3",
-    "exempt": false,
-    "reason": "Residual excess beyond the two loops (fare.distance_km 19.31 vs route 17.253 km and mapped segment totals; ≈0.8 km of extra mileage on the Woodlands–SLE approach not matched to a single loop). Not covered by any RD-3 stop request (driver's route change was announced after the fact, if at all) and not excused by RD-4; counted under RD-2."
+    "fact_id": "seg2",
+    "finding": "counts",
+    "basis": [],
+    "reason": "Eastern backtrack, 21:47:40–21:48:40 within the same window: (1.394332,103.832667)→(1.395986,103.831237)→(1.398267,103.828914)→(1.400844,103.827746), ~0.95 km heading north-east back toward Woodlands/Yishun, with no rider message relating to it and no stated reason other than the driver's 'I thought a small change of route was fine'. RD-5 consent cannot cover it (no rider message at all for this leg; the driver's statement that the rider agreed is a claim, not consent — G11) and RD-3(a) does not apply (the point chosen was not a rider-named or on-route stop). No RD-4 traffic evidence. Extra ≈ 0.95 km, chargeable under RD-1/RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_goodwill_route_change",
-    "reason": "Driver statement says the agreed 'short stop' justified a 'small change of route'; RD-3(b)/RD-5 reject this — the rider agreed to a stop, the driver chose the location without telling the rider beforehand, and the diversion began before the 21:44:10 consent."
+    "id": "driver-statement-consent",
+    "reason": "The driver's 'the rider agreed to a short stop' is a claim about a verbal/implied agreement. RD-5 requires the rider's own message sent before the detour; the only rider message ('Sure, no problem.', 21:44:10) covers a petrol stop at a station 'just ahead', not the 4.8 km Woodlands loop or the 0.95 km backtrack the trace shows, and it is not a waiver of the driver's shortest-route duty for those legs."
    },
    {
-    "id": "traffic_justification",
-    "reason": "RD-4 not met: no LTA incident (incidents empty) on the replaced route, and the only speed bands present (4 and 5) are well above the band 1–2 congestion threshold, so no exemption."
-   },
-   {
-    "id": "no_toll_or_erp_refund",
-    "reason": "FARE-2 not triggered — tolls field is S$0.00; no ERP/toll overcharge to refund."
-   },
-   {
-    "id": "fuel_stop_not_made",
-    "reason": "The unperformed petrol stop creates no separate refundable item; under RD-3(c) the non-stop yields no waiting charge and the metered waiting line is already S$0.00."
+    "id": "rider-full-meter-claim",
+    "reason": "The rider's 'the meter was higher than the estimate' is not refunded in full. Under RD-2 (RydeTAXI) only the extra km of the unexempted detour segments is refunded, not the whole fare difference; stop/standing time is handled separately (fare.waiting_fee = 0 here, and no citation-safe per-minute rate is available for the ~5.6 min of stopped time)."
    }
   ],
   "flag_account": false
  },
- "latency_s": 8.73,
- "input_tokens": 14245,
- "output_tokens": 1740,
+ "latency_s": 10.44,
+ "input_tokens": 14849,
+ "output_tokens": 2265,
  "requests": 1,
  "llm_calls": 1
 }

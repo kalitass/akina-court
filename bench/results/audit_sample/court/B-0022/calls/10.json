@@ -1,0 +1,126 @@
+{
+ "n": 10,
+ "started_at": "2026-10-09T19:46:54.516+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "x-stainless-lang": "<redacted>",
+  "x-stainless-package-version": "<redacted>",
+  "x-stainless-os": "<redacted>",
+  "x-stainless-arch": "<redacted>",
+  "x-stainless-runtime": "<redacted>",
+  "x-stainless-runtime-version": "<redacted>",
+  "x-stainless-async": "<redacted>",
+  "x-stainless-retry-count": "<redacted>",
+  "x-stainless-read-timeout": "<redacted>",
+  "content-length": "2813"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0022. Outcome: refund_partial $2.44. Recommended action: Refund $2.44 (voucher, NS-7) to the rider for the unexempted 1.73 km off-route segment; record the RD-1 breach on the driver's file; no account flag.. Escalated: False.\nReasoning:\nRydeTAXI trip, metered, so route deviation enters the fare [F6][RD-2]; one off-route segment exists at 21:47–21:50, +1.73 km [F3][RD-1]. No RD-4 cause is available: F13 records no incident, and F11/F12 are band 4 and band 5, which are not band 1/2 on the replaced optimal stretch [F13][F11][F12][RD-4].\n\nRD-5: the driver's message F7 at 21:43 named only \"the petrol station just ahead\" — a stop, not a road, area or corridor of travel — and the rider's F8 at 21:44 accepted that stop before the segment began [F7][F8][F3]. A named stop plus assent does not make the unnamed driving distance to reach that stop an agreed route; the record shows no different destination either, but it equally shows no rider agreement to the 1.73 km off-route leg [F3][RD-5]. RD-3(a) is not met: the rider never named any place, and the driver chose the point, so RD-3(b) applies and the extra km is not excused by the request to \"stop\" [F8][F3][RD-3]. Nothing in the record shows the segment start or meaning is unsettled, so this is not undetermined; the finding is counts [F3][F7][F8][RD-1].\n\nAmount: 1.73 km × $1.4102/km = $2.44 [F3][F6][RD-2]. The remaining 0.37 km of the 2.1 km billed excess is the map-matching residual between fare-excess and the segment sums and is not refundable [F1][F4][RD-2].\n\nRD-6: refund is positive, but route_disputes_upheld_90d = 0, so no account flag [F16][RD-6]. FARE-1 leaves base, time and platform fee undisturbed, and no toll/ERP item appears [F6][FARE-1][RD-2]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.537,
+ "finished_at": "2026-10-09T19:46:56.053+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 19:46:55 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "8bd7ca0fe09dcb0bb89e3ef8729b9667",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 4ebb770488ff09e25dd731447c468f30.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN3-P3",
+  "x-amz-cf-id": "EV5GxvNoHkflvB5MbDp6yxg8Lj2MlXJAqC5ovjGzO3y3Dr92PqTXzA=="
+ },
+ "response_body": {
+  "id": "9ac0b479-d8c4-4d46-9151-afd79967c07e",
+  "object": "chat.completion",
+  "created": 1791575214,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_shvjv51NtKK6rEjlKREO8873",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We reviewed your fare dispute. We found one part of the trip where the driver left the best route: 1.73 km between 21:47 and 21:50. Nothing in the trip record excuses that stretch, so we are refunding it.\\n\\nYou'll get $2.44 as a Ryde voucher. The rest of the fare, including the base, time and platform fee, stays as charged.\\n\\nYour account stays in good standing and no action is needed from you.\", \"driver\": \"We reviewed a fare dispute on this trip and found one off-route stretch: 1.73 km between 21:47 and 21:50. Your message mentioned stopping at a petrol station, but a named stop does not cover the driving distance used to reach it, and the rider did not agree to that extra leg. So that part of the fare is not upheld.\\n\\nWe are refunding $2.44 to the rider as a Ryde voucher. This route breach is noted on your file — no account flag, and no other action is needed from you.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 978,
+   "completion_tokens": 260,
+   "total_tokens": 1238,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 722
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "25b9b24dd49be3f6058ee2c2ea9268e5a6950effe39156157a503d67c75bf347"
+}

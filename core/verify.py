@@ -1,13 +1,14 @@
-"""Code-side checks on LLM output: citation validity and the confidence gate. Nothing here calls a model.
+"""Code-side checks on LLM output: citation validity and consistency with the policy certificate. Nothing here calls a model.
 
 verify_brief   marks claims void when they cite facts or clauses that do not exist.
-verify_ruling  hard rules -> escalate; then confidence adjustments (S1..S5) -> escalate below the confidence threshold.
+verify_ruling  hard rules -> escalate; a judge's own escalate (safety concern, undetermined finding, evidence gap) is
+               kept as stated — code records the ground and never turns it back into an executable ruling.
 Both return a new object plus a list of human-readable check lines for the Event log.
 """
 from __future__ import annotations
 
 from core.policy import ACTIONS, cited_in
-from core.policy_engine import check_ruling
+from core.policy_engine import check_ruling, escalate_grounds
 from core.schemas import CaseBrief, FactTable, Ruling
 
 
@@ -123,14 +124,27 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
     if ruling.ruling not in ACTIONS:
         lines.append(f"HARD: ruling action {ruling.ruling!r} not in vocabulary → escalate")
         return _escalate(ruling, f"ruling action {ruling.ruling!r} not in vocabulary"), lines
-    threat = any(v.get("threat") for v in vals.values())
-    if table.dispute_type == "safety" or threat:
-        lines.append("HARD: safety case / threat keyword present → escalate (SAFE-1)")
+    if table.dispute_type == "safety":
+        lines.append("HARD: complaint filed as a safety incident → escalate (SAFE-1 / SAFE-2)")
         if not ruling.escalate or ruling.ruling != "escalate":
-            ruling = _escalate(ruling, "SAFE-1: safety incident is never ruled automatically")
+            ruling = _escalate(ruling, "SAFE-1: a safety complaint is never ruled automatically")
         else:
             ruling = ruling.model_copy(update={"amount": None})
         return ruling, lines
+    # ---- the judge's own escalate stands: its grounds are recorded, never second-guessed by code ----
+    if ruling.ruling == "escalate" or ruling.escalate:
+        grounds = escalate_grounds(ruling)
+        why = "; ".join(grounds) if grounds else (ruling.escalation_reason or "judge sent the case to a person without naming a ground")
+        ok_g, why_g = (check_ruling(certificate, ruling) if certificate is not None else (True, []))
+        if ok_g:
+            lines.append("judge escalates → human review: " + why)
+        else:
+            lines.extend("✗ " + r for r in why_g)
+            lines.append("judge escalates on a ground the trace does not leave open; recorded for the reviewer as is")
+        return _escalate(ruling, why), lines
+    if ruling.safety_concern != "none":
+        lines.append(f"HARD: judge recorded a safety concern ({ruling.safety_concern}) but ruled → escalate (SAFE-1)")
+        return _escalate(ruling, f"safety concern {ruling.safety_concern}: " + (", ".join(ruling.safety_basis) or "no basis listed")), lines
     if ruling.ruling in ("refund_full", "refund_partial", "fee_waived"):
         cap = None
         for v in vals.values():
@@ -163,4 +177,4 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
         if not ok:
             return _escalate(ruling, "not eligible for automation: " + "; ".join(reasons)), lines
     lines.append(f"model confidence {ruling.confidence:.2f} (diagnostic only; automation is decided by the certificate)")
-    return ruling.model_copy(update={"escalate": False, "escalation_reason": None}), lines
+    return ruling.model_copy(update={"escalate": False, "escalation_reason": None}), lines   # reached only by a non-escalate ruling that passed every check

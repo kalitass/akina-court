@@ -52,7 +52,7 @@ CONTENT = {
         "NS-5": "advance-booking rule", "NS-6": "waiting-fee rule", "NS-7": "30-day dispute window",
         "NS-8": "no such Ryde rule",
         "FARE-1": "only published add-ons may be charged", "FARE-2": "toll overcharge", "FARE-3": "cleaning-fee rule",
-        "SAFE-1": "the threat-in-chat rule", "SAFE-2": "the dangerous-driving rule", "SAFE-3": "the phantom-trip rule",
+        "SAFE-1": "the threat-or-harassment rule (as the judge reads it)", "SAFE-2": "the dangerous-driving rule", "SAFE-3": "the phantom-trip rule",
     },
     "words": [  # ruling labels and field names → plain words (order matters)
         (r"\brefund_partial\b", "partial refund"), (r"\brefund_full\b", "full refund"),
@@ -74,7 +74,7 @@ CONTENT = {
         ("Second-level boundaries of the 3-minute rules", r"175s|185s|150s|200s|edge"),
         ("Fake 'I'm Here' taps far from the pickup", r"fake_here"),
         ("Driver statement contradicted by GPS", r"claims_5|no_here_tap|driver_waiting|180m|two_more"),
-        ("Threats, harassment and keyword traps", r"threat|safe_|keyword"),
+        ("Threats, harassment and a hint-word trap", r"threat|safe_|keyword"),
         ("No deviation at all / plain loops", r"no_deviation|basic|plain"),
     ],
     "type_names": {"route_deviation": "Route deviation", "no_show": "No-show / cancellation fee", "safety": "Safety"},
@@ -250,8 +250,9 @@ CONTENT = {
                       "observable adversarial hearing the track requires."),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
-        "incident, an unnamed stop, a fake arrival tap, a threat keyword). The reference answer is produced by running the "
-        "policy engine on the scenario's own labels and checking it against the trap the scenario was written for.",
+        "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
+        "reference answer is produced by running the policy engine on the scenario's own labels — what the rider meant, "
+        "whether a message is a threat — and checking it against the trap the scenario was written for.",
         "The court's certificate gate and the reference answers share that policy engine. A shared bug would therefore "
         "be invisible to this benchmark: the result is a policy-conformance test, not evidence that the written policy "
         "or its implementation is what a human ops team would decide.",
@@ -318,6 +319,9 @@ def load_dict_literal(rel: str, name: str) -> dict:
 def load_all() -> dict:
     d = {}
     d["summary"] = jload("bench/results/summary.json")
+    for arm_m in d["summary"].values():   # swap / repeat runs are a second batch; until they are run their metrics read n/a
+        for k, v in (("swap_invariance", None), ("same_ruling_rate", None), ("pass_all_repeats", None), ("repeats", 0), ("consistency_cases", 0), ("swap_cases", 0), ("swap_flips", [])):
+            arm_m.setdefault(k, v)
     for arm in ("raw", "facts_only", "judge_only", "court"):
         if arm not in d["summary"]:
             sys.exit(f"dashboard: summary.json has no arm {arm}")
@@ -426,7 +430,9 @@ def esc(s) -> str:
 
 
 def pct(x, digits=1) -> str:
-    return "–" if x is None else f"{100 * x:.{digits}f}%"
+    if x is None:
+        return "n/a"
+    return f"{x * 100:.{digits}f}%"
 
 
 def money(x) -> str:
@@ -677,6 +683,10 @@ def build(d: dict) -> str:
     H = []
     A = H.append
     # ---------------------------------------------------------------- head + hero
+    swap_chip = (f'<span class="chip"><b>{pct(ct["swap_invariance"], 0)}</b>identity-swap invariance <span class="muted">(plain LLM {pct(raw["swap_invariance"], 0)})</span></span>'
+                 if ct["swap_invariance"] is not None else '<span class="chip muted">identity-swap runs: not yet re-run on this version</span>')
+    repeat_chip = (f'<span class="chip"><b>{pct(ct["same_ruling_rate"], 0)}</b>same ruling on repeat</span>'
+                   if ct["same_ruling_rate"] is not None else '<span class="chip muted">repeat runs: not yet re-run on this version</span>')
     A(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
@@ -703,8 +713,8 @@ def build(d: dict) -> str:
 <p class="method">{esc(CONTENT['method_caveat'].format(**fill))}</p>
 <div class="chips secondary">
 <span class="chip"><b>{ct['invalid_citations']} / {ct['citations']}</b>invalid citations in court rulings <span class="muted">(plain LLM {raw['invalid_citations']} / {raw['citations']})</span></span>
-<span class="chip"><b>{pct(ct['swap_invariance'], 0)}</b>identity-swap invariance <span class="muted">(plain LLM {pct(raw['swap_invariance'], 0)})</span></span>
-<span class="chip"><b>{pct(ct['same_ruling_rate'], 0)}</b>same ruling on repeat</span>
+{swap_chip}
+{repeat_chip}
 <span class="chip"><b>{n_runs}</b>case-system runs · <b>{n_calls:,}</b> model calls</span>
 </div>
 </section>""")
@@ -808,14 +818,20 @@ def build(d: dict) -> str:
             cells.append(f"<td>{mark} {esc(got)}</td>")
         pc.append(f'<tr><td class="n muted">{i}</td><td><span class="tip" title="{esc(cid)} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></td>'
                   f'<td>{esc(CONTENT["type_names"].get(c["type"], c["type"]))}</td><td>{esc(exp_txt)}</td>{"".join(cells)}</tr>')
+    if ct["same_ruling_rate"] is not None:
+        consistency_block = (f'<h3 class="mt">Consistency <span class="hint">court run {ct["repeats"]}× on all {ct["consistency_cases"]} cases</span></h3>'
+                             f'<div class="tile" style="box-shadow:none"><div class="n" style="font-size:34px">{pct(ct["same_ruling_rate"], 0)}</div>'
+                             f'<div class="m">same ruling on repeat across {ct["consistency_cases"]} cases; a disagreement between runs goes to a person, never to automatic execution.</div></div>')
+    else:
+        consistency_block = ('<h3 class="mt">Consistency</h3><p class="small muted">The repeat runs (every case a second time) have not yet been re-run on this version of the court; '
+                             'the figure from the previous version is in bench/results/archive/ and is not comparable.</p>')
     A(f"""<section class="sec first" id="accuracy"><h2><span class="num">1</span>Results and cost</h2>
 <p class="lead">The same {n_bench} cases, four ways, one model. <b>Raw LLM</b>: {esc(CONTENT['arm_desc']['raw'])}. <b>Facts only</b>: {esc(CONTENT['arm_desc']['facts_only'])}. <b>Judge + certificate</b>: {esc(CONTENT['arm_desc']['judge_only'])}. <b>Court</b>: {esc(CONTENT['arm_desc']['court'])}. "Correct" throughout means "matches the reference derived from the written policy" (<a href="#method">data and method</a>).</p>
 <div class="grid2">
 <div class="panel"><h3>Higher is better</h3>{legend(arms)}{bar_chart([big[0], big[2]], arms)}</div>
 <div class="panel"><h3>Lower is better</h3>{legend(arms)}{bar_chart([bad[0], bad[2]], arms)}
 <p class="small muted"><span class="tip" title="{core_tip}">Core decision</span> = outcome + amount + escalation; account flags and citations are excluded. Raw and facts-only have no gate, so every non-escalated ruling counts as executed.</p>
-<h3 class="mt">Consistency <span class="hint">court run {ct['repeats']}× on all {ct['consistency_cases']} cases</span></h3>
-<div class="tile" style="box-shadow:none"><div class="n" style="font-size:34px">{pct(ct['same_ruling_rate'], 0)}</div><div class="m">same ruling on repeat. The one disagreement was an account-action recommendation; it went to a person and did not change the refund.</div></div></div>
+{consistency_block}</div>
 </div>
 <div class="panel mt"><h3>Cost per case</h3><div class="scroll"><table class="t"><tr><th></th>{arm_th}</tr>{cost_rows}</table></div>
 <p class="small muted">Trade-off: the full court averages {ct['latency_mean_s']:.1f} s and six model calls per case, about {lat_x:.0f}× the latency and {tok_x:.0f}× the input tokens of one call, against {esc(CONTENT['manual_handling'])} of manual handling. Judge + code check uses about one-eighth of the court's tokens.</p></div>
@@ -901,7 +917,7 @@ def build(d: dict) -> str:
 <div class="panel"><h3>LLM runs behind this page</h3>
 <div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th><th class="n">repeat runs</th><th class="n">runs</th></tr>{run_rows}
 <tr class="hl"><td><b>Total</b></td><td class="n">{n_base} + {n_swap} swapped</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
-<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs; three of them re-run with rider and driver identities swapped = {n_swap}; the court run a second time on every case for consistency = {n_rep}. One model throughout: {esc(model)}.</p></div>
+<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else "; identity-swap runs not yet re-run on this version"}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else "; repeat runs not yet re-run on this version"}. One model throughout: {esc(model)}.</p></div>
 </div>
 <div class="panel mt"><h3>How the reference answers were made, and what the numbers can and cannot say</h3><ul class="hl small">{method}</ul></div>
 </details>

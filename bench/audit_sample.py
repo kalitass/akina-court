@@ -39,6 +39,11 @@ CASES = ["B-0001", "B-0022", "B-0026", "B-0034", "B-0044"]   # route basic, rout
 ARMS = ["raw", "facts_only", "judge_only", "court"]
 OUT = ROOT / "bench" / "results" / "audit_sample"
 REDACT = {"authorization", "cookie", "set-cookie", "x-api-key"}
+REDACT_PREFIX = ("x-stainless-",)        # SDK / OS fingerprint headers: not evidence, not published
+
+
+def _keep(k: str) -> bool:
+    return k.lower() not in REDACT and not k.lower().startswith(REDACT_PREFIX)
 
 # ---- transport capture ----
 CALLS: list[dict] = []          # calls of the run in progress
@@ -53,7 +58,7 @@ async def _on_request(request: httpx2.Request) -> None:
         body_json = None
     rec = {"n": len(CALLS) + len(_pending) + 1, "started_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
            "method": request.method, "url": str(request.url),
-           "request_headers": {k: ("<redacted>" if k.lower() in REDACT else v) for k, v in request.headers.items()},
+           "request_headers": {k: ("<redacted>" if not _keep(k) else v) for k, v in request.headers.items()},
            "request_body": body_json if body_json is not None else body, "_t0": time.monotonic()}
     _pending[id(request)] = rec
 
@@ -68,7 +73,7 @@ async def _on_response(response: httpx2.Response) -> None:
         body_json = None
     rec.update({"status": response.status_code, "latency_s": round(time.monotonic() - rec.pop("_t0"), 3),
                 "finished_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
-                "response_headers": {k: ("<redacted>" if k.lower() in REDACT else v) for k, v in response.headers.items()},
+                "response_headers": {k: ("<redacted>" if not _keep(k) else v) for k, v in response.headers.items()},
                 "response_body": body_json if body_json is not None else text,
                 "response_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()})
     CALLS.append(rec)
@@ -167,7 +172,7 @@ def write_manifest(cases, arms, started, runs):
                 "command": " ".join(sys.argv), "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 "cases": cases, "arms": arms, "model": describe_model(), "provider_base_url": "https://api.deepseek.com (DeepSeekProvider)",
                 "versions": {"python": platform.python_version(), "pydantic_ai": pydantic_ai.__version__, "openai": openai.__version__, "httpx2": httpx2.__version__},
-                "redacted_headers": sorted(REDACT), "runs": runs}
+                "redacted_headers": sorted(REDACT) + [p + "*" for p in REDACT_PREFIX], "runs": runs}
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
     files = sorted(p for p in OUT.rglob("*.json") if p.name != "SHA256SUMS")
     (OUT / "SHA256SUMS").write_text("".join(f"{sha(p)}  {p.relative_to(OUT)}\n" for p in files))

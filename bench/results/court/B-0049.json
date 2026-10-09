@@ -4,13 +4,13 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T13:58:24.651195+00:00",
+ "ts": "2026-10-09T19:52:54.364712+00:00",
  "ok": true,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Escalate to RydeHELP human review: route-deviation money claim (0.77 km unexempt segment, $1.09) held pending review of the threat-tagged chat message; reviewer to confirm whether the keyword hit is a false positive, then apply RD-1/RD-2.",
-  "confidence": 0.75,
+  "ruling": "refund_partial",
+  "amount": 1.09,
+  "recommended_action": "Issue a $1.09 voucher refund for the unexempted off-route segment on this RydeTAXI trip (NS-7 form of payment); no account flag.",
+  "confidence": 0.86,
   "cited_facts": [
    "F1",
    "F3",
@@ -28,52 +28,77 @@
    "F15"
   ],
   "cited_policy": [
-   "SAFE-1",
+   "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "NS-7",
+   "SAFE-1",
+   "SAFE-2"
   ],
-  "escalate": true,
-  "escalation_reason": "Chat fact F7 / F8 contains a [threat]-tagged rider message with threat keywords detected; SAFE-1 requires escalation to a human reviewer instead of an automatic ruling.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Single off-route segment 09:49–09:52 adding 0.77 km, up to 1019 m off the optimal route; RD-3(a) has no rider-named stop [F7], RD-4 fails because there is no traffic incident [F12] and only band 4 readings [F10][F11], and RD-5 fails because the driver's GPS-following admission [F9] shows no pre-departure rider consent — so the segment is unexempt under RD-1/RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8",
+     "F9"
+    ],
+    "reason": "RD-5 requires a rider message sent before 09:49:15 agreeing to a route the driver named. The only pre-segment message is the rider's own 09:35 lobby/red-jacket note [F7], and the chat record is complete and fully timestamped [F8]; it says nothing about routing, names no road or area, and the driver named nothing. The driver's post-trip statement 'I followed my GPS; it rerouted me' [F9] is not rider consent (G11, RD-5), and RD-1's permission for a driver to take a fastest GPS route cannot override RD-2. No rider-requested stop is recorded for this segment either, so RD-3(a) gives no exemption. The segment is therefore unexempted and refundable under RD-2."
+   },
+   {
+    "fact_id": "F3",
+    "finding": "counts",
+    "basis": [
+     "F12",
+     "F10",
+     "F11"
+    ],
+    "reason": "RD-4(a) fails: no traffic incident is recorded near the route during the trip window [F12], so there is no 'reasonable cause' incident evidence for the replaced stretch. The only road-condition facts are speed band 4 (30–39 km/h) on AYE and CTE [F10][F11], which is outside the band 1–2 threshold of RD-4(b) and cannot exempt a segment on its own; weather was fair with 0.0 mm rain [F13], so no other cause is shown."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted only in part and subsumed by escalation: the meter-based excess is real on the system record [F1][F6], but the billed $2.30 full excess [F4] is capped by the single unexempt segment under RD-2 and no ruling is issued while the threat tag stands [F8]."
-   },
-   {
-    "id": "C5",
-    "reason": "The $1.09 figure is arithmetically sound (0.77 km × $1.41/km [F3][F4][F6]) but no refund is ordered: the settled SAFE-1 tag [F8] directs escalate, and the amount is held for the human reviewer."
-   },
-   {
     "id": "D1",
-    "reason": "The driver's attempt to shelter the deviation behind the rider's lobby message fails: that message names no stop or route, so RD-3(a) gives no cover, as the driver's own brief concedes [F7]."
+    "reason": "Only partly accepted. The off-route segment does add 0.77 km [F3], but the driver's framing of the residual +0.83 km as an unrefunded 'GPS-track/optimal-route delta' has no policy basis beyond RD-2's ≤0.25 km matching-residual carve-out; regardless, both sides agree only the segment extra_km is refundable, which does not change the outcome [F1][F3][RD-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "Accepted so far as it goes: the sole pre-segment message [F7] grants no routing consent and the driver claims none, so RD-5 is not satisfied and the segment counts [F7][F8][RD-5]."
    },
    {
     "id": "D4",
-    "reason": "The driver's failure to establish RD-4 must cut against him, not cap liability at one segment: the consequence of a failed RD-4 defence is RD-2 treatment of the unexempt segment [F10][F11][F12]."
+    "reason": "Rejected. RD-4 requires traffic evidence (an incident within the matching radius, or band 1–2 congestion) for the replaced optimal stretch; no incident exists [F12] and band 4 on AYE/CTE [F10][F11] is outside RD-4(b) and cannot exempt alone. The driver's 'my GPS rerouted me' [F9] is a statement that loses to the GPS record showing a segment up to 1019 m off the optimal line [F3][RD-4][RD-1]."
    },
    {
     "id": "D8",
-    "reason": "The contention that 'find you at the lobby' [F7] is innocuous and that no escalation arises cannot stand against the settled threat-keyword finding [F8]; SAFE-1 puts the safety question to a human reviewer, not to the advocates."
+    "reason": "Accepted. F15 records 2 upheld disputes but 0 route disputes, so RD-6's route_disputes_upheld_90d ≥ 1 predicate is not met and no flag_account attaches to this case [F14][F15][RD-6]."
+   },
+   {
+    "id": "C1",
+    "reason": "Accepted on the deviation [F3][RD-1], but the complaint's +1.6 km / whole-fare framing is not the compensable measure: RD-2 measures only the unexempted segment's extra_km [F1][F3][RD-2]."
+   },
+   {
+    "id": "C7",
+    "reason": "Withdrawn and rejected: RD-6's flag requires route_disputes_upheld_90d ≥ 1 and F15 shows 0 route disputes upheld, so profile facts cannot support an account flag and may never decide the finding itself [F15][RD-6]."
+   },
+   {
+    "id": "C8",
+    "reason": "Accepted: nothing in the chat (the rider's own lobby/red-jacket locator [F7]), the driver's statement [F9] or the complaint is a threat, intimidation, harassment or dangerous-driving allegation, so no SAFE-1/SAFE-2 escalation arises [F7][F8][F9][SAFE-1][SAFE-2]."
    }
   ],
   "flag_account": false
  },
  "pre_verify_ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Escalate to RydeHELP human review: route-deviation money claim (0.77 km unexempt segment, $1.09) held pending review of the threat-tagged chat message; reviewer to confirm whether the keyword hit is a false positive, then apply RD-1/RD-2.",
-  "confidence": 0.75,
+  "ruling": "refund_partial",
+  "amount": 1.09,
+  "recommended_action": "Issue a $1.09 voucher refund for the unexempted off-route segment on this RydeTAXI trip (NS-7 form of payment); no account flag.",
+  "confidence": 0.86,
   "cited_facts": [
    "F1",
    "F3",
@@ -91,57 +116,82 @@
    "F15"
   ],
   "cited_policy": [
-   "SAFE-1",
+   "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "NS-7",
+   "SAFE-1",
+   "SAFE-2"
   ],
-  "escalate": true,
-  "escalation_reason": "Chat fact F7 / F8 contains a [threat]-tagged rider message with threat keywords detected; SAFE-1 requires escalation to a human reviewer instead of an automatic ruling.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "exempt": false,
-    "reason": "Single off-route segment 09:49–09:52 adding 0.77 km, up to 1019 m off the optimal route; RD-3(a) has no rider-named stop [F7], RD-4 fails because there is no traffic incident [F12] and only band 4 readings [F10][F11], and RD-5 fails because the driver's GPS-following admission [F9] shows no pre-departure rider consent — so the segment is unexempt under RD-1/RD-2."
+    "finding": "counts",
+    "basis": [
+     "F7",
+     "F8",
+     "F9"
+    ],
+    "reason": "RD-5 requires a rider message sent before 09:49:15 agreeing to a route the driver named. The only pre-segment message is the rider's own 09:35 lobby/red-jacket note [F7], and the chat record is complete and fully timestamped [F8]; it says nothing about routing, names no road or area, and the driver named nothing. The driver's post-trip statement 'I followed my GPS; it rerouted me' [F9] is not rider consent (G11, RD-5), and RD-1's permission for a driver to take a fastest GPS route cannot override RD-2. No rider-requested stop is recorded for this segment either, so RD-3(a) gives no exemption. The segment is therefore unexempted and refundable under RD-2."
+   },
+   {
+    "fact_id": "F3",
+    "finding": "counts",
+    "basis": [
+     "F12",
+     "F10",
+     "F11"
+    ],
+    "reason": "RD-4(a) fails: no traffic incident is recorded near the route during the trip window [F12], so there is no 'reasonable cause' incident evidence for the replaced stretch. The only road-condition facts are speed band 4 (30–39 km/h) on AYE and CTE [F10][F11], which is outside the band 1–2 threshold of RD-4(b) and cannot exempt a segment on its own; weather was fair with 0.0 mm rain [F13], so no other cause is shown."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted only in part and subsumed by escalation: the meter-based excess is real on the system record [F1][F6], but the billed $2.30 full excess [F4] is capped by the single unexempt segment under RD-2 and no ruling is issued while the threat tag stands [F8]."
-   },
-   {
-    "id": "C5",
-    "reason": "The $1.09 figure is arithmetically sound (0.77 km × $1.41/km [F3][F4][F6]) but no refund is ordered: the settled SAFE-1 tag [F8] directs escalate, and the amount is held for the human reviewer."
-   },
-   {
     "id": "D1",
-    "reason": "The driver's attempt to shelter the deviation behind the rider's lobby message fails: that message names no stop or route, so RD-3(a) gives no cover, as the driver's own brief concedes [F7]."
+    "reason": "Only partly accepted. The off-route segment does add 0.77 km [F3], but the driver's framing of the residual +0.83 km as an unrefunded 'GPS-track/optimal-route delta' has no policy basis beyond RD-2's ≤0.25 km matching-residual carve-out; regardless, both sides agree only the segment extra_km is refundable, which does not change the outcome [F1][F3][RD-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "Accepted so far as it goes: the sole pre-segment message [F7] grants no routing consent and the driver claims none, so RD-5 is not satisfied and the segment counts [F7][F8][RD-5]."
    },
    {
     "id": "D4",
-    "reason": "The driver's failure to establish RD-4 must cut against him, not cap liability at one segment: the consequence of a failed RD-4 defence is RD-2 treatment of the unexempt segment [F10][F11][F12]."
+    "reason": "Rejected. RD-4 requires traffic evidence (an incident within the matching radius, or band 1–2 congestion) for the replaced optimal stretch; no incident exists [F12] and band 4 on AYE/CTE [F10][F11] is outside RD-4(b) and cannot exempt alone. The driver's 'my GPS rerouted me' [F9] is a statement that loses to the GPS record showing a segment up to 1019 m off the optimal line [F3][RD-4][RD-1]."
    },
    {
     "id": "D8",
-    "reason": "The contention that 'find you at the lobby' [F7] is innocuous and that no escalation arises cannot stand against the settled threat-keyword finding [F8]; SAFE-1 puts the safety question to a human reviewer, not to the advocates."
+    "reason": "Accepted. F15 records 2 upheld disputes but 0 route disputes, so RD-6's route_disputes_upheld_90d ≥ 1 predicate is not met and no flag_account attaches to this case [F14][F15][RD-6]."
+   },
+   {
+    "id": "C1",
+    "reason": "Accepted on the deviation [F3][RD-1], but the complaint's +1.6 km / whole-fare framing is not the compensable measure: RD-2 measures only the unexempted segment's extra_km [F1][F3][RD-2]."
+   },
+   {
+    "id": "C7",
+    "reason": "Withdrawn and rejected: RD-6's flag requires route_disputes_upheld_90d ≥ 1 and F15 shows 0 route disputes upheld, so profile facts cannot support an account flag and may never decide the finding itself [F15][RD-6]."
+   },
+   {
+    "id": "C8",
+    "reason": "Accepted: nothing in the chat (the rider's own lobby/red-jacket locator [F7]), the driver's statement [F9] or the complaint is a threat, intimidation, harassment or dangerous-driving allegation, so no SAFE-1/SAFE-2 escalation arises [F7][F8][F9][SAFE-1][SAFE-2]."
    }
   ],
   "flag_account": false
  },
- "status": "escalated",
+ "status": "resolved",
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "HARD: safety case / threat keyword present → escalate (SAFE-1)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0049.record.json",
- "latency_s": 21.48,
- "input_tokens": 82269,
- "output_tokens": 6678,
- "requests": 9,
+ "latency_s": 23.33,
+ "input_tokens": 97639,
+ "output_tokens": 7238,
+ "requests": 10,
  "llm_calls": 6
 }
