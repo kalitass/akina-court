@@ -1,0 +1,46 @@
+{
+  "currency": "SGD",
+  "service_type": "unit rates apply to RydeTAXI (metered); RydeX is a fixed quote computed from the optimal route with the same units; cancellation / platform fees apply to both. NOTE: rate_per_km / rate_per_min are demo assumptions, NOT the LTA taxi meter units (26c per 400 m = ~$0.65/km; 26c per 45 s only while the taxi is below ~22 km/h) - see lta_taxi_reference",
+  "as_of": "2026-09-28",
+
+  "base_fare": 3.90,
+  "rate_per_km": 1.41,
+  "rate_per_min": 0.26,
+  "waiting_rate_per_min": 0.26,
+  "stationary_threshold_m": 3.0,
+  "platform_fee_tiers": [
+    {"subtotal_up_to": 18.00, "fee": 1.25},
+    {"subtotal_up_to": null,  "fee": 1.47}
+  ],
+  "cancellation_fee": 6.61,
+  "cancellation_fee_driver_payout": 4.50,
+  "cancellation_grace_min": 3,
+  "pickup_waiting_fee_flat": 5.00,
+  "pickup_waiting_after_min": 3,
+  "surge": {
+    "default_multiplier": 1.0,
+    "max_multiplier": 2.0,
+    "peak_windows": [
+      {"days": "Mon-Fri", "from": "06:00", "to": "09:29", "typical_multiplier": 1.25},
+      {"days": "Mon-Sun", "from": "17:00", "to": "23:59", "typical_multiplier": 1.25},
+      {"days": "Sat-Sun", "from": "10:00", "to": "13:59", "typical_multiplier": 1.25},
+      {"days": "Mon-Sun", "from": "00:00", "to": "05:59", "typical_multiplier": 1.5}
+    ]
+  },
+
+  "formula": "total = (base_fare + distance_km*rate_per_km + time_min*rate_per_min + waiting_min*waiting_rate_per_min) * surge_multiplier + platform_fee - discount ; waiting_min = minutes stationary mid-trip (consecutive 5 s samples < stationary_threshold_m apart, excluding pickup/dropoff); time_min = trip minutes MINUS waiting_min, so a stationary minute is billed once (as waiting) and never also as trip time; platform_fee tier is chosen on the surged subtotal",
+
+  "sources": {
+    "base_fare": "assumed - Ryde does not publish a flag-down; value chosen so a 7.5 km / 18 min Orchard->Marina Bay trip lands in the S$18-22 band quoted by 2024-2026 price comparisons",
+    "rate_per_km": "assumed - Ryde does not publish unit fares (help article 'How are the trip fares calculated?' only says fares depend on distance, service type and surge); S$1.41/km is the narrative value used across the demo",
+    "rate_per_min": "assumed - same as above; S$0.26/min mirrors the LTA 26-cent time unit",
+    "waiting_rate_per_min": "assumed - spec 1.4 bills mid-trip stops per minute; Ryde's real product only has a flat pickup waiting fee (see pickup_waiting_fee_flat)",
+    "platform_fee_tiers": "policy/sources.md A6 / https://help.rydesharing.com/hc/en-us/articles/22836370596377-Platform-Fee (effective 17 Feb 2026: $1.25 incl. GST for fares <= $18, $1.47 incl. GST above $18)",
+    "cancellation_fee": "policy/sources.md A1 = https://help.rydesharing.com/hc/en-us/articles/23534478435353-Cancellation-and-Waiting-Fee (rider is charged $6.61 if cancelling > 3 min after matching, or if driver pressed 'I'm Here', waited > 3 min and cancelled as NO SHOW)",
+    "cancellation_fee_driver_payout": "policy/sources.md A2 = https://help.rydesharing.com/hc/en-us/articles/20244064619161-Cancellation-and-Waiting-Time-Policy (driver receives $4.50)",
+    "cancellation_grace_min": "same two Ryde articles: 'All cancellations made within 3 minutes of matching are not chargeable'",
+    "pickup_waiting_fee_flat": "https://help.rydesharing.com/hc/en-us/articles/23534478435353-Cancellation-and-Waiting-Fee (rider may be charged $5 if driver waited > 3 min at pickup and completed the trip; driver receives $4.50). Not used by fare.py, kept for the policy layer",
+    "surge": "assumed - Ryde applies dynamic surge but publishes no table; peak windows and 25%/50% typical multipliers mirror LTA taxi peak / late-night surcharge periods",
+    "lta_taxi_reference": "https://www.lta.gov.sg/content/ltagov/en/getting_around/point_to_point_transport_and_cross_border_services/taxi_fares_payment_methods.html (standard taxi: flag-down $4.40-5.20, 26c per 400 m for 1-10 km, 26c per 350 m above 10 km, 26c per 45 s waiting, peak +25%, midnight-5.59am +50%, city area $3 5pm-midnight, booking fee $2.30). Metered taxi units, NOT applied to PHV fares here."
+  }
+}
