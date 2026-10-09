@@ -1,0 +1,117 @@
+{
+ "n": 2,
+ "started_at": "2026-10-09T13:57:26.055+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "3688"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0022. Outcome: refund_partial $2.44. Recommended action: Refund S$2.44 to the rider as a Ryde voucher for the non-exempt detour mileage; record the driver's RD-1 breach on file (no account flag).. Escalated: False.\nReasoning:\nThis is a RydeTAXI trip, so the fare is metered and extra distance directly increases the fare [F6]; the fare was $40.18 with distance $27.23 over 19.3 km, i.e. $27.23 ÷ 19.3 km = $1.4102/km [F6][RD-2]. Facts show one off-route segment, 21:47–21:50, 1.76 km against a 0.03 km optimal stretch, +1.73 km, up to 979 m off route, overall +2.1 km (+12%) [F1][F3][RD-1].\n\nThe driver's claim rests on consent. At 21:43 he named only \"the petrol station just ahead\" for \"one minute\", the rider agreed at 21:44 — before the segment started at 21:47 — so consent was given in advance of the deviation [F7][F8][RD-5]. But consent under RD-5 is limited to the route/place the driver actually named: it does not stretch to an unnamed excursion [F7][F9][RD-5]. The stop the rider agreed to was \"just ahead\" and for \"one minute\"; the driven segment covered 1.76 km and reached 979 m away from the optimal route, which is not the named, immediately-ahead petrol stop, and the driver concedes he treated the stop as licence for \"a small change of route\" [F3][F9][RD-5]. RD-3 does not help either: the stop was driver-proposed, not rider-named, and the rider never designated the place [F7][F8][RD-3]. The reduced-but-nonzero outcome reflects that a short, prompt pull-in is within what was agreed; only the unexplained excess is charged back.\n\nThe driver cannot rely on traffic: no incident was recorded near the route during the trip, the speed-band records for SLE (band 4) and TPE (band 5) are normal-flow bands, and band evidence alone does not exempt a segment, nor is it shown to cover the replaced stretch [F10][F11][F12][RD-4]. Weather was fair, so no other \"reasonable cause\" appears [F13][RD-4].\n\nAmount: only the non-exempt mileage is refunded, at the trip's own per-km rate [RD-2]. Taking the excess beyond what the named \"just ahead, one minute\" stop reasonably entails — about 0.6 km of the 1.73 km off-route extra — the refund is 1.73 km − 0.60 km = 1.13 km × $1.4102/km = $1.594 ≈ $1.59... recomputed on the base excess only: 1.73 km × $1.4102/km = $2.4397 ≈ $2.44, less the tolerated short stop-in approach. Applying the full non-exempt extra_km of the segment gives 1.73 × $1.4102 = $2.44 [F3][F6][RD-2]. The map-matching residual inside the $4.63 overall excess ($2.90 billed excess, $4.63 in fact at the trip rate) is not refunded [F4][F6][RD-2]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 2.14,
+ "finished_at": "2026-10-09T13:57:28.195+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:57:26 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "0689749ab0c5d9a6b077314726f5011e",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "7-AI2SrAQ0F46Igze2MtCcFqSviiAiD96wc9v9hH2uuSjPs9RBhBFw=="
+ },
+ "response_body": {
+  "id": "c320be0a-06d5-4edd-a8af-8e7df8d42f8a",
+  "object": "chat.completion",
+  "created": 1791554246,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_1iXJgjrPQwukXbkHDX7b9458",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We reviewed your fare dispute and are refunding you S$2.44 as a Ryde voucher.\\n\\nWhat decided it: you agreed in advance to a stop the driver described as \\\"just ahead\\\" and lasting \\\"one minute,\\\" but the detour actually run covered 1.76 km and went up to about 979 metres off the best route. Only the short pull-in you agreed to was allowed, so the extra distance was charged back to you at your trip's own per-kilometre rate.\\n\\nNothing else is needed from you. The voucher will be applied to your account.\", \"driver\": \"We reviewed the fare dispute on this trip and are refunding the rider S$2.44 as a Ryde voucher, charged against the extra distance driven.\\n\\nWhat decided it: the rider agreed in advance only to a stop you described as \\\"just ahead\\\" and lasting \\\"one minute,\\\" but the off-route segment ran 1.76 km and reached about 979 metres from the best route. Consent covers only the place and stop you actually named, so the unexplained excess is charged back. No traffic or weather exemption applied.\\n\\nThis is recorded as a route-deviation breach on your file. No account flag is applied, so your ability to drive is unaffected. Please keep any detour to the stop you name and agree with the rider.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1214,
+   "completion_tokens": 313,
+   "total_tokens": 1527,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 958
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "9889734897989d14c353bb72879320d3be2ff24762dab341f3303ff5d47770f9"
+}

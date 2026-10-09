@@ -1,0 +1,117 @@
+{
+ "n": 2,
+ "started_at": "2026-10-09T13:57:17.191+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "3177"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0001. Outcome: refund_partial $4.17. Recommended action: Issue a Ryde voucher of $4.17 (per NS-7) to the rider for the non-exempt detour distance on this RydeTAXI trip; record the RD-1 breach on the driver's file (no account flag this time).. Escalated: False.\nReasoning:\nThis is a completed RydeTAXI trip metered by distance, so extra kilometres feed directly into what the rider paid [F1][F6][RD-2]. The trip ran 24.7 km against a 21.6 km optimal route, i.e. +3.2 km [F1], and the fare fact prices 3.2 km of excess at $4.45, i.e. $1.41/km [F4].\n\nOne off-route segment exists: 09:32–09:38, 2.96 km driven where the optimal route covers 0.00 km, reaching 974 m off the optimal route [F3]. Nothing exempts it. There is no rider-requested stop and no named place, the rider and driver never exchanged in-app messages, and the driver's own account is merely \"I followed my GPS; it rerouted me\" with no prior request or agreement [F3][F7][F8][RD-3][RD-5]. The driver also cannot invoke reasonable cause: no incident was recorded on the replaced stretch, and the speed-band facts (band 4, 30–39 km/h, on East Coast Parkway and Airport Boulevard) are not the band 1–2 congestion levels and in any case stand alone, so they do not exempt the segment [F3][F9][F10][F11][RD-4]. This segment is therefore a non-exempt detour under RD-1.\n\nFor RydeTAXI the refund is the non-exempt segment's extra_km × the trip's per-km rate, and only the distance unit is refunded [F3][F6][RD-2]. Rate = $34.84 ÷ 24.7 km = $1.4104/km [F6]. 2.96 km × $1.4104/km = $4.1748 → $4.17 [F3][F6][RD-2]. The fare fact's $4.45 corresponds to the full +3.2 km including residual map-matching noise beyond the off-route segment, which is not refunded under RD-2 [F1][F4][RD-2].\n\nBoth advocates requested no_action, which cannot stand against an unexplained off-route segment; but no account flag is warranted because RD-6 requires a prior upheld route dispute within 90 days and the driver profile shows route_disputes_upheld_90d = 0 [F14][RD-6]. Refund is issued as a Ryde voucher, and Ryde retains final discretion [NS-7]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 2.023,
+ "finished_at": "2026-10-09T13:57:19.214+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:57:17 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "9d28feec2630c4fddd1ac501cf01263f",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "6Edg4sYaFN7sWiYU3u2l8DxTLOQJJRh1ozZgllAb7YaIIfECug_Fxw=="
+ },
+ "response_body": {
+  "id": "6be6a194-a0b4-4034-b507-e05a24074fa3",
+  "object": "chat.completion",
+  "created": 1791554237,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_cQbDL6ZL0HLXLGWWFTpr0482",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We looked into your RydeTAXI trip and you're getting $4.17 back. Your driver took a detour of about 3 km that wasn't on your route request, wasn't a stop you asked for, and wasn't caused by traffic or anything on the road — and on a metered taxi trip you pay for every kilometre, so that extra distance is on us. The amount is the distance portion only, paid as a Ryde voucher added to your account. Nothing else changes for you, and no further action is needed on your side.\", \"driver\": \"We reviewed the route on this RydeTAXI trip. Part of it went about 3 km off the best route with no rider-requested stop, no in-app agreement and no recorded incident or traffic conditions to explain it, and since the trip is metered by distance the rider paid for that extra distance. We're refunding the rider $4.17 as a Ryde voucher, and this is being noted on your file as a route breach. Your account isn't being flagged this time — that only happens after a previous upheld route dispute, and you have none. Follow the app's suggested route unless the rider asks otherwise.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1062,
+   "completion_tokens": 289,
+   "total_tokens": 1351,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 806
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "cc6163fd1c258685972bb9ccbf82c84517ede34dd32bdb1e7a675e9271b1ecd7"
+}

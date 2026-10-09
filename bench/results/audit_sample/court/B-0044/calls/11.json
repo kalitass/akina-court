@@ -1,0 +1,117 @@
+{
+ "n": 11,
+ "started_at": "2026-10-09T13:59:33.332+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "3891"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0044. Outcome: escalate. Recommended action: Route to RydeHELP human safety review: attach the chat transcript (F3, F4), the threat-keyword tag (F5) and the driver statement (F6); obtain from the driver the door/speed state at 17:19–17:20 and the cabin/in-car recording, and record the reviewer's outcome as a conduct caution or account referral only if the review so finds.. Escalated: True.\nReasoning:\nDispute type is safety and the chat record contains a threat-tagged driver message; under SAFE-1 any threatening / intimidating language in the chat record means no automatic ruling is made and the case is sent to human review with a factual summary [F4][F5][SAFE-1]. Both advocates agree escalation is the correct routing, and the policy trace settles the SAFE-1 element as present, leaving only the human reviewer's substantive finding open [F5][SAFE-1].\n\nWhat happened, per the record: at 17:19 the rider sent \"Please stop the car, I want to get out here.\" [F3]; at 17:20 the driver replied \"Sit down or I lock the doors.\" [F4], a message the keyword tagger flagged as a threat (\"lock the door\") [F5]. The driver's statement says the rider tried to open the door while the vehicle was moving and that he spoke for her safety [F6]. The trip itself was on-route and on-time: 15.4 km actual against 15.5 km optimal (−0.1 km) and 23.2 min against a 22 min estimate [F1][F2], and no fare item is disputed.\n\nWhat is disputed: whether the words at [F4] were a retaliatory threat after a refused request to alight [F3], or a safety instruction responding to an attempt to open a moving car's door [F6]. The record contains no GPS or timeline fact for vehicle speed, door state or door locking at 17:19–17:20, so [F1][F2] neither confirm nor refute either version; [F6] is a driver statement and, per the rule that system records override statements, cannot by itself establish the door was opened [F6][F1][F2].\n\nFacts a human reviewer should check: the in-car/audio recording or vehicle telematics for speed and door state at 17:19–17:20; whether any door-lock event is logged; the driver's message context immediately before [F4]; both parties' records — rider 709 d, rating 4.8, 0 disputes and 0 upheld in 90 d [F7]; driver 510 d, rating 4.66, 786 trips in 90 d, 0 disputes and 0 upheld in 90 d [F8]. Profiles are context only and do not decide the case; no account flag is imposed on this record [F7][F8][SAFE-1].\n\nNo monetary amount is computed: this is a safety escalation with no disputed fare item, and [F1] is a distance fact, not a fare fact, so there is no basis for a refund figure. Per SAFE-1 and SAFE-2 the reviewer should also signpost medical assistance (995), commercial motor insurance and RydeHELP reporting if any injury or dangerous-driving element is substantiated [SAFE-2]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.824,
+ "finished_at": "2026-10-09T13:59:35.155+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:59:33 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "06b1236cc2a79ce98d007d805f34f911",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "34bR2oh6-lpQqpaAbG5P1S8ElQYsBXFe7AqFS-mw5BxOgnaHSXeaUg=="
+ },
+ "response_body": {
+  "id": "b4444f87-d85e-4e89-8b83-65dc1964b9e7",
+  "object": "chat.completion",
+  "created": 1791554373,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_JDxz6HXEpccyCN0HRiHz9162",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"Your dispute has been sent to a human safety reviewer. No automatic decision was made because of a message sent in the chat during your trip, and the reviewer will look at the full chat, the driver's account of events, and whether vehicle data or in-car recording shows the car's speed and door state at the time you asked to get out.\\n\\nNothing is decided yet and no money is involved here — no fare item was disputed and your trip ran on route and on time. Your account is not flagged. The reviewer will decide whether any caution or account action is warranted.\", \"driver\": \"Your case has been sent to a human safety reviewer. No automatic decision was made because of the message you sent in the chat during the trip. The reviewer will look at the chat, your statement, and whether vehicle data or in-car recording shows the car's speed and door state at the time the rider asked to get out, including whether any door lock event was logged.\\n\\nNothing is decided yet. No fare item was disputed and your account is not flagged. The reviewer will decide whether any caution or account action is warranted, so keep any relevant information available.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1164,
+   "completion_tokens": 272,
+   "total_tokens": 1436,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 908
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "15b647913795e7015db9c557c65c6ba8ef3a125ed4b75060647532d874ad1046"
+}

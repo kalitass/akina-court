@@ -1,0 +1,117 @@
+{
+ "n": 10,
+ "started_at": "2026-10-09T13:58:09.385+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "3502"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0001. Outcome: refund_partial $4.17. Recommended action: Issue a $4.17 Ryde voucher to the rider (NS-7 form) for the unexempted 2.96 km off-route segment; record the RD-1 shortest-direct-route breach on the driver's file but attach no account flag.. Escalated: False.\nReasoning:\nThis is a completed RydeTAXI trip billed on a metered breakdown (base $3.90, distance $34.84, time $12.96, platform $1.47, total $53.17), with no waiting charge and a 1.0× surge [F6][F5]. The fare model makes distance-driven metered trips the category where detour kilometres flow into the fare, so the metered branch of the remedy applies [F6][RD-2]. The GPS record shows one off-route segment, 09:32–09:38, in which 2.96 km were driven where the optimal route covers 0.00 km, reaching up to 974 m from it [F3]; that is an unexplained deviation from the shortest and most direct route and engages the driver's routing duty [F3][RD-1].\n\nNo exemption applies. There was no rider-requested stop or destination change: the bill shows only base, distance, time and platform, with $0.00 waiting and no $3.00 change fee [F6][RD-3]. There was no advance agreement to the route: the record shows no in-app chat at all, so no consent timestamp precedes the 09:32 segment start [F7][F3][RD-5]. The driver's \"my GPS rerouted me\" statement is a statement, and the system records override it [F8][F3][RD-4]. His congestion justification fails on the band evidence: the only traffic records are speed band 4 (30–39 km/h) on East Coast Parkway and Airport Boulevard, which is not the band 1–2 congestion condition, and band evidence alone corroborates rather than exempts [F9][F10][RD-4]. No incident was recorded near the route during the trip window, and weather was fair with 0.0 mm rain, so there is no other reasonable cause [F11][F12][RD-4]. The segment is therefore an unexempted detour segment [F3][RD-1].\n\nAmount: the per-km rate is the billed distance fare divided by the metered distance, $34.84 ÷ 24.7 km = $1.4101/km [F6], and the unexempted segment carried 2.96 km [F3]: 2.96 km × $1.41/km = $4.1736 → $4.17 [F3][F6][RD-2]. The residual between the $4.45 excess-distance line (the full 3.2 km gap) and the segment sum is map-matching residue and is not refunded under the metered branch [F4][F1][RD-2]. No account flag: the driver's 90-day record shows 0 upheld route disputes, so the repeated-breach condition is not met [F14][RD-6]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.948,
+ "finished_at": "2026-10-09T13:58:11.332+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:58:09 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "9097ec962d73ce3a041520724402ea9b",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "-9hkqgzWlDXqcgApncfo2K3BwVpqatIs9fpHnRg7RvkGh3GclrAL6A=="
+ },
+ "response_body": {
+  "id": "6d24d380-43d3-4285-9e6b-e90479859686",
+  "object": "chat.completion",
+  "created": 1791554289,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_jE9F0alh5MFP7fVNISIi9590",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We looked at your trip and found the driver took a longer way than needed for part of the journey. Your route shows one stretch where nearly 3 km were driven off the shortest, most direct path, with nothing on the bill or in the app to explain it. Because of that, we're refunding you $4.17 of the distance you were charged. It comes as a Ryde voucher, so watch for it in your account. Nothing else is needed from you. If you think this isn't right, reply and we'll take another look.\", \"driver\": \"We reviewed the route on this trip. The GPS record shows a stretch where you drove away from the shortest, most direct way to the destination, and nothing in the trip record or app supports it — no rider-requested stop or route change, and the traffic at that time doesn't account for it. The rider is getting a $4.17 voucher for that portion. This has been noted on your file, but no flag has been added to your account. Keep to the most direct route unless the rider agrees otherwise.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1127,
+   "completion_tokens": 264,
+   "total_tokens": 1391,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 871
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "0ea3bfdda2fbeff422ba4ace227cd1c26a0f663bde9250df80f1352d21a7dc44"
+}

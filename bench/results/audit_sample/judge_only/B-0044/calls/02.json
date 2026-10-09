@@ -1,0 +1,117 @@
+{
+ "n": 2,
+ "started_at": "2026-10-09T13:57:49.253+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "2900"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0044. Outcome: escalate. Recommended action: Route to RydeHELP human review as a safety/conduct case (SAFE-1): preserve chat log #1–#2 and the driver statement, interview both parties, and confirm whether the doors were locked while the vehicle was moving; remind the rider of the 995 / driver commercial-insurance / RydeHELP reporting paths if she wishes to pursue the conduct complaint.. Escalated: True.\nReasoning:\nThis is a safety-flagged ride-dispute (dispute type: safety). During the ride the rider asked to get out at 17:19 [F3], and one minute later the driver replied \"Sit down or I lock the doors\" [F4], a message containing threat/intimidation language flagged by the keyword detector at 17:20 [F5]. SAFE-1 applies: once threat or intimidation language appears in the chat, no automatic ruling is made and the case is escalated to a human reviewer [SAFE-1].\n\nWhat is not disputed: the trip ran Clarke Quay → Bedok Mall, 15.4 km actual against a 15.5 km optimal route (−0.1 km, −0%) in 23.2 min against 22 min estimated [F1][F2]; the fare was a fixed RydeX quote of $32.86, so no distance-based overcharge arises on these figures and RD-2/RD-1 do not require a refund computation [F1][RD-2].\n\nWhat is disputed and must be checked by the reviewer: whether the rider attempted to open the door while the vehicle was moving, as the driver asserts [F6], and whether the driver in fact locked, or threatened to lock, the doors [F4][F5]. Relevant context for the reviewer: neither party has any prior dispute or upheld complaint in the last 90 days [F7][F8], and the driver's record shows 786 trips in 90 days with no upheld disputes [F8]. Because SAFE-1 forbids an automatic outcome, no amount is computed and no account action is taken here; escalation is the only permitted outcome on this trace [SAFE-1]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.796,
+ "finished_at": "2026-10-09T13:57:51.049+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:57:49 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "b4b2b4628e1ed99dbfbefbe61ad343b8",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "j3_agUPkr9XhoOXEV_D7xB0LAoHAZANA8GosA3XEvcoZdW17QUzNnw=="
+ },
+ "response_body": {
+  "id": "8bfde179-7077-4a43-b787-4ab574efff38",
+  "object": "chat.completion",
+  "created": 1791554269,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_vqCSVHaS59PEdXsCF08R2820",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"Your case has been escalated to a RydeHELP human reviewer. Nothing has been decided yet.\\n\\nYour ride's chat contains a message from the driver that our safety rules treat as a possible threat, so we do not rule on it automatically. A reviewer will look at the ride chat, the driver's account of events, and speak to you both — including whether the doors were locked or a lock was threatened while the car was moving.\\n\\nNo payment or account action applies at this stage. If you want to pursue a conduct complaint, you can also report it to the police on 995.\", \"driver\": \"Your case has been escalated to a RydeHELP human reviewer. Nothing has been decided yet.\\n\\nA message in the ride chat was flagged under our safety rules as possible threat or intimidation language, so no automatic ruling is made. A reviewer will examine the chat, your statement, and the rider's account, and will speak to you both — including whether the doors were locked, or a lock was threatened, while the vehicle was moving, and whether the rider tried to open the door mid-trip.\\n\\nNo payment or account action applies at this stage. The reviewer will confirm any account measures after their checks.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 896,
+   "completion_tokens": 286,
+   "total_tokens": 1182,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 640
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "4e299764b8b1bb8d0130d028276e7b560c34f02d473efb36cc018666818ec8f5"
+}

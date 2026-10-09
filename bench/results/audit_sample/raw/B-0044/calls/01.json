@@ -1,0 +1,222 @@
+{
+ "n": 1,
+ "started_at": "2026-10-09T13:56:45.128+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "42267"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are the dispute-resolution judge for Ryde (Singapore ride-hailing). You receive the COMPLETE RAW CASE\nRECORD as JSON: the dispute ticket, trip timeline, quoted route (polyline + km), the driver's GPS trace (5 s samples,\nthinned to every 6th point), LTA speed bands and incidents, weather, the fare breakdown, the in-app chat, the\ndriver's statement and both parties' 90-day profiles. Nobody has pre-computed anything: distances, times, who was\nwhere when, and what was agreed are for you to work out from the record. Apply the numbered policy below and rule.\n\nRULES\n- ruling must be one of: refund_full, refund_partial, fee_waived, no_action, escalate. amount (SGD, 2 decimals) only for refund_full / refund_partial / fee_waived,\n  null for no_action and escalate. recommended_action is a short imperative for Ryde ops; append \"+ flag_account\"\n  when a clause (RD-6, NS-2) calls for it and set the structured field `flag_account: true` (only that field counts).\n  Never put flag_account in `ruling`.\n- cited_policy: the clause ids (e.g. RD-2, NS-1) whose conditions you actually applied. Clauses marked 不可引用\n  cannot be cited. cited_facts: leave empty unless you were given fact ids.\n- reasoning: short paragraphs with the arithmetic for any amount. confidence 0-1.\n- System records (gps / timeline / fare) override statements (chat / complaint / driver statement) when they\n  conflict. Profile facts never decide a case alone. These are rules of procedure, not clauses: never cite them.\n- SAFETY: if the dispute type is safety, or any chat message contains a threat / intimidation keyword (threat, threaten, kill, hurt, hit you, beat you, punch, slap, lock the door,\n  lock you, find you, shut up, idiot, stupid, harass),\n  do NOT rule: ruling = \"escalate\", escalate = true, reasoning = factual summary for a human reviewer.\n- segment_findings: for route_deviation cases, one entry per off-route segment you identify (fact_id = the fact id\n  if you were given one, else \"seg1\", \"seg2\" ...), exempt true/false, reason with clause ids. Empty otherwise.\n\nOUTPUT: a Ruling. English.\n\nPOLICY (full text)\n# Ryde 纠纷裁决政策（带编号条款）\n\n> 版本 2026-09-28 v2（全条款溯源版）。本文档是 agent 唯一可引用的规则来源；agent 只能引用条款号（如 `NS-1`），不得自创规则。\n> 每条格式：**条件 → 结果**。条件中的数值与事实表（spec 1.5）里的数值直接比对。\n> 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：\n> - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；\n> - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；\n> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、威胁关键词表）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。\n> 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节\"待 Ryde 确认的规则空缺\"。条款行含\"不可引用\"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。\n\n## 0. 前提：Ryde 的车费模型\n\n- **非计价器服务（RydeX / XL / LUXE / FLASH / POOL / PET）**：车费在下单时按上下车点一次性报价，行程中里程变化不改变车费；行程结束后只能叠加已公布的附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费）。\n- **RydeTAXI**：按所属出租车公司的计价器计费（\"Key in the fare as indicated on your meter\"），计价器结构由 LTA 公布：里程单位（每 400 m / 350 m）+ 等待时间单位（每 45 s）；因此绕路里程直接进入车费。\n- 因此 RD 组条款中\"多出费用\"的计算随服务类型不同（见 RD-2）。\n\n<sub>来源：Ryde 一手 A7、A8、A18（\"Fares quoted for our services are generally fixed, except for RydeTAXI\"；\"all fees for Standard and/or Premium taxis follow that of the respective taxi company\"）；计价器结构 B5（LTA）、B6（PTC \"Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company\"）。</sub>\n\n---\n\n## 1. RD — 绕路（Route Deviation）\n\n**RD-1** 事实表中每一个\"off-route segment\"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是\"在无合理事由时走最短最直接路线\"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。\n<sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)：\"in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route\"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 \"ensure that the shortest and most direct route is taken\"）、C4（CDG Zig \"the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act\"）、D1（NYC TLC §80-16(a)(2) \"shortest reasonable route\"）；Ryde 自身只规定司机可按 GPS 选\"最快或最高效路线\"（A7），无阈值（见空缺 G1）。</sub>\n\n**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差，≤ 0.25 km 的地图匹配残差）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。\n<sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对\"collected a fare … above the metered fare\"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde：\"Drivers who overcharge riders … may face account suspension\"）、A11（\"Overcharging of additional fees\" 被算法标记）、D3（Uber 对\"route deviates from the predicted route\"导致的多收\"happy to review these cases if you feel you were overcharged\"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>\n\n**RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内\"编辑目的地 / 加停靠点\"请求且司机接受）：\n(a) 乘客**指名了地点**，或未指名地点但司机选择的停靠点位于最优路线沿线（未产生 `gps-detour-*` 段） → 该段不构成绕路；\n(b) 乘客未指名地点、司机自行选择了一个使轨迹产生 off-route segment 的地点且**事前未告知乘客该地点** → 该段的 `extra_km` 不因乘客的停靠请求而豁免（乘客同意的是\"停一下\"，不是该路线变更；同意范围按 RD-5 判断），停靠时长仍按 (c) 处理；\n(c) 停靠时长：**RydeTAXI** 按计价器等待时间单位照收（事实表 `fare-wait`），不退；**非计价器服务**：Ryde 公布的等待费只有上车点 $5 一项，行程中停靠没有已公布的收费项，不得收取；app 内改目的地成立时只加已公布的 $3.00（RydeTAXI / 多站 / POOL 不支持 app 内改目的地，只能与司机聊天约定）。\n<sub>来源：(a)(b) 派生自 B1 r.23(1)(c)（义务指向\"the destination named by a passenger\"，乘客指名的地点即新的目的地）、D1（NYC TLC §80-16(a)(1) \"comply with all reasonable and lawful routing requests of the Passenger\"）、C4（Zig：\"passengers have the option to select the route upon boarding\"）、C2（Grab：\"Changing route without passenger's permission\"属违规）；(c) RydeTAXI 等待单位 B5（LTA \"26 cents for every 45 sec of waiting time\"）与 C6（CDG \"Every 45 seconds of waiting or less\"）、A18（RydeTAXI 按计价器）；非计价器 Ryde 一手 A1（仅公布上车点 $5 等待费）+ 派生自 B6（PTC：\"waiting time charge and other fees must be published\"）；$3.00 与 RydeTAXI 不支持改目的地 Ryde 一手 A9。</sub>\n\n**RD-4** 司机主张因封路 / 事故 / 严重拥堵改道（\"合理事由\"） → 必须有 traffic 事实佐证，且佐证针对**被替代的那一段最优路线**：\n(a) `traffic-incident-*`：LTA DataMall 事件（Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic 等 DataMall 类型）位于最优路线上（`m_from_route` ≤ 300 m，数据层匹配半径），`reported_at` 早于该绕路段开始且在行程窗口内仍被列出 → 该段豁免，`no_action`（对该段）；\n(b) `traffic-band-*`：最优路线上道路的速度档位记录为 band 1 或 2（LTA 定义 0 < 9 km/h、10 < 19 km/h）且时间窗覆盖该段 → 作为 (a) 的佐证；单独出现时是否足以豁免待 Ryde 确认（空缺 G3），MVP 不据此单独豁免；\n(c) 无 (a) → 该段按 RD-2 处理。\n<sub>来源：派生自 B1 r.23(1)(c) 的\"reasonable cause\"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9：\"SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19\"；Traffic Incidents 数据集）；Ryde 只允许司机\"按 GPS 选最快或最高效路线\"（A7）、未规定举证方式。</sub>\n\n**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定\"之前\"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意\"走 PIE\"，不含去远处便利店）→ 该段不视为同意。\n<sub>来源：Ryde 一手 A7（\"reach a mutual agreement before you go\"）；派生自 C2（Grab：\"Discuss and agree with the user before taking an alternative route\"，\"Changing route without passenger's permission\"列为违规）。\"改道后告知不算同意\"是 \"before you go\" / \"before taking\" 的直接推论。</sub>\n\n**RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为\"repeated\"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。\n<sub>来源：Ryde 一手 A10（\"Repeated or severe breaches may lead to permanent suspension from the Ryde platform\"；\"Where Ryde reasonably suspects serious or repeated violations, it may report such conduct to … Land Transport Authority (LTA)\"）、A11（\"Unusual trip patterns\"由算法标记）；派生自 B2/B4（LTA 扣分累计 6 分暂停、21 分吊销，绕路每次 3 分）。\"repeated\"的计数口径与 90 天窗口 Ryde 未公开（空缺 G4）。</sub>\n\n---\n\n## 2. NS — 爽约（No-Show）与取消费\n\n**NS-0** 取消费 $6.61 只在 Ryde 公布的两种情形之一下成立，按 `cancelled_by` 分支，其余 NS 条款只能经本条进入：\n- `cancelled_by = rider` → 即时单看 NS-4，预约单看 NS-5；\n- `cancelled_by = driver` 且司机主张乘客爽约 → NS-1 / NS-2；司机以其他理由取消 → NS-3；\n- 行程完成后的等待费争议 → NS-6。\n取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。\n<sub>来源：Ryde 一手 A1（\"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)\"）、A18（\"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI\"）、A16（ToU \"If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee\"）。</sub>\n\n**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下\"I'm Here\"；(ii) 按下时及等待期间 GPS 显示司机位于上车点（`gps-nearest` 的 `within_200m` 为真，200 m 为数据层参数，见空缺 G2）；(iii) 在上车点等待超过 3 分钟（≥ 3:01，`gps-within` 的 `within_200m_s` > 180） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。\n<sub>来源：Ryde 一手 A1、A3（\"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins\"）、A2/A5（司机得 $4.50）。\"位于上车点\"的米数 Ryde 未公开（空缺 G2）。</sub>\n\n**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按\"I'm Here\"；GPS 显示司机从未进入上车点范围或按\"I'm Here\"时不在范围内；范围内等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了\"I'm Here\"而 GPS 显示其不在上车点（`tl-here` 有值且 `gps-nearest.within_200m` 为假）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。\n<sub>来源：Ryde 一手 A3（\"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled\"）、A10（欺诈行为清单：\"Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees\"、\"Abuse of Cancellation and Waiting Fee Policy\"）、A11（\"Abuse of the cancellation and waiting time button\"）；同构规则见 C1（Grab \"You will not be charged the $4 cancellation fee if any of the above are not fulfilled\"）、C5（CDG）。</sub>\n\n**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，不是本案裁决；可附 `flag_account`）。\n<sub>来源：Ryde 一手 A13（\"Refusing or cancelling a trip without a valid reason at pick-up may result in account action\"）、A16（ToU \"the cancellation shall be based on acceptable cancellation reasons as shown in the Application\"）、A10（\"Cancellation Rate (CR) > 17.5%\" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>\n\n**NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布\"司机迟于 ETA 则免费取消\"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。\n<sub>来源：Ryde 一手 A1（\"All cancellations made within 3 minutes of matching are not chargeable\"）、A2（司机侧同文）。</sub>\n\n**NS-5**（不可引用·信息性：本数据集无预约单字段） 预约单：乘客在预约时间 15 分钟以前取消 → 不收费；15 分钟内取消 → 取消费成立；司机在预约时间前 15 分钟之后才接单的，乘客自匹配起有 3 分钟免费取消期。\n<sub>来源：Ryde 一手 A1（\"All cancellations made > 15 minutes before the scheduled trip time are not chargeable … If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period\"）。</sub>\n\n**NS-6** 等待费 $5.00 成立条件：司机按下\"I'm Here\"、GPS 位于上车点（同 NS-1 (ii)）、等待超过 3 分钟后乘客上车且行程完成、司机在行程内（下车时）按下等待费按钮。任一条件不满足 → `fee_waived`（退 $5.00）。\n<sub>来源：Ryde 一手 A1（\"Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses 'I'm Here', waits for > 3 minutes for the rider to board, and continues the trip\"）、A3、A5（\"Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off\" / \"we are unable to charge the rider once the trip is completed\"）。</sub>\n\n**NS-7** 取消费或等待费的争议须在行程后 **30 天内**提出 → 逾期 `no_action`；成立的退款以 Ryde 代金券（取消费 $6.61 / 等待费 $5.00）形式发放，不退现金；Ryde 对最终退款保留裁量权，本系统裁决为建议而非终局。\n<sub>来源：Ryde 一手 A4（\"submit a fee waiver request via RydeHELP in our app within 30 days of the trip … we will issue you a voucher with a unique code worth $6.61 [/ $5.00] as a refund … This voucher is non-refundable and cannot be exchanged for cash\"）、A16（ToU \"Ryde reserves its absolute discretion to any refunds to you … or to your RydeCoins wallet\"）。</sub>\n\n**NS-8**（不可引用·信息性：Ryde 无此规则，且案件文件无 ETA 字段） 其他运营商的规则：司机比 app 显示的预计到达时间晚超过 5 分钟仍未到达，乘客可免费取消（Grab 另有\"首次显示 ETA 后 3 分钟内未到则免取消费\"）。\n<sub>来源：C1（Grab：\"if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee\" / \"Cancellation fees are waived if your driver does not arrive within 3 minutes after the first-shown estimated time of arrival\"）、C3（Gojek：\"If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived\"）。空缺 G7。</sub>\n\n---\n\n## 3. FARE — 车费明细争议\n\n**FARE-1** 非计价器服务的最终车费 = 下单报价 + 已公布附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费 $6.61、平台费 $1.25/$1.47）；出现任何未公布或不满足对应条款的追加项 → 退还该项，`refund_partial`。\n<sub>来源：Ryde 一手 A8（\"Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls\"）、A6（平台费两档）、A9（$3.00）；派生自 B6（PTC：\"this amount must be provided upfront to the commuter prior to the booking … additional stop charge, waiting time charge and other fees must be published\"）。</sub>\n\n**FARE-2** 收取的 ERP/过路费高于实际路线在该时段应缴闸门费之和 → 退还差额，`refund_partial`；ERP 差额若源于未豁免绕路段则并入 RD-2。本数据集无 `tolls` 字段时不触发。\n<sub>来源：Ryde 一手 A8（\"I was overcharged for ERP/toll\"：ERP 按实际发生收取）；闸门核验方法 Ryde 未公开（空缺 G9）。</sub>\n\n**FARE-3**（不可引用·信息性：本数据集无清洁费索赔数据） 司机清洁费索赔成立条件：照片证据（至少一张含车牌）、事发 24 小时内专业清洁、行程后 48 小时内经 app 提交、附收据；上限：食物/饮料 $40，体液/污渍 $120，呕吐 $200。任一条件缺失 → `fee_waived`。\n<sub>来源：Ryde 一手 A15（\"Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours … At least one photo must show the vehicle's car plate number\"）、A16（ToU \"cleaning fee of up to S$200\"）。</sub>\n\n---\n\n## 4. SAFE — 安全事件\n\n**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（事实表 `chat-threat-*`，关键词表为数据层参数，`core/facts/tools.py`） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。\n<sub>来源：Ryde 一手 A13（Code of Conduct：\"Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable\"；\"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures\"）。</sub>\n\n**SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。\n<sub>来源：Ryde 一手 A14（\"If you're in need of medical assistance, please call 995 … You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP\"）。</sub>\n\n**SAFE-3**（不可引用·信息性：六案中无此情形，Judge 不据此裁决） GPS 与时间线显示行程在乘客未上车的情况下被\"完成\"并收费 → `refund_full` 并 `flag_account`（Ryde 定义为欺诈行为）。\n<sub>来源：Ryde 一手 A10（\"Completing trips without the rider onboard\"属欺诈）、A12（\"If your rider has been charged for a trip that you could not cancel, please let us know\"）。</sub>\n\n---\n\n## 5. 裁决动作词表（Judge 输出 schema 用）\n\n| 动作 | 定义 |\n|---|---|\n| `refund_full` | 争议项（取消费 / 等待费 / 整段被投诉的费用）全额退还乘客。 |\n| `refund_partial` | 只退还争议项中经条款认定多收的部分，金额由事实表数值算出，裁决须注明计算所依据的事实编号。 |\n| `fee_waived` | 某项附加费（等待费、清洁费、改目的地费）因不满足成立条件而取消；等同于对该单项的全额退还，用于附加费争议。 |\n| `no_action` | 投诉不成立，原车费与已收费用维持不变。 |\n| `escalate` | 不输出裁决，转人工处理并附事实摘要；用于安全事件、置信度不足或证据不足以适用任何条款。 |\n| `flag_account` | 附加动作，可与上述任一动作并列：将司机或乘客账号送交 Ryde 审查（欺诈、多次违规）。不单独作为裁决结果。 |\n\n退款动作统一以 Ryde 代金券发放（NS-7），金额单位 SGD。\n\n---\n\n## 6. 待 Ryde 确认的规则空缺\n\n| # | 空缺 | 为什么需要 | 当前采用 / 建议值 | 缺什么依据 |\n|---|---|---|---|---|\n| G1 | 绕路的量化门槛（百分比 / 绝对公里）与噪声容差 | 区分真实绕路与地图匹配误差 | 不设政策门槛（RD-1），数据层 0.2 km 噪声容差（`core/facts/tools.py`） | Ryde / LTA / PTC / Grab / Gojek / CDG 均无量化阈值（B1、C2、C4、D1 只说\"最短最直接\"；Uber D3 只说 \"significantly\"） |\n| G2 | \"at the pick-up location according to GPS data\" 的半径 | NS-1/NS-2/NS-6 的 (ii) 要件需要米数 | 200 m（数据层参数）；建议 Ryde 按其 app 的到达判定给出 | Ryde A3、Grab C1、CDG C5 均无米数；Tada 报道称约 500 m（C7，二手来源）；GPS.gov 只给精度 4.9 m（D5） |\n| G3 | \"严重拥堵\"的档位门槛；路况记录与路线的匹配半径 | RD-4 (b) 能否单独豁免 | band ≤ 2 只作佐证（RD-4）；匹配 300 m（数据层参数） | LTA 只定义档位区间（B7），未定义\"拥堵\"；OneMotoring 图例无 km/h 门槛 |\n| G4 | \"repeated\" 违规的计数口径与时间窗 | RD-6 的 `flag_account` | 近 90 天 ≥ 1 起已成立 + 本案（RD-6）；画像字段本身以 90 天为窗（spec §1.3） | Ryde A10 只说 \"Repeated or severe\"；评分用\"last 100 trips\"，违规窗口未公开；LTA 扣分累计（B4）是官方惩戒口径而非本系统裁决 |\n| G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |\n| G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |\n| G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |\n| G8 | Judge 置信度阈值 0.70 | 置信度不足时转人工（`core/verify.py`） | 0.70 | spec §5.4/§5.6 只要求有阈值，未定值 |\n| G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |\n| G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |"
+   },
+   {
+    "role": "user",
+    "content": "CASE B-0044 — dispute type: safety, filed by: rider\nComplaint: \"The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.\"\n\nRAW CASE RECORD (JSON)\n{\"case_id\":\"B-0044\",\"dispute\":{\"type\":\"safety\",\"filed_by\":\"rider\",\"filed_at\":\"2026-10-17T17:44:15+08:00\",\"statement\":\"The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.\"},\"trip\":{\"trip_id\":\"T-2044\",\"service_type\":\"RydeX\",\"pickup\":{\"lat\":1.2906,\"lon\":103.8465,\"name\":\"Clarke Quay\"},\"dropoff\":{\"lat\":1.3249,\"lon\":103.9296,\"name\":\"Bedok Mall\"},\"estimated_km\":15.472,\"estimated_min\":21.8,\"requested_at\":\"2026-10-17T17:01:20+08:00\",\"accepted_at\":\"2026-10-17T17:01:55+08:00\",\"driver_arrived_at\":\"2026-10-17T17:06:45+08:00\",\"driver_pressed_here_at\":\"2026-10-17T17:07:50+08:00\",\"arrival_confirmed_by\":null,\"arrival_radius_m\":null,\"wait_started_at\":null,\"wait_expired_at\":null,\"fee_applied_at\":null,\"pickup_at\":\"2026-10-17T17:08:00+08:00\",\"dropoff_at\":\"2026-10-17T17:31:15+08:00\",\"cancelled_at\":null,\"cancelled_by\":null},\"route\":{\"total_km\":15.472,\"total_min\":21.8,\"polyline\":[[1.2906,103.8465],[1.29073,103.84612],[1.29116,103.84631],[1.29123,103.84621],[1.29128,103.84613],[1.29143,103.84591],[1.29168,103.84555],[1.29241,103.84454],[1.2925,103.84444],[1.29254,103.84439],[1.29259,103.84433],[1.29269,103.84421],[1.29279,103.84409],[1.293,103.84379],[1.29305,103.84373],[1.29311,103.84376],[1.29359,103.844],[1.2939,103.84411],[1.29424,103.84414],[1.2953,103.84402],[1.2955,103.844],[1.29615,103.84392],[1.29634,103.8439],[1.29671,103.84386],[1.29795,103.84376],[1.2981,103.84375],[1.29825,103.84373],[1.29858,103.84371],[1.29882,103.84369],[1.29925,103.84305],[1.29938,103.84285],[1.30001,103.843],[1.30028,103.84306],[1.30069,103.84316],[1.30095,103.84322],[1.30122,103.84303],[1.30132,103.84291],[1.30136,103.8428],[1.3015,103.84235],[1.30243,103.84141],[1.30287,103.84103],[1.30337,103.84058],[1.30378,103.84033],[1.30413,103.84018],[1.30446,103.84007],[1.30479,103.84],[1.30504,103.83997],[1.30553,103.83997],[1.30593,103.84003],[1.30612,103.84009],[1.30722,103.8406],[1.30771,103.84107],[1.30812,103.84163],[1.30852,103.84222],[1.30916,103.84303],[1.30976,103.84362],[1.31025,103.84399],[1.31103,103.84438],[1.3116,103.84456],[1.31214,103.84467],[1.31295,103.84484],[1.31366,103.8451],[1.31425,103.84536],[1.31492,103.84575],[1.31568,103.84634],[1.31606,103.84673],[1.31634,103.84706],[1.31673,103.84757],[1.31718,103.84829],[1.31796,103.84997],[1.31908,103.85248],[1.31935,103.85308],[1.31986,103.85396],[1.32018,103.85443],[1.32073,103.85516],[1.32103,103.85553],[1.32135,103.85588],[1.3218,103.85629],[1.32402,103.85828],[1.32613,103.86058],[1.32691,103.86126],[1.32746,103.86162],[1.32813,103.86193],[1.32876,103.86211],[1.32919,103.86221],[1.3296,103.86225],[1.32983,103.86224],[1.33046,103.86215],[1.33123,103.86208],[1.33149,103.86202],[1.33178,103.86191],[1.33198,103.86177],[1.33218,103.86168],[1.33237,103.86164],[1.33254,103.86165],[1.33271,103.86173],[1.33282,103.86182],[1.3329,103.86194],[1.33295,103.8621],[1.33295,103.86226],[1.33289,103.86245],[1.33277,103.86258],[1.33267,103.86266],[1.33254,103.86272],[1.33232,103.86278],[1.33179,103.86283],[1.33143,103.86289],[1.33115,103.86296],[1.33074,103.86315],[1.33048,103.86336],[1.33024,103.86364],[1.33006,103.86395],[1.32969,103.86473],[1.32954,103.86501],[1.32919,103.86581],[1.32887,103.86687],[1.32861,103.8676],[1.32835,103.8682],[1.32821,103.86848],[1.32795,103.86888],[1.32764,103.86933],[1.32723,103.86985],[1.32683,103.87028],[1.32621,103.87089],[1.32567,103.87133],[1.32512,103.87171],[1.32407,103.87251],[1.32171,103.87427],[1.32112,103.87475],[1.32065,103.87534],[1.32044,103.87567],[1.32016,103.87626],[1.32004,103.87661],[1.31997,103.87725],[1.31997,103.87865],[1.32001,103.87908],[1.32017,103.87963],[1.32038,103.88013],[1.32095,103.88154],[1.32158,103.88308],[1.32186,103.88378],[1.32204,103.8843],[1.32221,103.88479],[1.32228,103.88516],[1.32233,103.88561],[1.3224,103.88758],[1.3225,103.88857],[1.32268,103.88943],[1.32288,103.89052],[1.32314,103.8916],[1.32344,103.89294],[1.32383,103.8943],[1.32541,103.90243],[1.32551,103.90315],[1.32569,103.90388],[1.3268,103.90761],[1.32705,103.90841],[1.32725,103.90887],[1.32739,103.90922],[1.32835,103.9109],[1.32934,103.91281],[1.33159,103.91756],[1.33244,103.9193],[1.33268,103.91963],[1.33324,103.92038],[1.33331,103.92054],[1.33333,103.92069],[1.33332,103.92082],[1.33327,103.92094],[1.33319,103.92106],[1.3331,103.92115],[1.33298,103.92122],[1.33283,103.92126],[1.33155,103.9212],[1.33155,103.9212],[1.33116,103.92127],[1.33078,103.92144],[1.33027,103.92183],[1.32996,103.92227],[1.32972,103.92273],[1.32948,103.92334],[1.32936,103.92385],[1.32929,103.92444],[1.32929,103.92492],[1.32936,103.9255],[1.3295,103.92606],[1.32963,103.9265],[1.32924,103.92655],[1.32681,103.92686],[1.32663,103.92689],[1.32648,103.9269],[1.32564,103.92702],[1.32551,103.92709],[1.32541,103.92718],[1.32534,103.92739],[1.3253,103.92822],[1.32528,103.92856],[1.32535,103.92885],[1.32543,103.92919],[1.32562,103.9296],[1.3255,103.92963],[1.3249,103.9296]]},\"gps\":[{\"ts\":\"2026-10-17T17:01:55+08:00\",\"lat\":1.282351,\"lon\":103.839558,\"speed_kmh\":0.0},{\"ts\":\"2026-10-17T17:02:25+08:00\",\"lat\":1.282553,\"lon\":103.838462,\"speed_kmh\":26.7},{\"ts\":\"2026-10-17T17:02:55+08:00\",\"lat\":1.28187,\"lon\":103.837938,\"speed_kmh\":23.0},{\"ts\":\"2026-10-17T17:03:25+08:00\",\"lat\":1.280708,\"lon\":103.839155,\"speed_kmh\":23.7},{\"ts\":\"2026-10-17T17:03:55+08:00\",\"lat\":1.281122,\"lon\":103.840654,\"speed_kmh\":27.9},{\"ts\":\"2026-10-17T17:04:25+08:00\",\"lat\":1.282595,\"lon\":103.841856,\"speed_kmh\":23.0},{\"ts\":\"2026-10-17T17:04:55+08:00\",\"lat\":1.283886,\"lon\":103.842954,\"speed_kmh\":24.0},{\"ts\":\"2026-10-17T17:05:25+08:00\",\"lat\":1.285408,\"lon\":103.844269,\"speed_kmh\":27.9},{\"ts\":\"2026-10-17T17:05:55+08:00\",\"lat\":1.286877,\"lon\":103.845477,\"speed_kmh\":23.0},{\"ts\":\"2026-10-17T17:06:25+08:00\",\"lat\":1.288159,\"lon\":103.846584,\"speed_kmh\":23.9},{\"ts\":\"2026-10-17T17:06:55+08:00\",\"lat\":1.289725,\"lon\":103.847847,\"speed_kmh\":27.9},{\"ts\":\"2026-10-17T17:07:25+08:00\",\"lat\":1.290872,\"lon\":103.846747,\"speed_kmh\":23.0},{\"ts\":\"2026-10-17T17:07:55+08:00\",\"lat\":1.2906,\"lon\":103.8465,\"speed_kmh\":0.0},{\"ts\":\"2026-10-17T17:08:25+08:00\",\"lat\":1.292189,\"lon\":103.844846,\"speed_kmh\":44.7},{\"ts\":\"2026-10-17T17:08:55+08:00\",\"lat\":1.294691,\"lon\":103.844089,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:09:25+08:00\",\"lat\":1.297366,\"lon\":103.843807,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:09:55+08:00\",\"lat\":1.300032,\"lon\":103.843005,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:10:25+08:00\",\"lat\":1.302289,\"lon\":103.841553,\"speed_kmh\":38.3},{\"ts\":\"2026-10-17T17:10:55+08:00\",\"lat\":1.304486,\"lon\":103.840064,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:11:25+08:00\",\"lat\":1.307415,\"lon\":103.840787,\"speed_kmh\":44.1},{\"ts\":\"2026-10-17T17:11:55+08:00\",\"lat\":1.309367,\"lon\":103.843234,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:12:25+08:00\",\"lat\":1.311655,\"lon\":103.844571,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:12:55+08:00\",\"lat\":1.314609,\"lon\":103.845569,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:13:25+08:00\",\"lat\":1.316834,\"lon\":103.847737,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:13:55+08:00\",\"lat\":1.318036,\"lon\":103.85014,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:14:25+08:00\",\"lat\":1.319317,\"lon\":103.853006,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:14:55+08:00\",\"lat\":1.321086,\"lon\":103.855591,\"speed_kmh\":38.3},{\"ts\":\"2026-10-17T17:15:25+08:00\",\"lat\":1.323058,\"lon\":103.857418,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:15:55+08:00\",\"lat\":1.325269,\"lon\":103.859641,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:16:25+08:00\",\"lat\":1.327617,\"lon\":103.861693,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:16:55+08:00\",\"lat\":1.330212,\"lon\":103.862185,\"speed_kmh\":36.7},{\"ts\":\"2026-10-17T17:17:25+08:00\",\"lat\":1.33295,\"lon\":103.862169,\"speed_kmh\":42.4},{\"ts\":\"2026-10-17T17:17:55+08:00\",\"lat\":1.33035,\"lon\":103.863512,\"speed_kmh\":38.1},{\"ts\":\"2026-10-17T17:18:25+08:00\",\"lat\":1.329158,\"lon\":103.865914,\"speed_kmh\":36.7},{\"ts\":\"2026-10-17T17:18:55+08:00\",\"lat\":1.327992,\"lon\":103.868815,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:19:25+08:00\",\"lat\":1.325903,\"lon\":103.87114,\"speed_kmh\":38.3},{\"ts\":\"2026-10-17T17:19:55+08:00\",\"lat\":1.323749,\"lon\":103.87275,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:20:25+08:00\",\"lat\":1.321248,\"lon\":103.874646,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:20:55+08:00\",\"lat\":1.31997,\"lon\":103.877412,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:21:25+08:00\",\"lat\":1.320344,\"lon\":103.880043,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:21:55+08:00\",\"lat\":1.321527,\"lon\":103.882951,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:22:25+08:00\",\"lat\":1.322342,\"lon\":103.885957,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:22:55+08:00\",\"lat\":1.322515,\"lon\":103.888641,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:23:25+08:00\",\"lat\":1.323165,\"lon\":103.891711,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:23:55+08:00\",\"lat\":1.323919,\"lon\":103.894757,\"speed_kmh\":38.3},{\"ts\":\"2026-10-17T17:24:25+08:00\",\"lat\":1.324432,\"lon\":103.897398,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:24:55+08:00\",\"lat\":1.325031,\"lon\":103.90048,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:25:25+08:00\",\"lat\":1.325612,\"lon\":103.903563,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:25:55+08:00\",\"lat\":1.326364,\"lon\":103.906146,\"speed_kmh\":36.7},{\"ts\":\"2026-10-17T17:26:25+08:00\",\"lat\":1.327351,\"lon\":103.909123,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:26:55+08:00\",\"lat\":1.328856,\"lon\":103.911876,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:27:25+08:00\",\"lat\":1.330042,\"lon\":103.914292,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:27:55+08:00\",\"lat\":1.331386,\"lon\":103.917129,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:28:25+08:00\",\"lat\":1.33287,\"lon\":103.919884,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:28:55+08:00\",\"lat\":1.331911,\"lon\":103.921217,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:29:25+08:00\",\"lat\":1.329623,\"lon\":103.922977,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:29:55+08:00\",\"lat\":1.329498,\"lon\":103.92605,\"speed_kmh\":38.2},{\"ts\":\"2026-10-17T17:30:25+08:00\",\"lat\":1.327426,\"lon\":103.926781,\"speed_kmh\":36.8},{\"ts\":\"2026-10-17T17:30:55+08:00\",\"lat\":1.3253,\"lon\":103.928222,\"speed_kmh\":44.6},{\"ts\":\"2026-10-17T17:31:15+08:00\",\"lat\":1.3249,\"lon\":103.9296,\"speed_kmh\":0.0}],\"traffic\":{\"speed_bands\":[{\"link_id\":\"SYN-0009\",\"road_name\":\"PAN ISLAND EXPRESSWAY\",\"road_category\":\"1\",\"speed_band\":4,\"window_start\":\"2026-10-17T16:56:55+08:00\",\"window_end\":\"2026-10-17T17:36:15+08:00\",\"geometry\":[[1.32919,103.86581],[1.32887,103.86687],[1.32861,103.8676],[1.32835,103.8682],[1.32821,103.86848],[1.32795,103.86888],[1.32764,103.86933],[1.32723,103.86985],[1.32683,103.87028],[1.32621,103.87089],[1.32567,103.87133],[1.32512,103.87171],[1.32407,103.87251],[1.32171,103.87427],[1.32112,103.87475],[1.32065,103.87534],[1.32044,103.87567],[1.32016,103.87626],[1.32004,103.87661],[1.31997,103.87725],[1.31997,103.87865],[1.32001,103.87908],[1.32017,103.87963],[1.32038,103.88013],[1.32095,103.88154],[1.32158,103.88308],[1.32186,103.88378],[1.32204,103.8843],[1.32221,103.88479],[1.32228,103.88516],[1.32233,103.88561],[1.3224,103.88758],[1.3225,103.88857],[1.32268,103.88943],[1.32288,103.89052],[1.32314,103.8916],[1.32344,103.89294],[1.32383,103.8943],[1.32541,103.90243],[1.32551,103.90315],[1.32569,103.90388],[1.3268,103.90761],[1.32705,103.90841],[1.32725,103.90887],[1.32739,103.90922],[1.32835,103.9109],[1.32934,103.91281],[1.33159,103.91756],[1.33244,103.9193],[1.33268,103.91963],[1.33324,103.92038],[1.33331,103.92054],[1.33333,103.92069],[1.33332,103.92082],[1.33327,103.92094],[1.33319,103.92106],[1.3331,103.92115],[1.33298,103.92122],[1.33283,103.92126],[1.33155,103.9212],[1.33155,103.9212],[1.33116,103.92127],[1.33078,103.92144],[1.33027,103.92183]]},{\"link_id\":\"SYN-0007\",\"road_name\":\"CENTRAL EXPRESSWAY\",\"road_category\":\"1\",\"speed_band\":4,\"window_start\":\"2026-10-17T16:56:55+08:00\",\"window_end\":\"2026-10-17T17:36:15+08:00\",\"geometry\":[[1.30287,103.84103],[1.30337,103.84058],[1.30378,103.84033],[1.30413,103.84018],[1.30446,103.84007],[1.30479,103.84],[1.30504,103.83997],[1.30553,103.83997],[1.30593,103.84003],[1.30612,103.84009],[1.30722,103.8406],[1.30771,103.84107],[1.30812,103.84163],[1.30852,103.84222],[1.30916,103.84303],[1.30976,103.84362],[1.31025,103.84399],[1.31103,103.84438],[1.3116,103.84456],[1.31214,103.84467],[1.31295,103.84484],[1.31366,103.8451],[1.31425,103.84536],[1.31492,103.84575],[1.31568,103.84634],[1.31606,103.84673],[1.31634,103.84706],[1.31673,103.84757],[1.31718,103.84829],[1.31796,103.84997],[1.31908,103.85248],[1.31935,103.85308],[1.31986,103.85396],[1.32018,103.85443],[1.32073,103.85516],[1.32103,103.85553],[1.32135,103.85588],[1.3218,103.85629],[1.32402,103.85828],[1.32613,103.86058],[1.32691,103.86126],[1.32746,103.86162],[1.32813,103.86193],[1.32876,103.86211],[1.32919,103.86221],[1.3296,103.86225],[1.32983,103.86224],[1.33046,103.86215],[1.33123,103.86208],[1.33149,103.86202],[1.33178,103.86191],[1.33198,103.86177],[1.33218,103.86168],[1.33237,103.86164],[1.33254,103.86165],[1.33271,103.86173],[1.33282,103.86182],[1.3329,103.86194],[1.33295,103.8621],[1.33295,103.86226],[1.33289,103.86245],[1.33277,103.86258],[1.33267,103.86266],[1.33254,103.86272],[1.33232,103.86278],[1.33179,103.86283],[1.33143,103.86289],[1.33115,103.86296],[1.33074,103.86315],[1.33048,103.86336],[1.33024,103.86364],[1.33006,103.86395],[1.32969,103.86473],[1.32954,103.86501]]}],\"incidents\":[]},\"weather\":{\"rain_mm\":0.0,\"description\":\"Fair\"},\"fare\":{\"base_fare\":3.9,\"distance_km\":15.472,\"distance_fare\":21.82,\"time_min\":21.8,\"time_fare\":5.67,\"waiting_fee\":0.0,\"surge_multiplier\":1.0,\"platform_fee\":1.47,\"discount\":0.0,\"total\":32.86,\"cancellation_fee\":0.0,\"tolls\":0.0,\"edit_destination_fee\":0.0,\"quoted_total\":null,\"pricing\":\"fixed\",\"waiting_fee_basis\":\"flat_pickup_button\",\"currency\":\"SGD\"},\"chat\":[{\"ts\":\"2026-10-17T17:19:37+08:00\",\"from\":\"rider\",\"text\":\"Please stop the car, I want to get out here.\",\"kind\":\"message\"},{\"ts\":\"2026-10-17T17:20:37+08:00\",\"from\":\"driver\",\"text\":\"Sit down or I lock the doors.\",\"kind\":\"message\"}],\"driver_statement\":\"The rider tried to open the door while we were moving. I told her to sit down for her own safety.\",\"profiles\":{\"rider\":{\"account_age_days\":709,\"rating\":4.8,\"disputes_90d\":0,\"disputes_upheld_90d\":0,\"route_disputes_upheld_90d\":0,\"no_show_disputes_upheld_90d\":0},\"driver\":{\"account_age_days\":510,\"rating\":4.66,\"disputes_90d\":0,\"disputes_upheld_90d\":0,\"route_disputes_upheld_90d\":0,\"no_show_disputes_upheld_90d\":0,\"trips_90d\":786}},\"policy_params\":null,\"_note\":\"gps thinned to every 6th sample (60 of 353 points, 5 s grid -> 30 s)\"}\n\nIssue your Ruling."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "ruling": {
+        "type": "string"
+       },
+       "amount": {
+        "default": null,
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "recommended_action": {
+        "type": "string"
+       },
+       "confidence": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+       },
+       "reasoning": {
+        "type": "string"
+       },
+       "cited_facts": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       "cited_policy": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       "rejected_claims": {
+        "default": [],
+        "items": {
+         "$ref": "#/$defs/RejectedClaim"
+        },
+        "type": "array"
+       },
+       "flag_account": {
+        "default": false,
+        "type": "boolean"
+       },
+       "segment_findings": {
+        "default": [],
+        "items": {
+         "$ref": "#/$defs/SegmentFinding"
+        },
+        "type": "array"
+       },
+       "escalate": {
+        "default": false,
+        "type": "boolean"
+       },
+       "escalation_reason": {
+        "default": null,
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      },
+      "required": [
+       "ruling",
+       "recommended_action",
+       "confidence",
+       "reasoning",
+       "cited_facts",
+       "cited_policy"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "$defs": {
+       "RejectedClaim": {
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "reason": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "id",
+         "reason"
+        ],
+        "type": "object",
+        "additionalProperties": false
+       },
+       "SegmentFinding": {
+        "properties": {
+         "fact_id": {
+          "type": "string"
+         },
+         "exempt": {
+          "type": "boolean"
+         },
+         "reason": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "fact_id",
+         "exempt",
+         "reason"
+        ],
+        "type": "object",
+        "additionalProperties": false
+       }
+      }
+     }
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 3.4,
+ "finished_at": "2026-10-09T13:56:48.528+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:56:45 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "24e617db9b96d2e03de1660877082ba5",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "qQOMpQ3CvqX1WAcLYCgurv-Xwct3n41FyjqHIhvG0tGl-KqdXuR_1g=="
+ },
+ "response_body": {
+  "id": "9433a1f5-b154-4f11-8461-0f3ebab6f0d6",
+  "object": "chat.completion",
+  "created": 1791554205,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_bzL9rL511Pgw0EIwpzdm5509",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"ruling\": \"escalate\", \"escalate\": true, \"escalation_reason\": \"Safety dispute (rider alleges driver threatened to lock her in the vehicle when she asked to exit) and the in-app chat contains an intimidation statement from the driver: 17:20:37 \\\"Sit down or I lock the doors.\\\" Per SAFE-1 this is not eligible for automated adjudication and is routed to a human reviewer with a factual summary.\", \"recommended_action\": \"Route to Ryde Trust &amp; Safety for manual review: preserve chat transcript (rider 17:19:37 request to stop; driver 17:20:37 \\\"Sit down or I lock the doors.\\\") and GPS trace; interview both parties; remind rider of 995 / driver commercial motor insurance / RydeHELP reporting paths; assess account action under the Code of Conduct; no automated fare adjustment.\", \"confidence\": 0.97, \"cited_facts\": [], \"cited_policy\": [\"SAFE-1\"], \"segment_findings\": [], \"rejected_claims\": [], \"flag_account\": false, \"amount\": null, \"reasoning\": \"Dispute type is \\\"safety\\\" (rider: \\\"The driver threatened to lock me in when I asked to get out\\\"), which independently triggers the safety rule. Independently, the chat record contains an intimidation statement: at 17:19:37 the rider asked \\\"Please stop the car, I want to get out here.\\\"; at 17:20:37 the driver replied \\\"Sit down or I lock the doors.\\\" — a threat to confine the passenger, matching the threat/intimidation keyword class in SAFE-1. The driver's statement (\\\"I told her to sit down for her own safety\\\") confirms the substance of the exchange, so there is no material factual conflict requiring GPS reconstruction of the ride.\\\\n\\\\nPer SAFE-1 no automated ruling is issued: ruling = escalate, escalate = true, with a factual summary for a human reviewer. No fare adjustment is computed here — the case is a RydeX fixed-price trip (fare.total $32.86, no cancellation or waiting fee, tolls $0.00, no edit-destination fee), so no monetary item is in dispute and amount is null. flag_account is left false because NS-2 / RD-6 account-referral conditions are not what this escalation rests on; the reviewer determines any Code-of-Conduct account action. Segment findings are not applicable (dispute type is safety, not route_deviation).\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 14550,
+   "completion_tokens": 682,
+   "total_tokens": 15232,
+   "prompt_tokens_details": {
+    "cached_tokens": 14336
+   },
+   "prompt_cache_hit_tokens": 14336,
+   "prompt_cache_miss_tokens": 214
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "6a932ee2286f54c98243e4aa531504534a50afe453835d61005ef99dbaa51a01"
+}

@@ -1,0 +1,222 @@
+{
+ "n": 9,
+ "started_at": "2026-10-09T13:58:03.548+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "41924"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are the neutral Judge in a Ryde (Singapore ride-hailing) dispute. You do not gather evidence; you apply\nthe numbered policy to the materials given. Your ruling is a recommendation — Ryde keeps final discretion (NS-7).\n\nMATERIALS: the complete fact table (every fact has an id and a source), the two advocates' briefs with void claims\nalready removed, the full policy.\n\nRULES\n- reasoning: short paragraphs; every paragraph cites at least one fact as [F3] and one clause as [RD-2]. Cite only\n  ids that exist in the materials. Clauses marked 不可引用 cannot be cited.\n- System records (gps / timeline / fare) override statements (chat / complaint / driver statement) when they\n  conflict. Profile facts never decide a case alone. These are rules of procedure, not clauses: never cite them;\n  cite only the numbered policy clauses (RD-, NS-, FARE-, SAFE-).\n- For every claim of the losing side, give a rejected_claims entry with the reason (fact + clause).\n- amount (SGD) must be computed from numbers in a gps or fare fact; write the arithmetic in reasoning\n  (e.g. \"2.83 km × $1.41/km = $3.99 [F5][F6][RD-2]\"). Round to cents.\n- ruling must be one of: refund_full, refund_partial, fee_waived, no_action, escalate. recommended_action is a short imperative for Ryde ops; append\n  \"+ flag_account\" when a clause (RD-6, NS-2) calls for it, AND set the structured field `flag_account: true` — only the\n  structured field creates an account action; free text never does. Never put flag_account in `ruling`.\n- confidence (0–1) is how clearly the clauses apply to these facts, not how much you like the outcome. Code will\n  re-check your citations and may adjust it.\n- SAFETY: if the dispute type is safety, or any chat fact is tagged [threat], do NOT rule. Set ruling = \"escalate\",\n  escalate = true, and write reasoning as a factual summary for a human reviewer (what happened, when, what is\n  disputed, which facts to check), citing ids.\n- cited_facts / cited_policy: list only the ids you actually applied — every clause in cited_policy must be one whose\n  conditions you checked against a fact in reasoning. Do not pad the list with clauses you merely mention.\n- rejected_claims[].id must be the exact claim id from a brief (C1, D3 ...), nothing else.\n- amount must be null for no_action and escalate.\n- Rider-named stops (RD-3): when the rider names the place and the car stops there, the segment driven to reach it is not a detour —\n  its extra km are exempt in full (segment_findings exempt=true). Do not split a segment into \"the stop\" and \"the way there\".\n- Consent scope (RD-5): consent covers the route the driver actually NAMED before leaving the optimal route (\"go round by X\" covers\n  the X corridor); it does not stretch to a different, unnamed excursion. RD-3(b) is about rider-requested STOPS, not about\n  driver-proposed routes — do not use it to deny a driver-proposed, rider-agreed route.\n- segment_findings: for route_deviation cases, one entry per off-route segment fact (the gps facts that say\n  \"Off-route segment ...\"): fact_id, exempt (true if RD-3/RD-4/RD-5 exempts it), reason with clause ids. Empty for other types.\n\nOUTPUT: a Ruling. English.\n\nPOLICY (full text)\n# Ryde 纠纷裁决政策（带编号条款）\n\n> 版本 2026-09-28 v2（全条款溯源版）。本文档是 agent 唯一可引用的规则来源；agent 只能引用条款号（如 `NS-1`），不得自创规则。\n> 每条格式：**条件 → 结果**。条件中的数值与事实表（spec 1.5）里的数值直接比对。\n> 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：\n> - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；\n> - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；\n> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、威胁关键词表）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。\n> 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节\"待 Ryde 确认的规则空缺\"。条款行含\"不可引用\"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。\n\n## 0. 前提：Ryde 的车费模型\n\n- **非计价器服务（RydeX / XL / LUXE / FLASH / POOL / PET）**：车费在下单时按上下车点一次性报价，行程中里程变化不改变车费；行程结束后只能叠加已公布的附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费）。\n- **RydeTAXI**：按所属出租车公司的计价器计费（\"Key in the fare as indicated on your meter\"），计价器结构由 LTA 公布：里程单位（每 400 m / 350 m）+ 等待时间单位（每 45 s）；因此绕路里程直接进入车费。\n- 因此 RD 组条款中\"多出费用\"的计算随服务类型不同（见 RD-2）。\n\n<sub>来源：Ryde 一手 A7、A8、A18（\"Fares quoted for our services are generally fixed, except for RydeTAXI\"；\"all fees for Standard and/or Premium taxis follow that of the respective taxi company\"）；计价器结构 B5（LTA）、B6（PTC \"Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company\"）。</sub>\n\n---\n\n## 1. RD — 绕路（Route Deviation）\n\n**RD-1** 事实表中每一个\"off-route segment\"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是\"在无合理事由时走最短最直接路线\"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。\n<sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)：\"in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route\"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 \"ensure that the shortest and most direct route is taken\"）、C4（CDG Zig \"the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act\"）、D1（NYC TLC §80-16(a)(2) \"shortest reasonable route\"）；Ryde 自身只规定司机可按 GPS 选\"最快或最高效路线\"（A7），无阈值（见空缺 G1）。</sub>\n\n**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差，≤ 0.25 km 的地图匹配残差）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。\n<sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对\"collected a fare … above the metered fare\"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde：\"Drivers who overcharge riders … may face account suspension\"）、A11（\"Overcharging of additional fees\" 被算法标记）、D3（Uber 对\"route deviates from the predicted route\"导致的多收\"happy to review these cases if you feel you were overcharged\"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>\n\n**RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内\"编辑目的地 / 加停靠点\"请求且司机接受）：\n(a) 乘客**指名了地点**，或未指名地点但司机选择的停靠点位于最优路线沿线（未产生 `gps-detour-*` 段） → 该段不构成绕路；\n(b) 乘客未指名地点、司机自行选择了一个使轨迹产生 off-route segment 的地点且**事前未告知乘客该地点** → 该段的 `extra_km` 不因乘客的停靠请求而豁免（乘客同意的是\"停一下\"，不是该路线变更；同意范围按 RD-5 判断），停靠时长仍按 (c) 处理；\n(c) 停靠时长：**RydeTAXI** 按计价器等待时间单位照收（事实表 `fare-wait`），不退；**非计价器服务**：Ryde 公布的等待费只有上车点 $5 一项，行程中停靠没有已公布的收费项，不得收取；app 内改目的地成立时只加已公布的 $3.00（RydeTAXI / 多站 / POOL 不支持 app 内改目的地，只能与司机聊天约定）。\n<sub>来源：(a)(b) 派生自 B1 r.23(1)(c)（义务指向\"the destination named by a passenger\"，乘客指名的地点即新的目的地）、D1（NYC TLC §80-16(a)(1) \"comply with all reasonable and lawful routing requests of the Passenger\"）、C4（Zig：\"passengers have the option to select the route upon boarding\"）、C2（Grab：\"Changing route without passenger's permission\"属违规）；(c) RydeTAXI 等待单位 B5（LTA \"26 cents for every 45 sec of waiting time\"）与 C6（CDG \"Every 45 seconds of waiting or less\"）、A18（RydeTAXI 按计价器）；非计价器 Ryde 一手 A1（仅公布上车点 $5 等待费）+ 派生自 B6（PTC：\"waiting time charge and other fees must be published\"）；$3.00 与 RydeTAXI 不支持改目的地 Ryde 一手 A9。</sub>\n\n**RD-4** 司机主张因封路 / 事故 / 严重拥堵改道（\"合理事由\"） → 必须有 traffic 事实佐证，且佐证针对**被替代的那一段最优路线**：\n(a) `traffic-incident-*`：LTA DataMall 事件（Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic 等 DataMall 类型）位于最优路线上（`m_from_route` ≤ 300 m，数据层匹配半径），`reported_at` 早于该绕路段开始且在行程窗口内仍被列出 → 该段豁免，`no_action`（对该段）；\n(b) `traffic-band-*`：最优路线上道路的速度档位记录为 band 1 或 2（LTA 定义 0 < 9 km/h、10 < 19 km/h）且时间窗覆盖该段 → 作为 (a) 的佐证；单独出现时是否足以豁免待 Ryde 确认（空缺 G3），MVP 不据此单独豁免；\n(c) 无 (a) → 该段按 RD-2 处理。\n<sub>来源：派生自 B1 r.23(1)(c) 的\"reasonable cause\"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9：\"SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19\"；Traffic Incidents 数据集）；Ryde 只允许司机\"按 GPS 选最快或最高效路线\"（A7）、未规定举证方式。</sub>\n\n**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定\"之前\"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意\"走 PIE\"，不含去远处便利店）→ 该段不视为同意。\n<sub>来源：Ryde 一手 A7（\"reach a mutual agreement before you go\"）；派生自 C2（Grab：\"Discuss and agree with the user before taking an alternative route\"，\"Changing route without passenger's permission\"列为违规）。\"改道后告知不算同意\"是 \"before you go\" / \"before taking\" 的直接推论。</sub>\n\n**RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为\"repeated\"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。\n<sub>来源：Ryde 一手 A10（\"Repeated or severe breaches may lead to permanent suspension from the Ryde platform\"；\"Where Ryde reasonably suspects serious or repeated violations, it may report such conduct to … Land Transport Authority (LTA)\"）、A11（\"Unusual trip patterns\"由算法标记）；派生自 B2/B4（LTA 扣分累计 6 分暂停、21 分吊销，绕路每次 3 分）。\"repeated\"的计数口径与 90 天窗口 Ryde 未公开（空缺 G4）。</sub>\n\n---\n\n## 2. NS — 爽约（No-Show）与取消费\n\n**NS-0** 取消费 $6.61 只在 Ryde 公布的两种情形之一下成立，按 `cancelled_by` 分支，其余 NS 条款只能经本条进入：\n- `cancelled_by = rider` → 即时单看 NS-4，预约单看 NS-5；\n- `cancelled_by = driver` 且司机主张乘客爽约 → NS-1 / NS-2；司机以其他理由取消 → NS-3；\n- 行程完成后的等待费争议 → NS-6。\n取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。\n<sub>来源：Ryde 一手 A1（\"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)\"）、A18（\"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI\"）、A16（ToU \"If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee\"）。</sub>\n\n**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下\"I'm Here\"；(ii) 按下时及等待期间 GPS 显示司机位于上车点（`gps-nearest` 的 `within_200m` 为真，200 m 为数据层参数，见空缺 G2）；(iii) 在上车点等待超过 3 分钟（≥ 3:01，`gps-within` 的 `within_200m_s` > 180） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。\n<sub>来源：Ryde 一手 A1、A3（\"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins\"）、A2/A5（司机得 $4.50）。\"位于上车点\"的米数 Ryde 未公开（空缺 G2）。</sub>\n\n**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按\"I'm Here\"；GPS 显示司机从未进入上车点范围或按\"I'm Here\"时不在范围内；范围内等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了\"I'm Here\"而 GPS 显示其不在上车点（`tl-here` 有值且 `gps-nearest.within_200m` 为假）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。\n<sub>来源：Ryde 一手 A3（\"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled\"）、A10（欺诈行为清单：\"Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees\"、\"Abuse of Cancellation and Waiting Fee Policy\"）、A11（\"Abuse of the cancellation and waiting time button\"）；同构规则见 C1（Grab \"You will not be charged the $4 cancellation fee if any of the above are not fulfilled\"）、C5（CDG）。</sub>\n\n**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，不是本案裁决；可附 `flag_account`）。\n<sub>来源：Ryde 一手 A13（\"Refusing or cancelling a trip without a valid reason at pick-up may result in account action\"）、A16（ToU \"the cancellation shall be based on acceptable cancellation reasons as shown in the Application\"）、A10（\"Cancellation Rate (CR) > 17.5%\" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>\n\n**NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布\"司机迟于 ETA 则免费取消\"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。\n<sub>来源：Ryde 一手 A1（\"All cancellations made within 3 minutes of matching are not chargeable\"）、A2（司机侧同文）。</sub>\n\n**NS-5**（不可引用·信息性：本数据集无预约单字段） 预约单：乘客在预约时间 15 分钟以前取消 → 不收费；15 分钟内取消 → 取消费成立；司机在预约时间前 15 分钟之后才接单的，乘客自匹配起有 3 分钟免费取消期。\n<sub>来源：Ryde 一手 A1（\"All cancellations made > 15 minutes before the scheduled trip time are not chargeable … If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period\"）。</sub>\n\n**NS-6** 等待费 $5.00 成立条件：司机按下\"I'm Here\"、GPS 位于上车点（同 NS-1 (ii)）、等待超过 3 分钟后乘客上车且行程完成、司机在行程内（下车时）按下等待费按钮。任一条件不满足 → `fee_waived`（退 $5.00）。\n<sub>来源：Ryde 一手 A1（\"Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses 'I'm Here', waits for > 3 minutes for the rider to board, and continues the trip\"）、A3、A5（\"Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off\" / \"we are unable to charge the rider once the trip is completed\"）。</sub>\n\n**NS-7** 取消费或等待费的争议须在行程后 **30 天内**提出 → 逾期 `no_action`；成立的退款以 Ryde 代金券（取消费 $6.61 / 等待费 $5.00）形式发放，不退现金；Ryde 对最终退款保留裁量权，本系统裁决为建议而非终局。\n<sub>来源：Ryde 一手 A4（\"submit a fee waiver request via RydeHELP in our app within 30 days of the trip … we will issue you a voucher with a unique code worth $6.61 [/ $5.00] as a refund … This voucher is non-refundable and cannot be exchanged for cash\"）、A16（ToU \"Ryde reserves its absolute discretion to any refunds to you … or to your RydeCoins wallet\"）。</sub>\n\n**NS-8**（不可引用·信息性：Ryde 无此规则，且案件文件无 ETA 字段） 其他运营商的规则：司机比 app 显示的预计到达时间晚超过 5 分钟仍未到达，乘客可免费取消（Grab 另有\"首次显示 ETA 后 3 分钟内未到则免取消费\"）。\n<sub>来源：C1（Grab：\"if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee\" / \"Cancellation fees are waived if your driver does not arrive within 3 minutes after the first-shown estimated time of arrival\"）、C3（Gojek：\"If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived\"）。空缺 G7。</sub>\n\n---\n\n## 3. FARE — 车费明细争议\n\n**FARE-1** 非计价器服务的最终车费 = 下单报价 + 已公布附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费 $6.61、平台费 $1.25/$1.47）；出现任何未公布或不满足对应条款的追加项 → 退还该项，`refund_partial`。\n<sub>来源：Ryde 一手 A8（\"Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls\"）、A6（平台费两档）、A9（$3.00）；派生自 B6（PTC：\"this amount must be provided upfront to the commuter prior to the booking … additional stop charge, waiting time charge and other fees must be published\"）。</sub>\n\n**FARE-2** 收取的 ERP/过路费高于实际路线在该时段应缴闸门费之和 → 退还差额，`refund_partial`；ERP 差额若源于未豁免绕路段则并入 RD-2。本数据集无 `tolls` 字段时不触发。\n<sub>来源：Ryde 一手 A8（\"I was overcharged for ERP/toll\"：ERP 按实际发生收取）；闸门核验方法 Ryde 未公开（空缺 G9）。</sub>\n\n**FARE-3**（不可引用·信息性：本数据集无清洁费索赔数据） 司机清洁费索赔成立条件：照片证据（至少一张含车牌）、事发 24 小时内专业清洁、行程后 48 小时内经 app 提交、附收据；上限：食物/饮料 $40，体液/污渍 $120，呕吐 $200。任一条件缺失 → `fee_waived`。\n<sub>来源：Ryde 一手 A15（\"Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours … At least one photo must show the vehicle's car plate number\"）、A16（ToU \"cleaning fee of up to S$200\"）。</sub>\n\n---\n\n## 4. SAFE — 安全事件\n\n**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（事实表 `chat-threat-*`，关键词表为数据层参数，`core/facts/tools.py`） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。\n<sub>来源：Ryde 一手 A13（Code of Conduct：\"Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable\"；\"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures\"）。</sub>\n\n**SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。\n<sub>来源：Ryde 一手 A14（\"If you're in need of medical assistance, please call 995 … You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP\"）。</sub>\n\n**SAFE-3**（不可引用·信息性：六案中无此情形，Judge 不据此裁决） GPS 与时间线显示行程在乘客未上车的情况下被\"完成\"并收费 → `refund_full` 并 `flag_account`（Ryde 定义为欺诈行为）。\n<sub>来源：Ryde 一手 A10（\"Completing trips without the rider onboard\"属欺诈）、A12（\"If your rider has been charged for a trip that you could not cancel, please let us know\"）。</sub>\n\n---\n\n## 5. 裁决动作词表（Judge 输出 schema 用）\n\n| 动作 | 定义 |\n|---|---|\n| `refund_full` | 争议项（取消费 / 等待费 / 整段被投诉的费用）全额退还乘客。 |\n| `refund_partial` | 只退还争议项中经条款认定多收的部分，金额由事实表数值算出，裁决须注明计算所依据的事实编号。 |\n| `fee_waived` | 某项附加费（等待费、清洁费、改目的地费）因不满足成立条件而取消；等同于对该单项的全额退还，用于附加费争议。 |\n| `no_action` | 投诉不成立，原车费与已收费用维持不变。 |\n| `escalate` | 不输出裁决，转人工处理并附事实摘要；用于安全事件、置信度不足或证据不足以适用任何条款。 |\n| `flag_account` | 附加动作，可与上述任一动作并列：将司机或乘客账号送交 Ryde 审查（欺诈、多次违规）。不单独作为裁决结果。 |\n\n退款动作统一以 Ryde 代金券发放（NS-7），金额单位 SGD。\n\n---\n\n## 6. 待 Ryde 确认的规则空缺\n\n| # | 空缺 | 为什么需要 | 当前采用 / 建议值 | 缺什么依据 |\n|---|---|---|---|---|\n| G1 | 绕路的量化门槛（百分比 / 绝对公里）与噪声容差 | 区分真实绕路与地图匹配误差 | 不设政策门槛（RD-1），数据层 0.2 km 噪声容差（`core/facts/tools.py`） | Ryde / LTA / PTC / Grab / Gojek / CDG 均无量化阈值（B1、C2、C4、D1 只说\"最短最直接\"；Uber D3 只说 \"significantly\"） |\n| G2 | \"at the pick-up location according to GPS data\" 的半径 | NS-1/NS-2/NS-6 的 (ii) 要件需要米数 | 200 m（数据层参数）；建议 Ryde 按其 app 的到达判定给出 | Ryde A3、Grab C1、CDG C5 均无米数；Tada 报道称约 500 m（C7，二手来源）；GPS.gov 只给精度 4.9 m（D5） |\n| G3 | \"严重拥堵\"的档位门槛；路况记录与路线的匹配半径 | RD-4 (b) 能否单独豁免 | band ≤ 2 只作佐证（RD-4）；匹配 300 m（数据层参数） | LTA 只定义档位区间（B7），未定义\"拥堵\"；OneMotoring 图例无 km/h 门槛 |\n| G4 | \"repeated\" 违规的计数口径与时间窗 | RD-6 的 `flag_account` | 近 90 天 ≥ 1 起已成立 + 本案（RD-6）；画像字段本身以 90 天为窗（spec §1.3） | Ryde A10 只说 \"Repeated or severe\"；评分用\"last 100 trips\"，违规窗口未公开；LTA 扣分累计（B4）是官方惩戒口径而非本系统裁决 |\n| G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |\n| G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |\n| G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |\n| G8 | Judge 置信度阈值 0.70 | 置信度不足时转人工（`core/verify.py`） | 0.70 | spec §5.4/§5.6 只要求有阈值，未定值 |\n| G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |\n| G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |"
+   },
+   {
+    "role": "user",
+    "content": "CASE B-0001 — dispute type: route_deviation, filed by: rider\nComplaint: \"The app estimated 22 km but the driver went a different way and the meter came to 25 km. He never asked me. I want the extra distance refunded.\"\nTrip: RydeTAXI Raffles Place → Changi Airport T3, estimate 21.6 km / 28 min, pickup 09:07 drop-off 09:56; charged $53.17 (metered)\n\nFACT TABLE\n  F1  [gps]  Actual distance 24.7 km vs optimal route 21.6 km: +3.2 km (+15%).\n  F2  [gps]  Trip duration 49.8 min vs estimated 28 min (+21.4 min).\n  F3  [gps]  Off-route segment 09:32–09:38: 2.96 km driven where the optimal route covers 0.00 km, adding 2.96 km (up to 974 m from the optimal route).\n  F4  [fare]  Excess distance billed $4.45 (3.2 km × $1.41/km).\n  F5  [fare]  Surge multiplier 1.0× (no surge).\n  F6  [fare]  Total charged $53.17 SGD: base $3.90, distance $34.84 (24.7 km), time $12.96 (49.8 min), waiting $0.00, platform $1.47, discount $0.00.\n  F7  [chat]  No in-app chat messages between rider and driver.\n  F8  [chat]  Driver statement: “I followed my GPS; it rerouted me. Nothing wrong with the fare.”\n  F9  [traffic]  EAST COAST PARKWAY (category 1) speed band 4 (30–39 km/h) during 08:58–10:01.\n  F10  [traffic]  AIRPORT BOULEVARD (category 2) speed band 4 (30–39 km/h) during 08:58–10:01.\n  F11  [traffic]  No traffic incidents recorded near the route during the trip window.\n  F12  [weather]  Weather: Fair, 0.0 mm rain.\n  F13  [profile]  Rider: account age 765 d (2.1 y), rating 4.6, 1 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\n  F14  [profile]  Driver: account age 398 d (1.1 y), rating 4.8, 968 trips in 90 d, 2 disputes, 1 upheld (route: 0, no-show: 0).\n\nBRIEF — RIDER ADVOCATE\n  C1: The driver drove 24.7 km against a 21.6 km optimal route, an excess of 3.2 km (+15%), which the rider was billed for on a metered RydeTAXI trip.  [facts: F1, F6; policy: RD-1, RD-2]\n  C2: The excess is not noise from map-matching: a single off-route segment 09:32–09:38 put the car 2.96 km of driving on roads the optimal route does not use, reaching up to 974 m away from it.  [facts: F3; policy: RD-1]\n  C3: That segment is not exempt; the driver's own statement that 'my GPS rerouted me' offers no traffic cause, and the only recorded conditions on the optimal route are moderate speed bands 4 (30–39 km/h) with no incident anywhere near the route.  [facts: F3, F8, F9, F10, F11; policy: RD-4, RD-1]\n  C4: The reroute was not agreed in advance: there is no in-app chat at all between rider and driver, so there is no rider consent timestamp preceding the 09:32 segment start.  [facts: F7, F3; policy: RD-5]\n  C5: Because this is a metered RydeTAXI trip, the unexempted detour kilometres entered the fare; at the billed $1.41/km the 2.96 km detour segment corresponds to $4.17 in extra distance charges.  [facts: F3, F4, F6; policy: RD-2]\n  C6: The fare already itemises $4.45 of excess-distance billing for the full 3.2 km gap, confirming the meter charged for the detour rather than absorbing it in a fixed quote.  [facts: F4, F6; policy: RD-2, FARE-1]\n  C7: The driver has 1 upheld dispute in 90 days and 2 disputes total; if the tribunal accepts a fresh upheld route finding here, RD-6's repeated-violation flag is engaged on his account, not on the rider's (rider: 1 dispute, 0 upheld).  [facts: F14, F13; policy: RD-6]\n  weaknesses admitted: The gps record shows 3.2 km of excess overall (F1) but only 2.96 km is attributable to the single off-route segment (F3); the driver will argue the ~0.25 km residual is map-matching error and outside RD-2, and RD-2 expressly does not refund that residual — so the recoverable base is 2.96 km, not the full 3.2 km. | The driver's case will rely on his statement (F8) that GPS rerouting was legitimate, plus the trip's real delays: 21.4 minutes over estimate (F2) and speed band 4 on East Coast Parkway and Airport Boulevard (F9, F10, F11) — he will say he was choosing the faster route as Ryde permits, and our answer is that RD-4 requires an incident on the replaced optimal segment, which F11 says does not exist. | The rider's own 90-day record shows 1 dispute with 0 upheld (F13), which the driver can use to paint this as a second unfounded complaint. | The metered-fare breakdown (F6) shows time charges of $12.96 for 49.8 minutes, so the driver may claim the trip was slow rather than long; we do not contest the waiting/time units, only the detour distance.\n  requested: refund_partial $4.17\n\nBRIEF — DRIVER ADVOCATE\n  D1: The trip was a RydeTAXI metered trip (F6 shows a metered breakdown of base + distance + time) billed 24.7 km against a 21.6 km optimal route; the meter is driven by distance units, so any excess distance is the only refundable element.  [facts: F1, F4, F6; policy: RD-2, RD-1]\n  D2: Only one off-route segment exists: 09:32–09:38, 2.96 km added (F3). The remaining 0.2 km of the 3.2 km total excess (F1) is map-matching residual and must not be refunded under RD-2.  [facts: F1, F3; policy: RD-2]\n  D3: My client's reroute is justified by congestion on the optimal route: the optimal corridor EAST COAST PARKWAY was recording speed band 4 (30–39 km/h) throughout 08:58–10:01, covering the 09:32–09:38 segment window (F9).  [facts: F3, F9; policy: RD-4]\n  D4: AIRPORT BOULEVARD, the category-2 approach to the destination, was likewise at speed band 4 (30–39 km/h) over the same window (F10), corroborating that the diversion was driven by real congestion rather than by my client's preference.  [facts: F3, F10; policy: RD-4]\n  D5: No traffic incidents were recorded near the route and weather was Fair with 0.0 mm rain (F11, F12), which means the tie-break must rest on the speed-band evidence in F9 and F10 rather than on any incident record.  [facts: F11, F12; policy: RD-4]\n  D6: There is no chat agreement to point to because no in-app messages were exchanged (F7); the rider was therefore never charged for any agreed stop or destination change, and no $3.00 or extra stop charge appears in the bill (F6).  [facts: F6, F7; policy: RD-3]\n  D7: The waiting line on the bill is $0.00 and there is no undeclared surcharge in the total of $53.17 (F6), so the only contested money is the distance element, which on the driver's side should be limited to the map-matching residual rather than the full 3.2 km.  [facts: F4, F6; policy: RD-2, FARE-1]\n  D8: My client's record shows 968 trips in 90 days with only 2 disputes and 0 route disputes upheld (F14), which is inconsistent with a pattern of deliberate detouring and is a reason not to attach any repeated-breach account flag.  [facts: F14; policy: RD-6]\n  weaknesses admitted: The GPS record in F3 shows an off-route segment of 2.96 km that no contractual or passenger-requested stop explains (F7 has no chat), so RD-1 is breached on that segment and at least part of the refund is unavoidable. | My RD-4 congestion argument is built only on speed-band evidence (F9, F10); RD-4(a) requires an incident record and F11 states no incidents were recorded, so the rider will argue R-4(b) band evidence cannot exempt a segment on its own. | The rider will rely on F1 (+3.2 km, +15%) and F2 (+21.4 min over estimate) to argue the whole detour was avoidable, and on F4 ($4.45 of billed excess) to claim the full amount back rather than only the 2.96 km. | The driver statement in F8 asserts 'nothing wrong with the fare' with no supporting record, and under the record-first rule it cannot outweigh the GPS off-route segment in F3.\n  requested: refund_partial $4.17\n\nREBUTTAL — RIDER ADVOCATE\n  → D1 (concedes): Accepted as far as it goes: the meter is distance-driven on RydeTAXI, which is exactly why the detour kilometres are recoverable, and RD-2's metered branch refunds the unexempted segment km. The billed excess of $4.45 over 3.2 km (F4, F6) confirms distance entered the fare rather than being absorbed.  [facts: F1, F4, F6; policy: RD-2, RD-1]\n  → D2 (concedes): Conceded: RD-2 expressly does not refund the residual between the excess-distance billing and the sum of segments, so we rest on the 2.96 km in F3 and claim 2.96 × $1.41 = $4.17, not the full $4.45. That is the figure in our requested outcome.  [facts: F1, F3, F4; policy: RD-2]\n  → D3: Band 4 is 30–39 km/h, defined by LTA as moderate flow and nowhere near the band 1–2 (0–9 / 10–19 km/h) congestion bands; RD-4(b) only lets band evidence corroborate an incident, and RD-4(b) states band evidence standing alone does not exempt a segment in this system.  [facts: F9; policy: RD-4]\n  → D4: Airport Boulevard is category-2 traffic already inside the destination approach, not evidence about the replaced portion of the optimal route, and under RD-4 the corroboration must target the substituted segment; F10 therefore corroborates nothing about the 09:32–09:38 diversion.  [facts: F3, F10; policy: RD-4]\n  → D5: F11 (no incidents recorded) is fatal to the driver's exemption rather than neutral: RD-4(a) requires an incident within 300 m of the optimal route, reported before the segment and still listed during the trip, and RD-4(c) sends an unmatched segment straight back to RD-2. Fair weather in F12 removes weather as an alternative reasonable cause.  [facts: F11, F12, F3; policy: RD-4]\n  → D6: We agree there was no agreement — and that is the rider's point, not the driver's: with no chat at all (F7), nothing satisfies RD-5's requirement that consent precede the 09:32 segment start in F3, so the segment stands unexempted. RD-3 is irrelevant here because no stop or destination change was ever requested or charged (F6).  [facts: F3, F6, F7; policy: RD-5, RD-3]\n  → D7: The rider does not contest the $5.00 waiting fee or any surcharge — F6 shows $0.00 waiting and a 1.0× surge in F5 — so the driver's point concedes the whole field in dispute: distance. On distance the meter charged $34.84 for 24.7 km, of which 2.96 km was unexempted detour (F3, F6), giving $4.17.  [facts: F3, F5, F6; policy: RD-2, FARE-1]\n  → D8: We do not seek an account flag on volume alone; but F14 shows 2 disputes with 1 upheld in 90 days, and RD-6 triggers on an upheld route finding plus a prior upheld dispute, so the flag question turns on whether the tribunal upholds this segment, not on the driver's trip count.  [facts: F14, F13; policy: RD-6]\n  → C1: No change: we maintain the route-deviation finding, narrowed to the single unexempted segment in F3, refund 2.96 km × $1.41/km = $4.17, which is computable from F3 (extra_km) and F6 (distance fare ÷ distance km).  [facts: F1, F3, F6; policy: RD-1, RD-2]\n  revised ask: refund_partial $4.17\n\nREBUTTAL — DRIVER ADVOCATE\n  → C1 (concedes): Conceded as to the arithmetic: F1 shows +3.2 km against the 21.6 km optimal route on a metered RydeTAXI trip billed by distance units, so some distance excess is refundable — but only the exempted/unexempted segment split under RD-2 governs the amount, not the headline 3.2 km.  [facts: F1, F6; policy: RD-2]\n  → C2 (concedes): Accepted that the 2.96 km off-route segment in F3 is a real detour and not map-matching noise; RD-1 places the shortest-direct-route duty on the driver, so this segment is the correct unit of review.  [facts: F3; policy: RD-1]\n  → C3 (concedes): I do not rely on the statement in F8 — the system record shows the optimal corridor EAST COAST PARKWAY at speed band 4 (30–39 km/h) for 08:58–10:01 and AIRPORT BOULEVARD likewise (F9, F10), the bands do not cover a justified reroute on their own, so see my concession below.  [facts: F8, F9, F10; policy: RD-4]\n  → C4: Neither side has chat evidence: F7 records no in-app messages at all, so RD-5 cannot be satisfied by either party, but the absence of rider consent also means the $3.00 change-of-destination fee and any stop charge were correctly never levied (F6).  [facts: F6, F7; policy: RD-5, RD-3]\n  → C5: The $4.17 figure itself is the one point of the rider's brief I can live with: F3's 2.96 km at the billed $1.41/km rate used in F4 is the only computation consistent with RD-2's rule of refunding distance units of the unexempted segment.  [facts: F3, F4; policy: RD-2]\n  → C6: F6 shows the $4.45 excess-distance line covers the full 3.2 km gap while only 2.96 km is attributable to a segment (F3), and RD-2 expressly does not refund the residual difference, so the refundable base is $4.17, not $4.45.  [facts: F3, F4, F6; policy: RD-2, FARE-1]\n  → C7: F14 shows my client's own 90-day record contains 0 upheld route disputes despite 968 trips, so a single fresh route finding does not make this 'repeated' conduct; the 1 upheld entry is not a route matter and RD-6 flags only where the count is met, while any flag would attach to the account under review, not to the rider.  [facts: F13, F14; policy: RD-6]\n  revised ask: refund_partial $4.17\n\nPOLICY EXECUTION TRACE (computed by code from the fact values; ✓ pass, ✗ fail, ? you must decide)\n  ✓ RD-1 off-route segment(s) exist [case] 1 segment(s) (F3)\n  ✗ RD-4 (a) incident on the replaced stretch, reported before the detour [F3] no qualifying incident (speed band alone does not exempt) (no evidence)\n  ✗ RD-5 rider agreed to a route change before the detour [F3] no prior driver request + rider agreement (no evidence)\n  ✗ RD-3 rider-requested stop [F3] no rider stop request before the segment (no evidence)\n  ✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F14)\n  allowed outcomes: refund_partial; amount = Σ extra_km of non-exempt segments × $1.4100/km (distance_fare ÷ distance_km), rounded to cents\n  flag_account required: False\n\nIssue your Ruling. Your outcome and amount must be consistent with the trace: ✓/✗ elements are settled; only the ? elements are yours to decide, and the amount follows the formula in the trace."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "ruling": {
+        "type": "string"
+       },
+       "amount": {
+        "default": null,
+        "anyOf": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "recommended_action": {
+        "type": "string"
+       },
+       "confidence": {
+        "maximum": 1,
+        "minimum": 0,
+        "type": "number"
+       },
+       "reasoning": {
+        "type": "string"
+       },
+       "cited_facts": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       "cited_policy": {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       "rejected_claims": {
+        "default": [],
+        "items": {
+         "$ref": "#/$defs/RejectedClaim"
+        },
+        "type": "array"
+       },
+       "flag_account": {
+        "default": false,
+        "type": "boolean"
+       },
+       "segment_findings": {
+        "default": [],
+        "items": {
+         "$ref": "#/$defs/SegmentFinding"
+        },
+        "type": "array"
+       },
+       "escalate": {
+        "default": false,
+        "type": "boolean"
+       },
+       "escalation_reason": {
+        "default": null,
+        "anyOf": [
+         {
+          "type": "string"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       }
+      },
+      "required": [
+       "ruling",
+       "recommended_action",
+       "confidence",
+       "reasoning",
+       "cited_facts",
+       "cited_policy"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "$defs": {
+       "RejectedClaim": {
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "reason": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "id",
+         "reason"
+        ],
+        "type": "object",
+        "additionalProperties": false
+       },
+       "SegmentFinding": {
+        "properties": {
+         "fact_id": {
+          "type": "string"
+         },
+         "exempt": {
+          "type": "boolean"
+         },
+         "reason": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "fact_id",
+         "exempt",
+         "reason"
+        ],
+        "type": "object",
+        "additionalProperties": false
+       }
+      }
+     }
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 5.832,
+ "finished_at": "2026-10-09T13:58:09.380+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:58:03 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "d83fd68f45b55668395d804788ee5d9a",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "Q01PAmmJlS0TQbHW9MNjAZd08qYvhGtEQheSCRWAbb-_b936fkLFNg=="
+ },
+ "response_body": {
+  "id": "90e052cf-a9ca-46ae-ad4e-35f9f70cf5ca",
+  "object": "chat.completion",
+  "created": 1791554283,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_b4AGn38No2VjIk0vSDOu3503",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"ruling\": \"refund_partial\", \"amount\": 4.17, \"recommended_action\": \"Issue a $4.17 Ryde voucher to the rider (NS-7 form) for the unexempted 2.96 km off-route segment; record the RD-1 shortest-direct-route breach on the driver's file but attach no account flag.\", \"confidence\": 0.9, \"reasoning\": \"This is a completed RydeTAXI trip billed on a metered breakdown (base $3.90, distance $34.84, time $12.96, platform $1.47, total $53.17), with no waiting charge and a 1.0× surge [F6][F5]. The fare model makes distance-driven metered trips the category where detour kilometres flow into the fare, so the metered branch of the remedy applies [F6][RD-2]. The GPS record shows one off-route segment, 09:32–09:38, in which 2.96 km were driven where the optimal route covers 0.00 km, reaching up to 974 m from it [F3]; that is an unexplained deviation from the shortest and most direct route and engages the driver's routing duty [F3][RD-1].\\n\\nNo exemption applies. There was no rider-requested stop or destination change: the bill shows only base, distance, time and platform, with $0.00 waiting and no $3.00 change fee [F6][RD-3]. There was no advance agreement to the route: the record shows no in-app chat at all, so no consent timestamp precedes the 09:32 segment start [F7][F3][RD-5]. The driver's \\\"my GPS rerouted me\\\" statement is a statement, and the system records override it [F8][F3][RD-4]. His congestion justification fails on the band evidence: the only traffic records are speed band 4 (30–39 km/h) on East Coast Parkway and Airport Boulevard, which is not the band 1–2 congestion condition, and band evidence alone corroborates rather than exempts [F9][F10][RD-4]. No incident was recorded near the route during the trip window, and weather was fair with 0.0 mm rain, so there is no other reasonable cause [F11][F12][RD-4]. The segment is therefore an unexempted detour segment [F3][RD-1].\\n\\nAmount: the per-km rate is the billed distance fare divided by the metered distance, $34.84 ÷ 24.7 km = $1.4101/km [F6], and the unexempted segment carried 2.96 km [F3]: 2.96 km × $1.41/km = $4.1736 → $4.17 [F3][F6][RD-2]. The residual between the $4.45 excess-distance line (the full 3.2 km gap) and the segment sum is map-matching residue and is not refunded under the metered branch [F4][F1][RD-2]. No account flag: the driver's 90-day record shows 0 upheld route disputes, so the repeated-breach condition is not met [F14][RD-6].\", \"cited_facts\": [\"F1\", \"F3\", \"F4\", \"F5\", \"F6\", \"F7\", \"F8\", \"F9\", \"F10\", \"F11\", \"F12\", \"F14\"], \"cited_policy\": [\"RD-1\", \"RD-2\", \"RD-3\", \"RD-4\", \"RD-5\", \"RD-6\"], \"segment_findings\": [{\"fact_id\": \"F3\", \"exempt\": false, \"reason\": \"2.96 km off-route 09:32–09:38 with no rider-named stop or destination change [F6], no pre-departure rider agreement (no chat at all) [F7], and no qualifying traffic cause: only band 4 speed records, which neither meet the band 1–2 congestion condition nor exempt on their own, and no incident recorded on the replaced optimal stretch [F9][F10][F11][RD-3][RD-4][RD-5].\"}], \"rejected_claims\": [{\"id\": \"D3\", \"reason\": \"Band 4 (30–39 km/h) on East Coast Parkway is not the band 1–2 congestion condition and band evidence standing alone cannot exempt a segment; RD-4(a) requires an incident on the replaced stretch, and F11 records none [F9][F11][RD-4].\"}, {\"id\": \"D4\", \"reason\": \"Airport Boulevard is the destination-approach road, not the replaced portion of the optimal route, and its band 4 record is likewise non-exempting corroboration only [F10][F3][RD-4].\"}, {\"id\": \"D5\", \"reason\": \"Fair weather and the absence of incidents do not create a reasonable cause; with no incident record the segment falls back to the refund rule [F11][F12][F3][RD-4].\"}, {\"id\": \"D8\", \"reason\": \"The claim is not that volume alone shows a pattern; RD-6 turns on an upheld route finding plus a prior upheld route dispute, and F14 shows 0 upheld route disputes, so no flag is attached — but this does not excuse the segment itself [F14][RD-6].\"}, {\"id\": \"C7\", \"reason\": \"RD-6's repeated-breach condition requires route_disputes_upheld_90d ≥ 1; the driver's 90-day record shows 1 upheld dispute but 0 route disputes upheld, so the account flag is not engaged by this single finding [F14][RD-6].\"}], \"flag_account\": false, \"escalate\": false}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 12043,
+   "completion_tokens": 1410,
+   "total_tokens": 13453,
+   "prompt_tokens_details": {
+    "cached_tokens": 8320
+   },
+   "prompt_cache_hit_tokens": 8320,
+   "prompt_cache_miss_tokens": 3723
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "5d5736652d9ea2fc485ec7e196fca01c6154501d48ee3106f8f98125fa4b7a9a"
+}

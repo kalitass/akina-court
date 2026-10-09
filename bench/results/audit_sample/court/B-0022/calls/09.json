@@ -1,0 +1,117 @@
+{
+ "n": 9,
+ "started_at": "2026-10-09T13:58:30.654+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "content-length": "3970"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0022. Outcome: refund_partial $2.44. Recommended action: Issue a $2.44 voucher refund (metered mileage for the unexempted 21:47–21:50 deviation) under NS-7, and send the driver a route-discipline advisory citing RD-1; no account flag.. Escalated: False.\nReasoning:\nThe trip is a completed RydeTAXI metered journey with one recorded off-route segment: 21:47–21:50, 1.76 km driven where the optimal route covers 0.03 km, adding 1.73 km and straying up to 979 m off the optimal route [F3]. RD-1 treats any unexplained deviation from the shortest and most direct route as a deviation, with no de minimis threshold, so this segment breaches the driver's routing duty unless RD-3, RD-4 or RD-5 exempts it [F3][RD-1].\n\nNo traffic exemption exists: there is no incident record near the route during the trip window, and the only speed-band records are moderate bands 4 and 5 (SLE 30–39 km/h; TPE 40–49 km/h), neither of which is band 1 or 2, so RD-4(a) is not satisfied and RD-4(b) cannot exempt on its own [F10][F11][F12][RD-4].\n\nThe rider's consent does not cover this route. The driver's pre-departure request was limited to pulling in \"at the petrol station just ahead for one minute,\" naming no road, area or route [F7], and the rider's reply \"Sure, no problem\" answered exactly that [F8]. RD-5 exempts only the route the driver actually named before leaving the optimal route, and here nothing was named beyond an immediate stop \"just ahead\"; the segment actually driven ran for three minutes (21:47–21:50) and swung 979 m from the optimal route, which does not answer the description the rider agreed to [F3][F8][RD-5]. RD-3(b) does not rescue the driver either: the rider never named a place, the driver selected the location, and the agreed stop was never even made, as the driver's own statement and request show [F7][F9][RD-3]. The segment is therefore unexempted.\n\nBecause the service is metered, only the unexempted segment's mileage units enter the fare: 1.73 km × this trip's own per-km rate of $1.41/km = $2.44 [F3][F6][RD-2]. The rate is derived from the fare record itself ($27.23 distance fare ÷ 19.3 km) and is corroborated by the billed excess ($2.90 for 2.1 km) [F4][F6][RD-2]. The residual ~0.37 km between the 2.1 km total excess and the 1.73 km segment is not refunded [F1][F3][RD-2].\n\nThe time and distance components otherwise conform to the meter breakdown (base $3.90, distance $27.23, time $7.58, waiting $0.00, platform $1.47), and FARE-1/FARE-2 are not triggered since no unpublished add-on was charged and the dataset carries no tolls field [F6][FARE-1][RD-2]. Both advocates converge on the same figure, which supports the arithmetic [F3][F6][RD-2].\n\nRD-6 is not met: the driver's profile shows route disputes upheld in 90 days = 0, so the \"repeated breach\" condition for an account referral fails, and no flag_account is issued [F15][RD-6]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 2.3,
+ "finished_at": "2026-10-09T13:58:32.953+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Fri, 09 Oct 2026 13:58:30 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "c77be090633a775a6222fe6a158322a9",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 9e7574adb9a113dab92737ea901376d8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P1",
+  "x-amz-cf-id": "XovoKn0Rsz0Yz5CM43zDHq6VSfe8P6-BCtJF4UmRNXd6_3HY0w0AQg=="
+ },
+ "response_body": {
+  "id": "b7642213-b0cc-45a6-93db-2128b99f13b3",
+  "object": "chat.completion",
+  "created": 1791554310,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_fjg8FA0gSmuoA8UTF4cq3642",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We reviewed your fare dispute and are refunding part of the fare: $2.44, issued as a Ryde voucher on your account.\\n\\nWe looked at the trip record. Your driver left the shortest, most direct route between 21:47 and 21:50, adding about 1.73 km. Your \\\"sure, no problem\\\" reply covered only a short one-minute stop just ahead, not that detour, so that part of the fare was not something you agreed to.\\n\\nYou do not need to do anything to claim the voucher.\\n\\nYour driver is being reminded of their route duty. No change has been made to your account.\", \"driver\": \"We reviewed a fare dispute on one of your completed metered trips and are refunding the rider $2.44 as a Ryde voucher.\\n\\nThe trip record shows you left the shortest, most direct route between 21:47 and 21:50, adding about 1.73 km and going up to roughly 979 m off route. The rider's \\\"sure, no problem\\\" covered only a short stop just ahead, so it did not cover that detour.\\n\\nNo traffic or other exemption applies, so this is a route-discipline advisory. No flag has been placed on your account.\\n\\nTravel the shortest, most direct route unless a rider agrees to a specific detour first.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1245,
+   "completion_tokens": 317,
+   "total_tokens": 1562,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 989
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "aba996b655d9b175c468856eac1673832977b650385f4b85e14df3f2439ed9fb"
+}
