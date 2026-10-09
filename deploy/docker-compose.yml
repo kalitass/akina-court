@@ -1,0 +1,19 @@
+# Lighthouse (Singapore) · docker compose up -d
+# .env next to this file: LIVE_RUNS=0, DEMO_TOKEN, DOMAIN (public demo: no model key); add DEEPSEEK_API_KEY only for live runs
+services:
+  court:
+    build: ..
+    env_file: .env
+    # the public demo runs with LIVE_RUNS=0: nothing is written, the stored runs ship inside the image.
+    # (For a live instance, mount a volume on /srv/runs so new rulings persist across deploys.)
+    restart: unless-stopped
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    environment: ["DOMAIN=${DOMAIN}"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [court]
+    restart: unless-stopped
+volumes: { caddy_data: {} }
