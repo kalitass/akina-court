@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Akina Court · expert court</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="map.js"></script>
+<style>
+:root{--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--bg:#f6f7f9;--card:#fff;--blue:#1a73e8;--amber:#f59e0b;--red:#dc2626;--green:#16a34a;--violet:#7c3aed;--rider:#1a73e8;--driver:#ea580c;--judge:#111827;--verify:#7c3aed}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Inter","PingFang SC","Helvetica Neue",sans-serif;font-size:13.5px}
+a{color:var(--blue)}
+#top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:10px 20px}
+#top .logo{font-weight:800;font-size:15px;letter-spacing:.02em}#top .logo span{color:var(--blue)}
+.tabs{display:flex;gap:4px;margin-left:8px}.tab{padding:6px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:#fff;font-size:12.5px}.tab b{font-family:Menlo,monospace;margin-right:5px}.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}.tab .t{color:var(--muted)}.tab.on .t{color:#cbd5e1}
+#demo{margin-left:auto}#demobox label{display:block;padding:3px 0;cursor:pointer}#demobox h4{margin:6px 0 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}#demobox select{width:100%;padding:4px}
+#run{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;font-size:13px}#run:disabled{background:#93c5fd;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff}
+.chip.dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.idle{color:var(--muted)}.chip.running{color:var(--blue)}.chip.done{color:var(--green)}.chip.esc{color:var(--red)}
+#status{font-family:Menlo,monospace;font-size:12px;color:var(--muted)}
+main{padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:1800px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+h3{margin:0 0 8px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+#hdr{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+#hdr .stmt{font-size:16px;line-height:1.5;font-style:italic;color:#1f2937}#hdr .trip{color:var(--muted);margin-top:6px;font-family:Menlo,monospace;font-size:12px}
+#outcome{text-align:right;min-width:260px}#outcome .big{font-size:22px;font-weight:800}#outcome .sub{color:var(--muted);font-size:12px;margin-top:4px}
+#outcome .stage{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#outcome.pending .big{color:var(--muted)}#outcome.proposed .big{color:var(--amber)}#outcome.final .big{color:var(--green)}#outcome.esc .big{color:var(--red)}
+.bar{height:6px;border-radius:3px;background:#e5e7eb;position:relative;margin-top:8px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--ink)}.bar b{position:absolute;top:-4px;width:2px;height:14px;background:var(--red)}
+#row1{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.75fr);gap:14px}
+#mapwrap{position:relative;height:520px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}#map{position:absolute;inset:0}
+.legend{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:11.5px;line-height:1.8;z-index:5}
+.legend i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}.legend label{display:flex;gap:6px;align-items:center;cursor:pointer}
+#info{position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.95);padding:5px 9px;font:11.5px Menlo,monospace;border-radius:6px;z-index:5}
+#reset{position:absolute;left:10px;top:10px;z-index:6;display:none;background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:12px;cursor:pointer}
+.maplibregl-ctrl-top-left{top:36px}
+#tl{height:96px;margin-top:10px}#tl svg{width:100%;height:100%}
+#side{display:flex;flex-direction:column;gap:14px;min-height:0}
+#cert .ln{font-family:Menlo,monospace;font-size:11.5px;line-height:1.55;padding:2px 0;display:flex;gap:8px}#cert .m{width:14px;flex:none;font-weight:700}
+#cert .pass .m{color:var(--green)}#cert .fail .m{color:var(--red)}#cert .judge .m{color:var(--amber)}#cert .na{opacity:.45}#cert .sum{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);color:var(--ink);font-weight:600}
+#cert .empty{color:var(--muted);font-style:italic}
+details.grp{border:1px solid var(--line);border-radius:8px;margin-bottom:6px;overflow:hidden}details.grp>summary{list-style:none;cursor:pointer;padding:6px 10px;background:#f8f9fb;display:flex;gap:8px;align-items:center;font-size:12.5px}details.grp>summary::-webkit-details-marker{display:none}details.grp>summary .cnt{margin-left:auto;color:var(--muted);font-weight:normal}details.grp.key>summary{background:#fff7ed}
+.fact{padding:5px 10px;border-top:1px solid #f1f5f9;cursor:pointer;line-height:1.4;font-size:12.5px;border-left:3px solid transparent}.fact:hover{background:#f3f6ff}.fact.on{background:#eaf1fe;border-left-color:var(--blue)}.fact b{font-family:Menlo,monospace;margin-right:6px;color:#374151}.fact.lit{animation:lit 1.2s ease-out}
+@keyframes lit{0%{background:#fef3c7}100%{background:transparent}}
+.tag{display:inline-block;font-size:10px;padding:0 5px;border-radius:8px;background:#e5e7eb;color:#374151;margin-left:4px}.tag.agree{background:#dcfce7;color:#166534}.tag.req{background:#dbeafe;color:#1e40af}.tag.threat{background:#fee2e2;color:#991b1b}
+#court{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;align-items:start}
+.col h3 .who{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.col.rider h3 .who{background:var(--rider)}.col.driver h3 .who{background:var(--driver)}.col.bench h3 .who{background:var(--judge)}
+.ev{border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:8px;background:#fff;animation:pop .35s ease-out;position:relative}
+@keyframes pop{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+.ev .k{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center}.ev .k .el{margin-left:auto;font-family:Menlo,monospace}
+.ev .t{font-weight:700;margin:3px 0 4px}.ev .b{white-space:pre-wrap;line-height:1.5;font-size:12.5px;color:#1f2937}
+.ev.tool{padding:6px 10px;border-style:dashed}.ev.tool .t{font-family:Menlo,monospace;font-weight:600;font-size:12px}
+.ev.check{background:#faf5ff;border-color:#e9d5ff}.ev.escalate{background:#fef2f2;border-color:#fecaca}.ev.summary{background:#f0fdf4;border-color:#bbf7d0}.ev.ruling{border-color:#111827;border-width:1.5px}
+.claim{padding:5px 0;border-top:1px solid #f1f5f9;font-size:12.5px;line-height:1.45}.claim.void{color:#9ca3af;text-decoration:line-through}.claim .id{font-family:Menlo,monospace;font-weight:700;margin-right:6px}.claim .vr{color:var(--red);text-decoration:none;display:block;font-size:11.5px}
+.ref{display:inline-block;font-family:Menlo,monospace;font-size:11px;padding:0 5px;border-radius:5px;background:#eef2ff;color:#3730a3;cursor:pointer;margin:0 1px}.ref.p{background:#ecfdf5;color:#065f46}.ref:hover{filter:brightness(.92)}
+.weak{color:var(--muted);font-size:12px;margin-top:6px}.ask{font-weight:700;margin-top:6px}
+#log .row{display:grid;grid-template-columns:62px 60px 76px 1fr;gap:10px;padding:5px 0;border-top:1px solid #f1f5f9;font-size:12px}#log .row .a{font-weight:700}#log .a.rider{color:var(--rider)}#log .a.driver{color:var(--driver)}#log .a.judge{color:var(--judge)}#log .a.verify{color:var(--verify)}#log .a.system{color:var(--muted)}
+.notice{border-left:4px solid var(--blue);padding:8px 10px;background:#f8fafc;border-radius:6px;margin-top:6px;font-size:12.5px;line-height:1.5}.notice.driver{border-color:var(--driver)}
+.empty{color:var(--muted);font-style:italic;padding:8px 0}
+@media (max-width:1200px){#row1{grid-template-columns:1fr}#court{grid-template-columns:1fr}}
+</style></head><body>
+<div id="top"><a href="/" class="logo" style="text-decoration:none;color:inherit">AKINA <span>COURT</span></a><nav class="site" style="display:flex;gap:12px;font-size:12px;font-weight:600"><a href="/">Home</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch</a><a href="/ops.html">Ops</a><a href="/policy.html">Policy</a><a href="/report.html">Results</a></nav><div class="tabs" id="tabs"></div>
+<details id="demo" style="position:relative"><summary class="chip" style="cursor:pointer;list-style:none">⚙ demo controls</summary><div id="demobox" style="position:absolute;right:0;top:32px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:12px 14px;width:420px;z-index:30;font-size:12.5px"></div></details><a id="toreplay" class="chip" style="text-decoration:none" href="/replay.html?case=C-0001">🎬 replay view</a><button id="run">▶ Run the court</button><span class="chip dot idle" id="state">idle</span><span id="status"></span></div>
+<main>
+<div class="card" id="hdr"><div><div class="stmt" id="stmt"></div><div class="trip" id="trip"></div></div>
+ <div id="outcome" class="pending"><div class="stage" id="stage">awaiting ruling</div><div class="big" id="big">—</div><div class="sub" id="sub"></div><div class="bar" id="bar" style="display:none"><i id="barfill"></i></div></div></div>
+<div id="row1">
+ <div><div id="mapwrap"><div id="map"></div><button id="reset">✕ clear highlight</button>
+  <div class="legend"><div><i style="background:#111827"></i>actual track</div><div><i style="height:0;border-top:3px dashed #1a73e8"></i>OneMap optimal route</div><div><i style="background:#6b7280"></i>deviation · under review</div><div><i style="background:#f59e0b"></i>deviation · exempt</div><div><i style="background:#dc2626"></i>deviation · not exempt</div>
+  <label><input type="checkbox" id="cbSpeed"> speed / LTA traffic</label></div><div id="info">hover the track or the timeline</div></div>
+  <div class="card" id="tl"><svg id="tlsvg"></svg></div></div>
+ <div id="side"><div class="card" id="cert"><h3>Policy execution trace · computed by code</h3><div id="certbody" class="empty">Run the court to evaluate the clauses.</div></div>
+  <div class="card"><h3>Fact table · <span id="nfacts"></span> facts computed from GPS, fare, chat, traffic — agents can only cite these ids</h3><div id="facts"></div></div></div>
+</div>
+<div id="court">
+ <div class="card col rider"><h3><span class="who"></span>Rider Advocate</h3><div id="col-rider"><div class="empty">waiting…</div></div></div>
+ <div class="card col bench"><h3><span class="who"></span>Bench · intake, verification, ruling</h3><div id="col-bench"><div class="empty">waiting…</div></div></div>
+ <div class="card col driver"><h3><span class="who"></span>Driver Advocate</h3><div id="col-driver"><div class="empty">waiting…</div></div></div>
+</div>
+<div class="card"><h3>Notices to the parties</h3><div id="notices" class="empty">—</div></div>
+<div id="row3" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+ <div class="card"><h3>Review queue · SLA routing</h3><div id="queue" class="empty">—</div></div>
+ <div class="card"><h3>Human review · override feeds the precedent store</h3><div id="override"><div class="empty">Select an escalated case to override.</div></div></div>
+</div>
+<div class="card"><h3>Communication log · every tool call and message, in order</h3><div id="log"></div></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+let CASE=null, FACTS=null, MAPI=null, EVENTS=[], ES=null, CUR=null, FACTMAP={};
+const hm=s=>(s||'').slice(11,16);
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function linkify(t){return esc(t||'').replace(/\[(F\d+|[A-Z]+-\d+)\]/g,(m,id)=>`<span class="ref${id.startsWith('F')?'':' p'}" data-ref="${id}">${id}</span>`).replace(/\n/g,'<br>');}
+function refs(ids,cls){return (ids||[]).map(id=>`<span class="ref${cls||''}" data-ref="${id}">${id}</span>`).join(' ');}
+document.addEventListener('click',e=>{const r=e.target.closest('.ref');if(!r)return;const id=r.dataset.ref;if(id.startsWith('F')){const el=document.querySelector(`.fact[data-id="${id}"]`);if(el){el.closest('details').open=true;el.classList.remove('lit');void el.offsetWidth;el.classList.add('lit');el.scrollIntoView({block:'center',behavior:'smooth'});}const f=FACTMAP[id];if(f&&MAPI&&MAPI.highlight(f)){document.querySelectorAll('.fact').forEach(x=>x.classList.toggle('on',x.dataset.id===id));$('#reset').style.display='block';}}});
+$('#reset').onclick=()=>{MAPI&&MAPI.clear();document.querySelectorAll('.fact').forEach(x=>x.classList.remove('on'));$('#reset').style.display='none';};
+$('#cbSpeed').onchange=e=>MAPI&&MAPI.setSpeedMode(e.target.checked);
+
+async function loadCases(){const all=await (await fetch('/api/cases')).json();const cs=all.filter(c=>c.group!=='benchmark'),bench=all.filter(c=>c.group==='benchmark');
+ $('#tabs').innerHTML=cs.map(c=>`<div class="tab" data-id="${c.case_id}"><b>${c.case_id}</b><span class="t">${c.type.replace('_',' ')}</span></div>`).join('')+(bench.length?`<select id="benchSel" class="tab" title="Benchmark cases"><option value="">benchmark · ${bench.length} cases…</option>${bench.map(c=>`<option value="${c.case_id}">${c.case_id} · ${c.title||c.type.replace('_',' ')}</option>`).join('')}</select>`:'');
+ document.querySelectorAll('.tab:not(select)').forEach(t=>t.onclick=()=>select(t.dataset.id));const bs=$('#benchSel');if(bs)bs.onchange=()=>{if(bs.value)select(bs.value);};
+ const want=new URLSearchParams(location.search).get('case');select(want&&all.some(c=>c.case_id===want)?want:cs[0].case_id);}
+async function select(cid){CUR=cid;$('#toreplay').href=`/replay.html?case=${cid}`;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.id===cid));if(ES){ES.close();ES=null;}
+ [CASE,FACTS]=await Promise.all([fetch(`/api/cases/${cid}`).then(r=>r.json()),fetch(`/api/cases/${cid}/facts`).then(r=>r.json())]);
+ FACTMAP={};FACTS.facts.forEach(f=>FACTMAP[f.id]=f);
+ const T=CASE.trip;$('#stmt').textContent=`“${CASE.dispute.statement}”`;
+ $('#trip').textContent=`${cid} · ${CASE.dispute.type.replace('_',' ')} · filed by ${CASE.dispute.filed_by} ${hm(CASE.dispute.filed_at)} · ${T.service_type} ${T.pickup.name} → ${T.dropoff.name}`+(T.cancelled_at?` · cancelled by ${T.cancelled_by} ${hm(T.cancelled_at)} · fee $${CASE.fare.cancellation_fee.toFixed(2)}`:` · ${hm(T.pickup_at)}–${hm(T.dropoff_at)} · charged $${CASE.fare.total.toFixed(2)}`);
+ if(MAPI){MAPI.map.remove();}$('#map').innerHTML='';MAPI=RydeMap.mount($('#map'),CASE,FACTS,{onHover:s=>$('#info').textContent=s,padding:{top:60,bottom:30,left:40,right:200}});
+ MAPI.map.on('load',()=>RydeMap.timeline($('#tlsvg'),CASE,FACTS,MAPI,null,s=>$('#info').textContent=s));
+ renderFacts();resetCourt();
+ const r=await fetch(`/api/runs/${cid}`);if(r.ok){const rec=await r.json();rec.events.forEach(onEvent);finish(rec);setState('done','last run (replayed)');}else {setState('idle','no run yet');renderOverride(null);loadQueue();}}
+function renderFacts(){const fs=FACTS.facts;$('#nfacts').textContent=fs.length;const isKey=f=>{const v=f.value||{};return f.source==='gps'&&('extra_km' in v||('m_from_pickup' in v&&'duration_s' in v)||'nearest_m' in v)||f.source==='chat'&&(((v.flags||[]).length&&'idx' in v)||v.count===0)||f.source==='traffic'&&('reported_at' in v||v.severe||v.count===0)||f.source==='timeline';};
+ const groups=[['key','Key facts',fs.filter(isKey)],...['gps','timeline','fare','chat','traffic','weather','profile'].map(s=>[s,s,fs.filter(f=>f.source===s)])];
+ $('#facts').innerHTML=groups.filter(g=>g[2].length).map(([k,t,list])=>`<details class="grp${k==='key'?' key':''}"${k==='key'?' open':''}><summary><b>${t}</b><span class="cnt">${list.length}</span></summary>${list.map(f=>`<div class="fact" data-id="${f.id}"><b>${f.id}</b>${head(f)}</div>`).join('')}</details>`).join('');
+ document.querySelectorAll('.fact').forEach(el=>el.onclick=()=>{const f=FACTMAP[el.dataset.id];if(el.classList.contains('on')){$('#reset').click();return;}if(MAPI.highlight(f)){document.querySelectorAll('.fact').forEach(x=>x.classList.toggle('on',x===el));$('#reset').style.display='block';}});}
+function head(f){const v=f.value||{},t=f.text;const dur=x=>x>=60?`${Math.floor(x/60)} min${x%60?' '+x%60+' s':''}`:`${x} s`;
+ if(f.source==='gps'){if('actual_km' in v)return `actual <b>${v.actual_km} km</b> vs optimal ${v.optimal_km} km (+${v.excess_km} km)`;if('extra_km' in v&&v.start)return `off-route ${hm(v.start)}–${hm(v.end)} · <b>+${v.extra_km.toFixed(2)} km</b> · up to ${v.max_off_route_m} m off`;if('duration_s' in v&&'m_from_pickup' in v)return `stationary <b>${dur(v.duration_s)}</b> ${hm(v.start)}–${hm(v.end)} · ${v.m_from_pickup} m from pickup`;if('nearest_m' in v)return `closest to pickup <b>${v.nearest_m} m</b>${v.within_200m?'':' · never within 200 m'}`;if('within_200m_s' in v)return `inside 200 m from ${hm(v.first_within_200m_at)} · <b>${dur(v.within_200m_s)}</b> total`;if('delta_min' in v)return `${v.actual_min} min vs est. ${v.estimated_min} min`;}
+ if(f.source==='chat'){if(v.count===0)return '<b>no chat at all</b>';const who='idx' in v?v.from:'driver statement';const q=t.match(/“([^”]+)”/);const tags=(v.flags||[]).map(x=>`<span class="tag ${x==='agreement'?'agree':x==='request'?'req':x==='threat'?'threat':''}">${x}</span>`).join('');return `${v.ts?hm(v.ts)+' ':''}${who}: <b>“${q?(q[1].length>80?q[1].slice(0,80)+'…':q[1]):t}”</b>${tags}`;}
+ if(f.source==='traffic'){if('speed_band' in v)return `${v.road_name} · band <b>${v.speed_band}</b> (${v.kmh_min}–${v.kmh_max??'+'} km/h) ${hm(v.window_start)}–${hm(v.window_end)}${v.severe?'<span class="tag threat">severe</span>':''}`;if('reported_at' in v)return `<b>${v.type}</b> ${hm(v.reported_at)} · ${v.m_from_route} m from route`;return t.startsWith('No traffic incidents')?'<b>no incidents</b> on record':t;}
+ if(f.source==='fare'){if('excess_amount' in v)return `excess distance billed <b>$${v.excess_amount.toFixed(2)}</b> (${v.excess_km} km × $${v.rate_km})`;if('total' in v)return `total <b>$${v.total.toFixed(2)}</b> = base ${v.base_fare} + dist ${v.distance_fare} + time ${v.time_fare} + wait ${v.waiting_fee} + platform ${v.platform_fee}`;if('cancellation_fee' in v)return `cancellation fee <b>$${v.cancellation_fee.toFixed(2)}</b>`;}
+ if(f.source==='profile'){const w=v.party;return `${w}: ${v.rating}★ · ${(v.account_age_days/365).toFixed(1)} y · <b>${v.disputes_90d} disputes / ${v.disputes_upheld_90d} upheld</b> (route ${v.route_disputes_upheld_90d}, no-show ${v.no_show_disputes_upheld_90d})`;}
+ if(f.source==='timeline'){if('cancelled_by' in v)return `<b>${v.cancelled_by} cancelled</b> ${hm(v.cancelled_at)} · ${dur(v.s_after_accept)} after acceptance`;if('driver_arrived_at' in v)return v.driver_arrived_at?`arrival recorded ${hm(v.driver_arrived_at)} · cancelled ${dur(v.s_arrival_to_cancel)} later`:'<b>no arrival ever recorded</b>';if('driver_pressed_here_at' in v)return v.driver_pressed_here_at?`"I'm Here" tapped <b>${hm(v.driver_pressed_here_at)}</b>`:'<b>never tapped</b> "I\'m Here"';}
+ return t;}
+function resetCourt(){EVENTS=[];['rider','bench','driver'].forEach(c=>$('#col-'+c).innerHTML='<div class="empty">waiting…</div>');$('#log').innerHTML='';$('#notices').innerHTML='—';$('#certbody').innerHTML='Run the court to evaluate the clauses.';$('#certbody').className='empty';setOutcome('pending','—','','awaiting ruling');$('#bar').style.display='none';}
+function setState(s,txt){const c=$('#state');c.className='chip dot '+s;c.textContent=s;$('#status').textContent=txt||'';}
+function setOutcome(cls,big,sub,stage){const o=$('#outcome');o.className=cls;$('#big').textContent=big;$('#sub').textContent=sub;$('#stage').textContent=stage;}
+function col(actor){return actor==='rider'?'rider':actor==='driver'?'driver':'bench';}
+function card(ev){const d=document.createElement('div');d.className='ev '+ev.kind;let body='';
+ if(ev.kind==='brief'&&ev.brief){const b=ev.brief;body=b.claims.map(c=>`<div class="claim${c.void?' void':''}"><span class="id">${esc(c.id)}</span>${esc(c.assertion)} ${refs(c.facts)} ${refs(c.policy,' p')}${c.void?`<span class="vr">void — ${c.void_reason}</span>`:''}</div>`).join('')+(b.weaknesses.length?`<div class="weak"><b>Admitted weaknesses:</b> ${b.weaknesses.map(esc).join(' · ')}</div>`:'')+`<div class="ask">Asks: ${b.requested_outcome.action}${b.requested_outcome.amount?' $'+b.requested_outcome.amount.toFixed(2):''}</div>`;}
+ else if(ev.kind==='rebuttal'&&ev.rebuttal){const r=ev.rebuttal;body=r.points.map(p=>`<div class="claim${p.void?' void':''}"><span class="id">→ ${esc(p.target_claim_id)}${p.concede?' · concedes':''}</span>${esc(p.response)} ${refs(p.facts)} ${refs(p.policy,' p')}${p.void?`<span class="vr">void — ${p.void_reason}</span>`:''}</div>`).join('')+(r.revised_outcome?`<div class="ask">Revised ask: ${r.revised_outcome.action}${r.revised_outcome.amount?' $'+r.revised_outcome.amount.toFixed(2):''}</div>`:'');}
+ else if(ev.kind==='ruling'&&ev.ruling){const r=ev.ruling;body=`<div class="b">${linkify(r.reasoning)}</div>`+(r.segment_findings&&r.segment_findings.length?`<div class="weak"><b>Segment findings:</b> ${r.segment_findings.map(s=>`${s.fact_id} ${s.exempt?'exempt':'not exempt'}`).join(' · ')}</div>`:'')+(r.rejected_claims.length?`<div class="weak"><b>Rejected:</b> ${r.rejected_claims.map(x=>`<span class="id">${esc(x.id)}</span> ${esc(x.reason)}`).join(' · ')}</div>`:'')+`<div class="ask">${esc(r.recommended_action)}</div>`;}
+ else if(ev.kind==='check'&&ev.certificate&&ev.title.startsWith('Policy execution')){body='';}
+ else body=`<div class="b">${linkify(ev.body)}</div>`;
+ d.innerHTML=`<div class="k">${ev.actor} · ${ev.kind}<span class="el">${ev.elapsed}</span></div><div class="t">${esc(ev.title)}</div>${body}`;return d;}
+function renderCert(lines){const b=$('#certbody');b.className='';b.innerHTML=lines.map(l=>{const m=l[0];const cls=m==='✓'?'pass':m==='✗'?'fail':m==='?'?'judge':m==='–'?'na':'';if(l.startsWith('allowed')||l.startsWith('flag_account'))return `<div class="sum">${esc(l)}</div>`;return `<div class="ln ${cls}"><span class="m">${m}</span><span>${linkify(l.slice(2))}</span></div>`;}).join('');}
+function onEvent(ev){EVENTS.push(ev);const c=col(ev.actor);const host=$('#col-'+c);if(host.querySelector('.empty'))host.innerHTML='';
+ if(ev.kind==='check'&&ev.certificate){renderCert(ev.certificate);}
+ host.appendChild(card(ev));
+ if(ev.kind==='tool'&&ev.tool){ev.tool.returned.forEach(id=>{const el=document.querySelector(`.fact[data-id="${id}"]`);if(el){el.classList.remove('lit');void el.offsetWidth;el.classList.add('lit');}});}
+ if(ev.kind==='ruling'&&ev.ruling){const r=ev.ruling;setOutcome('proposed',r.ruling.replace('_',' ')+(r.amount?' $'+r.amount.toFixed(2):''),`model confidence ${r.confidence.toFixed(2)} · awaiting code verification`,'proposed by the judge');if(r.segment_findings)MAPI.setFindings(r.segment_findings);MAPI.findings={};r.segment_findings.forEach(s=>MAPI.findings[s.fact_id]=s.exempt);RydeMap.timeline($('#tlsvg'),CASE,FACTS,MAPI,null,s=>$('#info').textContent=s);}
+ if(ev.kind==='summary'){setOutcome('final',ev.title.replace('Final: ','').split(' · ')[0],ev.title.split(' · ').slice(1).join(' · '),'final · verified by code');}
+ if(ev.kind==='escalate'){setOutcome('esc','human review',ev.body,'not eligible for automation');}
+ if(ev.kind==='notify'&&ev.body.startsWith('RIDER:')){const [r,d]=ev.body.split('\n\nDRIVER:');$('#notices').className='';$('#notices').innerHTML=`<div class="notice"><b>To the rider</b> · ${esc(r.replace('RIDER:',''))}</div><div class="notice driver"><b>To the driver</b> · ${esc(d)}</div>`;}
+ const row=document.createElement('div');row.className='row';row.innerHTML=`<span style="font-family:Menlo,monospace;color:#6b7280">${ev.elapsed}</span><span class="a ${ev.actor}">${ev.actor}</span><span style="color:#6b7280">${ev.kind}</span><span>${esc(ev.title)}</span>`;$('#log').appendChild(row);}
+async function loadQueue(){const q=await (await fetch('/api/queue')).json();const el=$('#queue');if(!q.length){el.className='empty';el.textContent='queue empty';return;}el.className='';el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#6b7280;text-align:left"><th>case</th><th>queue</th><th>SLA</th><th>reason</th><th>status</th></tr>'+q.map(x=>`<tr style="border-top:1px solid #f1f5f9"><td style="font-family:Menlo,monospace">${x.case_id}</td><td><b>${x.queue}</b></td><td>${x.sla_hours} h</td><td>${x.reason}</td><td>${x.status}${x.resolved_by?' · '+x.resolved_by:''}</td></tr>`).join('')+'</table>';}
+function renderOverride(rec){const el=$('#override');if(!rec||!rec.ruling){el.innerHTML='<div class="empty">no ruling yet</div>';return;}el.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="ovr"><option value="no_action">No refund</option><option value="refund_partial">Partial refund</option><option value="refund_full">Full refund</option><option value="fee_waived">Fee waived</option></select><input id="ova" placeholder="amount" style="width:80px"><input id="ovn" placeholder="reviewer note" style="flex:1;min-width:160px"><button id="ovb" style="padding:5px 10px">Record override</button></div><div id="ovres" class="empty" style="margin-top:6px">${rec.ruling.escalate?'escalated — a reviewer decides; the override is stored as a human precedent and resolves the queue item':'resolved automatically — an override here records a correction (learning loop)'}</div>`;$('#ovb').onclick=async()=>{const body={ruling:$('#ovr').value,amount:parseFloat($('#ova').value)||null,note:$('#ovn').value,reviewer:'demo-reviewer'};const r=await (await fetch(`/api/override/${CUR}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();$('#ovres').textContent='Override recorded: '+(($('#ovr').selectedOptions[0]||{}).textContent||'')+($('#ova').value?' $'+$('#ova').value:'')+' · stored as a human precedent';loadQueue();};}
+function finish(rec){renderOverride(rec);loadQueue();if(rec&&rec.eligibility){const e=rec.eligibility;const acts=(e.actions||[]).map(a=>`<span class="chip" style="margin:2px 2px 0 0;color:${a.mode==='auto'?'var(--green)':'var(--amber)'}">${esc(a.type)} · ${a.mode==='auto'?'auto':'human review'}</span>`).join('');$('#sub').innerHTML=acts+(e.what_would_change&&e.what_would_change.length?`<div style="margin-top:6px;text-align:left;font-size:12px;color:#374151"><b>What would change this ruling:</b> ${e.what_would_change.map(esc).join(' · ')}</div>`:'');}if(rec&&rec.ruling){const r=rec.ruling;if(r.escalate)setOutcome('esc','human review',r.escalation_reason||'','not eligible for automation');else setOutcome('final',r.ruling.replace('_',' ')+(r.amount?' $'+r.amount.toFixed(2):''),r.recommended_action,'final · verified by code');if(r.segment_findings&&r.segment_findings.length){MAPI.setFindings(r.segment_findings);}}}
+$('#run').onclick=async()=>{if(!CUR)return;resetCourt();$('#run').disabled=true;setState('running','starting…');const t0=Date.now();
+ const inject=[...document.querySelectorAll('input[name=inject]:checked')].map(x=>x.value);const cf=($('#cf')||{}).value||null;
+ const res=await fetch(`/api/runs/${CUR}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rebuttal:true,inject,counterfactual:cf})}).then(r=>r.json());const RID=res.run_id||CUR;if(cf)$('#trip').textContent+=` · COUNTERFACTUAL ${cf}`;
+ ES=new EventSource(`/api/runs/${RID}/stream`);ES.addEventListener('event',e=>{onEvent(JSON.parse(e.data));setState('running',`${res.model} · ${((Date.now()-t0)/1000).toFixed(0)} s`);});
+ ES.addEventListener('done',async()=>{ES.close();ES=null;$('#run').disabled=false;setState('done',`${res.model} · ${((Date.now()-t0)/1000).toFixed(0)} s`);const rr=await fetch(`/api/runs/${RID}`);if(rr.ok)finish(await rr.json());});
+ ES.onerror=()=>{setState('esc','stream error');$('#run').disabled=false;};};
+loadCases();
+fetch('/api/demo-controls').then(r=>r.json()).then(d=>{if(d.live_runs===false){const b=$('#run');if(b){b.disabled=true;b.textContent='Stored runs only';b.title=d.live_runs_note||'';}}$('#demobox').innerHTML=`<h4>Fault injection · applied to the LLM output, caught by code</h4>${Object.entries(d.inject).map(([k,v])=>`<label><input type="checkbox" name="inject" value="${k}"> <b>${k}</b> — ${v}</label>`).join('')}<h4>Counterfactual audit · transform the case, run again</h4><select id="cf"><option value="">— none —</option>${Object.entries(d.counterfactual).map(([k,v])=>`<option value="${k}">${k} — ${v}</option>`).join('')}</select>`;});
+</script></body></html>

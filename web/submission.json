@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-10-09",
+  "project": "Ryde Dispute Court",
+  "team": "Akina Court",
+  "tagline": "AI argues. Code verifies what can execute.",
+  "hackathon": "Tencent Cloud AI CAN DO IT Hackathon Singapore 2026",
+  "track": "Ryde: multi-agent autonomous dispute resolution",
+  "built_with": [
+    "CodeBuddy",
+    "Pydantic AI",
+    "DeepSeek-chat via the DeepSeek API",
+    "FastAPI",
+    "MapLibre",
+    "OneMap Singapore routing"
+  ],
+  "target_users": [
+    "Ryde support and trust-and-safety operations (primary)",
+    "riders and drivers (plain-language notices)",
+    "compliance and audit (reproducibility receipt)"
+  ],
+  "differentiation": "Facts are computed by code from platform, user and external records; the policy is a public, numbered, sourced document that runs as code; the agents may only cite both; a pre-execution policy check decides what may execute. Money can be automatic, account punishment never is.",
+  "agents": [
+    "Rider Advocate (tools, brief, rebuttal)",
+    "Driver Advocate (tools, brief, rebuttal)",
+    "Judge (no tools, rules only on open questions)",
+    "Notice writer"
+  ],
+  "dispute_categories": {
+    "adjudicated": [
+      "route deviation",
+      "no-show fee"
+    ],
+    "escalation_only": [
+      "safety"
+    ]
+  },
+  "data": {
+    "demo_cases": 6,
+    "benchmark_cases": 49,
+    "audit_variants": 14,
+    "nature": "synthetic trips on real OneMap road geometry; GPS traces simulated; no real rider or driver"
+  },
+  "metrics": [
+    {
+      "name": "exact core decision, one model call",
+      "value": "38/49 (77.6%)",
+      "comparator": "22/49 (44.9%) with a raw case record, GPS thinned to 30 s",
+      "denominator": 49,
+      "scope": "same DeepSeek model, one call each, 49 synthetic cases",
+      "limitations": "measures the value of code-computed facts, not a contribution attributable to any one agent",
+      "evidence_url": "/report.html"
+    },
+    {
+      "name": "wrong core decisions that would execute",
+      "value": "49/49",
+      "comparator": "21/49 for a raw single call with no execution check",
+      "denominator": 49,
+      "scope": "full court with the pre-execution policy check; 49 cases plus repeat runs",
+      "limitations": "synthetic policy-conformance batch",
+      "evidence_url": "/report.html"
+    },
+    {
+      "name": "full court match to the policy-derived reference core decision",
+      "value": "49/49",
+      "comparator": "judge + policy check without advocates: 48/49",
+      "denominator": 49,
+      "scope": "outcome, amount to the cent, escalation",
+      "limitations": "policy conformance, not production accuracy; reference answers derived from the written policy, no blind human labelling yet",
+      "evidence_url": "/report.html"
+    },
+    {
+      "name": "prototype routing",
+      "value": "41 auto-cleared, 8 to a person, 5 account flags to a person",
+      "denominator": 49,
+      "scope": "eligibility decided by code after the ruling",
+      "limitations": "not live Ryde volume",
+      "evidence_url": "/ops.html"
+    },
+    {
+      "name": "invalid citations",
+      "value": "0 of 1,003 (588 fact ids, 415 clause ids)",
+      "comparator": "raw call: 52 of 396, 51 invented fact ids",
+      "scope": "court arm",
+      "evidence_url": "/report.html"
+    },
+    {
+      "name": "identity-swap invariance",
+      "value": "100%",
+      "comparator": "raw call 83.7%",
+      "scope": "rider and driver histories swapped",
+      "evidence_url": "/report.html"
+    },
+    {
+      "name": "latency and cost",
+      "value": "23.9 s mean, p95 33.8 s, 6 model calls, about 92k input tokens per case",
+      "comparator": "raw single call 6.1 s, 1 call",
+      "evidence_url": "/report.html"
+    }
+  ],
+  "boundaries": {
+    "real": [
+      "working API, UI and SSE event stream",
+      "actual model runs",
+      "deterministic fact and policy code",
+      "sourced policy clauses with disclosed gaps",
+      "OneMap road geometry",
+      "reproducibility receipts",
+      "49 automated tests"
+    ],
+    "synthetic_or_simulated": [
+      "riders, drivers, trips, GPS traces",
+      "6 demo cases and 49 benchmark scenarios",
+      "policy-derived reference outcomes",
+      "traffic, congestion and weather values per scenario",
+      "wallet, voucher and trust-and-safety integrations"
+    ],
+    "model_never_authorizes": [
+      "facts or their values",
+      "allowed outcomes or the amount",
+      "execution of a refund",
+      "account punishment",
+      "automatic ruling on safety complaints"
+    ]
+  },
+  "pages": {
+    "landing": "/",
+    "guided_case": "/replay.html?case=C-0001",
+    "ops_handoff": "/ops.html",
+    "results": "/report.html",
+    "policy": "/policy.html",
+    "expert_court": "/court.html",
+    "architecture": "/architecture-system.png",
+    "health": "/api/health",
+    "receipt_example": "/api/runs/C-0001/receipt"
+  },
+  "evidence": [
+    {
+      "claim": "facts computed by code",
+      "path": "core/facts/tools.py"
+    },
+    {
+      "claim": "policy as code: allowed outcomes and amount formula",
+      "path": "core/policy_engine.py"
+    },
+    {
+      "claim": "citation and ruling checks",
+      "path": "core/verify.py"
+    },
+    {
+      "claim": "state machine, eligibility, fault injection",
+      "path": "core/orchestrate.py"
+    },
+    {
+      "claim": "reproducibility receipt",
+      "path": "core/receipt.py"
+    },
+    {
+      "claim": "benchmark and ablations",
+      "path": "bench/results/summary.md"
+    },
+    {
+      "claim": "sourced policy",
+      "path": "policy/policy.md"
+    }
+  ],
+  "source_repository": null,
+  "demo_video": null,
+  "codebuddy_evidence": "conversation screenshots and a development reflection attached to the submission",
+  "provenance": {
+    "requested_model": "deepseek-chat",
+    "api": "DeepSeek API (pydantic-ai)",
+    "api_reported_model_in_audit_sample": "deepseek-flash",
+    "benchmark_window_utc": "2026-10-08T16:04 to 17:21",
+    "stored_runs": 392,
+    "recorded_model_calls": 1179,
+    "audit_sample": {
+      "runs": 20,
+      "http_calls": 72,
+      "files": 103,
+      "path": "bench/results/audit_sample/",
+      "matched_reference": {
+        "court": "5/5",
+        "judge_only": "5/5",
+        "facts_only": "5/5",
+        "raw": "2/5"
+      }
+    },
+    "verify": "python bench/provenance.py --hashes",
+    "doc": "README.md (Where the numbers come from)"
+  }
+}
