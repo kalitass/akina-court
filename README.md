@@ -39,7 +39,7 @@ A rider says the driver took the long way; the driver says the road was closed. 
 | Impact & Relevance | 3 dispute categories; 41/49 cleared automatically; the ops queue receives only what code could not clear (16%) | `/report.html` |
 | Human-Centered Design | Plain-language notice to each party; money automatic, punishment never; "what would change this ruling" on every case; appeal route in the receipt | `/replay.html?case=C-0004&phase=court` |
 | AI Interaction | Two advocates with tools and logged reads, briefs, rebuttals with concessions, judge constrained to open questions | `/replay.html?case=C-0001&phase=court` |
-| Technical Execution | Fact engine, policy-as-code, verifier, SSE event log, 4-arm benchmark + gate ablation, 52 tests, Docker + Caddy | `core/`, `bench/`, `tests/`, `deploy/` |
+| Technical Execution | Fact engine, policy-as-code, verifier, SSE event log, 4-arm benchmark + gate ablation, 56 tests, Docker + Caddy | `core/`, `bench/`, `tests/`, `deploy/` |
 | Feasibility | Every clause carries a source; 10 rules Ryde has not published are listed as gaps; Lighthouse deployment; limits table below | `policy/policy.md`, `deploy/` |
 | Demo & Storytelling | Animated replay on real roads, plain-language court cards, pre-recorded fault injection and counterfactuals | `/` |
 | Innovation & Creativity | The policy runs as code and locks the outcome space before the model speaks; the model fills only interpretive gaps | `core/policy_engine.py` |
@@ -50,7 +50,7 @@ A rider says the driver took the long way; the driver says the road was closed. 
 ## Where the numbers come from
 
 - Model: requested id deepseek-chat via the DeepSeek API (pydantic-ai client); the API reports serving deepseek-flash in the 2026-10-09 audit sample. One model for all four systems.
-- Runs: 2026-10-09 13:33 to 14:19 UTC; 392 stored case-system runs, 1,179 recorded model calls, 18.0 M input tokens; every run file carries model id, timestamp, latency and API-reported usage.
+- Runs: 2026-10-09 13:33 to 14:19 UTC; 392 stored case-system runs, 1,179 recorded model calls, 16.2 M input tokens; every run file carries model id, timestamp, latency and API-reported usage.
 - Cases: 49 synthetic scenarios (26 route deviation, 18 no-show, 5 safety), reference answers derived clause by clause from the written policy.
 - Inputs: raw JSON with GPS every 30 s + policy; code-computed fact table + policy; judge with the policy trace + check; full court (advocates, rebuttal, judge, check).
 - Audit sample: 20 fresh runs (5 cases × 4 systems, 74 HTTP calls) keep the exact requests, the raw responses, DeepSeek trace ids and system fingerprints: bench/results/audit_sample/. Against the reference: full court 5/5, judge + check 5/5, facts by code 5/5, raw LLM 3/5.
@@ -63,8 +63,8 @@ A rider says the driver took the long way; the driver says the road was closed. 
 
 1. `.venv/bin/python bench/provenance.py --hashes` recomputes the table above and prints a sha256 per run file.
 2. Open any run file, e.g. `bench/results/court/B-0024.json`: parsed ruling, the judge's ruling before verification, verifier lines, tokens, latency, event count. Its companion `B-0024.record.json` holds the full event log of that hearing (every tool call with the fact ids it returned, both briefs, rebuttal points, the judge's ruling, every check) plus facts, certificate, eligibility and notices.
-3. Re-run any case live from the replay page (`Run live`) or the CLI (`scripts/run_case.py C-0001`): the same model, the same prompts, a fresh ruling with a fresh receipt. Benchmark cases: `bench/run_bench.py --cases B-0007 --arms raw,court --force`.
-4. Compare with the provider's usage dashboard for 2026-10-08 16:04–17:21 UTC: the token totals above should match the account's usage for that window.
+3. On a local copy with `DEEPSEEK_API_KEY` set, re-run any case live from the replay page (`Run live`) or the CLI (`scripts/run_case.py C-0001`): the same model, the same prompts, a fresh ruling with a fresh receipt. Benchmark cases: `bench/run_bench.py --cases B-0007 --arms raw,court --force`.
+4. Compare with the provider's usage dashboard for 2026-10-09 13:33–14:19 UTC: the token totals above should match the account's usage for that window.
 5. Open `bench/results/audit_sample/court/B-0001/calls/01.json` to read, verbatim, what the rider's advocate was asked and what the model answered, with the provider's trace id.
 
 ### Scoring rule, stated plainly
@@ -84,13 +84,13 @@ Each claim made on the landing page maps to code, data or a page. Paths are rela
 |---|---|---|
 | Facts are computed by code, never asked of the model | all cases | `core/facts/tools.py` · `/api/cases/C-0001/facts` |
 | The policy runs as code and fixes allowed outcomes and the amount formula | 21 clauses | `core/policy_engine.py` · `/policy.html` · `policy/sources.md` |
-| Advocates can only cite facts they read and clauses that exist; invalid claims are struck | 0 invalid citations in 1,003 (court arm) | `core/verify.py` · `/replay.html?case=C-0001&run=C-0001~fake_fact&phase=court` |
+| Advocates can only cite facts they read and clauses that exist; invalid claims are struck | 0 invalid citations in 874 (court arm) | `core/verify.py` · `/replay.html?case=C-0001&run=C-0001~fake_fact&phase=court` |
 | Unsupported rulings cannot execute; account flags and safety always go to a person | 0 wrong core decisions executed in 49 cases and repeat runs | `core/orchestrate.py` · `/replay.html?case=C-0001&run=C-0001~wrong_amount&phase=court` · `/ops.html` |
 | Inter-agent communication is observable and replayable | every run | `runs/*.json`, `bench/results/court/*.record.json` · `/replay.html?case=C-0001&phase=court&mode=expert` |
 | Four systems compared on 49 synthetic cases, with a judge-only ablation | 392 case-system runs, 1,179 model calls | `bench/results/summary.md` · `bench/results/gate_ablation.json` · `/report.html` |
 | Rulings are reproducible: case, policy, code and model fingerprints | every run stored by the service | `core/receipt.py` · `/receipt.html?run=C-0001` (rendered) · `/api/runs/C-0001/receipt` (JSON) |
 | Benchmark provenance: model ids, time window, token counts, full-capture audit sample | 49 cases × 4 systems | this README (Where the numbers come from) · `bench/provenance.py --hashes` · `bench/results/audit_sample/` |
-| Automated tests | 52 tests, no API key needed | `tests/` · `requirements.lock` |
+| Automated tests | 56 tests, no API key needed | `tests/` · `requirements.lock` |
 
 Machine-readable summary with denominators and caveats: `web/submission.json`.
 
@@ -111,10 +111,10 @@ Result: cancellation charge upheld (`no_action`), as the sample's own "Expected 
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt     # or: pip install -r requirements.lock
 cp .env.example .env                       # DEEPSEEK_API_KEY (only needed for live runs)
 scripts/dev.sh                             # http://localhost:8000
-.venv/bin/python -m pytest -q              # 54 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
+.venv/bin/python -m pytest -q              # 56 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
 ```
 
-No key needed to browse: `runs/` ships the six demo rulings and eight pre-recorded audits (fault injection, counterfactuals); the replay page plays them back. A key is needed only for **Run live**. CLI: `scripts/run_case.py C-0001` (or `all`) compares a fresh run with `data/expected/`. Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Docker: `deploy/`.
+No key needed to browse: `runs/` ships the six demo rulings and eight pre-recorded audits (fault injection, counterfactuals); the replay page plays them back. A key is needed only for **Run live**; the public demo site runs without one, so there the button is disabled and every case plays back a stored run. CLI: `scripts/run_case.py C-0001` (or `all`) compares a fresh run with `data/expected/`. Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Docker: `deploy/`.
 
 ## Deploy
 

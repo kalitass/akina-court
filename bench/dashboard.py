@@ -128,7 +128,7 @@ CONTENT = {
         {"req": "Agent-to-agent communication must be observable",
          "how": "Every tool call, brief, rebuttal point, judge question and verifier check is an event streamed live "
                 "(server-sent events) and replayed in the court feed with timestamps.",
-         "where": [("Run live on the replay page", "/replay.html?case=C-0001"), ("Court UI", "/court.html")], "status": "done"},
+         "where": [("Replay page (Run live needs a local copy with a DeepSeek key)", "/replay.html?case=C-0001"), ("Court UI", "/court.html")], "status": "done"},
         {"req": "Built with CodeBuddy (handbook requirement: conversation screenshots)",
          "how": "Developed in CodeBuddy; the conversation screenshots and a short development reflection are part of the submission package.",
          "where": [], "status": "package"},

@@ -76,7 +76,7 @@ window.I18N_ZH = {
  "One call with no check → full court with the code policy check. Same benchmark, including repeat runs.": "无检查的单次调用 → 带代码政策检查的完整法庭。同一基准，含重复运行。",
  "Review workload after 49 cases": "49 个案子后的复核工作量",
  "84% of decisions cleared without case review; reviewers received 8 prepared cases instead of 49 raw tickets. All 5 account actions remain human.": "84% 的裁决无需人工复核；复核员拿到的是 8 份备好的案卷，而不是 49 张原始工单。5 个账号处理全部由人决定。",
- "The guided replay shows the timed trip, both advocates, the judge, the code checks, the notices to each party and the audit receipt. <b>Expert view</b> shows every fact, clause and tool call; <b>Run live</b> re-runs the agents in front of you.": "引导回放展示按时间推进的行程、双方辩护人、法官、代码检查、给双方的通知和审计收据。<b>专家视图</b>显示每条事实、条款和工具调用；<b>Run live</b> 当场重跑各 agent。",
+ "The guided replay shows the timed trip, both advocates, the judge, the code checks, the notices to each party and the audit receipt. <b>Expert view</b> shows every fact, clause and tool call. <b>Run live</b> re-runs the agents on your own copy with a DeepSeek API key; this public site plays back stored runs.": "引导回放展示按时间推进的行程、双方辩护人、法官、代码检查、给双方的通知和审计收据。<b>专家视图</b>显示每条事实、条款和工具调用；<b>Run live</b> 在你自己部署、配置了 DeepSeek API key 的副本上当场重跑各 agent；本公开站点播放的是已存储的运行。",
  "Rider and driver": "乘客与司机",
  "A plain-language notice: the outcome, the one or two facts that decided it, and what would have changed it. No ids, no legalese.": "一封大白话通知：结果、决定它的一两条事实、以及什么情况下会不一样。没有编号，没有法律腔。",
  "Reviewer": "复核员",
