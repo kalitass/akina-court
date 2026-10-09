@@ -10,8 +10,6 @@
 <meta property="og:image" content="/cover.png">
 <meta property="og:type" content="website">
 <style>
-:root{--bg:#0a0e15;--panel:#0f141c;--panel2:rgba(255,255,255,.04);--line:rgba(255,255,255,.09);--ink:#e9ecf2;--ink2:#c3c9d6;--muted:#8a93a6;--blue:#5b9cff;--amber:#f5b544;--red:#ff5c5c;--green:#3ad29f;--purple:#b48cff;
-  --mono:"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif}
 *{box-sizing:border-box}
 .cases4{grid-template-columns:repeat(4,1fr)}@media(max-width:960px){.cases4{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.cases4{grid-template-columns:1fr}}
 .skip{position:absolute;left:-999px;top:8px;background:var(--panel);color:var(--ink);padding:8px 12px;border-radius:8px;z-index:50}.skip:focus{left:16px}
@@ -143,7 +141,8 @@ header nav .sw button:hover{color:var(--ink);border-color:var(--muted)}
 </style>
 <link rel="icon" type="image/svg+xml" href="/logo.svg">
 <link rel="alternate" type="application/json" href="/submission.json">
-<script>(function(){var q=new URLSearchParams(location.search),st=q.get('style');try{if(st===null)st=localStorage.getItem('style')||'';}catch(e){st=st||''}if(st==='dark')st='';if(!st)return;var l=document.createElement('link');l.rel='stylesheet';l.href='/styles/'+st+'.css';document.head.appendChild(l);document.documentElement.dataset.style=st;var light={paper:1,editorial:1,mono:1};if(light[st])document.addEventListener('DOMContentLoaded',function(){var f=document.querySelector('.demo iframe');if(f)f.src=f.src+'&theme=light';});})();</script>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/styles/base.css">
 <script src="/i18n.zh.js" defer></script>
 </head>
 <body>
@@ -298,8 +297,7 @@ header nav .sw button:hover{color:var(--ink);border-color:var(--muted)}
     var q=new URLSearchParams(location.search), l=q.get('lang'); try{if(!l)l=localStorage.getItem('lang');}catch(e){}
     setLang('en');   // Chinese copy is switched off for now (translation quality); the dictionary stays in i18n.zh.js
     var lb=document.getElementById('langBtn'); if(lb) lb.onclick=function(){ setLang(document.documentElement.lang==='zh-CN'?'en':'zh'); };
-    var st=document.documentElement.dataset.style||'', sb=document.getElementById('styleBtn');
-    if(sb){ sb.textContent = st==='mono' ? 'Dark' : 'Light'; sb.onclick=function(){ try{localStorage.setItem('style', st==='mono'?'dark':'mono');}catch(e){} var u=new URL(location.href); u.searchParams.delete('style'); location.href=u.toString(); }; }
+    if(window.AKINA_THEME) AKINA_THEME.bind(document.getElementById('styleBtn'));
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

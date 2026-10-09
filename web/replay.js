@@ -4,7 +4,7 @@
 // ---------------- params ----------------
 const Q = new URLSearchParams(location.search);
 const SAVED_STYLE = (() => { try { return localStorage.getItem('style') || ''; } catch (e) { return ''; } })();
-const THEME = Q.get('theme') ? (Q.get('theme') === 'light' ? 'light' : 'dark') : (['mono', 'paper', 'editorial'].includes(SAVED_STYLE) ? 'light' : 'dark');
+const THEME = Q.get('theme') ? (Q.get('theme') === 'light' ? 'light' : 'dark') : (SAVED_STYLE === 'mono' ? 'light' : 'dark');
 if (THEME === 'light') document.body.classList.add('light');
 const MINI = Q.get('mini') === '1';   // hero micro-demo: map only, silent, ends on the result card (no court)
 let SPEED = +(Q.get('speed') || (MINI ? 100 : 50));

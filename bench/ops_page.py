@@ -347,11 +347,10 @@ def page(rows: list[dict], f: dict, model: str) -> str:
 <meta charset="utf-8">
 <title>Akina Court · Ops hand-off</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script>(function(){{var q=new URLSearchParams(location.search),st=q.get('style');try{{if(st===null)st=localStorage.getItem('style')||'';}}catch(e){{st=st||''}}if(st==='dark')st='';if(!st)return;var l=document.createElement('link');l.rel='stylesheet';l.href='/styles/'+st+'.css';var add=function(){{document.head.appendChild(l)}};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',add):add();document.documentElement.dataset.style=st;}})();</script>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/styles/base.css">
 <meta name="description" content="What reaches a human after the 49-case synthetic policy-conformance batch: {N} core decisions cleared by the policy check, {H} sent to a person, {A} account flags always routed to a person.">
 <style>
-:root{{--bg:#0a0e15;--panel:#0f141c;--panel2:rgba(255,255,255,.04);--line:rgba(255,255,255,.09);--ink:#e9ecf2;--ink2:#c3c9d6;--muted:#8a93a6;--blue:#5b9cff;--amber:#f5b544;--red:#ff5c5c;--green:#3ad29f;--purple:#b48cff;
-  --mono:"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif}}
 *{{box-sizing:border-box}}
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}}
 a{{color:var(--blue);text-decoration:none}}a:hover{{text-decoration:underline}}

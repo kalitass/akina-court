@@ -442,10 +442,7 @@ def ruling_word(label: str) -> str:
 # HTML pieces
 # =====================================================================================================================
 CSS = r"""
-:root{--bg:#0a0e15;--panel:rgba(13,17,25,.86);--panel2:rgba(255,255,255,.04);--line:rgba(255,255,255,.09);
---ink:#e9ecf2;--ink2:#c3c9d6;--muted:#8a93a6;--blue:#5b9cff;--amber:#f5b544;--red:#ff5c5c;--green:#3ad29f;--purple:#b48cff;
---shadow:0 10px 40px rgba(0,0,0,.45);--radius:14px;--mono:"SF Mono",Menlo,Consolas,monospace;
---sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI","Helvetica Neue",Arial,sans-serif;
+:root{--panel:rgba(13,17,25,.86);--shadow:0 10px 40px rgba(0,0,0,.45);--radius:14px;
 --glow:radial-gradient(1100px 500px at 50% -10%,rgba(91,156,255,.14),transparent 60%)}
 body.light{--bg:#f3f4f6;--panel:rgba(255,255,255,.92);--panel2:rgba(17,24,39,.04);--line:rgba(17,24,39,.10);
 --ink:#111827;--ink2:#1f2937;--muted:#6b7280;--blue:#1a73e8;--amber:#d97706;--red:#dc2626;--green:#15803d;--purple:#7c3aed;
@@ -564,14 +561,8 @@ body{--bg:#fff;--panel:#fff;--panel2:#f3f4f6;--line:#cfd4dc;--ink:#111;--ink2:#1
 
 JS = r"""
 (function(){
-  var q=new URLSearchParams(location.search);
-  var st=q.get('style');try{if(st===null)st=localStorage.getItem('style')||'';}catch(e){st=st||''}
-  var light=(st==='mono'||st==='paper'||st==='editorial'||q.get('theme')==='light');
-  if(light)document.body.classList.add('light');
-  var b=document.getElementById('theme');
-  b.textContent=light?'Dark theme':'Light theme';
-  b.onclick=function(){try{localStorage.setItem('style',light?'dark':'mono');}catch(e){}q.delete('theme');q.delete('style');
-    location.href=location.pathname+(q.toString()?'?'+q.toString():'');};
+  if(AKINA_THEME.light)document.body.classList.add('light');
+  AKINA_THEME.bind(document.getElementById('theme'),['Light theme','Dark theme']);
   document.getElementById('print').onclick=function(){window.print();};
   window.addEventListener('beforeprint',function(){document.querySelectorAll('details').forEach(function(d){d.open=true;});});
 })();
@@ -692,7 +683,8 @@ def build(d: dict) -> str:
     # ---------------------------------------------------------------- head + hero
     A(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script>(function(){{var q=new URLSearchParams(location.search),st=q.get('style');try{{if(st===null)st=localStorage.getItem('style')||'';}}catch(e){{st=st||''}}if(st==='dark')st='';if(!st)return;var l=document.createElement('link');l.rel='stylesheet';l.href='/styles/'+st+'.css';var add=function(){{document.head.appendChild(l)}};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',add):add();document.documentElement.dataset.style=st;}})();</script>
+<script src="/theme.js"></script>
+<link rel="stylesheet" href="/styles/base.css">
 <title>{esc(CONTENT['title'])}</title>
 <meta name="description" content="One-page results dashboard: mechanism, benchmark vs a plain LLM, demo cases, MVP status, data and method, stretch.">
 <style>{CSS}.brand{{display:flex;align-items:center;gap:12px}}.brand .site{{margin-left:auto;display:flex;gap:16px;font-size:13px;font-weight:600;white-space:nowrap}}.brand .site a{{color:var(--blue);text-decoration:none}}@media(max-width:560px){{.brand .site{{display:none}}}}details.more>summary{{cursor:pointer;font-weight:700;font-size:14px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);list-style:none;display:flex;gap:10px;align-items:center}}details.more>summary::before{{content:"▸";color:var(--muted)}}details.more[open]>summary::before{{content:"▾"}}details.more[open]>summary{{margin-bottom:12px}}details.more>summary::-webkit-details-marker{{display:none}}</style></head><body><div class="wrap">
