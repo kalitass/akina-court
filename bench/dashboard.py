@@ -378,9 +378,9 @@ def load_all() -> dict:
     }
     d["tests"] = sum(len(re.findall(r"^def test_", p.read_text(encoding="utf-8"), flags=re.M))
                      for p in need("tests").glob("test_*.py"))
-    try:   # parametrised cases count as separate tests: prefer pytest's own count when the venv is present
+    try:   # parametrised cases count as separate tests: prefer pytest's own count (the interpreter running this script)
         import subprocess
-        out = subprocess.run([str(ROOT / ".venv" / "bin" / "python"), "-m", "pytest", "--collect-only", "-q", str(need("tests"))],
+        out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q", str(need("tests"))],
                              capture_output=True, text=True, timeout=60, cwd=ROOT).stdout
         m = re.search(r"(\d+) tests? collected", out)
         if m:
