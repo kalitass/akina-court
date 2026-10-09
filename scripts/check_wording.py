@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FILES = ["web/index.html", "web/i18n.zh.js", "web/ops.html", "web/policy.html", "web/replay.html", "web/receipt.html", "web/submission.json",
+FILES = ["web/index.html", "web/i18n.zh.js", "web/ops.html", "web/policy.html", "web/facts.html", "web/replay.html", "web/receipt.html", "web/submission.json",
          "README.md", "web/report.html"]
 STALE = [
     (r"法庭 \*\*95\.9|court 95\.9|95\.9 / 95\.9|\*\*95\.9%\*\*", "pre-rerun court accuracy"),
