@@ -26,6 +26,8 @@ OUT = ROOT / "web" / "report.html"
 # =====================================================================================================================
 # HAND-WRITTEN CONTENT — everything that is NOT derivable from data lives here and nowhere else.
 # =====================================================================================================================
+FIRST_RESULTS_N = 49      # the set size when the four systems were first scored; a larger manifest adds a caveat on the page
+
 CONTENT = {
     "title": "Akina Court — Results",
     "subtitle": "Multi-agent autonomous dispute resolution · Tencent Cloud Hackathon SG 2026 · Ryde track",
@@ -635,6 +637,10 @@ def build(d: dict) -> str:
     raw, fo, jo, ct = (S[a] for a in arms)
     man = d["manifest"]["cases"]
     n_bench = len(man)
+    if n_bench > FIRST_RESULTS_N and not any("extended" in c for c in CONTENT["caveats"]):
+        CONTENT["caveats"].append(f"The benchmark set was extended from {FIRST_RESULTS_N} to {n_bench} cases on 2026-10-11, after the first four-system "
+                                  "results had been seen; the added cases were written from the policy and the record like the others, every one that "
+                                  "passed the generator's gates was kept, but they are not held-out. The held-out set is scored separately.")
     if n_bench != len(d["scenario_hard"]):
         sys.exit(f"dashboard: manifest has {n_bench} cases but scenarios.py defines {len(d['scenario_hard'])}")
     for a in arms:

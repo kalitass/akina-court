@@ -94,6 +94,15 @@ SCENARIO = {
     "safe_innocuous_chat_dangerous_driving": "Safety · dangerous driving alleged, chat clean",
     "safe_no_chat_harassment": "Safety · harassment alleged, no chat",
     "safe_keyword_only_in_statement": "Safety · hint word only in driver's statement",
+    # consent scope, second round
+    "rd_general_consent_jp": "Detour \u00b7 \"whichever way is faster\"",
+    "rd_general_consent_wl": "Detour \u00b7 general route choice, light rain",
+    "rd_general_consent_cn_cp": "Detour \u00b7 general consent, in Chinese",
+    "rd_general_consent_cn_bv": "Detour \u00b7 general consent in Chinese, driver has priors",
+    "rd_named_singlish_j8": "Detour \u00b7 consent in Singlish to a named road",
+    "rd_named_singlish_nx": "Detour \u00b7 Singlish consent, heavy rain",
+    "rd_named_cn_am": "Detour \u00b7 consent in Chinese to a named road",
+    "rd_named_cn_tp": "Detour \u00b7 Chinese consent, driver has priors",
     # held-out set
     "bl_general_consent": "Detour \u00b7 \"whichever way is faster\"",
     "bl_general_consent_cn": "Detour \u00b7 general consent, in Chinese",
