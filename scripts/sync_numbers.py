@@ -124,17 +124,10 @@ def chart(name: str, n: dict) -> str:
 EXAMPLES = [
     ("rd_incident_on_stretch", "An accident sat on the stretch the driver left, reported before he turned off: the detour is excused."),
     ("rd_consent_after", "The rider said \"sure\" two minutes after the car had already left the route: not consent."),
-    ("rd_band2_heavy_rain", "Heavy rain and slow traffic are not a recorded incident: the extra kilometres are refunded."),
     ("rd_stop_named", "The rider named the mall and asked for the stop: the way there is not a detour."),
     ("rd_prior_flag", "A detour upheld against a driver with prior upheld route disputes: refund and an account flag for a person."),
-    ("rd_two_segs_consent_seg1", "Two detours, the rider agreed to the first road only: the second is open, a person decides."),
-    ("rd_fixed_fare", "A detour on a fixed-quote trip: nothing to refund, the breach is still recorded."),
     ("ns_fake_here_far", "\"I'm Here\" tapped hundreds of metres from the pickup: fee refunded, the tap goes to a person."),
-    ("ns_wait_185s_edge", "The driver waited just past the three-minute mark: the fee stands."),
-    ("ns_rider_cancel_175s", "The rider cancelled just inside the grace period: the fee comes back."),
-    ("safe_keyword_only_in_statement", "A threat word appears only in the driver's own statement: screened by the judge, not by a keyword."),
     ("bl_gps_tail_missing", "The GPS trace ends minutes before the drop-off: the missing stretch cannot be measured, a person decides."),
-    ("bl_cancelled_by_missing", "The record does not say who cancelled: nothing to rule on, a person decides."),
 ]
 OUTCOME = {"no_action": "no refund", "refund_partial": "refund", "refund_full": "fee refunded", "escalate": "a person decides"}
 
