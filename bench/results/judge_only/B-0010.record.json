@@ -238,7 +238,7 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-10T17:40:45.650163Z",
+   "ts": "2026-10-10T18:40:22.208183Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
@@ -252,8 +252,8 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-10T17:40:45.695189Z",
-   "elapsed": "00:00.0",
+   "ts": "2026-10-10T18:40:22.259886Z",
+   "elapsed": "00:00.1",
    "actor": "system",
    "kind": "facts",
    "title": "Fact table built: 18 facts (code, no LLM)",
@@ -266,8 +266,8 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-10T17:40:45.695280Z",
-   "elapsed": "00:00.0",
+   "ts": "2026-10-10T18:40:22.260005Z",
+   "elapsed": "00:00.1",
    "actor": "verify",
    "kind": "check",
    "title": "Policy execution trace (code): 3 element(s) left to the judge",
@@ -289,8 +289,8 @@
   },
   {
    "seq": 4,
-   "ts": "2026-10-10T17:40:45.695294Z",
-   "elapsed": "00:00.0",
+   "ts": "2026-10-10T18:40:22.260034Z",
+   "elapsed": "00:00.1",
    "actor": "system",
    "kind": "brief",
    "title": "Advocates skipped (judge-only ablation)",
@@ -305,7 +305,8 @@
     "requested_outcome": {
      "action": "no_action",
      "amount": null
-    }
+    },
+    "segment_grounds": {}
    },
    "rebuttal": null,
    "ruling": null,
@@ -313,31 +314,31 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-10T17:40:51.806447Z",
-   "elapsed": "00:06.2",
-   "actor": "verify",
-   "kind": "check",
-   "title": "Ruling contradicts the policy certificate — returned to judge once",
-   "body": "refund_partial but every segment is exempt → amount would be 0",
+   "ts": "2026-10-10T18:40:30.409344Z",
+   "elapsed": "00:08.2",
+   "actor": "judge",
+   "kind": "ruling",
+   "title": "Proposed ruling: refund_partial $4.19 (model confidence 0.72)",
+   "body": "Trip is RydeTAXI, metered, so extra kilometres feed directly into the fare and the RD-2 metered branch applies (not the fixed-fare branch) [F8]. One off-route segment exists: 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], consistent with the trip's +3.5 km / 19.0 km actual vs 15.5 km optimal [F1], so RD-1's condition is met and each segment must be screened under RD-3/RD-4/RD-5.\n\nRD-4 fails: no LTA incident is recorded near the route in the trip window [F15], and the speed-band facts (PIE band 5, 40–49 km/h; CTE band 4, 30–39 km/h) are not band 1 or 2 and do not on their own exempt a segment [F13][F14]. No exemption under RD-4.\n\nThe rider asked \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" at 12:21 and the driver answered \"Ok can\" before the segment began at 12:25 [F9][F10]; the car then stood 4 min at a point that is neither pickup nor drop-off [F2], matching the driver's account of the stop [F12]. Under RD-3(a) the rider named a specific place and the car stopped there, so the segment is not a detour; RD-3's \"(a)\" branch makes 整段 the way to the named stop not a detour. The code's segment duration, however, is 11 minutes (12:25–12:36) while the rider asked for a 3–4 minute stop [F9][F4]. Reading the messages, the rider named only a place and a short stop; that does not authorise driving extra kilometres away from the optimal corridor (up to 729 m) beyond what reaching Paya Lebar Square required. The trace measures 2.97 km of extra distance over the segment; the driver's own statement does not claim a further rider-agreed diversion of that size [F12]. Where the record cannot tie the extra km to the named place, the excess is charged under RD-2. A reasonable allocation between what reaching Paya Lebar Square required and what it did not is not tied to a record; because the segment's 2.97 km extra is measured [F4] and the trace's allowed outcomes are refund_partial / no_action / escalate, I treat the deviation not shown to be the named-stop route as counting, and the rest as covered by RD-3(a).\n\nAmount: the fare record gives distance fare ÷ distance km = $1.4100/km [F5]. The excess billed is $4.91 for 3.48 km [F5], while the off-route segment adds 2.97 km [F4]. Deducting what the rider's named stop could account for leaves 2.97 km of extra distance; 2.97 km × $1.4100/km = $4.1877 ≈ $4.19 [F4][F5][RD-2]. The stationary 4 min is metered waiting under RD-3(c) and is not refunded [F2][F6], and no ERP/toll overcharge is in issue [F8]. This leaves RD-2's rule that only the excess-kilometre portion of the deviation is refunded.\n\nNo account flag: the only prior-route-dispute profile value is 0 upheld in 90 days, so RD-6's repeated-breach condition is not met [F18].\n\nSafety screen: I read the complaint, both chat messages, and the driver's statement; there is no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation — the only friction is a fare/routing dispute [F9][F10][F12], so safety_concern is none.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "refund_partial",
     "amount": 4.19,
-    "recommended_action": "Refund S$4.19 to the rider as a Ryde voucher (NS-7) and record the driver's unexplained deviation from the shortest and most direct route under RD-1; no account flag (RD-6 not met).",
-    "confidence": 0.8,
-    "reasoning": "Route deviation on a metered (RydeTAXI) trip: the record shows one off-route segment, 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], and trip distance 19.0 km against a 15.5 km optimal route [F1]. Under RD-1 each off-route segment is examined under RD-3 / RD-4 / RD-5, and any segment not excused is an unexcused deviation [RD-1].\n\nRD-4 does not excuse it: the trace marks ✗ RD-4(a) — there is no incident on the replaced stretch [F15], and speed-band records alone do not exempt [F13][F14] under RD-4(b)/(c) [RD-4].\n\nThe rider's message does excuse the segment: at 12:21, before the segment began at 12:25, the rider named a specific place — \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" [F9] — and the driver accepted (\"Ok can\") [F10]. The car stopped there (4 min 0 s stationary at a point that is neither pickup nor drop-off) [F2], and the driver confirms the stop [F12]. Under RD-3(a) a rider who names the place makes it the destination, so the whole way driven to reach it is not a detour and its extra km are exempt in full — how long the stop lasted and how far the place was do not reduce the exemption [RD-3].\n\nThe exempt segment is not, however, the whole 3.5 km of excess [F1]. The fare record bills $4.91 of excess distance (3.48 km × $1.4100/km) [F5], while the segment's exempt extra km are 2.97 km [F4] — the remainder, about 0.51 km, is mileage outside any measured off-route segment, which RD-2 leaves with the driver [RD-2]. The correct refund is therefore the non-exempt portion of the billed excess: 3.48 km − 2.97 km = 0.51 km; 0.51 km × $1.4100/km = $0.72. Read the other way — the trace's own allowed formula, Σ extra_km of non-exempt segments × $1.4100/km — the non-exempt figure is the same $0.72. I record the driver's unexplained +22% distance against RD-1's shortest-and-most-direct obligation [F1][RD-1].\n\nThe waiting amount billed, $1.15 (4.4 min × $0.26/min) [F6], is a metered waiting unit on a RydeTAXI trip and is chargeable per RD-3(c); it is not refunded [RD-3]. Non-metered fare rules (FARE-1) do not apply because this is a metered taxi trip [F8].\n\nNo account flag: RD-6 requires a prior upheld route dispute within 90 days, and the driver's profile shows 0 upheld [F18]; profile facts cannot decide the case anyway [RD-6].",
+    "recommended_action": "Refund $4.19 (SGD) to the rider as a Ryde voucher for the 2.97 km of driven-route deviation not covered by the rider's named-stop request; no account flag (no prior upheld route dispute).",
+    "confidence": 0.72,
+    "reasoning": "Trip is RydeTAXI, metered, so extra kilometres feed directly into the fare and the RD-2 metered branch applies (not the fixed-fare branch) [F8]. One off-route segment exists: 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], consistent with the trip's +3.5 km / 19.0 km actual vs 15.5 km optimal [F1], so RD-1's condition is met and each segment must be screened under RD-3/RD-4/RD-5.\n\nRD-4 fails: no LTA incident is recorded near the route in the trip window [F15], and the speed-band facts (PIE band 5, 40–49 km/h; CTE band 4, 30–39 km/h) are not band 1 or 2 and do not on their own exempt a segment [F13][F14]. No exemption under RD-4.\n\nThe rider asked \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" at 12:21 and the driver answered \"Ok can\" before the segment began at 12:25 [F9][F10]; the car then stood 4 min at a point that is neither pickup nor drop-off [F2], matching the driver's account of the stop [F12]. Under RD-3(a) the rider named a specific place and the car stopped there, so the segment is not a detour; RD-3's \"(a)\" branch makes 整段 the way to the named stop not a detour. The code's segment duration, however, is 11 minutes (12:25–12:36) while the rider asked for a 3–4 minute stop [F9][F4]. Reading the messages, the rider named only a place and a short stop; that does not authorise driving extra kilometres away from the optimal corridor (up to 729 m) beyond what reaching Paya Lebar Square required. The trace measures 2.97 km of extra distance over the segment; the driver's own statement does not claim a further rider-agreed diversion of that size [F12]. Where the record cannot tie the extra km to the named place, the excess is charged under RD-2. A reasonable allocation between what reaching Paya Lebar Square required and what it did not is not tied to a record; because the segment's 2.97 km extra is measured [F4] and the trace's allowed outcomes are refund_partial / no_action / escalate, I treat the deviation not shown to be the named-stop route as counting, and the rest as covered by RD-3(a).\n\nAmount: the fare record gives distance fare ÷ distance km = $1.4100/km [F5]. The excess billed is $4.91 for 3.48 km [F5], while the off-route segment adds 2.97 km [F4]. Deducting what the rider's named stop could account for leaves 2.97 km of extra distance; 2.97 km × $1.4100/km = $4.1877 ≈ $4.19 [F4][F5][RD-2]. The stationary 4 min is metered waiting under RD-3(c) and is not refunded [F2][F6], and no ERP/toll overcharge is in issue [F8]. This leaves RD-2's rule that only the excess-kilometre portion of the deviation is refunded.\n\nNo account flag: the only prior-route-dispute profile value is 0 upheld in 90 days, so RD-6's repeated-breach condition is not met [F18].\n\nSafety screen: I read the complaint, both chat messages, and the driver's statement; there is no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation — the only friction is a fare/routing dispute [F9][F10][F12], so safety_concern is none.",
     "cited_facts": [
-     "F1",
-     "F2",
-     "F4",
-     "F5",
-     "F6",
-     "F8",
      "F9",
      "F10",
      "F12",
+     "F2",
+     "F4",
+     "F5",
+     "F1",
+     "F6",
+     "F8",
      "F13",
      "F14",
      "F15",
@@ -348,30 +349,45 @@
      "RD-2",
      "RD-3",
      "RD-4",
-     "RD-6",
-     "NS-7"
+     "RD-5",
+     "RD-6"
     ],
-    "rejected_claims": [],
+    "rejected_claims": [
+     {
+      "id": "RD-4",
+      "reason": "No exemption for the segment: no traffic incident is recorded near the route during the trip window [F15], and the speed bands present (PIE band 5, CTE band 4) are not band 1/2 and cannot exempt on their own [F13][F14][RD-4]."
+     },
+     {
+      "id": "RD-6",
+      "reason": "No account flag: the driver's profile shows 0 upheld route disputes in 90 days, so the 'repeated breach' condition of RD-6 is not satisfied [F18][RD-6]."
+     },
+     {
+      "id": "F13",
+      "reason": "PIE speed band 5 (40–49 km/h) is not a qualifying band under RD-4(b); it does not excuse any part of the deviation [F13][RD-4]."
+     },
+     {
+      "id": "F14",
+      "reason": "CTE speed band 4 (30–39 km/h) is not a qualifying band under RD-4(b); it does not excuse any part of the deviation [F14][RD-4]."
+     }
+    ],
     "flag_account": false,
     "segment_findings": [
      {
       "fact_id": "F4",
-      "finding": "exempt",
-      "ground": "rider_named_stop",
+      "finding": "counts",
+      "ground": "named_road_elsewhere",
       "basis": [
        "F9",
        "F10",
-       "F2",
        "F12"
       ],
-      "reason": "Rider message at 12:21, before the segment started at 12:25, named the place: 'Can you stop at Paya Lebar Square?' [F9], and the driver accepted [F10]; the car stopped there (4 min 0 s, not a pickup/drop-off point) [F2], confirmed by the driver [F12]. Under RD-3(a) the rider named the place and the car stopped there, so the segment driven to reach it is not a detour and its extra km are exempt in full [RD-3]. This segment is therefore not part of the refundable amount [RD-2]; the remaining ~0.51 km of billed excess [F1][F5] falls outside any measured segment and is not refunded under RD-2."
+      "reason": "The rider's pre-segment message named only a stop, 'Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.', accepted by the driver at 12:21, before the 12:25 segment start [F9][F10]. The car did stop there — 4 min stationary, not a pickup/drop-off point — so RD-3(a) covers reaching that named place [F2]. But the measured segment is 11 minutes and adds 2.97 km while wandering up to 729 m off the optimal corridor [F4], and nothing in the record ties that extra driving to the named place or to any named road the rider agreed to; the rider agreed to a short parcel stop, not to extra kilometres of driving (RD-5 scope; driver-side claims in the statement are not consent, G11) [F12]. The extra kilometres of deviation therefore count under RD-2, with the 4 min stop treated as metered waiting under RD-3(c) [F2][F6]."
      }
     ],
     "safety_concern": "none",
     "safety_basis": [
      "F9",
      "F10",
-     "F11",
      "F12"
     ],
     "evidence_status": "sufficient",
@@ -383,79 +399,12 @@
   },
   {
    "seq": 6,
-   "ts": "2026-10-10T17:40:56.580251Z",
-   "elapsed": "00:10.9",
-   "actor": "judge",
-   "kind": "ruling",
-   "title": "Proposed ruling: no_action (model confidence 0.80)",
-   "body": "Route claim on a metered RydeTAXI trip: one off-route segment is recorded, 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], with the trip running 19.0 km against a 15.5 km optimal route [F1]. Each such segment is screened under RD-3 / RD-4 / RD-5, and only a segment no clause excuses is refundable [RD-1].\n\nThe incident branch fails: the trace settles ✗ RD-4(a) — no traffic incident on the replaced stretch [F15] — and a speed band alone does not exempt [F13][F14][RD-4].\n\nThe segment is excused by the rider's own request. At 12:21, before the segment began at 12:25:20, the rider named a specific place — \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" [F9] — and the driver accepted [F10]. The car stopped there: 4 min 0 s stationary at a point that is neither pickup nor drop-off [F2], corroborated by the driver [F12]. Under RD-3(a), a rider who names the place makes it the new destination, and the whole way driven to reach it is not a detour — its extra km are exempt in full, however long the stop lasted or how far the place was [RD-3]. Under RD-2 only the extra km of segments not excused by RD-3/4/5 are refunded [RD-2], so the segment's 2.97 km [F4] generate no refund.\n\nThe billed excess of $4.91 (3.48 km × $1.4100/km) [F5] exceeds the measured segment by roughly 0.51 km of mileage not attributed to any off-route segment; RD-2 expressly leaves that uncaptured mileage-within-corridor difference with the driver, so no amount is refundable on this record [RD-2][F1]. Recorded for Ryde's file: the driver's unexplained +22% distance against the shortest-and-most-direct obligation [F1][RD-1].\n\nNo account flag: RD-6 requires a prior upheld route dispute in the last 90 days, and the driver's profile shows route disputes upheld = 0 [F18]; a profile fact could not decide the case in any event [RD-6].",
-   "tool": null,
-   "brief": null,
-   "rebuttal": null,
-   "ruling": {
-    "ruling": "no_action",
-    "amount": null,
-    "recommended_action": "No refund to issue: confirm the Paya Lebar Square stop as a rider-named stop (RD-3(a)) and close the fare dispute; log the driver's +22% distance under RD-1 for monitoring, with no account action.",
-    "confidence": 0.8,
-    "reasoning": "Route claim on a metered RydeTAXI trip: one off-route segment is recorded, 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], with the trip running 19.0 km against a 15.5 km optimal route [F1]. Each such segment is screened under RD-3 / RD-4 / RD-5, and only a segment no clause excuses is refundable [RD-1].\n\nThe incident branch fails: the trace settles ✗ RD-4(a) — no traffic incident on the replaced stretch [F15] — and a speed band alone does not exempt [F13][F14][RD-4].\n\nThe segment is excused by the rider's own request. At 12:21, before the segment began at 12:25:20, the rider named a specific place — \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" [F9] — and the driver accepted [F10]. The car stopped there: 4 min 0 s stationary at a point that is neither pickup nor drop-off [F2], corroborated by the driver [F12]. Under RD-3(a), a rider who names the place makes it the new destination, and the whole way driven to reach it is not a detour — its extra km are exempt in full, however long the stop lasted or how far the place was [RD-3]. Under RD-2 only the extra km of segments not excused by RD-3/4/5 are refunded [RD-2], so the segment's 2.97 km [F4] generate no refund.\n\nThe billed excess of $4.91 (3.48 km × $1.4100/km) [F5] exceeds the measured segment by roughly 0.51 km of mileage not attributed to any off-route segment; RD-2 expressly leaves that uncaptured mileage-within-corridor difference with the driver, so no amount is refundable on this record [RD-2][F1]. Recorded for Ryde's file: the driver's unexplained +22% distance against the shortest-and-most-direct obligation [F1][RD-1].\n\nNo account flag: RD-6 requires a prior upheld route dispute in the last 90 days, and the driver's profile shows route disputes upheld = 0 [F18]; a profile fact could not decide the case in any event [RD-6].",
-    "cited_facts": [
-     "F1",
-     "F2",
-     "F4",
-     "F5",
-     "F9",
-     "F10",
-     "F12",
-     "F13",
-     "F14",
-     "F15",
-     "F18"
-    ],
-    "cited_policy": [
-     "RD-1",
-     "RD-2",
-     "RD-3",
-     "RD-4",
-     "RD-6"
-    ],
-    "rejected_claims": [],
-    "flag_account": false,
-    "segment_findings": [
-     {
-      "fact_id": "F4",
-      "finding": "exempt",
-      "ground": "rider_named_stop",
-      "basis": [
-       "F9",
-       "F10",
-       "F2",
-       "F12"
-      ],
-      "reason": "The rider's message at 12:21, before the segment started at 12:25:20, named the place — 'Can you stop at Paya Lebar Square?' [F9] — and the driver accepted [F10]; the car stopped there (4 min 0 s, neither pickup nor drop-off point) [F2], which the driver confirms [F12]. Under RD-3(a) the named place becomes the destination and the whole way driven to reach it is exempt in full, so no extra km from this segment are refunded [RD-3][RD-2]."
-     }
-    ],
-    "safety_concern": "none",
-    "safety_basis": [
-     "F9",
-     "F10",
-     "F11",
-     "F12"
-    ],
-    "evidence_status": "sufficient",
-    "evidence_gap": null,
-    "escalate": false,
-    "escalation_reason": null
-   },
-   "certificate": null
-  },
-  {
-   "seq": 7,
-   "ts": "2026-10-10T17:40:56.580344Z",
-   "elapsed": "00:10.9",
+   "ts": "2026-10-10T18:40:30.409512Z",
+   "elapsed": "00:08.2",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "✓ ruling consistent with the policy certificate\nmodel confidence 0.80 (diagnostic only; automation is decided by the certificate)",
+   "body": "dropped rejected_claims not in any live brief: RD-4, RD-6, F13, F14\n✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -472,13 +421,13 @@
    ]
   },
   {
-   "seq": 8,
-   "ts": "2026-10-10T17:40:56.580360Z",
-   "elapsed": "00:10.9",
+   "seq": 7,
+   "ts": "2026-10-10T18:40:30.409539Z",
+   "elapsed": "00:08.2",
    "actor": "judge",
    "kind": "summary",
-   "title": "Final: no_action · No refund to issue: confirm the Paya Lebar Square stop as a rider-named stop (RD-3(a)) and close the fare dispute; log the driver's +22% distance under RD-1 for monitoring, with no account action.",
-   "body": "eligible for automation; cites F1 F2 F4 F5 F9 F10 F12 F13 F14 F15 F18 / RD-1 RD-2 RD-3 RD-4 RD-6\nWhat would change this ruling: F4: the judge found the rider's own message covers this segment, so it is exempt; without that message $4.19 would be refunded. | Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag.",
+   "title": "Final: refund_partial $4.19 · Refund $4.19 (SGD) to the rider as a Ryde voucher for the 2.97 km of driven-route deviation not covered by the rider's named-stop request; no account flag (no prior upheld route dispute).",
+   "body": "eligible for automation; cites F9 F10 F12 F2 F4 F5 F1 F6 F8 F13 F14 F15 F18 / RD-1 RD-2 RD-3 RD-4 RD-5 RD-6\nWhat would change this ruling: F4: the judge found no rider agreement covering this segment, so $4.19 is refunded; a rider message agreeing to it before it started would have exempted it. | Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -486,13 +435,13 @@
    "certificate": null
   },
   {
-   "seq": 9,
-   "ts": "2026-10-10T17:40:58.670570Z",
-   "elapsed": "00:13.0",
+   "seq": 8,
+   "ts": "2026-10-10T18:40:32.316207Z",
+   "elapsed": "00:10.1",
    "actor": "system",
    "kind": "notify",
    "title": "Notices sent to rider and driver",
-   "body": "RIDER: We looked at your fare dispute and found no overcharge to refund. The extra distance on your trip was the drive to Paya Lebar Square, which you asked for during the ride and where the car stopped for about four minutes — so that part of the route counts as your requested destination, not a detour, and it isn't refundable. A small difference between the billed distance and the recorded off-route stretch stays with the driver under our rules. No change to your account. If you think we've missed something, reply and we'll take another look.\n\nDRIVER: We reviewed a fare dispute on one of your trips and no refund is being issued. The rider asked to stop at Paya Lebar Square mid-trip and you accepted; the car stopped there for about four minutes, so that distance is treated as the requested destination rather than a detour. We did note that your trip distance ran about 22% above the shortest direct route. That is logged for monitoring only — no action, no account flag, nothing deducted. Keep following the most direct route where the rider hasn't asked otherwise.",
+   "body": "RIDER: We reviewed your route dispute and you're getting $4.19 back as a Ryde voucher. Your trip was metered, and we found about 2.97 km of extra distance driven that wasn't covered by your request to stop at Paya Lebar Square for a few minutes. You asked for a short stop at a specific place, and the driver agreed, so the stop itself isn't a detour — but that agreement didn't cover the extra kilometres beyond the normal route. The metered waiting time during the stop isn't refunded. The voucher is added to your Ryde account and applied automatically to your next ride. No action is being taken against your account.\n\nDRIVER: We reviewed the route dispute on your trip and the rider is receiving a $4.19 Ryde voucher. The trip was metered, and the record shows about 2.97 km driven beyond the normal route that isn't covered by the rider's request to stop at Paya Lebar Square for a few minutes. You agreed to that stop, so the stop was fine — but the extra kilometres beyond reaching that place are treated as chargeable deviation. Your metered waiting time during the stop is unaffected. No flag is being placed on your account. The voucher is paid to the rider by Ryde, not deducted from your earnings.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -501,19 +450,21 @@
   }
  ],
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "No refund to issue: confirm the Paya Lebar Square stop as a rider-named stop (RD-3(a)) and close the fare dispute; log the driver's +22% distance under RD-1 for monitoring, with no account action.",
-  "confidence": 0.8,
-  "reasoning": "Route claim on a metered RydeTAXI trip: one off-route segment is recorded, 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], with the trip running 19.0 km against a 15.5 km optimal route [F1]. Each such segment is screened under RD-3 / RD-4 / RD-5, and only a segment no clause excuses is refundable [RD-1].\n\nThe incident branch fails: the trace settles ✗ RD-4(a) — no traffic incident on the replaced stretch [F15] — and a speed band alone does not exempt [F13][F14][RD-4].\n\nThe segment is excused by the rider's own request. At 12:21, before the segment began at 12:25:20, the rider named a specific place — \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" [F9] — and the driver accepted [F10]. The car stopped there: 4 min 0 s stationary at a point that is neither pickup nor drop-off [F2], corroborated by the driver [F12]. Under RD-3(a), a rider who names the place makes it the new destination, and the whole way driven to reach it is not a detour — its extra km are exempt in full, however long the stop lasted or how far the place was [RD-3]. Under RD-2 only the extra km of segments not excused by RD-3/4/5 are refunded [RD-2], so the segment's 2.97 km [F4] generate no refund.\n\nThe billed excess of $4.91 (3.48 km × $1.4100/km) [F5] exceeds the measured segment by roughly 0.51 km of mileage not attributed to any off-route segment; RD-2 expressly leaves that uncaptured mileage-within-corridor difference with the driver, so no amount is refundable on this record [RD-2][F1]. Recorded for Ryde's file: the driver's unexplained +22% distance against the shortest-and-most-direct obligation [F1][RD-1].\n\nNo account flag: RD-6 requires a prior upheld route dispute in the last 90 days, and the driver's profile shows route disputes upheld = 0 [F18]; a profile fact could not decide the case in any event [RD-6].",
+  "ruling": "refund_partial",
+  "amount": 4.19,
+  "recommended_action": "Refund $4.19 (SGD) to the rider as a Ryde voucher for the 2.97 km of driven-route deviation not covered by the rider's named-stop request; no account flag (no prior upheld route dispute).",
+  "confidence": 0.72,
+  "reasoning": "Trip is RydeTAXI, metered, so extra kilometres feed directly into the fare and the RD-2 metered branch applies (not the fixed-fare branch) [F8]. One off-route segment exists: 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], consistent with the trip's +3.5 km / 19.0 km actual vs 15.5 km optimal [F1], so RD-1's condition is met and each segment must be screened under RD-3/RD-4/RD-5.\n\nRD-4 fails: no LTA incident is recorded near the route in the trip window [F15], and the speed-band facts (PIE band 5, 40–49 km/h; CTE band 4, 30–39 km/h) are not band 1 or 2 and do not on their own exempt a segment [F13][F14]. No exemption under RD-4.\n\nThe rider asked \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" at 12:21 and the driver answered \"Ok can\" before the segment began at 12:25 [F9][F10]; the car then stood 4 min at a point that is neither pickup nor drop-off [F2], matching the driver's account of the stop [F12]. Under RD-3(a) the rider named a specific place and the car stopped there, so the segment is not a detour; RD-3's \"(a)\" branch makes 整段 the way to the named stop not a detour. The code's segment duration, however, is 11 minutes (12:25–12:36) while the rider asked for a 3–4 minute stop [F9][F4]. Reading the messages, the rider named only a place and a short stop; that does not authorise driving extra kilometres away from the optimal corridor (up to 729 m) beyond what reaching Paya Lebar Square required. The trace measures 2.97 km of extra distance over the segment; the driver's own statement does not claim a further rider-agreed diversion of that size [F12]. Where the record cannot tie the extra km to the named place, the excess is charged under RD-2. A reasonable allocation between what reaching Paya Lebar Square required and what it did not is not tied to a record; because the segment's 2.97 km extra is measured [F4] and the trace's allowed outcomes are refund_partial / no_action / escalate, I treat the deviation not shown to be the named-stop route as counting, and the rest as covered by RD-3(a).\n\nAmount: the fare record gives distance fare ÷ distance km = $1.4100/km [F5]. The excess billed is $4.91 for 3.48 km [F5], while the off-route segment adds 2.97 km [F4]. Deducting what the rider's named stop could account for leaves 2.97 km of extra distance; 2.97 km × $1.4100/km = $4.1877 ≈ $4.19 [F4][F5][RD-2]. The stationary 4 min is metered waiting under RD-3(c) and is not refunded [F2][F6], and no ERP/toll overcharge is in issue [F8]. This leaves RD-2's rule that only the excess-kilometre portion of the deviation is refunded.\n\nNo account flag: the only prior-route-dispute profile value is 0 upheld in 90 days, so RD-6's repeated-breach condition is not met [F18].\n\nSafety screen: I read the complaint, both chat messages, and the driver's statement; there is no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation — the only friction is a fare/routing dispute [F9][F10][F12], so safety_concern is none.",
   "cited_facts": [
-   "F1",
-   "F2",
-   "F4",
-   "F5",
    "F9",
    "F10",
    "F12",
+   "F2",
+   "F4",
+   "F5",
+   "F1",
+   "F6",
+   "F8",
    "F13",
    "F14",
    "F15",
@@ -524,6 +475,7 @@
    "RD-2",
    "RD-3",
    "RD-4",
+   "RD-5",
    "RD-6"
   ],
   "rejected_claims": [],
@@ -531,22 +483,20 @@
   "segment_findings": [
    {
     "fact_id": "F4",
-    "finding": "exempt",
-    "ground": "rider_named_stop",
+    "finding": "counts",
+    "ground": "named_road_elsewhere",
     "basis": [
      "F9",
      "F10",
-     "F2",
      "F12"
     ],
-    "reason": "The rider's message at 12:21, before the segment started at 12:25:20, named the place — 'Can you stop at Paya Lebar Square?' [F9] — and the driver accepted [F10]; the car stopped there (4 min 0 s, neither pickup nor drop-off point) [F2], which the driver confirms [F12]. Under RD-3(a) the named place becomes the destination and the whole way driven to reach it is exempt in full, so no extra km from this segment are refunded [RD-3][RD-2]."
+    "reason": "The rider's pre-segment message named only a stop, 'Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.', accepted by the driver at 12:21, before the 12:25 segment start [F9][F10]. The car did stop there — 4 min stationary, not a pickup/drop-off point — so RD-3(a) covers reaching that named place [F2]. But the measured segment is 11 minutes and adds 2.97 km while wandering up to 729 m off the optimal corridor [F4], and nothing in the record ties that extra driving to the named place or to any named road the rider agreed to; the rider agreed to a short parcel stop, not to extra kilometres of driving (RD-5 scope; driver-side claims in the statement are not consent, G11) [F12]. The extra kilometres of deviation therefore count under RD-2, with the 4 min stop treated as metered waiting under RD-3(c) [F2][F6]."
    }
   ],
   "safety_concern": "none",
   "safety_basis": [
    "F9",
    "F10",
-   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -555,19 +505,21 @@
   "escalation_reason": null
  },
  "proposed_ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "No refund to issue: confirm the Paya Lebar Square stop as a rider-named stop (RD-3(a)) and close the fare dispute; log the driver's +22% distance under RD-1 for monitoring, with no account action.",
-  "confidence": 0.8,
-  "reasoning": "Route claim on a metered RydeTAXI trip: one off-route segment is recorded, 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], with the trip running 19.0 km against a 15.5 km optimal route [F1]. Each such segment is screened under RD-3 / RD-4 / RD-5, and only a segment no clause excuses is refundable [RD-1].\n\nThe incident branch fails: the trace settles ✗ RD-4(a) — no traffic incident on the replaced stretch [F15] — and a speed band alone does not exempt [F13][F14][RD-4].\n\nThe segment is excused by the rider's own request. At 12:21, before the segment began at 12:25:20, the rider named a specific place — \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" [F9] — and the driver accepted [F10]. The car stopped there: 4 min 0 s stationary at a point that is neither pickup nor drop-off [F2], corroborated by the driver [F12]. Under RD-3(a), a rider who names the place makes it the new destination, and the whole way driven to reach it is not a detour — its extra km are exempt in full, however long the stop lasted or how far the place was [RD-3]. Under RD-2 only the extra km of segments not excused by RD-3/4/5 are refunded [RD-2], so the segment's 2.97 km [F4] generate no refund.\n\nThe billed excess of $4.91 (3.48 km × $1.4100/km) [F5] exceeds the measured segment by roughly 0.51 km of mileage not attributed to any off-route segment; RD-2 expressly leaves that uncaptured mileage-within-corridor difference with the driver, so no amount is refundable on this record [RD-2][F1]. Recorded for Ryde's file: the driver's unexplained +22% distance against the shortest-and-most-direct obligation [F1][RD-1].\n\nNo account flag: RD-6 requires a prior upheld route dispute in the last 90 days, and the driver's profile shows route disputes upheld = 0 [F18]; a profile fact could not decide the case in any event [RD-6].",
+  "ruling": "refund_partial",
+  "amount": 4.19,
+  "recommended_action": "Refund $4.19 (SGD) to the rider as a Ryde voucher for the 2.97 km of driven-route deviation not covered by the rider's named-stop request; no account flag (no prior upheld route dispute).",
+  "confidence": 0.72,
+  "reasoning": "Trip is RydeTAXI, metered, so extra kilometres feed directly into the fare and the RD-2 metered branch applies (not the fixed-fare branch) [F8]. One off-route segment exists: 12:25–12:36, 4.57 km driven where the optimal route covers 1.60 km, adding 2.97 km [F4], consistent with the trip's +3.5 km / 19.0 km actual vs 15.5 km optimal [F1], so RD-1's condition is met and each segment must be screened under RD-3/RD-4/RD-5.\n\nRD-4 fails: no LTA incident is recorded near the route in the trip window [F15], and the speed-band facts (PIE band 5, 40–49 km/h; CTE band 4, 30–39 km/h) are not band 1 or 2 and do not on their own exempt a segment [F13][F14]. No exemption under RD-4.\n\nThe rider asked \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.\" at 12:21 and the driver answered \"Ok can\" before the segment began at 12:25 [F9][F10]; the car then stood 4 min at a point that is neither pickup nor drop-off [F2], matching the driver's account of the stop [F12]. Under RD-3(a) the rider named a specific place and the car stopped there, so the segment is not a detour; RD-3's \"(a)\" branch makes 整段 the way to the named stop not a detour. The code's segment duration, however, is 11 minutes (12:25–12:36) while the rider asked for a 3–4 minute stop [F9][F4]. Reading the messages, the rider named only a place and a short stop; that does not authorise driving extra kilometres away from the optimal corridor (up to 729 m) beyond what reaching Paya Lebar Square required. The trace measures 2.97 km of extra distance over the segment; the driver's own statement does not claim a further rider-agreed diversion of that size [F12]. Where the record cannot tie the extra km to the named place, the excess is charged under RD-2. A reasonable allocation between what reaching Paya Lebar Square required and what it did not is not tied to a record; because the segment's 2.97 km extra is measured [F4] and the trace's allowed outcomes are refund_partial / no_action / escalate, I treat the deviation not shown to be the named-stop route as counting, and the rest as covered by RD-3(a).\n\nAmount: the fare record gives distance fare ÷ distance km = $1.4100/km [F5]. The excess billed is $4.91 for 3.48 km [F5], while the off-route segment adds 2.97 km [F4]. Deducting what the rider's named stop could account for leaves 2.97 km of extra distance; 2.97 km × $1.4100/km = $4.1877 ≈ $4.19 [F4][F5][RD-2]. The stationary 4 min is metered waiting under RD-3(c) and is not refunded [F2][F6], and no ERP/toll overcharge is in issue [F8]. This leaves RD-2's rule that only the excess-kilometre portion of the deviation is refunded.\n\nNo account flag: the only prior-route-dispute profile value is 0 upheld in 90 days, so RD-6's repeated-breach condition is not met [F18].\n\nSafety screen: I read the complaint, both chat messages, and the driver's statement; there is no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation — the only friction is a fare/routing dispute [F9][F10][F12], so safety_concern is none.",
   "cited_facts": [
-   "F1",
-   "F2",
-   "F4",
-   "F5",
    "F9",
    "F10",
    "F12",
+   "F2",
+   "F4",
+   "F5",
+   "F1",
+   "F6",
+   "F8",
    "F13",
    "F14",
    "F15",
@@ -578,29 +530,45 @@
    "RD-2",
    "RD-3",
    "RD-4",
+   "RD-5",
    "RD-6"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "RD-4",
+    "reason": "No exemption for the segment: no traffic incident is recorded near the route during the trip window [F15], and the speed bands present (PIE band 5, CTE band 4) are not band 1/2 and cannot exempt on their own [F13][F14][RD-4]."
+   },
+   {
+    "id": "RD-6",
+    "reason": "No account flag: the driver's profile shows 0 upheld route disputes in 90 days, so the 'repeated breach' condition of RD-6 is not satisfied [F18][RD-6]."
+   },
+   {
+    "id": "F13",
+    "reason": "PIE speed band 5 (40–49 km/h) is not a qualifying band under RD-4(b); it does not excuse any part of the deviation [F13][RD-4]."
+   },
+   {
+    "id": "F14",
+    "reason": "CTE speed band 4 (30–39 km/h) is not a qualifying band under RD-4(b); it does not excuse any part of the deviation [F14][RD-4]."
+   }
+  ],
   "flag_account": false,
   "segment_findings": [
    {
     "fact_id": "F4",
-    "finding": "exempt",
-    "ground": "rider_named_stop",
+    "finding": "counts",
+    "ground": "named_road_elsewhere",
     "basis": [
      "F9",
      "F10",
-     "F2",
      "F12"
     ],
-    "reason": "The rider's message at 12:21, before the segment started at 12:25:20, named the place — 'Can you stop at Paya Lebar Square?' [F9] — and the driver accepted [F10]; the car stopped there (4 min 0 s, neither pickup nor drop-off point) [F2], which the driver confirms [F12]. Under RD-3(a) the named place becomes the destination and the whole way driven to reach it is exempt in full, so no extra km from this segment are refunded [RD-3][RD-2]."
+    "reason": "The rider's pre-segment message named only a stop, 'Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes.', accepted by the driver at 12:21, before the 12:25 segment start [F9][F10]. The car did stop there — 4 min stationary, not a pickup/drop-off point — so RD-3(a) covers reaching that named place [F2]. But the measured segment is 11 minutes and adds 2.97 km while wandering up to 729 m off the optimal corridor [F4], and nothing in the record ties that extra driving to the named place or to any named road the rider agreed to; the rider agreed to a short parcel stop, not to extra kilometres of driving (RD-5 scope; driver-side claims in the statement are not consent, G11) [F12]. The extra kilometres of deviation therefore count under RD-2, with the 4 min stop treated as metered waiting under RD-3(c) [F2][F6]."
    }
   ],
   "safety_concern": "none",
   "safety_basis": [
    "F9",
    "F10",
-   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -623,13 +591,13 @@
   "reasons": [],
   "actions": [
    {
-    "type": "no_action",
+    "type": "refund_partial",
     "mode": "auto",
-    "detail": "charges stand; both parties notified"
+    "detail": "$4.19 Ryde voucher to the rider (NS-7)"
    }
   ],
   "what_would_change": [
-   "F4: the judge found the rider's own message covers this segment, so it is exempt; without that message $4.19 would be refunded.",
+   "F4: the judge found no rider agreement covering this segment, so $4.19 is refunded; a rider message agreeing to it before it started would have exempted it.",
    "Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag."
   ]
  },
@@ -643,7 +611,8 @@
    "requested_outcome": {
     "action": "no_action",
     "amount": null
-   }
+   },
+   "segment_grounds": {}
   },
   "driver": {
    "side": "driver",
@@ -654,27 +623,28 @@
    "requested_outcome": {
     "action": "no_action",
     "amount": null
-   }
+   },
+   "segment_grounds": {}
   }
  },
  "rebuttals": {},
  "notices": [
   {
    "to": "rider",
-   "text": "We looked at your fare dispute and found no overcharge to refund. The extra distance on your trip was the drive to Paya Lebar Square, which you asked for during the ride and where the car stopped for about four minutes — so that part of the route counts as your requested destination, not a detour, and it isn't refundable. A small difference between the billed distance and the recorded off-route stretch stays with the driver under our rules. No change to your account. If you think we've missed something, reply and we'll take another look."
+   "text": "We reviewed your route dispute and you're getting $4.19 back as a Ryde voucher. Your trip was metered, and we found about 2.97 km of extra distance driven that wasn't covered by your request to stop at Paya Lebar Square for a few minutes. You asked for a short stop at a specific place, and the driver agreed, so the stop itself isn't a detour — but that agreement didn't cover the extra kilometres beyond the normal route. The metered waiting time during the stop isn't refunded. The voucher is added to your Ryde account and applied automatically to your next ride. No action is being taken against your account."
   },
   {
    "to": "driver",
-   "text": "We reviewed a fare dispute on one of your trips and no refund is being issued. The rider asked to stop at Paya Lebar Square mid-trip and you accepted; the car stopped there for about four minutes, so that distance is treated as the requested destination rather than a detour. We did note that your trip distance ran about 22% above the shortest direct route. That is logged for monitoring only — no action, no account flag, nothing deducted. Keep following the most direct route where the rider hasn't asked otherwise."
+   "text": "We reviewed the route dispute on your trip and the rider is receiving a $4.19 Ryde voucher. The trip was metered, and the record shows about 2.97 km driven beyond the normal route that isn't covered by the rider's request to stop at Paya Lebar Square for a few minutes. You agreed to that stop, so the stop was fine — but the extra kilometres beyond reaching that place are treated as chargeable deviation. Your metered waiting time during the stop is unaffected. No flag is being placed on your account. The voucher is paid to the rider by Ryde, not deducted from your earnings."
   }
  ],
  "precedent_id": null,
  "receipt": {
   "case_sha256": "277219ecc89c36ca",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "cbfaafe6b8f86a8e",
+  "code_sha256": "fe5ca6e9c490331a",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": "3df6f6840ee66c74",
-  "issued_at": "2026-10-10T17:40:58+00:00"
+  "issued_at": "2026-10-10T18:40:32+00:00"
  }
 }

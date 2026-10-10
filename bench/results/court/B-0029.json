@@ -4,23 +4,24 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:47:38.581725+00:00",
+ "ts": "2026-10-10T18:47:08.115853+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a $6.61 Ryde voucher under NS-7; no account action against the driver.",
-  "confidence": 0.9,
-  "reasoning": "The record settles the branch: cancelled_by = rider on an immediate booking, so the fee can only enter through NS-0 and stand under NS-4 [F2][F5][NS-0]. The rider cancelled 2 min 30 s after acceptance (18:23:00 to 18:25:30), which is inside the 3-minute free-cancellation window, so no fee may be charged on this branch [F2][NS-4].\n\nThe only other route to a $6.61 charge is the no-show branch (NS-1/NS-2), and it fails on every element: driver_arrived_at is null, driver_pressed_here_at is null, and no platform auto-arrival was recorded, so NS-1(i) is unmet [F3][F4][NS-1]. The GPS shows the driver's closest approach to the pickup was 1816 m and he never came within 200 m, so NS-1(ii) fails [F1][NS-1][NS-2]. The driver's own chat message at 18:24 said \"5 min more, traffic is slow\" and his post-trip statement said he \"was on my way\" when the rider cancelled, confirming he had not arrived and no wait of more than 3 minutes at the pickup point could have accrued (indeed no waiting fee appears on the record) [F8][F10][F5][NS-1][NS-2].\n\nThe driver's delay explanation does not create a charge. There is no traffic exemption to apply here — RD-4 concerns route deviation, not no-show or cancellation fees — and in any case the only traffic record is Jurong East Avenue 1 at speed band 4 (30-39 km/h), not a congested band, with no incidents on the route and fair weather [F11][F12][F13][RD-4]. A driver still en route at the moment of a rider's cancellation 2 min 30 s after matching does not convert a free cancellation into a chargeable one [F2][NS-4].\n\nAmount: the only charge on record is the cancellation fee of $6.61, with no surge (1.0x) and no other add-ons; the full fee is therefore refundable — $6.61 [F5][F6][NS-4][NS-2]. No account flag is warranted: the driver never tapped \"I'm Here\", so NS-2's flag condition (a tap while outside the pickup radius) is not triggered, and the profiles of both parties are clean [F3][F4][F14][F15][NS-2][RD-6].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver.",
+  "confidence": 0.97,
+  "reasoning": "The cancellation is a rider cancellation 2 min 30 s after matching (accepted 18:23:00, cancelled 18:25:30) [F2], so the only gateway to the $6.61 fee is NS-0 (cancelled_by = rider → NS-4); no driver-side no-show cancellation occurred [F2][RD-6 not implicated]. Under NS-4, a cancellation within 3 minutes of matching (≤ 3:00) is not chargeable, and the trace confirms the fee window failed (150 s) [F2][F5][NS-4].\n\nThe fee cannot be saved through the no-show branch either: the driver's closest approach to the pickup was 1816 m and he never came within 200 m [F1], the platform recorded no arrival (driver_arrived_at null) [F3], and there was no \"I'm Here\" tap and no automatic arrival [F4]. NS-1 (ii) is therefore unsatisfied, and the driver's written statement that he \"was on my way\" [F10] is a post-hoc claim that yields to the GPS and timeline records [F1][F3][F4][NS-1][NS-2]. His chat message at 18:24 saying \"5 min more, traffic is slow\" [F8] corroborates that he had not reached the pickup point when the rider cancelled [F1][NS-1].\n\nThe driver's delay is not excused by the traffic picture in any way that earns the fee: Jurong East Avenue 1 shows only speed band 4 (30–39 km/h), i.e. not a band 1/2 record [F11], no traffic incidents were recorded on the route [F12], and the weather was fair with no rain [F13]; in any event RD-4-type evidence could only excuse a measured off-route segment, and here there is no off-route segment to excuse — this is a pre-pickup cancellation [F11][F12][F13][NS-4]. Since no segment of the route was driven, segment_findings is empty.\n\nThe chat record is complete: 2 messages, every one timestamped, so timing and the driver's distance are determinable without a G12 referral [F9]. The claimed amount is the cancellation fee itself: $6.61 [F5][F2][NS-4], which under NS-7 is disbursed as a Ryde voucher; no cash refund is ordered [NS-7]. The safety screen found nothing: the chat consists of a query about ETA [F7] and a delay reply [F8], and the driver's statement is a neutral assertion of travel [F10]; the complaint alleges only non-arrival and overcharging — no threat, intimidation, harassment or dangerous-driving allegation [F7][F8][F10][SAFE-1][SAFE-2]. Profile facts (rider clean history [F14]; driver clean history [F15]) are noted only in support and do not decide the case; no flag_account is warranted since no RD-6/NS-2 trigger applies.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
+   "F7",
    "F8",
+   "F9",
    "F10",
    "F11",
    "F12",
@@ -30,50 +31,17 @@
   ],
   "cited_policy": [
    "NS-0",
+   "NS-4",
    "NS-1",
    "NS-2",
-   "NS-4",
    "NS-7",
-   "RD-4",
-   "RD-6"
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
-   {
-    "id": "D1",
-    "reason": "The premise that a rider cancellation fee is presumptively valid is wrong: NS-4 charges the fee only for a cancellation made more than 3 minutes after matching, and the record shows acceptance 18:23:00 and cancellation 18:25:30, i.e. 2 min 30 s, inside the free window [F2][NS-4][NS-0]."
-   },
-   {
-    "id": "D2",
-    "reason": "Correct that the driver never asserted a no-show [F3][F4][NS-1], but that removes the only remaining route to the charge; with NS-4 unmet [F2][NS-4] the fee cannot stand on either branch."
-   },
-   {
-    "id": "D3",
-    "reason": "The chat and statement are complete and not misleading, but they show the driver was still en route at the moment of cancellation, confirming no arrival and no NS-1 wait [F8][F10][NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "Band 4 (30-39 km/h) is not congestion and no incident was recorded, with fair weather [F11][F12][F13]; RD-4's reasonable-cause exception governs route deviation, not cancellation fees, so it confers no charge here [RD-4][NS-4]."
-   },
-   {
-    "id": "D5",
-    "reason": "Accepted: the driver's clean profile and the absence of any no-show assertion give no ground for an account flag, and none is ordered [F14][F15][NS-2][RD-6]."
-   },
-   {
-    "id": "C2",
-    "reason": "Correct as far as it goes, but the operative charge is voided under NS-4, the branch NS-0 routes a rider cancellation to; NS-2's flag condition is not triggered because no 'I'm Here' tap exists [F3][NS-2][NS-0]."
-   },
-   {
-    "id": "C4",
-    "reason": "Relied on in substance, but the statement at F10 is a post-trip written statement and cannot establish the timeline; timing and position are settled by the system records F2 and F1 [F2][F1][NS-1]."
-   },
-   {
-    "id": "C5",
-    "reason": "The traffic reading is applied [F11][F12][F13], but the case does not turn on it; a delay does not excuse the fee because the charge already fails under NS-4's free window [NS-4][RD-4]."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
@@ -87,17 +55,18 @@
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a $6.61 Ryde voucher under NS-7; no account action against the driver.",
-  "confidence": 0.9,
-  "reasoning": "The record settles the branch: cancelled_by = rider on an immediate booking, so the fee can only enter through NS-0 and stand under NS-4 [F2][F5][NS-0]. The rider cancelled 2 min 30 s after acceptance (18:23:00 to 18:25:30), which is inside the 3-minute free-cancellation window, so no fee may be charged on this branch [F2][NS-4].\n\nThe only other route to a $6.61 charge is the no-show branch (NS-1/NS-2), and it fails on every element: driver_arrived_at is null, driver_pressed_here_at is null, and no platform auto-arrival was recorded, so NS-1(i) is unmet [F3][F4][NS-1]. The GPS shows the driver's closest approach to the pickup was 1816 m and he never came within 200 m, so NS-1(ii) fails [F1][NS-1][NS-2]. The driver's own chat message at 18:24 said \"5 min more, traffic is slow\" and his post-trip statement said he \"was on my way\" when the rider cancelled, confirming he had not arrived and no wait of more than 3 minutes at the pickup point could have accrued (indeed no waiting fee appears on the record) [F8][F10][F5][NS-1][NS-2].\n\nThe driver's delay explanation does not create a charge. There is no traffic exemption to apply here — RD-4 concerns route deviation, not no-show or cancellation fees — and in any case the only traffic record is Jurong East Avenue 1 at speed band 4 (30-39 km/h), not a congested band, with no incidents on the route and fair weather [F11][F12][F13][RD-4]. A driver still en route at the moment of a rider's cancellation 2 min 30 s after matching does not convert a free cancellation into a chargeable one [F2][NS-4].\n\nAmount: the only charge on record is the cancellation fee of $6.61, with no surge (1.0x) and no other add-ons; the full fee is therefore refundable — $6.61 [F5][F6][NS-4][NS-2]. No account flag is warranted: the driver never tapped \"I'm Here\", so NS-2's flag condition (a tap while outside the pickup radius) is not triggered, and the profiles of both parties are clean [F3][F4][F14][F15][NS-2][RD-6].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver.",
+  "confidence": 0.97,
+  "reasoning": "The cancellation is a rider cancellation 2 min 30 s after matching (accepted 18:23:00, cancelled 18:25:30) [F2], so the only gateway to the $6.61 fee is NS-0 (cancelled_by = rider → NS-4); no driver-side no-show cancellation occurred [F2][RD-6 not implicated]. Under NS-4, a cancellation within 3 minutes of matching (≤ 3:00) is not chargeable, and the trace confirms the fee window failed (150 s) [F2][F5][NS-4].\n\nThe fee cannot be saved through the no-show branch either: the driver's closest approach to the pickup was 1816 m and he never came within 200 m [F1], the platform recorded no arrival (driver_arrived_at null) [F3], and there was no \"I'm Here\" tap and no automatic arrival [F4]. NS-1 (ii) is therefore unsatisfied, and the driver's written statement that he \"was on my way\" [F10] is a post-hoc claim that yields to the GPS and timeline records [F1][F3][F4][NS-1][NS-2]. His chat message at 18:24 saying \"5 min more, traffic is slow\" [F8] corroborates that he had not reached the pickup point when the rider cancelled [F1][NS-1].\n\nThe driver's delay is not excused by the traffic picture in any way that earns the fee: Jurong East Avenue 1 shows only speed band 4 (30–39 km/h), i.e. not a band 1/2 record [F11], no traffic incidents were recorded on the route [F12], and the weather was fair with no rain [F13]; in any event RD-4-type evidence could only excuse a measured off-route segment, and here there is no off-route segment to excuse — this is a pre-pickup cancellation [F11][F12][F13][NS-4]. Since no segment of the route was driven, segment_findings is empty.\n\nThe chat record is complete: 2 messages, every one timestamped, so timing and the driver's distance are determinable without a G12 referral [F9]. The claimed amount is the cancellation fee itself: $6.61 [F5][F2][NS-4], which under NS-7 is disbursed as a Ryde voucher; no cash refund is ordered [NS-7]. The safety screen found nothing: the chat consists of a query about ETA [F7] and a delay reply [F8], and the driver's statement is a neutral assertion of travel [F10]; the complaint alleges only non-arrival and overcharging — no threat, intimidation, harassment or dangerous-driving allegation [F7][F8][F10][SAFE-1][SAFE-2]. Profile facts (rider clean history [F14]; driver clean history [F15]) are noted only in support and do not decide the case; no flag_account is warranted since no RD-6/NS-2 trigger applies.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
+   "F7",
    "F8",
+   "F9",
    "F10",
    "F11",
    "F12",
@@ -107,50 +76,17 @@
   ],
   "cited_policy": [
    "NS-0",
+   "NS-4",
    "NS-1",
    "NS-2",
-   "NS-4",
    "NS-7",
-   "RD-4",
-   "RD-6"
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
-   {
-    "id": "D1",
-    "reason": "The premise that a rider cancellation fee is presumptively valid is wrong: NS-4 charges the fee only for a cancellation made more than 3 minutes after matching, and the record shows acceptance 18:23:00 and cancellation 18:25:30, i.e. 2 min 30 s, inside the free window [F2][NS-4][NS-0]."
-   },
-   {
-    "id": "D2",
-    "reason": "Correct that the driver never asserted a no-show [F3][F4][NS-1], but that removes the only remaining route to the charge; with NS-4 unmet [F2][NS-4] the fee cannot stand on either branch."
-   },
-   {
-    "id": "D3",
-    "reason": "The chat and statement are complete and not misleading, but they show the driver was still en route at the moment of cancellation, confirming no arrival and no NS-1 wait [F8][F10][NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "Band 4 (30-39 km/h) is not congestion and no incident was recorded, with fair weather [F11][F12][F13]; RD-4's reasonable-cause exception governs route deviation, not cancellation fees, so it confers no charge here [RD-4][NS-4]."
-   },
-   {
-    "id": "D5",
-    "reason": "Accepted: the driver's clean profile and the absence of any no-show assertion give no ground for an account flag, and none is ordered [F14][F15][NS-2][RD-6]."
-   },
-   {
-    "id": "C2",
-    "reason": "Correct as far as it goes, but the operative charge is voided under NS-4, the branch NS-0 routes a rider cancellation to; NS-2's flag condition is not triggered because no 'I'm Here' tap exists [F3][NS-2][NS-0]."
-   },
-   {
-    "id": "C4",
-    "reason": "Relied on in substance, but the statement at F10 is a post-trip written statement and cannot establish the timeline; timing and position are settled by the system records F2 and F1 [F2][F1][NS-1]."
-   },
-   {
-    "id": "C5",
-    "reason": "The traffic reading is applied [F11][F12][F13], but the case does not turn on it; a delay does not excuse the fee because the charge already fails under NS-4's free window [NS-4][RD-4]."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
@@ -165,12 +101,12 @@
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.97 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0029.record.json",
- "latency_s": 25.94,
- "input_tokens": 117655,
- "output_tokens": 7617,
- "requests": 11,
+ "latency_s": 19.19,
+ "input_tokens": 104176,
+ "output_tokens": 6161,
+ "requests": 10,
  "llm_calls": 6
 }

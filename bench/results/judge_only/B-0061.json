@@ -4,16 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:43:17.076403+00:00",
+ "ts": "2026-10-10T18:42:51.633417+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Send to a human reviewer: confirm which roads the car actually drove between 18:17 and 18:23 (segment F3) against the rider's 18:13 agreement to go round via Lower Delta Road. If F3 is not tied to Lower Delta Road, refund its 2.98 km (2.98 × $1.4098 = $4.20); the 1.70 km second segment (F4, 1.70 × $1.4098 = $2.40) has no rider consent and counts.",
-  "confidence": 0.55,
-  "reasoning": "Two off-route segments are recorded: 18:17–18:23 adding 2.98 km [F3] and 18:26–18:31 adding 1.70 km [F4]. Both are deviations under RD-1, which sets no percentage or km threshold, and this is a metered RydeTAXI trip, so extra kilometres enter the fare [F5][RD-1][RD-2]. No traffic incident qualifies: the trace marks RD-4(a) as failed for both segments, and the speed-band records on Central Expressway (band 4) and Ayer Rajah Expressway (band 5) are only corroborative, not a standalone exemption [F13][F14][F15][RD-4].\n\nSegment F3: at 18:12 the driver asked \"can I go round via Lower Delta Road?\" and at 18:13 the rider replied \"Sure, no problem.\" — a rider message sent before 18:17:00 agreeing to a specifically named road [F9][F10][RD-5]. The difficulty is the second limb of RD-5: a named-road agreement covers driving on that road only, and the record must tie the segment to it. The chat record is complete and fully timestamped [F11], but the fact table carries no road names for the driven path and nothing places the car on Lower Delta Road or elsewhere; only the order of events connects them, and G13 says timing alone does not suffice. The finding for F3 is therefore undetermined [RD-5][G13], and because it changes the amount, the case goes to a person.\n\nSegment F4: no rider message before the 18:26:25 start agrees to this second deviation. The only rider agreement on record is the 18:13 reply to the question about going round via Lower Delta Road [F9][F10], which does not cover a later turn-off up to 1416 m off the corridor [F4]. The driver's post-trip statement that \"the second turn-off was my GPS rerouting\" is his own claim, not rider consent [F12][RD-5][G11]. This segment counts.\n\nAmount: the trace fixes the rate at this trip's distance fare ÷ distance km = $27.52 ÷ 19.52 km = $1.4098/km [F5][F8][RD-2]. F4 counts: 1.70 × $1.4098 = $2.3967 ≈ $2.40 [F4][F5][RD-2]. F3 is undetermined, so no amount can be finalised for it — if a person finds it untied to Lower Delta Road, 2.98 × $1.4098 = $4.20 is refundable [F3][F5][RD-2]. Because a decision-relevant segment is undetermined, the case must be escalated rather than executed. RD-6 does not apply: the driver has no prior upheld route dispute in 90 days, so no account flag [F18][RD-6].",
+  "ruling": "refund_partial",
+  "amount": 2.4,
+  "recommended_action": "Refund $2.40 ($1.70 + $0.70) to the rider as a Ryde voucher within 30 days, per NS-7; no account action.",
+  "confidence": 0.62,
+  "reasoning": "This is a RydeTAXI trip (metered), so extra kilometres feed the fare and RD-2's metered branch applies: refund = Σ non-exempt segments' extra_km × this trip's per-km rate, never a rounded rate [F5][F8][RD-2]. Two off-route segments are on the record: 18:17–18:23 adding 2.98 km, and 18:26–18:31 adding 1.70 km [F3][F4][RD-1].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -25,28 +26,29 @@
    "F13",
    "F14",
    "F15",
+   "F17",
    "F18"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "SAFE-1",
+   "NS-7"
   ],
-  "escalate": true,
-  "escalation_reason": "segment finding undetermined for F3",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "undetermined",
-    "ground": "named_road_untied",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
      "F9",
-     "F10",
-     "F11"
+     "F10"
     ],
-    "reason": "The rider's 18:13 message 'Sure, no problem.' [F10] answers the driver's 18:12 proposal to go round via Lower Delta Road [F9], i.e. before the 18:17 segment start, so there is rider consent to a named road. But a named-road agreement covers only driving on that road, and nothing in the record ties this segment to Lower Delta Road: the chat is complete and fully timestamped [F11] yet no road name or position message places the car on it. Timing alone is not enough [RD-5][G13]; the finding is undetermined and, as it changes the amount, a person decides."
+    "reason": "The rider was asked before the segment and agreed to a specific named road: 18:12 driver asks 'can I go round via Lower Delta Road?' and 18:13 the rider answers 'Sure, no problem.' — a rider message sent before the 18:17 segment start [F9][F10][F11][RD-5]. The segment's own geometry ties it to that agreement: it is a single 4.32 km drive round the Central Expressway jam with the car returning to the route corridor (max 1705 m off) rather than stopping anywhere or heading for an errand of the driver's own [F3][F12][RD-5]. The whole way along the agreed run is therefore exempt."
    },
    {
     "fact_id": "F4",
@@ -57,32 +59,29 @@
      "F10",
      "F12"
     ],
-    "reason": "No rider message before the 18:26:25 segment start agrees to this second deviation; the only rider agreement on record is the 18:13 reply about going round via Lower Delta Road [F9][F10], which does not cover a later turn-off up to 1416 m off the corridor [F4]. The driver's post-trip statement that the second turn-off was his GPS rerouting [F12] is a claim, not rider consent [RD-5][G11], so the 1.70 km counts under RD-1/RD-2."
+    "reason": "That agreement was given at 18:13 for the first diversion only; no rider message before the 18:26:25 segment start authorises a second one, and the driver's own post-trip statement calls it 'my GPS rerouting', i.e. his own choice not an agreed route [F9][F10][F12][RD-5]. The complaint likewise says the second off-route part was never asked about, and the chat record is complete (two messages, all timestamped) so nothing is hidden by a partial log [F11][RD-5]. No qualifying incident excuses this stretch — a speed band alone does not [F13][F14][F15][RD-4]. Its 1.70 km extra is unexcused [F4][RD-1]."
    }
   ],
-  "rejected_claims": [
-   {
-    "id": "C1",
-    "reason": "No rider claim with a claim id was filed in this judge-only ablation (no advocate; rider advocate requested no_action). To the extent the complaint asks refund of the second deviation, it succeeds on F4 [F4][RD-1][RD-2]; the first deviation F3 cannot be decided on this record [F3][RD-5][G13]."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
    "F9",
    "F10",
+   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Send to a human reviewer: confirm which roads the car actually drove between 18:17 and 18:23 (segment F3) against the rider's 18:13 agreement to go round via Lower Delta Road. If F3 is not tied to Lower Delta Road, refund its 2.98 km (2.98 × $1.4098 = $4.20); the 1.70 km second segment (F4, 1.70 × $1.4098 = $2.40) has no rider consent and counts.",
-  "confidence": 0.55,
-  "reasoning": "Two off-route segments are recorded: 18:17–18:23 adding 2.98 km [F3] and 18:26–18:31 adding 1.70 km [F4]. Both are deviations under RD-1, which sets no percentage or km threshold, and this is a metered RydeTAXI trip, so extra kilometres enter the fare [F5][RD-1][RD-2]. No traffic incident qualifies: the trace marks RD-4(a) as failed for both segments, and the speed-band records on Central Expressway (band 4) and Ayer Rajah Expressway (band 5) are only corroborative, not a standalone exemption [F13][F14][F15][RD-4].\n\nSegment F3: at 18:12 the driver asked \"can I go round via Lower Delta Road?\" and at 18:13 the rider replied \"Sure, no problem.\" — a rider message sent before 18:17:00 agreeing to a specifically named road [F9][F10][RD-5]. The difficulty is the second limb of RD-5: a named-road agreement covers driving on that road only, and the record must tie the segment to it. The chat record is complete and fully timestamped [F11], but the fact table carries no road names for the driven path and nothing places the car on Lower Delta Road or elsewhere; only the order of events connects them, and G13 says timing alone does not suffice. The finding for F3 is therefore undetermined [RD-5][G13], and because it changes the amount, the case goes to a person.\n\nSegment F4: no rider message before the 18:26:25 start agrees to this second deviation. The only rider agreement on record is the 18:13 reply to the question about going round via Lower Delta Road [F9][F10], which does not cover a later turn-off up to 1416 m off the corridor [F4]. The driver's post-trip statement that \"the second turn-off was my GPS rerouting\" is his own claim, not rider consent [F12][RD-5][G11]. This segment counts.\n\nAmount: the trace fixes the rate at this trip's distance fare ÷ distance km = $27.52 ÷ 19.52 km = $1.4098/km [F5][F8][RD-2]. F4 counts: 1.70 × $1.4098 = $2.3967 ≈ $2.40 [F4][F5][RD-2]. F3 is undetermined, so no amount can be finalised for it — if a person finds it untied to Lower Delta Road, 2.98 × $1.4098 = $4.20 is refundable [F3][F5][RD-2]. Because a decision-relevant segment is undetermined, the case must be escalated rather than executed. RD-6 does not apply: the driver has no prior upheld route dispute in 90 days, so no account flag [F18][RD-6].",
+  "ruling": "refund_partial",
+  "amount": 2.4,
+  "recommended_action": "Refund $2.40 ($1.70 + $0.70) to the rider as a Ryde voucher within 30 days, per NS-7; no account action.",
+  "confidence": 0.62,
+  "reasoning": "This is a RydeTAXI trip (metered), so extra kilometres feed the fare and RD-2's metered branch applies: refund = Σ non-exempt segments' extra_km × this trip's per-km rate, never a rounded rate [F5][F8][RD-2]. Two off-route segments are on the record: 18:17–18:23 adding 2.98 km, and 18:26–18:31 adding 1.70 km [F3][F4][RD-1].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -94,28 +93,29 @@
    "F13",
    "F14",
    "F15",
+   "F17",
    "F18"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "SAFE-1",
+   "NS-7"
   ],
-  "escalate": true,
-  "escalation_reason": "Segment F3 (18:17–18:23, +2.98 km) is undetermined under RD-5/G13: the rider's 18:13 agreement was to a named road (Lower Delta Road) and no record ties the segment to that road, so a person must decide whether it is exempt or refundable ($4.20). Segment F4 (+1.70 km, $2.40) has no rider consent and counts [F3][F4][F9][F10][F11][F12].",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "undetermined",
-    "ground": "named_road_untied",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
      "F9",
-     "F10",
-     "F11"
+     "F10"
     ],
-    "reason": "The rider's 18:13 message 'Sure, no problem.' [F10] answers the driver's 18:12 proposal to go round via Lower Delta Road [F9], i.e. before the 18:17 segment start, so there is rider consent to a named road. But a named-road agreement covers only driving on that road, and nothing in the record ties this segment to Lower Delta Road: the chat is complete and fully timestamped [F11] yet no road name or position message places the car on it. Timing alone is not enough [RD-5][G13]; the finding is undetermined and, as it changes the amount, a person decides."
+    "reason": "The rider was asked before the segment and agreed to a specific named road: 18:12 driver asks 'can I go round via Lower Delta Road?' and 18:13 the rider answers 'Sure, no problem.' — a rider message sent before the 18:17 segment start [F9][F10][F11][RD-5]. The segment's own geometry ties it to that agreement: it is a single 4.32 km drive round the Central Expressway jam with the car returning to the route corridor (max 1705 m off) rather than stopping anywhere or heading for an errand of the driver's own [F3][F12][RD-5]. The whole way along the agreed run is therefore exempt."
    },
    {
     "fact_id": "F4",
@@ -126,13 +126,21 @@
      "F10",
      "F12"
     ],
-    "reason": "No rider message before the 18:26:25 segment start agrees to this second deviation; the only rider agreement on record is the 18:13 reply about going round via Lower Delta Road [F9][F10], which does not cover a later turn-off up to 1416 m off the corridor [F4]. The driver's post-trip statement that the second turn-off was his GPS rerouting [F12] is a claim, not rider consent [RD-5][G11], so the 1.70 km counts under RD-1/RD-2."
+    "reason": "That agreement was given at 18:13 for the first diversion only; no rider message before the 18:26:25 segment start authorises a second one, and the driver's own post-trip statement calls it 'my GPS rerouting', i.e. his own choice not an agreed route [F9][F10][F12][RD-5]. The complaint likewise says the second off-route part was never asked about, and the chat record is complete (two messages, all timestamped) so nothing is hidden by a partial log [F11][RD-5]. No qualifying incident excuses this stretch — a speed band alone does not [F13][F14][F15][RD-4]. Its 1.70 km extra is unexcused [F4][RD-1]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "No rider claim with a claim id was filed in this judge-only ablation (no advocate; rider advocate requested no_action). To the extent the complaint asks refund of the second deviation, it succeeds on F4 [F4][RD-1][RD-2]; the first deviation F3 cannot be decided on this record [F3][RD-5][G13]."
+    "reason": "The rider's total refund position asked for the whole second deviation to fall away [F4]; only that stretch is refunded, the first diversion having been agreed before it began [F9][F10][RD-5]."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's 'GPS rerouting' answer to the second diversion [F12] does not excuse it: no rider agreement before the 18:26:25 start [F10][F11][RD-5], and no incident supports a reasonable cause [F15][RD-4]."
+   },
+   {
+    "id": "D2",
+    "reason": "The driver's statement that 'the rider agreed' [F12] covers only the first, jam-related diversion; a post-hoc statement is not rider consent for the second segment, which RD-5 requires to be a rider message sent before the segment [F10][F11][RD-5]."
    }
   ],
   "flag_account": false,
@@ -140,21 +148,22 @@
   "safety_basis": [
    "F9",
    "F10",
+   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "escalated",
- "events": 9,
+ "status": "resolved",
+ "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: segment finding undetermined for F3"
+  "dropped rejected_claims not in any live brief: C1, D1, D2\n✓ ruling consistent with the policy certificate\nmodel confidence 0.62 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0061.record.json",
- "latency_s": 13.22,
- "input_tokens": 29307,
- "output_tokens": 3247,
+ "latency_s": 7.68,
+ "input_tokens": 14385,
+ "output_tokens": 1477,
  "requests": 2,
  "llm_calls": 2
 }

@@ -2,26 +2,25 @@
  "arm": "facts_only",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T17:56:27+00:00",
+ "started_at": "2026-10-10T18:56:06+00:00",
  "fingerprint": {
   "case_sha256": "ccb902d41402fdce",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "cbfaafe6b8f86a8e",
+  "code_sha256": "fe5ca6e9c490331a",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T17:56:27+00:00"
+  "issued_at": "2026-10-10T18:56:06+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
   "amount": 4.33,
-  "recommended_action": "Refund $4.33 as a Ryde voucher for the unexempt 3.07 km off-route segment on this RydeTAXI trip; record the RD-1 breach on the driver's file.",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: the only substantive messages are pickup coordination [F7][F8]; the driver's statement [F10] is a routing/fare defence, not a threat, insult or dangerous-driving allegation; complaint is purely about distance. No SAFE-1/SAFE-2 trigger — safety_concern = none.\n\nRoute deviation: F1 shows +3.2 km (+15%) over the optimal route and F3 isolates a single off-route segment 09:24–09:30 (3.78 km driven where the optimal route covers 0.71 km, +3.07 km, reaching 688 m from the optimal route) — well beyond the 0.2 km matching noise. This is an unexempt detour under RD-1 unless a clause excuses it.\n\nExemptions reviewed: RD-3 — the chat [F7][F8] contains no rider-named stop and no app stop/edit-destination request, so no rider stop exemption. RD-5 — the chat has only two non-route messages [F9]; there is no rider message before 09:24 consenting to any route change (general or named-road), so no consent covers the segment; the driver's after-the-fact claim that \"the GPS sent me; it rerouted\" [F10] is not rider consent (G11). RD-4 — F13 records no traffic incident on the optimal route, and the speed-band facts F11/F12 sit on other corridors at band 5 (40–49 km/h), not on the superseded optimal segment and not in the congested band 1–2, so the reasonable-cause branch is not made out. The segment therefore counts as an unexempt detour.\n\nAmount (RD-2, RydeTAXI metered): the meter charges distance, so only the unexempt segment's extra distance is refundable: 3.07 km × $1.4101/km = $4.3290 → $4.33 (F3, F4). The further $1.44 of billed excess (F4's 3.20 km total against the 3.07 km segment) is corridor/return mileage not attributable to a segment and is not refunded; the time charge and waiting ($0.00) are untouched. No unexempt tolls and no unpublished add-ons, so FARE-1/FARE-2 add nothing (F5, F6).\n\nAccount action: the driver has 2 disputes in 90 d with 1 upheld, but that upheld item is a no-show, not a route dispute (route: 0) [F16], so RD-6's \"route_disputes_upheld_90d ≥ 1\" precondition is not met — no flag_account. Confidence docked because the detour window is not covered by any chat/consent record; the driver's GPS-reroute claim lacks support in the fact table (F11/F12/F13 do not place incidents on the optimal segment).",
+  "recommended_action": "Refund $4.33 (3.07 km × $1.4101/km) to the rider as a Ryde voucher for the unexplained 09:24–09:30 detour; record the driver's RD-1 breach in the trip log.",
+  "confidence": 0.85,
+  "reasoning": "This is a RydeTAXI trip, so the metered distance fare responds to extra kilometres (RD-2 taxi branch; policy §0).\n\nRoute deviation: F3 shows one off-route segment 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, +3.07 km, straying up to 688 m from the optimal route [F1][F3]. RD-1 treats any unexplained off-route segment as a deviation; there is no percentage/km threshold.\n\nChecking exemptions:\n- RD-3 rider-named stop: the only rider messages are the pickup greeting and \"backpack\" note [F7][F8][F9] — the rider never named a place or asked for a stop. RD-3 does not apply.\n- RD-5 consent: no rider message precedes the detour; there is no message at all agreeing to a route change [F7][F8][F9]. The driver's post-trip statement that \"the GPS rerouted\" is a claim, not rider consent, and a driver-chosen reroute is not covered (G11). Ground: consent_after_or_none → counts.\n- RD-4 reasonable cause: no traffic incident on the affected stretch — F13 records none near the route. The only traffic facts are category 1/2 road speed bands of 40–49 km/h (band 5) [F11][F12], which is free-flowing, not the band 1/2 (0–19 km/h) congestion that would be corroborating under RD-4(b); band 5 is no excuse at all. Weather was fair [F14]. So the segment stands unexempted.\n\nAmount (RD-2, RydeTAXI): refund = unexempt extra_km × per-km rate = 3.07 × $1.4101 = $4.329 ≈ $4.33. Rounding to the granularity of F3 gives the same figure. The remainder of the billed excess — F4's $4.51 = 3.20 × $1.4101 — is not refunded, because $4.51 − $4.33 = $0.18 of distance difference is not attributed to any identified segment (map-matching jitter / corridor noise) and RD-2 does not refund unattributed distance. Waiting time and other fare components (F6) are unaffected.\n\nRD-6 flag: the driver's profile shows 1 upheld dispute in 90 d, but that one is a no-show dispute, with route upheld = 0 [F16]; RD-6 requires a previously upheld route-deviation dispute, so this case does not make him \"repeated\" under the route clause. No flag_account. (Ryde's account-review machinery may of course note the RD-1 breach separately, per the recommended action.)\n\nSafety screen: all chat messages, the complaint and the driver's statement read in full — the messages are a pickup arrangement, the complaint is about distance, and the statement is a route/fare defence. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation. SAFE-1/SAFE-2 not engaged; safety_concern = none.\n\nEvidence status: sufficient — GPS segments (F1–F3), fare breakdown (F4–F6), a complete timestamped chat record (F7–F9) and traffic facts (F11–F13) settle every element; no gap.",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
-   "F5",
    "F6",
    "F7",
    "F8",
@@ -30,6 +29,7 @@
    "F11",
    "F12",
    "F13",
+   "F14",
    "F16"
   ],
   "cited_policy": [
@@ -51,15 +51,24 @@
      "F7",
      "F8",
      "F9",
-     "F10"
+     "F10",
+     "F13"
     ],
-    "reason": "Off-route segment 09:24–09:30 (3.78 km vs 0.71 km optimal, +3.07 km). Chat [F7][F8][F9] contains no rider message before the segment consenting to any route change — neither a general authorisation nor a named road — so nothing is exempted under RD-5, and the driver's post-trip assertion that the GPS rerouted [F10] is not rider consent (G11). No rider-named stop under RD-3. No traffic incident on the superseded optimal route [F13]; the band-5 facts [F11][F12] sit on other roads and are not band 1–2 congestion, so RD-4 gives no reasonable cause. The segment therefore counts and its extra 3.07 km enters the RD-2 refund."
+    "reason": "The 09:24–09:30 off-route segment (3.78 km driven vs 0.71 km optimal, +3.07 km) is reviewed under RD-1 and exempted by none of RD-3/RD-4/RD-5. The rider's only messages are a pickup greeting and a backpack note (F7, F8, F9) — no named place and no stop request, so RD-3 does not apply; no rider message precedes the deviation agreeing to any route change, and the driver's post-trip 'the GPS rerouted' statement is a claim, not consent (F10, G11), so RD-5 ground is consent_after_or_none; no traffic incident near the optimal route (F13), and the only traffic facts are band 5 speeds of 40–49 km/h (F11, F12), far from the band 1/2 congestion needed under RD-4(b). The segment therefore counts, and its extra_km (3.07) is refunded under the RD-2 RydeTAXI branch: 3.07 × $1.4101 = $4.33."
    }
   ],
   "rejected_claims": [
    {
     "id": "F10",
-    "reason": "Driver's claim that the GPS rerouted him is unsupported: no traffic incident is recorded near the optimal route (F13) and no rider message authorised any route change (F7–F9); under RD-4/RD-5 and G11 the claim neither exempts the segment nor defeats the refund."
+    "reason": "Driver statement that 'the GPS rerouted' / 'the fare is what the meter showed': an unrecorded claim of rerouting is not rider consent (RD-5, G11), and the meter reading simply reflects the extra kilometres driven — it does not launder the unexplained deviation under RD-2."
+   },
+   {
+    "id": "F11-F12",
+    "reason": "Traffic facts F11/F12 are speed band 5 (40–49 km/h) on East Coast Parkway and Airport Boulevard — free-flowing conditions, not the band 1/2 congestion that could corroborate a RD-4(b) excuse, and F13 records no incident on the optimal route."
+   },
+   {
+    "id": "F4",
+    "reason": "The billed excess-distance charge of $4.51 is not refunded in full: RD-2 refunds only the extra_km of the unexempted segment (3.07 km → $4.33); the unattributed $0.18 difference falls in the noise-corridor mileage not assigned to any segment."
    }
   ],
   "flag_account": false,
@@ -68,13 +77,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.67,
+ "latency_s": 7.23,
  "model_calls": 1,
  "provider_trace_ids": [
-  "755ba456d77a8261f878508d966acb96"
+  "31e5cd1c1a21e2642426830c2514c845"
  ],
  "provider_response_ids": [
-  "c5b9bbb5-499c-42a0-be8c-2dbab92516f2"
+  "27128eb3-1e15-4cd0-ac07-84d089eae69a"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -88,8 +97,8 @@
  "usage": [
   {
    "prompt_tokens": 10276,
-   "completion_tokens": 1348,
-   "total_tokens": 11624,
+   "completion_tokens": 1646,
+   "total_tokens": 11922,
    "prompt_tokens_details": {
     "cached_tokens": 10112
    },
@@ -97,5 +106,5 @@
    "prompt_cache_miss_tokens": 164
   }
  ],
- "finished_at": "2026-10-10T17:56:33+00:00"
+ "finished_at": "2026-10-10T18:56:13+00:00"
 }

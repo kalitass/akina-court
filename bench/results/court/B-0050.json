@@ -4,19 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:50:26.767094+00:00",
+ "ts": "2026-10-10T18:49:46.210169+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
+  "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Issue a voucher refund of $7.09 to the rider (RydeTAXI meter overcharge for the 5.03 km non-exempt off-route segment at $1.4101/km, per NS-7), and remind the driver that a \"take whichever way is faster\" agreement covers a route to the destination, not a 1391 m excursion off the optimal corridor (RD-1/RD-5).",
-  "confidence": 0.7,
-  "reasoning": "RydeTAXI metered trip, so distance feeds the meter and the calculation sits under RD-2's RydeTAXI head [F7][RD-2]. Code settles the off-route segment: 13:07–13:19, 7.41 km where the optimal route covers 2.38 km, +5.03 km, up to 1391 m off the optimal route, with no RD-4 incident on the replaced stretch [F3][F15][RD-1][RD-4].\n\nThe RD-4 screen fails: F15 records no qualifying incident on the replaced optimal stretch, and F12 (Ayer Rajah Expressway band 2, 12:41–13:07) is band evidence only, which RD-4(b) says cannot exempt a segment alone; a longer way that took 48.3 min against a 33.6 min estimate shows the reroute was not the faster way it needed to be [F12][F13][F15][F2][RD-4].\n\nConsent (RD-5): the only rider message is F9, 13:04 — before the 13:07:15 segment start — \"Just take whichever way is faster lah, I'm late\", a general route choice; the chat record is complete and timestamped, so the timing test is met [F8][F9][F10][F3][RD-5]. A general authorisation covers a route chosen to get to Suntec City, not an errand of the driver's own, a stop away from the route, or a loop that reaches nothing — and a loop that strays 1391 m off the optimal corridor while running 14.7 min over the estimate is not a destination route, so the segment is not covered by the authorisation [F3][F1][F2][RD-5]. The driver's after-trip statement that the rider agreed verbally is a claim, not consent [F11][G11].\n\nAmount from the fare record's own rate: $42.36 ÷ 30.04 km = $1.4101/km [F7][F4][RD-2]. RD-2 refunds only the non-exempt segment's extra_km, not corridor/matching mileage inside the 200 m band, so the billed 5.59 km excess-distance line is not the refundable measure; the segment's extra_km is 5.03 km. 5.03 km × $1.4101/km = $7.0928 → $7.09. Metered waiting ($0.11) stays with the driver under RD-3(c) and the platform fee ($1.47) is a published item [F5][F7][RD-3][FARE-1].\n\nNo flag: RD-6 needs route_disputes_upheld_90d ≥ 1 and F18 shows 0 upheld, so the breach is not \"repeated\" [F18][RD-6].",
+  "recommended_action": "Close the dispute as no_action: the sole off-route segment (F3) was covered by the rider's pre-segment general route authorisation, so no route refund is due; no account flag.",
+  "confidence": 0.6,
+  "reasoning": "The trip was a RydeTAXI metered trip (F7), so RD-2's metered branch applies: any unexempted off-route segment's extra_km is refunded at this trip's per-km rate, distance fare ÷ distance km [F4][RD-2]. RD-1 is satisfied because one off-route segment exists: F3 records 13:07–13:19, 7.41 km driven where the optimal route covers 2.38 km, +5.03 km, up to 1391 m off route [F3][RD-1]. The whole case therefore turns on RD-5 for that single segment.\n\nRD-5 requires a rider's own message sent before the segment start, agreeing to the route, and the agreement must cover that segment [F9][RD-5]. The driver asked at 13:03, \"shall I take another way?\" [F8], and the rider replied at 13:04, \"Just take whichever way is faster lah, I'm late.\" [F9]. Both chat messages are timestamped and the record is complete [F10], so the consent is rider-issued and precedes the 13:07 segment start by three minutes [F9][F10][RD-5]. The driver's statement F11 is not consent and I do not rely on it [F11][RD-5].\n\nOn scope, \"Just take whichever way is faster\" is a general route choice, not a named road [F9][RD-5]. A general authorisation covers the route chosen to reach the destination and excludes only the driver's own business — a stop away from the route or a loop that reaches nothing [F9][RD-5]. F3 shows no stop at all and no errand: the car kept moving on a driving route toward Suntec City, which is consistent with the driver routing around the Ayer Rajah Expressway queue he had flagged [F3][F8]. Nothing in the record places this segment on a wrong errand, so the general consent covers it, and the segment is exempt under RD-5. RD-3 is not engaged because no rider-named stop appears and no stop was measured in the segment [F3][F9][RD-3(a)]. RD-4 is unavailable: no qualifying incident exists [F15], and the Ayer Rajah Expressway band-2 record cannot exempt on its own [F12][RD-4].\n\nBecause the only segment is exempt, the route-related refund is zero and the metered fare of $60.30, including the excess-distance and waiting items, stays as charged [F4][F5][F7][RD-2]. Had the segment counted, the figure would have been 5.03 km × ($42.36 ÷ 30.04 km = $1.4101/km) = $7.09 [F4][F7][RD-2] — but that arithmetic only applies to an unexempted segment, and this one is exempt. No account flag: the trace marks the RD-6 precondition failed, with route_disputes_upheld_90d = 0 [F18][RD-6].",
   "cited_facts": [
    "F3",
-   "F1",
-   "F2",
    "F4",
    "F5",
    "F7",
@@ -25,7 +23,6 @@
    "F10",
    "F11",
    "F12",
-   "F13",
    "F15",
    "F18"
   ],
@@ -35,72 +32,67 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
-  "escalate": true,
-  "escalation_reason": "not eligible for automation: refund_partial but every segment is exempt → amount would be 0",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
     "finding": "exempt",
     "ground": "general_route_consent",
     "basis": [
+     "F8",
      "F9",
-     "F10",
-     "F8"
+     "F10"
     ],
-    "reason": "The rider's own message F9, sent 13:04 (before the 13:07:15 segment start) and part of a complete, fully timestamped chat record [F10], is a GENERAL route choice — 'Just take whichever way is faster lah, I'm late' — made in direct response to the driver's 13:03 proposal to avoid building traffic on Ayer Rajah Expressway [F8]; under RD-5 kind (1) a general 'whichever is faster' authorisation covers the routing chosen to reach the destination, and nothing in the record shows a stop or errand of the driver's own on this segment (no stop measured; the driver statement F11 adds nothing beyond the quoted message) [F3][F11][RD-5]. No RD-4 incident supports the segment on its own (band evidence only), so the exemption rests on the rider's own pre-segment authorisation, not on reasonable cause [F12][F15][RD-4]."
+    "reason": "Rider message F9 at 13:04, before the 13:07 segment start in F3, answered the driver's 13:03 question F8 with 'Just take whichever way is faster lah, I'm late.' — a general route choice for reaching Suntec City [F9][RD-5]. F3 records no stop and no errand; the car kept moving on a driving route, so the general authorisation covers this segment [F3][F8][RD-5]. Driver statement F11 is not rider-issued consent and is not relied on [F11][RD-5]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Accepted that the 13:07–13:19 stretch is an off-route segment under RD-1, but it is not refundable: the rider's own pre-segment message F9 is a general 'whichever way is faster' authorisation under RD-5 and no stop or errand of the driver's own appears in the record, so the segment is exempt [F3][F9][F10][RD-1][RD-5]."
+    "reason": "The +5.6 km aggregate and the $7.88 billed excess [F1][F4] are accepted as arithmetic, but RD-2 refunds only the extra_km of an unexempted segment [RD-2]; the sole segment F3 is exempt under RD-5 on the rider's own pre-segment message F9, so no amount is refundable."
    },
    {
     "id": "C2",
-    "reason": "The +5.6 km / +23% and +14.7 min figures are correct, but a general route authorisation is not defeated by the route turning out slower; the deviation was consented to before it began and RD-2 refunds no mileage where no unexempted segment remains [F1][F2][F9][F3][RD-2][RD-5]."
+    "reason": "The segment's existence and measurements in F3 are accepted [F3][RD-1], but the claim that it is unexempted fails: the rider agreed before the segment to 'whichever way is faster' [F9][RD-5], which covers a route chosen to get to the destination, and F3 shows no stop or driver errand."
    },
    {
     "id": "C3",
-    "reason": "The rider's reading of F9 as a general authorisation is right, but its claimed consequence is not: RD-5 kind (1) covers the routing chosen to reach the destination, and nothing in the record shows a driver's own stop or errand on this segment, so the segment is exempt rather than unexempted [F9][F8][F3][RD-5]."
+    "reason": "Correctly read as a general route consent [F9][RD-5], but a general authorisation is not limited to a named road and is not defeated by F1/F2's longer trip [F1][F2][RD-5]; the limitation the clause attaches is a driver's own errand or a loop to nowhere, and F3 shows neither."
    },
    {
     "id": "C4",
-    "reason": "The named-road rule does not bite: the driver runs no '走 X 路' case, so the absence of a road-name tie between F3 and a named road is irrelevant; the operative consent is the general authorisation in F9 [F9][F8][F3][RD-5]."
+    "reason": "Agreed that F11 is a post-trip statement and not consent [F11][RD-5]; that does not matter because the consent relied on is the rider's own timestamped message F9, sent before the segment."
    },
    {
     "id": "C5",
-    "reason": "Correct that F11 is a claim and not consent, but it is not needed: the consent relied on is the rider's own timestamped F9, read by its words [F9][F11][F3][RD-5][G11]."
+    "reason": "Accepted that RD-4(a) is unavailable on F15 and that the band-2 record F12 cannot exempt alone under RD-4(b) [F15][F12][RD-4]; the exemption here comes from RD-5 consent, not from the traffic branch, so the point does not decide the case."
    },
    {
     "id": "C6",
-    "reason": "Accepted that no RD-4(a)/(b) exemption arises (F15 records no incident; band evidence alone does not exempt), but the segment is nonetheless exempt under RD-5 on the rider's own authorisation, so the conclusion that it is unexempted does not follow [F12][F15][F9][RD-4][RD-5]."
+    "reason": "F2 and F16 are accurate [F2][F16], but RD-5's test is whether the rider agreed to the route before the segment, not whether the authorised route proved faster; a general authorisation that turns out slower is still an authorisation, and the excess-duration point is not a ground of recovery under RD-2."
    },
    {
     "id": "C7",
-    "reason": "The excess-distance line is $7.88 as billed (5.59 km × $1.4101/km) but RD-2 refunds only non-exempt segment extra_km, and here the only segment is exempt, so the refundable sum is $0 and the claim for $7.88 fails [F4][F3][F9][RD-2][RD-5]."
+    "reason": "The formula 5.03 km × ($42.36 ÷ 30.04 km = $1.4101/km) = $7.09 is the correct RD-2 measure [F4][F7][RD-2], but it is payable only if the segment is unexempted; F3 is exempt under RD-5, so the amount is zero."
    },
    {
     "id": "C8",
-    "reason": "Correct that the metered waiting of $0.11 is not refundable under RD-3(c)/RD-2; the rider does not claim it and it stays charged [F5][RD-3][RD-2]."
+    "reason": "Conceded by both sides and confirmed by the trace: route_disputes_upheld_90d = 0 in F18 fails the RD-6 precondition, so no flag_account [F18][RD-6]."
    },
    {
     "id": "C9",
-    "reason": "Correct: F18 shows 0 upheld route disputes, so RD-6's 'repeated' predicate (route_disputes_upheld_90d ≥ 1) is not met and no flag_account is sought [F18][RD-6]."
+    "reason": "Reading F8, F9 and F11 in context, no threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears [F8][F9][F11][SAFE-1]; the screen is recorded as none."
    },
    {
     "id": "D5",
-    "reason": "The congestion account does not itself exempt the segment — F12 is band evidence only and F15 records no incident, so under RD-4(b) the band record alone cannot carry an exemption; the segment is exempt on the rider's RD-5 authorisation instead [F12][F13][F15][RD-4][RD-5]."
-   },
-   {
-    "id": "D6",
-    "reason": "Accepted that no exemption arises under RD-4(a) or (b); the driver's concession that no incident supports the reroute is right, and the exemption here comes from F9 under RD-5 [F12][F15][F9][RD-4][RD-5]."
+    "reason": "The $7.09 figure D5 offers as the correct measure [F4][F5][RD-2] is not adopted as a payable amount: the segment is exempt, so the trace formula yields zero and the $0.11 waiting item stands separately as metered waiting time on a RydeTAXI trip [F5][RD-3]."
    },
    {
     "id": "D7",
-    "reason": "The arithmetic (5.59 km × $1.4101/km = $7.88) is right, but it is not payable: RD-2 only refunds unexempted segments and the single segment is exempt, so nothing is refundable; the platform fee and metered waiting remain charged [F4][F3][F5][F7][RD-2][RD-3][FARE-1]."
+    "reason": "The submission that the 5.03 km excess 'exceeds' the extra duration [F2][F12] is a comparison argument, not a ground of exemption; the general consent in F9 [RD-5] is what exempts the segment, and it does so without any finding about which road was faster."
    }
   ],
   "flag_account": false,
@@ -114,15 +106,13 @@
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_partial",
-  "amount": 7.09,
-  "recommended_action": "Issue a voucher refund of $7.09 to the rider (RydeTAXI meter overcharge for the 5.03 km non-exempt off-route segment at $1.4101/km, per NS-7), and remind the driver that a \"take whichever way is faster\" agreement covers a route to the destination, not a 1391 m excursion off the optimal corridor (RD-1/RD-5).",
-  "confidence": 0.7,
-  "reasoning": "RydeTAXI metered trip, so distance feeds the meter and the calculation sits under RD-2's RydeTAXI head [F7][RD-2]. Code settles the off-route segment: 13:07–13:19, 7.41 km where the optimal route covers 2.38 km, +5.03 km, up to 1391 m off the optimal route, with no RD-4 incident on the replaced stretch [F3][F15][RD-1][RD-4].\n\nThe RD-4 screen fails: F15 records no qualifying incident on the replaced optimal stretch, and F12 (Ayer Rajah Expressway band 2, 12:41–13:07) is band evidence only, which RD-4(b) says cannot exempt a segment alone; a longer way that took 48.3 min against a 33.6 min estimate shows the reroute was not the faster way it needed to be [F12][F13][F15][F2][RD-4].\n\nConsent (RD-5): the only rider message is F9, 13:04 — before the 13:07:15 segment start — \"Just take whichever way is faster lah, I'm late\", a general route choice; the chat record is complete and timestamped, so the timing test is met [F8][F9][F10][F3][RD-5]. A general authorisation covers a route chosen to get to Suntec City, not an errand of the driver's own, a stop away from the route, or a loop that reaches nothing — and a loop that strays 1391 m off the optimal corridor while running 14.7 min over the estimate is not a destination route, so the segment is not covered by the authorisation [F3][F1][F2][RD-5]. The driver's after-trip statement that the rider agreed verbally is a claim, not consent [F11][G11].\n\nAmount from the fare record's own rate: $42.36 ÷ 30.04 km = $1.4101/km [F7][F4][RD-2]. RD-2 refunds only the non-exempt segment's extra_km, not corridor/matching mileage inside the 200 m band, so the billed 5.59 km excess-distance line is not the refundable measure; the segment's extra_km is 5.03 km. 5.03 km × $1.4101/km = $7.0928 → $7.09. Metered waiting ($0.11) stays with the driver under RD-3(c) and the platform fee ($1.47) is a published item [F5][F7][RD-3][FARE-1].\n\nNo flag: RD-6 needs route_disputes_upheld_90d ≥ 1 and F18 shows 0 upheld, so the breach is not \"repeated\" [F18][RD-6].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the dispute as no_action: the sole off-route segment (F3) was covered by the rider's pre-segment general route authorisation, so no route refund is due; no account flag.",
+  "confidence": 0.6,
+  "reasoning": "The trip was a RydeTAXI metered trip (F7), so RD-2's metered branch applies: any unexempted off-route segment's extra_km is refunded at this trip's per-km rate, distance fare ÷ distance km [F4][RD-2]. RD-1 is satisfied because one off-route segment exists: F3 records 13:07–13:19, 7.41 km driven where the optimal route covers 2.38 km, +5.03 km, up to 1391 m off route [F3][RD-1]. The whole case therefore turns on RD-5 for that single segment.\n\nRD-5 requires a rider's own message sent before the segment start, agreeing to the route, and the agreement must cover that segment [F9][RD-5]. The driver asked at 13:03, \"shall I take another way?\" [F8], and the rider replied at 13:04, \"Just take whichever way is faster lah, I'm late.\" [F9]. Both chat messages are timestamped and the record is complete [F10], so the consent is rider-issued and precedes the 13:07 segment start by three minutes [F9][F10][RD-5]. The driver's statement F11 is not consent and I do not rely on it [F11][RD-5].\n\nOn scope, \"Just take whichever way is faster\" is a general route choice, not a named road [F9][RD-5]. A general authorisation covers the route chosen to reach the destination and excludes only the driver's own business — a stop away from the route or a loop that reaches nothing [F9][RD-5]. F3 shows no stop at all and no errand: the car kept moving on a driving route toward Suntec City, which is consistent with the driver routing around the Ayer Rajah Expressway queue he had flagged [F3][F8]. Nothing in the record places this segment on a wrong errand, so the general consent covers it, and the segment is exempt under RD-5. RD-3 is not engaged because no rider-named stop appears and no stop was measured in the segment [F3][F9][RD-3(a)]. RD-4 is unavailable: no qualifying incident exists [F15], and the Ayer Rajah Expressway band-2 record cannot exempt on its own [F12][RD-4].\n\nBecause the only segment is exempt, the route-related refund is zero and the metered fare of $60.30, including the excess-distance and waiting items, stays as charged [F4][F5][F7][RD-2]. Had the segment counted, the figure would have been 5.03 km × ($42.36 ÷ 30.04 km = $1.4101/km) = $7.09 [F4][F7][RD-2] — but that arithmetic only applies to an unexempted segment, and this one is exempt. No account flag: the trace marks the RD-6 precondition failed, with route_disputes_upheld_90d = 0 [F18][RD-6].",
   "cited_facts": [
    "F3",
-   "F1",
-   "F2",
    "F4",
    "F5",
    "F7",
@@ -131,7 +121,6 @@
    "F10",
    "F11",
    "F12",
-   "F13",
    "F15",
    "F18"
   ],
@@ -141,8 +130,7 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -152,61 +140,57 @@
     "finding": "exempt",
     "ground": "general_route_consent",
     "basis": [
+     "F8",
      "F9",
-     "F10",
-     "F8"
+     "F10"
     ],
-    "reason": "The rider's own message F9, sent 13:04 (before the 13:07:15 segment start) and part of a complete, fully timestamped chat record [F10], is a GENERAL route choice — 'Just take whichever way is faster lah, I'm late' — made in direct response to the driver's 13:03 proposal to avoid building traffic on Ayer Rajah Expressway [F8]; under RD-5 kind (1) a general 'whichever is faster' authorisation covers the routing chosen to reach the destination, and nothing in the record shows a stop or errand of the driver's own on this segment (no stop measured; the driver statement F11 adds nothing beyond the quoted message) [F3][F11][RD-5]. No RD-4 incident supports the segment on its own (band evidence only), so the exemption rests on the rider's own pre-segment authorisation, not on reasonable cause [F12][F15][RD-4]."
+    "reason": "Rider message F9 at 13:04, before the 13:07 segment start in F3, answered the driver's 13:03 question F8 with 'Just take whichever way is faster lah, I'm late.' — a general route choice for reaching Suntec City [F9][RD-5]. F3 records no stop and no errand; the car kept moving on a driving route, so the general authorisation covers this segment [F3][F8][RD-5]. Driver statement F11 is not rider-issued consent and is not relied on [F11][RD-5]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Accepted that the 13:07–13:19 stretch is an off-route segment under RD-1, but it is not refundable: the rider's own pre-segment message F9 is a general 'whichever way is faster' authorisation under RD-5 and no stop or errand of the driver's own appears in the record, so the segment is exempt [F3][F9][F10][RD-1][RD-5]."
+    "reason": "The +5.6 km aggregate and the $7.88 billed excess [F1][F4] are accepted as arithmetic, but RD-2 refunds only the extra_km of an unexempted segment [RD-2]; the sole segment F3 is exempt under RD-5 on the rider's own pre-segment message F9, so no amount is refundable."
    },
    {
     "id": "C2",
-    "reason": "The +5.6 km / +23% and +14.7 min figures are correct, but a general route authorisation is not defeated by the route turning out slower; the deviation was consented to before it began and RD-2 refunds no mileage where no unexempted segment remains [F1][F2][F9][F3][RD-2][RD-5]."
+    "reason": "The segment's existence and measurements in F3 are accepted [F3][RD-1], but the claim that it is unexempted fails: the rider agreed before the segment to 'whichever way is faster' [F9][RD-5], which covers a route chosen to get to the destination, and F3 shows no stop or driver errand."
    },
    {
     "id": "C3",
-    "reason": "The rider's reading of F9 as a general authorisation is right, but its claimed consequence is not: RD-5 kind (1) covers the routing chosen to reach the destination, and nothing in the record shows a driver's own stop or errand on this segment, so the segment is exempt rather than unexempted [F9][F8][F3][RD-5]."
+    "reason": "Correctly read as a general route consent [F9][RD-5], but a general authorisation is not limited to a named road and is not defeated by F1/F2's longer trip [F1][F2][RD-5]; the limitation the clause attaches is a driver's own errand or a loop to nowhere, and F3 shows neither."
    },
    {
     "id": "C4",
-    "reason": "The named-road rule does not bite: the driver runs no '走 X 路' case, so the absence of a road-name tie between F3 and a named road is irrelevant; the operative consent is the general authorisation in F9 [F9][F8][F3][RD-5]."
+    "reason": "Agreed that F11 is a post-trip statement and not consent [F11][RD-5]; that does not matter because the consent relied on is the rider's own timestamped message F9, sent before the segment."
    },
    {
     "id": "C5",
-    "reason": "Correct that F11 is a claim and not consent, but it is not needed: the consent relied on is the rider's own timestamped F9, read by its words [F9][F11][F3][RD-5][G11]."
+    "reason": "Accepted that RD-4(a) is unavailable on F15 and that the band-2 record F12 cannot exempt alone under RD-4(b) [F15][F12][RD-4]; the exemption here comes from RD-5 consent, not from the traffic branch, so the point does not decide the case."
    },
    {
     "id": "C6",
-    "reason": "Accepted that no RD-4(a)/(b) exemption arises (F15 records no incident; band evidence alone does not exempt), but the segment is nonetheless exempt under RD-5 on the rider's own authorisation, so the conclusion that it is unexempted does not follow [F12][F15][F9][RD-4][RD-5]."
+    "reason": "F2 and F16 are accurate [F2][F16], but RD-5's test is whether the rider agreed to the route before the segment, not whether the authorised route proved faster; a general authorisation that turns out slower is still an authorisation, and the excess-duration point is not a ground of recovery under RD-2."
    },
    {
     "id": "C7",
-    "reason": "The excess-distance line is $7.88 as billed (5.59 km × $1.4101/km) but RD-2 refunds only non-exempt segment extra_km, and here the only segment is exempt, so the refundable sum is $0 and the claim for $7.88 fails [F4][F3][F9][RD-2][RD-5]."
+    "reason": "The formula 5.03 km × ($42.36 ÷ 30.04 km = $1.4101/km) = $7.09 is the correct RD-2 measure [F4][F7][RD-2], but it is payable only if the segment is unexempted; F3 is exempt under RD-5, so the amount is zero."
    },
    {
     "id": "C8",
-    "reason": "Correct that the metered waiting of $0.11 is not refundable under RD-3(c)/RD-2; the rider does not claim it and it stays charged [F5][RD-3][RD-2]."
+    "reason": "Conceded by both sides and confirmed by the trace: route_disputes_upheld_90d = 0 in F18 fails the RD-6 precondition, so no flag_account [F18][RD-6]."
    },
    {
     "id": "C9",
-    "reason": "Correct: F18 shows 0 upheld route disputes, so RD-6's 'repeated' predicate (route_disputes_upheld_90d ≥ 1) is not met and no flag_account is sought [F18][RD-6]."
+    "reason": "Reading F8, F9 and F11 in context, no threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears [F8][F9][F11][SAFE-1]; the screen is recorded as none."
    },
    {
     "id": "D5",
-    "reason": "The congestion account does not itself exempt the segment — F12 is band evidence only and F15 records no incident, so under RD-4(b) the band record alone cannot carry an exemption; the segment is exempt on the rider's RD-5 authorisation instead [F12][F13][F15][RD-4][RD-5]."
-   },
-   {
-    "id": "D6",
-    "reason": "Accepted that no exemption arises under RD-4(a) or (b); the driver's concession that no incident supports the reroute is right, and the exemption here comes from F9 under RD-5 [F12][F15][F9][RD-4][RD-5]."
+    "reason": "The $7.09 figure D5 offers as the correct measure [F4][F5][RD-2] is not adopted as a payable amount: the segment is exempt, so the trace formula yields zero and the $0.11 waiting item stands separately as metered waiting time on a RydeTAXI trip [F5][RD-3]."
    },
    {
     "id": "D7",
-    "reason": "The arithmetic (5.59 km × $1.4101/km = $7.88) is right, but it is not payable: RD-2 only refunds unexempted segments and the single segment is exempt, so nothing is refundable; the platform fee and metered waiting remain charged [F4][F3][F5][F7][RD-2][RD-3][FARE-1]."
+    "reason": "The submission that the 5.03 km excess 'exceeds' the extra duration [F2][F12] is a comparison argument, not a ground of exemption; the general consent in F9 [RD-5] is what exempts the segment, and it does so without any finding about which road was faster."
    }
   ],
   "flag_account": false,
@@ -219,16 +203,16 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "escalated",
- "events": 29,
+ "status": "resolved",
+ "events": 28,
  "void_claims": 0,
  "verify_lines": [
-  "✗ refund_partial but every segment is exempt → amount would be 0"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.60 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0050.record.json",
- "latency_s": 36.34,
- "input_tokens": 126605,
- "output_tokens": 10820,
+ "latency_s": 25.09,
+ "input_tokens": 112003,
+ "output_tokens": 7915,
  "requests": 10,
  "llm_calls": 6
 }

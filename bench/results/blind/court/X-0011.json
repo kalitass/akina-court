@@ -4,69 +4,65 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:55:23.738363+00:00",
+ "ts": "2026-10-10T18:54:41.449980+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to a Ryde human reviewer to verify the driver's continuous wait at the pickup point using raw GPS/telemetry (platform arrival record 14:21:15, stationary block 14:21:55-14:26:55 at 39 m, \"I'm Here\" tap 14:22:15) before deciding whether the $6.61 no-show cancellation fee stands; leave the fee pending, do not execute a refund or an account flag automatically.",
-  "confidence": 0.83,
-  "reasoning": "This is a driver-cancelled no-show dispute, so it enters the NS rules through NS-0: cancelled_by = driver and the driver claims the rider was a no-show [F5][F13][NS-0]. NS-1 requires three elements together: the \"I'm Here\" tap or a platform arrival confirmation, GPS placing the driver at the pickup at that moment, and a continuous wait beyond 3 minutes at the pickup until cancellation [F7][F6][F4][NS-1].\n\nNS-1(i) and (ii) are settled by the records: the driver tapped \"I'm Here\" at 14:22:15 while 39 m from the pickup, inside the 200 m arrival radius, and the platform independently recorded arrival at 14:21:15 [F7][F6][NS-1]. His chat line at 14:22 (\"I'm here at the pickup point, white BYD e6\") is consistent with, but not the basis of, that finding [F10][NS-1].\n\nNS-1(iii) is the element the code marks as failed: the GPS trace has a hole of 3 min 20 s between 14:23:25 and 14:26:45, so the wait up to the 14:26:55 cancellation is not covered by samples [F1][F5][NS-1]. NS-1 states expressly that where the wait period has a GPS gap the continuous wait cannot be inferred between two samples and the case goes to a person [F1][NS-1]. The records around the hole (stationary 39 m from 14:21:55 to 14:26:55, within 200 m for 4 min 40 s after the tap, cancellation 5 min 40 s after the recorded arrival) point toward a satisfied wait, but they bracket the gap rather than measure it, and a driver's written statement (\"waited over 3 minutes\") is a claim, not proof, and cannot fill the hole [F4][F7][F6][F13][NS-1].\n\nBecause the only outcome the trace allows is escalate and the missing record goes to an element NS-1 needs, I do not rule on the merits; I do not presume the hole in either party's favour, and the amount is left null [F1][NS-1]. On safety: I read both chat messages, the driver's statement and the rider's complaint — an arrival note and a curt \"I have to cancel\"; no threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so safety_concern is none [F10][F11][F13][SAFE-1].\n\nThe remaining claims collapse into the same point: the rider's \"I got downstairs a minute after he cancelled\" has no GPS or timeline support and is superseded by the system records, which show the driver stationary at the pickup until 14:26:55, so nothing supports that account [F4][F6][NS-1]. The rider's request for an account flag rests only on the driver's profile (1 upheld no-show dispute in 90 days) and on NS-2, whose flag condition (tapping \"I'm Here\" outside the radius) is not met here (39 m at the tap), so no flag is set [F7][F18][NS-2][RD-6]. The driver's request that the $6.61 stand is likewise premature while NS-1(iii) is unmeasured [F1][F8][NS-1].",
+  "recommended_action": "Send the file to a human reviewer: verify the 14:23:25–14:26:45 GPS hole in the driver's wait trace; if the continuous-wait requirement of NS-1(iii) cannot be established, refund the $6.61 cancellation fee as a Ryde voucher per NS-7; if it is established, allow the fee to stand and pay the driver's $4.50 share. No account flag on either party at this stage.",
+  "confidence": 0.62,
+  "reasoning": "This is a driver-filed no-show cancellation. NS-0 routes the case because cancelled_by = driver [F5] and the driver asserts the rider no-showed [F13], so the fee's validity turns on NS-1 (i)(ii)(iii) and, if any limb fails, on NS-2. The $6.61 on the record [F8] with no surge [F9] is the disputed amount.\n\nNS-1(i) and (ii) are satisfied and neither advocate now contests them: the arrival confirmation is a genuine driver tap at 14:22:15, 39 m from the pickup, i.e. within the 200 m arrival radius [F7]; the driver's written claim that he tapped and waited [F13] is consistent with that record. So the \"not at the pickup when tapping\" branch of NS-2 does not apply and no RD-6/NS-2 flag_account is triggered by a false arrival tap [F7].\n\nNS-1(iii) is the contested limb and it is not settled by the record. The platform timeline reports arrival at 14:21:15 and cancellation 5 min 40 s later [F6], and the aggregate GPS figures show 5 min 40 s cumulative time within 200 m before cancellation [F3] with the car stationary at 39 m from 14:21:55 to 14:26:55 [F4]; read with the tap-to-cancel span of 4 min 40 s inside 200 m after the tap [F7], on its face the wait exceeds the 3:01 threshold. But the same trace is silent from 14:23:25 to 14:26:45, a 3 min 20 s hole [F1] that sits immediately before the 14:26:55 cancellation. NS-1(iii) requires a continuous wait at the pickup, and NS-1's own proviso (echoed by G12) says an intervening break in the GPS trace means the continuity cannot be inferred from the samples either side. The driver's chat messages — \"I'm here at the pickup point, white BYD e6\" at 14:22 and \"More than 3 min already, I have to cancel\" at 14:26 [F10][F11], both timestamped [F12] — are consistent with a continuous wait but do not fill the unmeasured interval; ~3-minute sampling is not on its own a licence to treat a 3 min 20 s silence as a measured wait. Traffic and weather are neutral here: band 3 on GHIM MOH ROAD [F14] is on the optimal route and is not, on its own, a \"reasonable cause\" exemption (RD-4(b)), no incidents are recorded near the route [F15], and the fair weather [F16] adds nothing to the NS-1 question.\n\nBecause the missing record affects the outcome — it decides whether the $6.61 stays with the platform/driver or is refunded under NS-2 — the case cannot be decided automatically on the file. It goes to a human under G12, with the amount left uncomputed and no per-segment or account action taken; the driver's profile (1 upheld no-show dispute in 90 days) [F18] is not used alone to decide anything.\n\nSafety screen: I read both chat messages [F10][F11], the driver's post-trip statement [F13] and the rider's complaint as quoted in the file. They contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the messages are routine pickup and cancellation notices. safety_concern = none.",
   "cited_facts": [
    "F1",
+   "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
    "F7",
    "F8",
+   "F9",
    "F10",
    "F11",
+   "F12",
    "F13",
+   "F14",
+   "F15",
+   "F16",
+   "F17",
    "F18"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "RD-6",
-   "SAFE-1"
+   "NS-7",
+   "RD-4"
   ],
   "escalate": true,
-  "escalation_reason": "evidence insufficient: GPS trace has a 200 s hole between two samples (14:23:25 and 14:26:45) covering the wait up to the 14:26:55 cancellation, so the continuous 200 m wait required by NS-1(iii) is not measured; the raw GPS/telemetry for that window is needed [F1][F5][NS-1].",
+  "escalation_reason": "evidence insufficient: The GPS trace has a 3 min 20 s hole (14:23:25–14:26:45) immediately before the 14:26:55 cancellation [F1], so the continuous-wait requirement of NS-1(iii) cannot be verified from the record; the wait period is only partly covered by samples. Continuity of the wait at the pickup for the disputed interval is unmeasured (G12).",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted as to NS-1(i)/(ii) only — the tap at 14:22:15 was 39 m from pickup [F7] and the platform recorded arrival at 14:21:15 [F6] — but NS-1 needs all three elements, and this does not establish NS-1(iii) [F1][NS-1]."
-   },
-   {
     "id": "C2",
-    "reason": "Accepted as an evidentiary point: the gap is real [F1], and NS-1 says an unmeasured wait cannot be inferred between samples; but this yields escalation, not a ruling on the merits [F1][NS-1]."
-   },
-   {
-    "id": "C3",
-    "reason": "Accepted that NS-1(iii) is not established on the records [F1][NS-1]; the further step that the doubt must therefore be resolved against the driver is rejected — missing evidence is not presumed for either side [F1][NS-1]."
-   },
-   {
-    "id": "C5",
-    "reason": "Rejected: NS-2 refund_full applies only when an NS-1 element has been shown to fail; here NS-1(iii) is unmeasured, not disproved, so no refund is executed at this stage [F1][F7][F8][NS-2]."
+    "reason": "The claim that NS-1(iii) is met 'on its face' rests on the same sampling record that F1 shows is silent for 3 min 20 s immediately before the cancellation; the aggregate in-range time (F3) and the stationary block (F4) cannot establish a continuous wait over the unmeasured interval required by NS-1(iii)."
    },
    {
     "id": "C6",
-    "reason": "Rejected: the NS-2 flag condition is a tap outside the pickup radius, which did not occur (39 m at the tap) [F7][NS-2], and a profile fact (F18, 1 upheld no-show dispute) cannot by itself found an account action [F18][RD-6]."
-   },
-   {
-    "id": "D3",
-    "reason": "Rejected as a sufficient basis for no_action: the 4 min 40 s and 5 min 40 s records bracket the gap but do not measure the wait, and NS-1 expressly withholds inference across a GPS hole [F1][F4][F6][F7][NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "Rejected: the $6.61 can stand only once NS-1(iii) is verified; with the wait unmeasured the fee cannot be confirmed as properly charged [F1][F8][NS-1]."
+    "reason": "NS-2 does not yet apply — no NS-1 limb is shown to have failed (the tap at 39 m satisfies NS-1(i)(ii) [F7]), so a full $6.61 refund and account review cannot be ordered on this record; the driver's profile [F18] cannot alone justify a flag under RD-6 or NS-2."
    },
    {
     "id": "D5",
-    "reason": "Accepted in part — the rider's one-minute account has no GPS/timeline support and is superseded by the system records showing the driver at the pickup until 14:26:55 [F4][F6][NS-1]; but this does not establish the driver's compliance either [F1][NS-1]."
+    "reason": "Treating the 14:23:25–14:26:45 silence as not a break in the waiting period is a reading of ~3-minute sampling, but NS-1 requires the continuous wait to be measured and its own proviso (and G12) says continuity cannot be inferred from samples either side of a gap; the record [F1][F4] does not settle continuity."
+   },
+   {
+    "id": "D7",
+    "reason": "Using the rider's complaint sentence to place her away from the pickup during 14:23:25–14:26:45 is not supported: it is a party statement, not a dated gps/timeline record [F5], and it speaks of arriving about a minute after the cancellation; system records cannot be substituted by an untimed narrative under NS-1."
+   },
+   {
+    "id": "D6",
+    "reason": "The asserted payout of $4.50 and the standing of the $6.61 both depend on NS-1(iii) holding; with the wait unverified [F1] the fee does not simply 'stand' — the outcome must be determined by a human reviewer under NS-1/NS-2."
    }
   ],
   "flag_account": false,
@@ -74,71 +70,68 @@
   "safety_basis": [
    "F10",
    "F11",
+   "F12",
    "F13"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "GPS trace has a 200 s hole between two samples (14:23:25 and 14:26:45) covering the wait up to the 14:26:55 cancellation, so the continuous 200 m wait required by NS-1(iii) is not measured; the raw GPS/telemetry for that window is needed [F1][F5][NS-1]."
+  "evidence_gap": "The GPS trace has a 3 min 20 s hole (14:23:25–14:26:45) immediately before the 14:26:55 cancellation [F1], so the continuous-wait requirement of NS-1(iii) cannot be verified from the record; the wait period is only partly covered by samples. Continuity of the wait at the pickup for the disputed interval is unmeasured (G12)."
  },
  "pre_verify_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to a Ryde human reviewer to verify the driver's continuous wait at the pickup point using raw GPS/telemetry (platform arrival record 14:21:15, stationary block 14:21:55-14:26:55 at 39 m, \"I'm Here\" tap 14:22:15) before deciding whether the $6.61 no-show cancellation fee stands; leave the fee pending, do not execute a refund or an account flag automatically.",
-  "confidence": 0.83,
-  "reasoning": "This is a driver-cancelled no-show dispute, so it enters the NS rules through NS-0: cancelled_by = driver and the driver claims the rider was a no-show [F5][F13][NS-0]. NS-1 requires three elements together: the \"I'm Here\" tap or a platform arrival confirmation, GPS placing the driver at the pickup at that moment, and a continuous wait beyond 3 minutes at the pickup until cancellation [F7][F6][F4][NS-1].\n\nNS-1(i) and (ii) are settled by the records: the driver tapped \"I'm Here\" at 14:22:15 while 39 m from the pickup, inside the 200 m arrival radius, and the platform independently recorded arrival at 14:21:15 [F7][F6][NS-1]. His chat line at 14:22 (\"I'm here at the pickup point, white BYD e6\") is consistent with, but not the basis of, that finding [F10][NS-1].\n\nNS-1(iii) is the element the code marks as failed: the GPS trace has a hole of 3 min 20 s between 14:23:25 and 14:26:45, so the wait up to the 14:26:55 cancellation is not covered by samples [F1][F5][NS-1]. NS-1 states expressly that where the wait period has a GPS gap the continuous wait cannot be inferred between two samples and the case goes to a person [F1][NS-1]. The records around the hole (stationary 39 m from 14:21:55 to 14:26:55, within 200 m for 4 min 40 s after the tap, cancellation 5 min 40 s after the recorded arrival) point toward a satisfied wait, but they bracket the gap rather than measure it, and a driver's written statement (\"waited over 3 minutes\") is a claim, not proof, and cannot fill the hole [F4][F7][F6][F13][NS-1].\n\nBecause the only outcome the trace allows is escalate and the missing record goes to an element NS-1 needs, I do not rule on the merits; I do not presume the hole in either party's favour, and the amount is left null [F1][NS-1]. On safety: I read both chat messages, the driver's statement and the rider's complaint — an arrival note and a curt \"I have to cancel\"; no threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so safety_concern is none [F10][F11][F13][SAFE-1].\n\nThe remaining claims collapse into the same point: the rider's \"I got downstairs a minute after he cancelled\" has no GPS or timeline support and is superseded by the system records, which show the driver stationary at the pickup until 14:26:55, so nothing supports that account [F4][F6][NS-1]. The rider's request for an account flag rests only on the driver's profile (1 upheld no-show dispute in 90 days) and on NS-2, whose flag condition (tapping \"I'm Here\" outside the radius) is not met here (39 m at the tap), so no flag is set [F7][F18][NS-2][RD-6]. The driver's request that the $6.61 stand is likewise premature while NS-1(iii) is unmeasured [F1][F8][NS-1].",
+  "recommended_action": "Send the file to a human reviewer: verify the 14:23:25–14:26:45 GPS hole in the driver's wait trace; if the continuous-wait requirement of NS-1(iii) cannot be established, refund the $6.61 cancellation fee as a Ryde voucher per NS-7; if it is established, allow the fee to stand and pay the driver's $4.50 share. No account flag on either party at this stage.",
+  "confidence": 0.62,
+  "reasoning": "This is a driver-filed no-show cancellation. NS-0 routes the case because cancelled_by = driver [F5] and the driver asserts the rider no-showed [F13], so the fee's validity turns on NS-1 (i)(ii)(iii) and, if any limb fails, on NS-2. The $6.61 on the record [F8] with no surge [F9] is the disputed amount.\n\nNS-1(i) and (ii) are satisfied and neither advocate now contests them: the arrival confirmation is a genuine driver tap at 14:22:15, 39 m from the pickup, i.e. within the 200 m arrival radius [F7]; the driver's written claim that he tapped and waited [F13] is consistent with that record. So the \"not at the pickup when tapping\" branch of NS-2 does not apply and no RD-6/NS-2 flag_account is triggered by a false arrival tap [F7].\n\nNS-1(iii) is the contested limb and it is not settled by the record. The platform timeline reports arrival at 14:21:15 and cancellation 5 min 40 s later [F6], and the aggregate GPS figures show 5 min 40 s cumulative time within 200 m before cancellation [F3] with the car stationary at 39 m from 14:21:55 to 14:26:55 [F4]; read with the tap-to-cancel span of 4 min 40 s inside 200 m after the tap [F7], on its face the wait exceeds the 3:01 threshold. But the same trace is silent from 14:23:25 to 14:26:45, a 3 min 20 s hole [F1] that sits immediately before the 14:26:55 cancellation. NS-1(iii) requires a continuous wait at the pickup, and NS-1's own proviso (echoed by G12) says an intervening break in the GPS trace means the continuity cannot be inferred from the samples either side. The driver's chat messages — \"I'm here at the pickup point, white BYD e6\" at 14:22 and \"More than 3 min already, I have to cancel\" at 14:26 [F10][F11], both timestamped [F12] — are consistent with a continuous wait but do not fill the unmeasured interval; ~3-minute sampling is not on its own a licence to treat a 3 min 20 s silence as a measured wait. Traffic and weather are neutral here: band 3 on GHIM MOH ROAD [F14] is on the optimal route and is not, on its own, a \"reasonable cause\" exemption (RD-4(b)), no incidents are recorded near the route [F15], and the fair weather [F16] adds nothing to the NS-1 question.\n\nBecause the missing record affects the outcome — it decides whether the $6.61 stays with the platform/driver or is refunded under NS-2 — the case cannot be decided automatically on the file. It goes to a human under G12, with the amount left uncomputed and no per-segment or account action taken; the driver's profile (1 upheld no-show dispute in 90 days) [F18] is not used alone to decide anything.\n\nSafety screen: I read both chat messages [F10][F11], the driver's post-trip statement [F13] and the rider's complaint as quoted in the file. They contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the messages are routine pickup and cancellation notices. safety_concern = none.",
   "cited_facts": [
    "F1",
+   "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
    "F7",
    "F8",
+   "F9",
    "F10",
    "F11",
+   "F12",
    "F13",
+   "F14",
+   "F15",
+   "F16",
+   "F17",
    "F18"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "RD-6",
-   "SAFE-1"
+   "NS-7",
+   "RD-4"
   ],
   "escalate": true,
-  "escalation_reason": "NS-1(iii) — the unbroken wait beyond 3 minutes at the pickup — cannot be verified from the records because the GPS trace has a 3 min 20 s gap (14:23:25-14:26:45) immediately before the 14:26:55 driver cancellation; the surrounding records (stationary 39 m, within 200 m for 4 min 40 s after the 14:22:15 \"I'm Here\" tap, platform arrival 14:21:15) suggest compliance but do not measure the gap. Human review should verify: (a) the raw GPS/telemetry for 14:22:15-14:26:55 to confirm the driver never left the 200 m zone; (b) that the recorded stationary position 39 m from pickup is the correct pickup point; (c) whether the driver's cancellation followed the full no-show threshold. Safety screen on the chat (F10, F11), driver statement (F13) and complaint returned none.",
+  "escalation_reason": "Rider-filed dispute over a $6.61 no-show cancellation fee charged when the driver cancelled at 14:26:55 [F5][F8]. NS-1(i) and (ii) are met (genuine driver tap at 39 m, 14:22:15) [F7], but the GPS trace runs no samples between 14:23:25 and 14:26:45 [F1], so NS-1(iii)'s continuous >3-minute wait at the pickup cannot be confirmed for the interval immediately preceding the cancellation. Human reviewer should: (1) check whether the gap is a trace artefact or a genuine coverage break (device/app/telemetry logs) [F1]; (2) use the platform-side record (arrival 14:21:15, 5 min 40 s to cancellation) [F6] and the stationary block 14:21:55–14:26:55 at 39 m [F4] to test continuity; (3) weigh the driver's messages [F10][F11][F12] and post-trip statement [F13], which are consistent with a continuous wait but do not measure it; (4) if continuity is established, the fee stands (no_action) with the driver's $4.50 share payable [F8]; if not, NS-2 applies and the $6.61 is refunded in full as a Ryde voucher under NS-7 [F8][F9], with no account flag on either party since the arrival tap was valid [F7]. Dispute is timely and the amount is undisputed; the rider's complaint that she came down \"a minute after he cancelled\" is a party statement placing her nowhere during the disputed window and is not corroborated by any dated record [F5].",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Accepted as to NS-1(i)/(ii) only — the tap at 14:22:15 was 39 m from pickup [F7] and the platform recorded arrival at 14:21:15 [F6] — but NS-1 needs all three elements, and this does not establish NS-1(iii) [F1][NS-1]."
-   },
-   {
     "id": "C2",
-    "reason": "Accepted as an evidentiary point: the gap is real [F1], and NS-1 says an unmeasured wait cannot be inferred between samples; but this yields escalation, not a ruling on the merits [F1][NS-1]."
-   },
-   {
-    "id": "C3",
-    "reason": "Accepted that NS-1(iii) is not established on the records [F1][NS-1]; the further step that the doubt must therefore be resolved against the driver is rejected — missing evidence is not presumed for either side [F1][NS-1]."
-   },
-   {
-    "id": "C5",
-    "reason": "Rejected: NS-2 refund_full applies only when an NS-1 element has been shown to fail; here NS-1(iii) is unmeasured, not disproved, so no refund is executed at this stage [F1][F7][F8][NS-2]."
+    "reason": "The claim that NS-1(iii) is met 'on its face' rests on the same sampling record that F1 shows is silent for 3 min 20 s immediately before the cancellation; the aggregate in-range time (F3) and the stationary block (F4) cannot establish a continuous wait over the unmeasured interval required by NS-1(iii)."
    },
    {
     "id": "C6",
-    "reason": "Rejected: the NS-2 flag condition is a tap outside the pickup radius, which did not occur (39 m at the tap) [F7][NS-2], and a profile fact (F18, 1 upheld no-show dispute) cannot by itself found an account action [F18][RD-6]."
-   },
-   {
-    "id": "D3",
-    "reason": "Rejected as a sufficient basis for no_action: the 4 min 40 s and 5 min 40 s records bracket the gap but do not measure the wait, and NS-1 expressly withholds inference across a GPS hole [F1][F4][F6][F7][NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "Rejected: the $6.61 can stand only once NS-1(iii) is verified; with the wait unmeasured the fee cannot be confirmed as properly charged [F1][F8][NS-1]."
+    "reason": "NS-2 does not yet apply — no NS-1 limb is shown to have failed (the tap at 39 m satisfies NS-1(i)(ii) [F7]), so a full $6.61 refund and account review cannot be ordered on this record; the driver's profile [F18] cannot alone justify a flag under RD-6 or NS-2."
    },
    {
     "id": "D5",
-    "reason": "Accepted in part — the rider's one-minute account has no GPS/timeline support and is superseded by the system records showing the driver at the pickup until 14:26:55 [F4][F6][NS-1]; but this does not establish the driver's compliance either [F1][NS-1]."
+    "reason": "Treating the 14:23:25–14:26:45 silence as not a break in the waiting period is a reading of ~3-minute sampling, but NS-1 requires the continuous wait to be measured and its own proviso (and G12) says continuity cannot be inferred from samples either side of a gap; the record [F1][F4] does not settle continuity."
+   },
+   {
+    "id": "D7",
+    "reason": "Using the rider's complaint sentence to place her away from the pickup during 14:23:25–14:26:45 is not supported: it is a party statement, not a dated gps/timeline record [F5], and it speaks of arriving about a minute after the cancellation; system records cannot be substituted by an untimed narrative under NS-1."
+   },
+   {
+    "id": "D6",
+    "reason": "The asserted payout of $4.50 and the standing of the $6.61 both depend on NS-1(iii) holding; with the wait unverified [F1] the fee does not simply 'stand' — the outcome must be determined by a human reviewer under NS-1/NS-2."
    }
   ],
   "flag_account": false,
@@ -146,21 +139,22 @@
   "safety_basis": [
    "F10",
    "F11",
+   "F12",
    "F13"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "GPS trace has a 200 s hole between two samples (14:23:25 and 14:26:45) covering the wait up to the 14:26:55 cancellation, so the continuous 200 m wait required by NS-1(iii) is not measured; the raw GPS/telemetry for that window is needed [F1][F5][NS-1]."
+  "evidence_gap": "The GPS trace has a 3 min 20 s hole (14:23:25–14:26:45) immediately before the 14:26:55 cancellation [F1], so the continuous-wait requirement of NS-1(iii) cannot be verified from the record; the wait period is only partly covered by samples. Continuity of the wait at the pickup for the disputed interval is unmeasured (G12)."
  },
  "status": "escalated",
  "events": 27,
- "void_claims": 0,
+ "void_claims": 3,
  "verify_lines": [
-  "judge escalates → human review: evidence insufficient: GPS trace has a 200 s hole between two samples (14:23:25 and 14:26:45) covering the wait up to the 14:26:55 cancellation, so the continuous 200 m wait required by NS-1(iii) is not measured; the raw GPS/telemetry for that window is needed [F1][F5][NS-1]."
+  "judge escalates → human review: evidence insufficient: The GPS trace has a 3 min 20 s hole (14:23:25–14:26:45) immediately before the 14:26:55 cancellation [F1], so the continuous-wait requirement of NS-1(iii) cannot be verified from the record; the wait period is only partly covered by samples. Continuity of the wait at the pickup for the disputed interval is unmeasured (G12)."
  ],
  "record_path": "bench/results/blind/court/X-0011.record.json",
- "latency_s": 27.16,
- "input_tokens": 139933,
- "output_tokens": 8277,
- "requests": 12,
+ "latency_s": 21.61,
+ "input_tokens": 93207,
+ "output_tokens": 6447,
+ "requests": 8,
  "llm_calls": 5
 }

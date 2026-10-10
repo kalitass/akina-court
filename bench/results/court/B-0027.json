@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:47:17.930414+00:00",
+ "ts": "2026-10-10T18:46:43.422927+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag on the driver, as the arrival tap was genuine (41 m).",
-  "confidence": 0.93,
-  "reasoning": "This is a no-show cancellation fee dispute: the driver cancelled at 14:15:50 and $6.61 was charged [F4][F7], so it enters the policy through NS-0's driver-cancelled, no-show-claimed branch [RD-2][NS-0]. The driver's written statement that he \"waited for the rider, then cancelled as a no-show\" [F12] is a statement, not a system record, and the system records (GPS/timeline) override it [F5][F6].\n\nNS-1 requires all three limbs. The arrival precondition is genuinely met: the driver tapped \"I'm Here\" at 14:14:10 at 41 m from the pickup [F6], matching NS-1(i) and NS-1(ii), and this is confirmed by the trace [F1][NS-1]. The trace also settles the GPS coverage of the wait with no hole [F2][F6][NS-1], so G12 manual referral is not triggered.\n\nThe decisive limb, NS-1(iii), fails on the trace: continuously inside the 200 m radius after the tap was 100 s, below the >180 s threshold [F6], and the cumulative time within 200 m before cancellation was only 2 min 25 s [F2][F5]. The driver's chat \"3 min up, cancelling the trip\" [F10] and the 2 min 0 s stationary period at 41 m [F3] do not rescue it. The driver did not tap outside the radius [F6], so no NS-2 fraud flag applies, and the trace marks the flag_account condition ✗ [F1][F6][NS-2].\n\nWith NS-1(iii) unsatisfied, NS-2 requires the $6.61 to be refunded in full; the amount follows the trace (cancellation fee $6.61) [F4][F7][NS-2]. The rider's request for refund_full is therefore granted.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag (NS-2's flag only applies to a fake arrival confirmation, which the trace marks ✗).",
+  "confidence": 0.95,
+  "reasoning": "The case is a driver-cancelled no-show fee dispute, so it enters through NS-0 (cancelled_by = driver, driver asserting rider no-show) and is tested against NS-1's three conditions [F4][NS-0]. Condition (i) is met: the platform records a driver arrival confirmation by driver tap at 14:14:10 [F6][NS-1]. Condition (ii) is met: at the moment of that tap the GPS placed the driver 41 m from the pickup point (closest approach overall 38 m), inside the pickup radius [F6][F1][NS-1].\n\nCondition (iii) fails. NS-1 requires a continuous wait at the pickup of more than 3 minutes (≥ 3:01) after the arrival confirmation until cancellation. From the 14:14:10 tap to the cancellation at 14:15:50 is 1 min 40 s (100 s) inside the radius [F6][F4]; the platform's own arrival ping at 14:13:25 to cancellation is 2 min 25 s, and the cumulative time within 200 m is likewise 2 min 25 s [F5][F2]; the stationary block at 41 m runs 14:13:50–14:15:50, i.e. 2 min 0 s [F3]. No measurement on the record reaches 3 minutes [F2][F3][F6][NS-1].\n\nThe driver's message \"3 min up, cancelling the trip\" at 14:15 and his post-trip statement that he waited and cancelled as a no-show are statements, and the system GPS/timeline records (F2, F3, F4, F5, F6) control where they conflict; the trace accordingly marks NS-1 (iii) ✗ [F10][F12][F4][F6][NS-1]. There is no GPS hole — samples run from the arrival confirmation to the cancellation without a gap — so the measurements, not a presumption, govern [F2][F6][NS-1]. The driver's alternative re-basing of the clock to a kerb stop 25 s after the platform ping is not supported by any record: F3 shows stationarity from 14:13:50, still only 2 min 0 s before cancellation [F3][F4][NS-1].\n\nSince NS-1 (iii) is unmet, NS-2 applies: the $6.61 cancellation fee charged to the rider must be refunded in full [F7][F4][NS-2]. The NS-2 flag_account branch does not trigger — the trace marks \"arrival confirmed while not at pickup\" ✗ (the tap was 41 m from the pickup), so no account action is warranted on this record [F6][F1][NS-2].\n\nAmount: the cancellation fee on record is $6.61 and no other disputed component exists; the surge multiplier is 1.0× so there is no uplift [F7][F8]. Refund = $6.61, payable as a Ryde voucher under NS-7 [F7][NS-7]. Profile facts (rider 0 upheld in 90 d; driver 1 upheld no-show in 90 d) cannot decide the finding and add nothing once NS-1 (iii) has failed on the timeline records [F16][F17][NS-1].",
   "cited_facts": [
    "F1",
    "F2",
@@ -21,8 +21,11 @@
    "F5",
    "F6",
    "F7",
+   "F8",
    "F10",
-   "F12"
+   "F12",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
@@ -36,23 +39,35 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "Not rejected as inaccurate but irrelevant to the outcome: the arrival precondition the driver invokes (tap at 41 m) is true [F6][NS-1], yet NS-1 still requires (iii), which the trace fails at 100 s [F6][NS-1]."
+    "reason": "Arrival is conceded and indeed met, but arrival alone does not earn the fee; NS-1 (iii) requires a continuous wait of more than 3 minutes after the arrival confirmation, which the timeline fails (2 min 25 s from platform arrival, 1 min 40 s from the tap) [F5][F6][F2][NS-1]."
+   },
+   {
+    "id": "D2",
+    "reason": "NS-1 (ii) is conceded and met (tap at 41 m from the pickup), but the same fact F6 starts the clock for (iii): only 1 min 40 s elapsed between the tap and the 14:15:50 cancellation, short of the >3-minute requirement [F6][F3][F4][NS-1]."
    },
    {
     "id": "D3",
-    "reason": "The driver's own measurement confirms the fee cannot stand: the strictest wait after the tap was 1 min 40 s and the stationary period was 2 min 0 s, both below the NS-1(iii) default [F3][F6][NS-1]."
+    "reason": "The absence of a GPS gap proves the measurements are reliable, not that the threshold is met; the measured continuous time inside the radius after the tap is 100 s (threshold >180 s) and the cumulative time within 200 m is 2 min 25 s [F6][F2][F3][NS-1]."
    },
    {
     "id": "D4",
-    "reason": "Accepted only in the direction it points: the post-trip statement and chat lose to the system records [F9][F10][F12][F2][F3][F6], which is why the $6.61 fee cannot be sustained under NS-2."
+    "reason": "No record starts the wait at a kerb stop 25 s after the platform ping; the stationary block runs 14:13:50–14:15:50 (2 min 0 s) and the driver's message F10 is overridden by the timeline/GPS records F4, F5, F6 [F3][F2][F5][F10][F4][NS-1]."
    },
    {
-    "id": "D7",
-    "reason": "Not disputed as far as it goes — the driver did tap at the pickup and charged no $5 waiting fee [F6][F7] — but this does not validate the $6.61 cancellation fee, which fails NS-1(iii) and falls to NS-2."
+    "id": "D5",
+    "reason": "The rider's silence in the chat is irrelevant to NS-1, which conditions the fee on the driver's GPS position and continuous wait, not on rider messages; a short wait is not cured by the absence of chat [F9][F10][F11][F2][F6][NS-1]."
    },
    {
-    "id": "C7",
-    "reason": "Account flag refused: RD-6 applies to upheld route-deviation breaches, not no-show cases, and F17 shows route: 0; NS-2's flag_account requires the arrival tap to have been made outside 200 m, and the tap was at 41 m [F6][F17][NS-2][RD-6]."
+    "id": "D6",
+    "reason": "That $6.61 is the published fee at 1.0× with no surge does not make it earned; NS-2 requires the fee to fall away whenever NS-1 (i)–(iii) fails, and (iii) fails on the platform's own GPS and timeline entries [F7][F8][F5][F6][NS-2][NS-0]."
+   },
+   {
+    "id": "D8",
+    "reason": "Profile facts (815 trips, 4.53 rating, no upheld no-show on the rider) cannot decide the finding and add nothing once NS-1 (iii) has failed on the timeline records [F16][F17][F2][F6][NS-1]."
+   },
+   {
+    "id": "C8",
+    "reason": "The requested account-review referral is not available here: RD-6 attaches flag_account to a case where an RD-2 refund exceeds zero or an RD-1 route violation is recorded, and this is a no-show case with no off-route segment; NS-2's flag branch requires a fake arrival confirmation while not at the pickup, which the trace marks ✗ (41 m at the tap) [F6][F1][F4][RD-6][NS-2]."
    }
   ],
   "flag_account": false,
@@ -60,7 +75,6 @@
   "safety_basis": [
    "F9",
    "F10",
-   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -69,9 +83,9 @@
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag on the driver, as the arrival tap was genuine (41 m).",
-  "confidence": 0.93,
-  "reasoning": "This is a no-show cancellation fee dispute: the driver cancelled at 14:15:50 and $6.61 was charged [F4][F7], so it enters the policy through NS-0's driver-cancelled, no-show-claimed branch [RD-2][NS-0]. The driver's written statement that he \"waited for the rider, then cancelled as a no-show\" [F12] is a statement, not a system record, and the system records (GPS/timeline) override it [F5][F6].\n\nNS-1 requires all three limbs. The arrival precondition is genuinely met: the driver tapped \"I'm Here\" at 14:14:10 at 41 m from the pickup [F6], matching NS-1(i) and NS-1(ii), and this is confirmed by the trace [F1][NS-1]. The trace also settles the GPS coverage of the wait with no hole [F2][F6][NS-1], so G12 manual referral is not triggered.\n\nThe decisive limb, NS-1(iii), fails on the trace: continuously inside the 200 m radius after the tap was 100 s, below the >180 s threshold [F6], and the cumulative time within 200 m before cancellation was only 2 min 25 s [F2][F5]. The driver's chat \"3 min up, cancelling the trip\" [F10] and the 2 min 0 s stationary period at 41 m [F3] do not rescue it. The driver did not tap outside the radius [F6], so no NS-2 fraud flag applies, and the trace marks the flag_account condition ✗ [F1][F6][NS-2].\n\nWith NS-1(iii) unsatisfied, NS-2 requires the $6.61 to be refunded in full; the amount follows the trace (cancellation fee $6.61) [F4][F7][NS-2]. The rider's request for refund_full is therefore granted.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag (NS-2's flag only applies to a fake arrival confirmation, which the trace marks ✗).",
+  "confidence": 0.95,
+  "reasoning": "The case is a driver-cancelled no-show fee dispute, so it enters through NS-0 (cancelled_by = driver, driver asserting rider no-show) and is tested against NS-1's three conditions [F4][NS-0]. Condition (i) is met: the platform records a driver arrival confirmation by driver tap at 14:14:10 [F6][NS-1]. Condition (ii) is met: at the moment of that tap the GPS placed the driver 41 m from the pickup point (closest approach overall 38 m), inside the pickup radius [F6][F1][NS-1].\n\nCondition (iii) fails. NS-1 requires a continuous wait at the pickup of more than 3 minutes (≥ 3:01) after the arrival confirmation until cancellation. From the 14:14:10 tap to the cancellation at 14:15:50 is 1 min 40 s (100 s) inside the radius [F6][F4]; the platform's own arrival ping at 14:13:25 to cancellation is 2 min 25 s, and the cumulative time within 200 m is likewise 2 min 25 s [F5][F2]; the stationary block at 41 m runs 14:13:50–14:15:50, i.e. 2 min 0 s [F3]. No measurement on the record reaches 3 minutes [F2][F3][F6][NS-1].\n\nThe driver's message \"3 min up, cancelling the trip\" at 14:15 and his post-trip statement that he waited and cancelled as a no-show are statements, and the system GPS/timeline records (F2, F3, F4, F5, F6) control where they conflict; the trace accordingly marks NS-1 (iii) ✗ [F10][F12][F4][F6][NS-1]. There is no GPS hole — samples run from the arrival confirmation to the cancellation without a gap — so the measurements, not a presumption, govern [F2][F6][NS-1]. The driver's alternative re-basing of the clock to a kerb stop 25 s after the platform ping is not supported by any record: F3 shows stationarity from 14:13:50, still only 2 min 0 s before cancellation [F3][F4][NS-1].\n\nSince NS-1 (iii) is unmet, NS-2 applies: the $6.61 cancellation fee charged to the rider must be refunded in full [F7][F4][NS-2]. The NS-2 flag_account branch does not trigger — the trace marks \"arrival confirmed while not at pickup\" ✗ (the tap was 41 m from the pickup), so no account action is warranted on this record [F6][F1][NS-2].\n\nAmount: the cancellation fee on record is $6.61 and no other disputed component exists; the surge multiplier is 1.0× so there is no uplift [F7][F8]. Refund = $6.61, payable as a Ryde voucher under NS-7 [F7][NS-7]. Profile facts (rider 0 upheld in 90 d; driver 1 upheld no-show in 90 d) cannot decide the finding and add nothing once NS-1 (iii) has failed on the timeline records [F16][F17][NS-1].",
   "cited_facts": [
    "F1",
    "F2",
@@ -80,8 +94,11 @@
    "F5",
    "F6",
    "F7",
+   "F8",
    "F10",
-   "F12"
+   "F12",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
@@ -95,23 +112,35 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "Not rejected as inaccurate but irrelevant to the outcome: the arrival precondition the driver invokes (tap at 41 m) is true [F6][NS-1], yet NS-1 still requires (iii), which the trace fails at 100 s [F6][NS-1]."
+    "reason": "Arrival is conceded and indeed met, but arrival alone does not earn the fee; NS-1 (iii) requires a continuous wait of more than 3 minutes after the arrival confirmation, which the timeline fails (2 min 25 s from platform arrival, 1 min 40 s from the tap) [F5][F6][F2][NS-1]."
+   },
+   {
+    "id": "D2",
+    "reason": "NS-1 (ii) is conceded and met (tap at 41 m from the pickup), but the same fact F6 starts the clock for (iii): only 1 min 40 s elapsed between the tap and the 14:15:50 cancellation, short of the >3-minute requirement [F6][F3][F4][NS-1]."
    },
    {
     "id": "D3",
-    "reason": "The driver's own measurement confirms the fee cannot stand: the strictest wait after the tap was 1 min 40 s and the stationary period was 2 min 0 s, both below the NS-1(iii) default [F3][F6][NS-1]."
+    "reason": "The absence of a GPS gap proves the measurements are reliable, not that the threshold is met; the measured continuous time inside the radius after the tap is 100 s (threshold >180 s) and the cumulative time within 200 m is 2 min 25 s [F6][F2][F3][NS-1]."
    },
    {
     "id": "D4",
-    "reason": "Accepted only in the direction it points: the post-trip statement and chat lose to the system records [F9][F10][F12][F2][F3][F6], which is why the $6.61 fee cannot be sustained under NS-2."
+    "reason": "No record starts the wait at a kerb stop 25 s after the platform ping; the stationary block runs 14:13:50–14:15:50 (2 min 0 s) and the driver's message F10 is overridden by the timeline/GPS records F4, F5, F6 [F3][F2][F5][F10][F4][NS-1]."
    },
    {
-    "id": "D7",
-    "reason": "Not disputed as far as it goes — the driver did tap at the pickup and charged no $5 waiting fee [F6][F7] — but this does not validate the $6.61 cancellation fee, which fails NS-1(iii) and falls to NS-2."
+    "id": "D5",
+    "reason": "The rider's silence in the chat is irrelevant to NS-1, which conditions the fee on the driver's GPS position and continuous wait, not on rider messages; a short wait is not cured by the absence of chat [F9][F10][F11][F2][F6][NS-1]."
    },
    {
-    "id": "C7",
-    "reason": "Account flag refused: RD-6 applies to upheld route-deviation breaches, not no-show cases, and F17 shows route: 0; NS-2's flag_account requires the arrival tap to have been made outside 200 m, and the tap was at 41 m [F6][F17][NS-2][RD-6]."
+    "id": "D6",
+    "reason": "That $6.61 is the published fee at 1.0× with no surge does not make it earned; NS-2 requires the fee to fall away whenever NS-1 (i)–(iii) fails, and (iii) fails on the platform's own GPS and timeline entries [F7][F8][F5][F6][NS-2][NS-0]."
+   },
+   {
+    "id": "D8",
+    "reason": "Profile facts (815 trips, 4.53 rating, no upheld no-show on the rider) cannot decide the finding and add nothing once NS-1 (iii) has failed on the timeline records [F16][F17][F2][F6][NS-1]."
+   },
+   {
+    "id": "C8",
+    "reason": "The requested account-review referral is not available here: RD-6 attaches flag_account to a case where an RD-2 refund exceeds zero or an RD-1 route violation is recorded, and this is a no-show case with no off-route segment; NS-2's flag branch requires a fake arrival confirmation while not at the pickup, which the trace marks ✗ (41 m at the tap) [F6][F1][F4][RD-6][NS-2]."
    }
   ],
   "flag_account": false,
@@ -119,7 +148,6 @@
   "safety_basis": [
    "F9",
    "F10",
-   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -129,12 +157,12 @@
  "events": 28,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0027.record.json",
- "latency_s": 20.65,
- "input_tokens": 103970,
- "output_tokens": 5766,
- "requests": 10,
+ "latency_s": 27.92,
+ "input_tokens": 135156,
+ "output_tokens": 8339,
+ "requests": 12,
  "llm_calls": 6
 }
