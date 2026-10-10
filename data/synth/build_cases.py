@@ -313,7 +313,7 @@ def c0001(rates):
     accepted, pickup_at, dropoff_at = T("2026-09-20 14:00:40"), T("2026-09-20 14:05:10"), T("2026-09-20 14:31:40")
     stop_at, stop_s = T("2026-09-20 14:20:20"), 250
     opt = [tuple(p) for p in route["polyline"]]
-    loops = [{"leave": P, "via": [(1.3075, 103.8425)], "rejoin": (1.2987, 103.8475)},                    # Orchard Rd -> Cavenagh Rd (parallel) -> back to Orchard -> Bras Basah
+    loops = [{"leave": P, "via": [(1.3075, 103.8425), (1.3040, 103.8470)], "rejoin": (1.2968, 103.8488)},   # Orchard Rd -> Cavenagh Rd -> down to Bras Basah: bypasses Orchard km 0.78–1.61, where the accident sits
              {"leave": (1.2932, 103.8558), "via": [store], "rejoin": D}]                                  # Raffles Blvd -> Beach Rd store -> MBS
     _, trip_gps, detours, legs = detour_trace(
         rp, opt, loops, pickup_at, secs(pickup_at, dropoff_at),
@@ -334,7 +334,7 @@ def c0001(rates):
             "speed_bands": [band("ORCHARD ROAD", 1, w0, T("2026-09-20 14:10:00"), R),                     # jammed, avoided via Cavenagh
                             band_from_gps("BRAS BASAH ROAD", trip_gps, w0, w1, R),
                             band_from_gps("BAYFRONT AVENUE", trip_gps, T("2026-09-20 14:20:00"), T("2026-09-20 14:40:00"), R)],
-            "incidents": [incident("Accident", 1.3002, 103.8415, T("2026-09-20 13:52:00"),
+            "incidents": [incident("Accident", 1.29926, 103.84527, T("2026-09-20 13:52:00"),
                                    "Accident on Orchard Road (towards Bras Basah) after Cavenagh Road, two lanes closed.")],
         },
         "weather": {"rain_mm": 0, "description": "Fair"},

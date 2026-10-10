@@ -29,6 +29,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, HERE)
 sys.path.insert(0, ROOT)
 
+import contract  # noqa: E402
 import validate  # noqa: E402
 from build_cases import (LOC, ROADS, SGT, Congestion, Stop, along_km, approach_trace, band_from_gps, build_trajectory,  # noqa: E402
                          compose, detour_trace, dump, incident, measure_detours, nearest_idx, offset, place, profiles,
@@ -234,17 +235,17 @@ def S(name, pair, **kw):
 SCENARIOS = [
     # ---- route deviation ------------------------------------------------------------------------------------
     R("rd_basic", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}],
-      hard="plain unexplained loop; the only trap is the rider overstating the extra km"),
+      hard="plain unexplained loop; the only trap is the rider overstating the extra km -> refund the measured extra km"),
     R("rd_consent_before", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], consent="before",
-      hard="RD-5: consent 3 min before the segment covers it -> no refund despite +km"),
+      hard="RD-5: the rider agreed to a named road 3 min before the segment, but no record ties the driven segment to that road (G13) -> undetermined, a person decides"),
     R("rd_consent_after", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], consent="after",
-      hard="same chat as rd_consent_before but timestamped after the segment started -> RD-5 fails"),
-    R("rd_incident_on_stretch", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.40, 0.55)}], incident="on_stretch",
+      hard="same chat as rd_consent_before but timestamped after the segment started -> RD-5 fails, refund"),
+    R("rd_incident_on_stretch", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.30, 0.52)}], incident="on_stretch",
       hard="RD-4(a): accident on the replaced stretch reported before -> exempt; the rider's complaint is loud"),
     R("rd_incident_decoy", ("Tanjong Pagar Centre", "Changi Airport T3"), loops=[{"frac": (0.30, 0.45)}], incident="decoy_far",
-      hard="an accident exists on the optimal route but 2+ km from the replaced stretch -> no exemption"),
+      hard="an accident exists on the optimal route but 2+ km from the replaced stretch -> no exemption, refund"),
     R("rd_incident_late", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], incident="late",
-      hard="accident on the stretch but reported after the driver had already left the route -> no exemption"),
+      hard="accident on the stretch but reported after the driver had already left the route -> no exemption, refund"),
     R("rd_band1_no_incident", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], band=1, weather="light",
       hard="RD-4(b): band 1 on the replaced stretch alone does not exempt (MVP rule) -> refund"),
     R("rd_band1_incident", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], band=1, incident="on_stretch",
@@ -258,7 +259,7 @@ SCENARIOS = [
     R("rd_stop_unnamed", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], stop="unnamed",
       hard="RD-3(b): 'a 7-Eleven on the way' does not cover a loop to one 1 km off the route -> refund the km, keep the waiting"),
     R("rd_two_segs_consent_seg1", ("Woodlands Civic Centre", "Orchard Road"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}], consent="before_seg1",
-      hard="two segments; the rider agreed to the first (named road) only -> refund segment 2 only"),
+      hard="two segments; the rider agreed to a named road for the first only; nothing ties segment 1 to that road (G13) -> undetermined on 1, counts on 2 -> a person decides the amount"),
     R("rd_two_segs_incident_seg1", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}], incident="seg1",
       hard="two segments; accident exempts the first, the second is unexplained -> refund segment 2 only"),
     R("rd_two_segs_plain", ("Tanjong Pagar Centre", "Changi Airport T3"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}],
@@ -266,7 +267,7 @@ SCENARIOS = [
     R("rd_fixed_fare", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], service="RydeX",
       hard="RydeX is a fixed quote: real detour, zero refundable km -> no_action (RD-2 non-metered branch)"),
     R("rd_fixed_fare_consent", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], service="RydeX", consent="before",
-      hard="fixed fare + consent -> no_action either way"),
+      hard="fixed fare + agreement to a named road: the finding changes no amount and no flag -> may stay undetermined, no_action either way"),
     R("rd_prior_flag", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], prior=2,
       hard="RD-6: driver has 2 upheld route disputes -> refund + flag_account"),
     R("rd_fixed_fare_prior_flag", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], service="RydeX", prior=2,
@@ -276,13 +277,13 @@ SCENARIOS = [
     R("rd_request_only", ("Clarke Quay", "Sentosa Beach Station"), loops=[{"frac": (0.30, 0.50)}], consent="request_only",
       hard="driver asked, rider never answered -> no agreement, RD-5 fails -> refund"),
     R("rd_scope_other", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.40, 0.55)}], consent="scope_other",
-      hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it"),
+      hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it, refund"),
     R("rd_consent_before_prior", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}], consent="before", prior=2,
-      hard="consent exempts the segment, so RD-6 is NOT triggered despite 2 priors -> no_action, no flag"),
+      hard="agreement to a named road with no record tying the segment to it (G13); with 2 priors the RD-6 flag depends on the finding -> undetermined, a person decides"),
     R("rd_threat_in_chat", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.40, 0.55)}], threat="driver",
       hard="route dispute whose chat holds an intimidating driver message -> the judge's safety screen (SAFE-1) overrides: escalate, no refund computed"),
     R("rd_consent_before_light", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], consent="before", weather="light", incident="decoy_far",
-      hard="consent exempts; the decoy incident is irrelevant noise"),
+      hard="agreement to a named road, no record tying the segment to it (G13); the decoy incident is far from the route and settles nothing -> undetermined, a person decides"),
     # ---- no-show ----------------------------------------------------------------------------------------------
     N("ns_fake_here_far", ("Bugis Junction", "Tanjong Pagar Centre"), by="driver", park_m=600, wait_s=210, here=True,
       hard="NS-2: I'm Here tapped 600 m away, never within 200 m -> refund + flag_account"),
@@ -332,13 +333,22 @@ SCENARIOS = [
     S("safe_keyword_only_in_statement", ("NUS", "Raffles Place"), chat="innocuous", statement_threat=True,
       hard="the only hint word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
     R("rd_keyword_trap_find_you", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], threat="trap",
-      hard="route dispute; rider wrote 'I'll find you at the lobby' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour"),
+      hard="route dispute; rider wrote 'I'll find you at the lobby' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour: refund"),
 ]
 
 
 # ----------------------------------------------------------------------------------------------- route cases
 
 FRAC_SHIFTS = [0.0, 0.08, -0.08, 0.16, -0.16]
+MIN_REPLACED_KM = contract.MIN_REPLACED_KM   # a loop that claims to go round a stretch must really bypass this much of the optimal route
+OFFLINE_SKIPS: dict[str, int] = {}           # scenario -> loop candidates skipped because their leg is not in the cache (no token)
+
+
+def loop_must_bypass(spec: dict) -> bool:
+    """True when the story says the first loop goes ROUND a stretch: an accident on it (RD-4 tests whether the incident sits on
+    the replaced stretch), "go round via X to avoid Y" (the car must not drive the whole of Y), or "take whichever way is
+    faster" (a loop that reaches nothing is a driver's errand). An out-and-back spur (entry = exit) satisfies none of them."""
+    return spec["incident"] in ("on_stretch", "seg1", "late") or spec["consent"] in contract.ROAD_NAMING_CONSENT + ("general", "general_cn")
 
 
 def _loop_from_spec(opt, cum, lp, cand):
@@ -413,7 +423,7 @@ def build_route(spec, rates, rp, idx, rng):
     pickup_at = spec["day"]
     approach_start, approach_s = approach_leg(rp, P, D, rng)
     accepted = pickup_at - timedelta(seconds=approach_s + 10)
-    stop_dur = {"named": 240, "unnamed": 250}.get(spec["stop"], 0)
+    stop_dur = {"named": 240, "unnamed": 250, "driver_errand": 240}.get(spec["stop"], 0)
     stops_spec = [(0, stop_dur)] if spec["stop"] != "none" else []
     cz = spec["band"]
 
@@ -427,9 +437,15 @@ def build_route(spec, rates, rp, idx, rng):
             if loop is None or (loops and loop["i1"] <= loops[-1]["i2"]):
                 continue
             try:
-                _try_trace(rp, route, opt, loops + [loop], pickup_at, spec, [s for s in stops_spec if s[0] <= k], cz)
-            except (ValueError, RuntimeError, AssertionError, urllib.error.HTTPError):
+                trial = _try_trace(rp, route, opt, loops + [loop], pickup_at, spec, [s for s in stops_spec if s[0] <= k], cz)
+            except (ValueError, RuntimeError, AssertionError, urllib.error.HTTPError) as e:
+                if "leg not in cache" in str(e):
+                    OFFLINE_SKIPS[spec["name"]] = OFFLINE_SKIPS.get(spec["name"], 0) + 1   # reported by main(): an online run may choose this candidate
                 continue        # no clean segment, or OneMap found no route (via point in the sea / a reserve)
+            if k == 0 and loop_must_bypass(spec) and trial[4][0]["route_km"] < MIN_REPLACED_KM:
+                continue        # an out-and-back spur replaces no stretch of the route: an incident placed mid-stretch would not sit on it, a
+                                # "go round via X" loop would still drive the whole of the road it claims to avoid, and a "whichever way is
+                                # faster" loop that reaches nothing is a driver's errand, not a route round the jam
             loops.append(loop)
             ok = True
             break
@@ -483,17 +499,37 @@ def build_route(spec, rates, rp, idx, rng):
 
     # ---- chat ----
     chat_lines, consent, stop_place = [], spec["consent"], None
-    detour_road = {}
+    detour_road, alt_road = {}, {}
     for k, lg in enumerate(legs):
         # the road the driver names must differ from the congested stretch, else "go round via X to avoid X" is self-contradictory
         others = [r for r in lg["roads"] if r["name"].title() != stretch_roads[0].title()] or lg["roads"]
         detour_road[k] = max(others, key=lambda r: r["to_m"] - r["from_m"])["name"].title().replace("'S ", "'s ")
+        rest = [r for r in others if r["name"].title().replace("'S ", "'s ") != detour_road[k]]
+        alt_road[k] = (max(rest, key=lambda r: r["to_m"] - r["from_m"])["name"].title().replace("'S ", "'s ") if rest else "the service road alongside")
     if consent in ("before", "after", "before_seg1"):
         t_req = seg_start[0] + timedelta(seconds=(120 if consent == "after" else -200))
         road = detour_road[0]
         ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
         yes = "Sure, go ahead."
         chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
+    elif consent in ("general", "general_cn", "general_errand"):
+        # a GENERAL route choice: the rider authorises any route that gets there, naming none
+        t_req = seg_start[0] - timedelta(seconds=200)
+        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, shall I take another way?"
+        yes = "随便你，哪条快走哪条，我赶时间。" if consent == "general_cn" else "Just take whichever way is faster lah, I'm late."
+        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
+    elif consent in ("named_singlish", "named_cn", "named_elsewhere"):
+        # agreement to a NAMED road, worded in Singlish / Chinese, or followed by a driver account that puts the car on another road
+        t_req = seg_start[0] - timedelta(seconds=200)
+        road = detour_road[0]
+        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
+        yes = {"named_singlish": "Can lah, go ahead.", "named_cn": f"可以，走 {road} 吧。", "named_elsewhere": "Sure, go ahead."}[consent]
+        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
+    elif consent == "negation":
+        t_req = seg_start[0] - timedelta(seconds=200)
+        road = detour_road[0]
+        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
+        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", f"No, I'm not okay with that. Please stay on {stretch_roads[0].title()}.")]
     elif consent == "request_only":
         t_req = seg_start[0] - timedelta(seconds=200)
         ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {detour_road[0]}?"
@@ -540,8 +576,22 @@ def build_route(spec, rates, rp, idx, rng):
         "request_only": "The driver asked about another road but I did not reply; he went anyway and the fare was higher than the estimate.",
         "scope_other": "I agreed to a quick petrol stop, not to a long loop. The meter was higher than the estimate and he never stopped for petrol anyway.",
         "before_seg1": "I agreed to go round the jam near the start, but later he went off the route a second time without asking. I want that part refunded.",
+        "general": "I told him any faster way was fine, but the meter ended up well above the estimate. I don't think it was faster at all.",
+        "general_cn": "我说过哪条快走哪条，结果车费比预估高了一截，我不觉得那条路更快。",
+        "general_errand": "I said take any faster way, not stop somewhere for four minutes. The meter was way above the estimate.",
+        "named_singlish": "I said can when he asked about the other road, but the fare was much higher than the app showed. Was that even the road he said?",
+        "named_cn": "他问能不能换路我说可以，但车费比预估贵了很多，我不确定他走的是不是他说的那条路。",
+        "named_elsewhere": "I agreed to the road he named, but he says himself he went a different way. The fare was much higher than the estimate.",
+        "negation": "He asked about another road and I said no, stay on the main road. He went anyway and the fare was higher.",
     }
     statement = rider_lines.get(consent, rider_lines["none"])
+    if service == "RydeX" and found:
+        # a fixed quote has no meter and no "more than the estimate": the rider's grievance is the route itself
+        fixed_lines = {
+            "none": f"The app showed a {route['total_km']:.0f} km route but the driver went a different way and never asked me. I know the fare was a fixed quote; I still want the detour on record.",
+            "before": "The driver took a longer way round than the app showed. The fare was a fixed quote, but I want the detour looked at.",
+        }
+        statement = fixed_lines.get(consent, fixed_lines["none"])
     if spec["stop"] == "named":
         statement = f"I asked to stop at {stop_place} and we did, fine, but the fare was much more than the estimate. I think the detour was overcharged."
     elif spec["stop"] == "unnamed":
@@ -559,6 +609,13 @@ def build_route(spec, rates, rp, idx, rng):
         "request_only": "I asked the rider about the alternative road; no objection, so I took it.",
         "scope_other": "The rider agreed to a short stop so I thought a small change of route was fine.",
         "before_seg1": "I asked about going round the jam and the rider agreed. The second turn-off was my GPS rerouting.",
+        "general": "Traffic was building up ahead. I asked the rider and the rider said any faster way was fine, so I went round.",
+        "general_cn": "Traffic was building up ahead. I asked the rider and the rider said any faster way was fine, so I went round.",
+        "general_errand": "The rider said any route was fine. I went round the jam and stopped briefly to collect something on the way.",
+        "named_singlish": f"I asked the rider before turning off via {detour_road.get(0, 'the alternative road')} and the rider said can.",
+        "named_cn": f"I asked the rider before turning off via {detour_road.get(0, 'the alternative road')} and the rider agreed.",
+        "named_elsewhere": f"I asked the rider about going via {detour_road.get(0, 'the alternative road')} and the rider agreed. In the end I went by {alt_road.get(0, 'the service road alongside')} instead because it looked clearer; same direction.",
+        "negation": "I asked the rider about the alternative road. The traffic was bad so I took it anyway; it was faster.",
     }
     dstmt = driver_lines.get(consent, driver_lines["none"])
     if inc_kind in ("on_stretch", "seg1"):
@@ -591,19 +648,31 @@ def build_route(spec, rates, rp, idx, rng):
         "driver_statement": dstmt,
         "profiles": profiles(r_prof, d_prof),
     }
-    # what the scenario knows about the interpretive slots, per segment (in time order)
-    exempt_by_scenario = []
+    # what the scenario knows about the interpretive slots, per segment (in time order), under the frozen evidence rules:
+    #   named stop (RD-3): the rider named the place and the stop fact sits inside the segment -> exempt
+    #   consent to a NAMED road before the segment (RD-5): the agreement is real, but nothing in the record ties the driven
+    #     segment to that road (the fact table carries no road names for the driven path) -> undetermined (G13);
+    #     whether that sends the case to a person depends on whether the finding changes the outcome (derive_truth)
+    #   after / request_only / scope_other / unnamed stop / none -> counts
+    #   general route choice ("whichever way is faster"): the loop goes round the congested stretch -> exempt; with a
+    #     driver's own stop inside it (general_errand) the segment is the driver's errand -> counts
+    #   named road but the driver's own account puts the car on another road (named_elsewhere) -> counts
+    #   "No, stay on the main road" (negation) -> counts
+    finding_by_scenario, exempt_by_scenario = [], []
     for k in range(len(found)):
-        if consent == "before":
-            exempt_by_scenario.append(True)
-        elif consent == "before_seg1":
-            exempt_by_scenario.append(k == 0)
-        elif spec["stop"] == "named":
-            exempt_by_scenario.append(True)
+        if consent in ("before", "named_singlish", "named_cn") or (consent == "before_seg1" and k == 0):
+            finding_by_scenario.append("undetermined"); exempt_by_scenario.append(None)
+        elif spec["stop"] == "named" or consent in ("general", "general_cn"):
+            finding_by_scenario.append("exempt"); exempt_by_scenario.append(True)
         else:
-            exempt_by_scenario.append(False)   # after / request_only / scope_other / unnamed stop / none
+            finding_by_scenario.append("counts"); exempt_by_scenario.append(False)   # after / request_only / scope_other / unnamed / errand / elsewhere / negation / none
+    if spec.get("gps_tail_cut_s"):
+        cut = dropoff_at - timedelta(seconds=spec["gps_tail_cut_s"])
+        gps = [p for p in gps if datetime.fromisoformat(p["ts"]) <= cut]
+        case["gps"] = gps
+        found = measure_detours(slice_gps(gps, iso(pickup_at), iso(dropoff_at)), opt)   # the manifest shows the segments the fact tool will see
     meta = {"segments": found, "stretch_roads": stretch_roads, "detour_roads": detour_road, "exempt_by_scenario": exempt_by_scenario,
-            "extra_km": round(extra_km, 2), "stop_place": stop_place}
+            "finding_by_scenario": finding_by_scenario, "extra_km": round(extra_km, 2), "stop_place": stop_place}
     return case, meta
 
 
@@ -652,8 +721,12 @@ def build_noshow(spec, rates, rp, idx, rng):
             cancelled, gps = trace(wait_s)
             assert after_tap_s(gps, P, park_at + timedelta(seconds=20), cancelled) == spec["within_s"], spec["name"]
         pressed = park_at + timedelta(seconds=20) if spec["here"] else None
+        if spec.get("gps_hole_s"):      # the trace stops for a while in the middle of the wait
+            h0 = park_at + timedelta(seconds=90)
+            h1 = h0 + timedelta(seconds=spec["gps_hole_s"])
+            gps = [p for p in gps if not (h0 < datetime.fromisoformat(p["ts"]) < h1)]
         trip = trip_block(f"T-{2000 + idx}", spec["service"], place(spec["pair"][0]), place(spec["pair"][1]), route,
-                          accepted - timedelta(seconds=30), accepted, gps, pressed, cancelled_at=cancelled, cancelled_by="driver")
+                          accepted - timedelta(seconds=30), accepted, gps, pressed, cancelled_at=cancelled, cancelled_by=spec.get("recorded_by", "driver"))
         kind = spec.get("chat")
         plate = rng.choice(["silver Toyota Altis", "white Honda Vezel", "black Hyundai Ioniq", "grey Kia Niro"])
         if park_m > 200:
@@ -704,13 +777,20 @@ def build_noshow(spec, rates, rp, idx, rng):
         cancel_s = spec["cancel_s"]
         cancelled = accepted + timedelta(seconds=cancel_s)
         if spec["driver"] == "en_route":
-            start = offset(P, (bearing(D, P) + rng.uniform(-30, 30)) % 360, 2600)
-            approach = rp.route([start, P])
-            full = [tuple(p) for p in approach["polyline"]]
-            cum = along_km(full)
             drive_km = 30.0 / 3600 * cancel_s          # 30 km/h; the driver is still on the way when the rider cancels
-            cut = vertex_at(full, cum, drive_km)
-            poly = full[:max(cut, 2) + 1]
+            for _ in range(12):
+                start = offset(P, (bearing(D, P) + rng.uniform(-30, 30)) % 360, 2600)
+                approach = rp.route([start, P])
+                full = [tuple(p) for p in approach["polyline"]]
+                cum = along_km(full)
+                cut = vertex_at(full, cum, drive_km)
+                poly = full[:max(cut, 2) + 1]
+                # the driver must be ON THE WAY: a one-way system can send the first kilometre away from the pickup, and a judge
+                # reading the map would see a car driving off, not a driver who was "still far away"
+                if haversine_m(poly[-1], P) < haversine_m(start, P) - 300 and min(haversine_m(q, P) for q in poly) > 200:
+                    break
+            else:
+                raise RuntimeError(f"{spec['name']}: no approach route that brings the driver closer in {cancel_s} s")
             gps = build_trajectory(poly, accepted, cancel_s, seed=spec["seed"])
             chat_lines = [(accepted + timedelta(seconds=40), "rider", "How long will you be?"),
                           (accepted + timedelta(seconds=70), "driver", "About 5 min, traffic")] if cancel_s > 120 else []
@@ -760,6 +840,11 @@ def build_noshow(spec, rates, rp, idx, rng):
         "driver_statement": dstmt,
         "profiles": profiles(r_prof, d_prof),
     }
+    if spec.get("policy"):          # the record states its own parameters (the organisers' sample format)
+        case["policy_params"] = dict(spec["policy"])
+        if spec["policy"].get("cancellation_fee"):
+            case["fare"]["cancellation_fee"] = spec["policy"]["cancellation_fee"]
+            case["dispute"]["statement"] = statement.replace("$6.61", f"${spec['policy']['cancellation_fee']:.2f}")
     return case, {}
 
 
@@ -845,9 +930,13 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
         why = f"{case.dispute.type} dispute, but the chat holds an intimidating message; the judge's safety screen (SAFE-1) overrides every other clause: escalate."
         return {"ruling": "escalate", "amount": None, "cited_policy": ["SAFE-1"], "escalate": True, "rationale": why,
                 "flag_account": False, "_cert": lines}
+    if cert.insufficient:
+        return {"ruling": "escalate", "amount": None, "cited_policy": ["NS-0", "NS-1"] if kind == "no_show" else ["RD-1"], "escalate": True,
+                "rationale": "; ".join(lines) + f". Evidence insufficient (G12): {cert.insufficient} -> escalate, a person decides.",
+                "flag_account": False, "evidence_gap": cert.insufficient, "_cert": lines}
     if kind == "no_show":
         ruling = cert.allowed[0]
-        amount = CANCEL_FEE if ruling == "refund_full" else None
+        amount = cert.fee if ruling == "refund_full" else None
         by = case.trip.cancelled_by
         if by == "rider":
             cited = ["NS-0", "NS-4"]
@@ -861,28 +950,29 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
     # route deviation
     seg_ids = list(cert.segments)                       # fact ids in time order (gps-detour-k numbering)
     scen = meta.get("exempt_by_scenario", [])
+    kinds = meta.get("finding_by_scenario", ["exempt" if w else "counts" for w in scen])
     assert len(seg_ids) == len(scen), f"{spec['name']}: engine sees {len(seg_ids)} segments, scenario injected {len(scen)}"
-    findings, notes = {}, []
-    for fid, want in zip(seg_ids, scen):
+    findings, notes, open_slots = {}, [], []
+    for fid, want, kind in zip(seg_ids, scen, kinds):
         s = cert.segments[fid]
         if s["exempt"] is None:
             findings[fid] = want
-            notes.append(f"{fid} interpretive slot ({s['why']}): scenario says {'exempt' if want else 'NOT exempt'}")
+            if kind == "undetermined":
+                road = meta.get("detour_roads", {}).get(seg_ids.index(fid), "the named road")
+                notes.append(f"{fid} interpretive slot: the rider agreed to '{road}' before the segment (RD-5), but no record ties this driven segment to that road "
+                             f"(G13) -> undetermined" + (" and it changes the outcome -> a person decides" if s.get("changes_outcome", True) else ", and it changes neither the amount nor the flag -> the ruling stands"))
+                if s.get("changes_outcome", True):
+                    open_slots.append((fid, road))
+            else:
+                notes.append(f"{fid} interpretive slot ({s['why']}): scenario says {kind}")
         else:
             # mechanical slot: the engine decided (RD-4 incident exempts; no candidate -> not exempt). The scenario's
             # own label only covers interpretive consent/stop scope, so an RD-4 exemption may override a False label.
-            if s["exempt"] != want and not (s["exempt"] and spec["incident"] in ("on_stretch", "seg1")):
+            if s["exempt"] != want and want is not None and not (s["exempt"] and spec["incident"] in ("on_stretch", "seg1")):
                 raise AssertionError(f"{spec['name']}: engine says {fid} exempt={s['exempt']} but the scenario intended {want}")
             findings[fid] = s["exempt"]
             notes.append(f"{fid} mechanical: exempt={s['exempt']} ({s['why']})")
     metered = case.trip.service_type == "RydeTAXI"
-    non_exempt = [fid for fid in seg_ids if not findings[fid]]
-    amount = expected_amount(cert, findings) if metered else None
-    if amount is not None and amount <= 0:
-        amount = None
-    ruling = "refund_partial" if (metered and amount) else "no_action"
-    prior = case.profiles.driver.route_disputes_upheld_90d >= 1
-    flag = bool(prior and non_exempt)
     cited = ["RD-1", "RD-2"] if seg_ids else ["RD-1"]
     if any(p.clause == "RD-4" and p.status == "pass" for p in cert.predicates):
         cited.append("RD-4")
@@ -890,6 +980,18 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
         cited.append("RD-5")    # the chat holds a route exchange the judge had to read
     if spec["stop"] != "none" and any(p.clause == "RD-3" and p.status == "judge" for p in cert.predicates):
         cited.append("RD-3")
+    if open_slots:
+        gap = "; ".join(f"no record ties segment {fid} to {road}, the road the rider agreed to" for fid, road in open_slots)
+        return {"ruling": "escalate", "amount": None, "cited_policy": cited, "escalate": True,
+                "rationale": "; ".join([f"{len(seg_ids)} off-route segment(s) measured"] + notes) + f". Evidence gap (G13): {gap}. -> escalate, a person decides.",
+                "flag_account": False, "evidence_gap": gap, "_cert": lines}
+    non_exempt = [fid for fid in seg_ids if findings[fid] is False]
+    amount = expected_amount(cert, {f: (True if v is None else v) for f, v in findings.items()}) if metered else None   # an open slot that changes nothing is fixed-fare: no amount anyway
+    if amount is not None and amount <= 0:
+        amount = None
+    ruling = "refund_partial" if (metered and amount) else "no_action"
+    prior = case.profiles.driver.route_disputes_upheld_90d >= 1
+    flag = bool(prior and non_exempt)
     if flag:
         cited.append("RD-6")
     parts = [f"{len(seg_ids)} off-route segment(s) measured" if seg_ids else "no off-route segment: GPS follows the optimal route (RD-1 fails)"]
@@ -906,11 +1008,59 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
             "flag_account": flag, "_cert": lines}
 
 
+# ----------------------------------------------------------------------------------------------- blind set
+# Written after the prompts of 2026-10-10 were frozen and never used to tune them. Generated into data/bench/blind/
+# with its own seed and the X- prefix; the reference answers come from the same frozen rules (derive_truth).
+BLIND_SEED = 20261010
+BLIND_SCENARIOS = [
+    R("bl_general_consent", ("Bugis Junction", "Changi Airport T3"), loops=[{"frac": (0.40, 0.58)}], consent="general",
+      hard="'whichever way is faster lah': a general route choice covers the loop round the jam -> exempt, no refund"),
+    R("bl_general_consent_cn", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.45, 0.62)}], consent="general_cn",
+      hard="Chinese general route choice ('哪条快走哪条') -> exempt, no refund"),
+    R("bl_general_errand", ("Woodlands Civic Centre", "Orchard Road"), loops=[{"frac": (0.35, 0.52)}], consent="general_errand", stop="driver_errand",
+      hard="general route choice, but the driver stops 4 min inside the loop for his own errand -> the segment is the driver's errand, counts"),
+    R("bl_negation", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.30, 0.50)}], consent="negation",
+      hard="'No, I'm not okay with that, stay on X': a refusal, driver went anyway -> counts"),
+    R("bl_named_singlish", ("Tampines Mall", "Changi Airport T3"), loops=[{"frac": (0.30, 0.48)}], consent="named_singlish",
+      hard="'Can lah, go ahead' to a named road, nothing ties the driven segment to that road (G13) -> undetermined, a person decides"),
+    R("bl_named_cn", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.62)}], consent="named_cn",
+      hard="Chinese agreement to a named road ('可以，走 X 吧'), nothing ties the segment to it (G13) -> undetermined, a person decides"),
+    R("bl_named_elsewhere", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], consent="named_elsewhere",
+      hard="agreed to road X; the driver's own account says he went by another road -> the agreement does not cover it, counts"),
+    R("bl_gps_tail_missing", ("Sentosa Beach Station", "Clarke Quay"), loops=[{"frac": (0.55, 0.72)}], gps_tail_cut_s=240,
+      hard="the trace ends 4 min before drop-off: the last stretch cannot be measured (G12) -> escalate"),
+    N("bl_record_threshold_7m50", ("Bugis Junction", "Jurong East MRT"), by="driver", park_m=40, wait_s=490, here=True,
+      policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
+      hard="record states an 8-min no-show threshold; 7:50 does not reach it (free wait 5 min is not the threshold) -> refund_full $5.00"),
+    N("bl_record_threshold_8m10", ("Clarke Quay", "Sentosa Beach Station"), by="driver", park_m=40, wait_s=510, here=True,
+      policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
+      hard="record states an 8-min no-show threshold; 8:10 reaches it -> no_action"),
+    N("bl_hole_in_wait", ("NUS", "Raffles Place"), by="driver", park_m=40, wait_s=300, here=True, gps_hole_s=200,
+      hard="the trace has a 200 s hole during the wait: the time between two samples is not a measured wait (G12) -> escalate"),
+    N("bl_cancelled_by_missing", ("Tanjong Pagar Centre", "Sentosa Beach Station"), by="driver", park_m=40, wait_s=300, here=True, recorded_by=None,
+      hard="cancelled_by is not on record: NS-1 and NS-4 cannot be told apart (G12) -> escalate"),
+]
+
+
 # ----------------------------------------------------------------------------------------------- main
+
+# The reference answers follow the written policy AND the evidence rules frozen on this date. Bump when either changes
+# and record every changed answer in data/bench/REFERENCE_CHANGES.md (what the gap is and why it moves the outcome).
+REFERENCE_VERSION = "2026-10-10 v3: agreement to a named road needs a record tying the driven segment to it (G13); otherwise undetermined, and a person decides when it changes the outcome"
 
 def validate_bench(case_dict: dict, spec: dict, rates, clauses) -> list[str]:
     validate.EXPECTED_DIR = EXPECTED_DIR
+    if spec.get("gps_tail_cut_s"):
+        return []        # the trace deliberately ends early; the format checks assume a complete trip
     errs = validate.check_case(case_dict, rates, clauses)
+    if spec.get("policy"):
+        errs = [e for e in errs if "policy_params" not in e and "cancellation fare" not in e]   # record-stated parameters (the organisers' format)
+    if spec.get("gps_hole_s"):
+        errs = [e for e in errs if "5 s grid" not in e]                                      # the hole IS the scenario
+    if "recorded_by" in spec and spec["recorded_by"] is None:
+        errs = [e for e in errs if "cancel fields" not in e]                                 # an unrecorded canceller IS the scenario
+    if spec.get("stop") == "driver_errand":
+        errs = [e for e in errs if "unexplained mid-trip stop" not in e]                     # the driver's own stop IS the scenario
     if spec["kind"] == "no_show" and not spec.get("here", True):
         errs = [e for e in errs if "without an 'I'm Here' tap" not in e]   # that IS the scenario (NS-3)
     if spec["kind"] == "route_deviation" and not spec["loops"]:
@@ -927,31 +1077,41 @@ def validate_bench(case_dict: dict, spec: dict, rates, clauses) -> list[str]:
     return errs
 
 
-def main(limit: int | None = None):
-    rng0 = random.Random(SEED)
+def main(limit: int | None = None, blind: bool = False):
+    global BENCH_DIR, CASES_DIR, EXPECTED_DIR
+    seed, prefix, specs_all = (BLIND_SEED, "X-", BLIND_SCENARIOS) if blind else (SEED, "B-", SCENARIOS)
+    if blind:
+        BENCH_DIR = os.path.join(ROOT, "data", "bench", "blind")
+        CASES_DIR, EXPECTED_DIR = os.path.join(BENCH_DIR, "cases"), os.path.join(BENCH_DIR, "expected")
+    rng0 = random.Random(seed)
     rates = load_rates()
     clauses = validate.policy_clauses()
     rp = routes()
     for d in (CASES_DIR, EXPECTED_DIR):
         os.makedirs(d, exist_ok=True)
         for old in os.listdir(d):          # a renumbered scenario must not leave a stale case behind
-            if old.startswith("B-") and old.endswith(".json"):
+            if old.startswith(prefix) and old.endswith(".json"):
                 os.remove(os.path.join(d, old))
-    day0 = datetime(2026, 9, 25, 8, 0, 0, tzinfo=SGT)
+    day0 = datetime(2026, 10, 3, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 25, 8, 0, 0, tzinfo=SGT)
     hours = [8, 9, 12, 14, 17, 18, 21, 22]
     manifest, failures = [], []
-    specs = SCENARIOS[:limit] if limit else SCENARIOS
+    specs = specs_all[:limit] if limit else specs_all
     for i, spec in enumerate(specs, 1):
         spec = dict(spec)
-        spec["case_id"] = f"B-{i:04d}"
-        spec["seed"] = SEED + i
+        spec["case_id"] = f"{prefix}{i:04d}"
+        spec["seed"] = seed + i
         spec["day"] = (day0 + timedelta(days=i // 2)).replace(hour=hours[i % len(hours)], minute=(i * 7) % 60, second=0)
-        rng = random.Random(SEED * 7 + i)
+        rng = random.Random(seed * 7 + i)
         builder = {"route_deviation": build_route, "no_show": build_noshow, "safety": build_safety}[spec["kind"]]
         try:
             case, meta = builder(spec, rates, rp, i, rng)
             truth = derive_truth(case, spec, meta)
             expected = {k: v for k, v in truth.items() if not k.startswith("_")}
+            # the gate: the record must tell the scenario's story and the label must promise the reference answer.
+            # A case that fails is NOT written (no retry that changes the story); the run reports it and exits 1.
+            broken = contract.check(case, contract.contract_for(spec, LOC)) + contract.check_label(spec["hard"], expected)
+            if broken:
+                raise contract.ContractError(f"{spec['case_id']} {spec['name']} refused: " + " | ".join(broken))
             with open(os.path.join(EXPECTED_DIR, f"{spec['case_id']}.json"), "w") as f:
                 json.dump(expected, f, indent=2, ensure_ascii=False)
                 f.write("\n")
@@ -972,15 +1132,20 @@ def main(limit: int | None = None):
             failures.append((spec["case_id"], spec["name"], [f"{type(e).__name__}: {e}"]))
             print(f"{spec['case_id']} {spec['name']:36} BUILD FAILED {type(e).__name__}: {e}")
     with open(os.path.join(BENCH_DIR, "manifest.json"), "w") as f:
-        json.dump({"seed": SEED, "generated_by": "data/synth/scenarios.py", "cases": manifest}, f, indent=1, ensure_ascii=False)
+        json.dump({"seed": seed, "generated_by": "data/synth/scenarios.py" + (" --blind (held out: written after the 2026-10-10 prompt freeze, never used for tuning)" if blind else ""),
+                   "reference_version": REFERENCE_VERSION, "cases": manifest}, f, indent=1, ensure_ascii=False)
     by_type = {}
     for m in manifest:
         by_type[m["type"]] = by_type.get(m["type"], 0) + 1
     print(f"\n{len(manifest)} cases written: {by_type}; {len(failures)} failure(s)")
     for cid, name, errs in failures:
         print(f"  {cid} {name}: {errs}")
+    if OFFLINE_SKIPS:
+        print("offline run: loop candidates skipped because their OneMap leg is not cached (a run with a token may choose one of them "
+              "and produce different geometry): " + ", ".join(f"{k} x{v}" for k, v in sorted(OFFLINE_SKIPS.items())))
     return 1 if failures else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(int(sys.argv[1]) if len(sys.argv) > 1 else None))
+    args = [a for a in sys.argv[1:] if a != "--blind"]
+    sys.exit(main(int(args[0]) if args else None, blind="--blind" in sys.argv))
