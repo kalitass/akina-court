@@ -4,57 +4,82 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:03:54.596012+00:00",
+ "ts": "2026-10-10T13:17:11.940221+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
+  "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Reject the rider's overcharge complaint and keep the metered fare as charged; no account flag on either party (driver's route_disputes_upheld_90d = 0, so RD-6 is not triggered). Advise Ryde ops that the geographic extent of the rider's \"Sure, go ahead\" consent should be clarified with the rider as a service-quality follow-up only, since the rider's refund claim itself does not succeed on this record.",
-  "confidence": 0.64,
+  "recommended_action": "Send to a human reviewer: GPS-derived detour segments and the chat message-route-to-road mapping are ambiguous, so the RD-2 refund and any RD-6 flag cannot be settled automatically. Provisional figures if the mapping is accepted: the post-consent southbound deviation (Clementi Rd / West Coast) is covered by RD-5 consent; the U-turn back north on AYE is prima facie outside consent (extra ≈3.9 km ≈ $5.50), and the driver never declaring the Clementi Road amendment to the metered destination is a separate concern. Confirm the routing with the reviewer before any voucher is issued.",
+  "confidence": 0.4,
+  "reasoning": "Safety screen: the chat contains only a routing arrangement and the driver statement a matching account — no threat, harassment, abuse or dangerous-driving allegation. safety_concern = none.\n\nRoute facts computed from the record: quoted route 8.432 km / 13.8 min; metered fare 10.6 km / 18.58 min; driver's GPS ends 14:40:00 at the NUS dropoff (system record). By my reconstruction the driver ran roughly 12.8 km, i.e. some 4.4 km beyond the 8.432 km.\n\nThe chat is the problem. The driver's detour proposal (\"Jam on Ayer Rajah Expressway … can I go round via Clementi Road?\") is timestamped 14:30:55, but the record shows the driver already heading east/south away from the quoted Jurong Town Hall Rd corridor from about 14:24–14:25 (GPS: 14:24:25 at 1.320913,103.754714; 14:25:25 at 1.316603,103.758517; then the slow 15 km/h stretch at 14:26–14:29 arcing east to ~1.3092,103.7611). The rider's reply is 14:31:35. So on the record the first clearly off-corridor movement begins before any consent existed, and even after the reply the GPS runs *north* on AYE (14:31:25 → 14:37:25, reaching 1.295862,103.785068) before a U-turn and return south down Clementi Rd / West Coast to the dropoff — i.e. for several minutes after consent the car was not on a route to NUS at all (the later 14:37:55–14:39:55 points coincide with the inbound Clementi Rd corridor near NUS).\n\nApplying RD-5: consent must be the rider's own message sent before the detour began; a general \"Sure, no problem\" to a named-road proposal grants at most a designated-route authorisation, which covers driving on that named road, not the driver's own U-turn and not segments driven before the message. The driver's statement (\"the rider said sure\") gives no timing and cannot by itself establish prior verbal consent (G11). Because the precise detour segmentation (thin GPS, gaps at 14:24:25–14:24:55, 14:26:55–14:27:25, 14:29:55–14:30:25 and 14:31:25–14:31:55; no `gps-detour-*` ids supplied) cannot be tied reliably to the chat, and because the route-driven-vs-Clementi-Road correspondence is not directly evidenced (no road-name facts, 300 m match radius exceeded on part of the trace), the record does not settle the segment findings and the resulting amount (G12, G13). RD-4 gives no exemption: no LTA incident on the abandoned optimal route; the AYE band 2 entry lies on the *actual* AYE segment after the turn, not on the replaced optimal route, and a band alone does not exempt (RD-4(b), G3).\n\nConsequential items: waiting_fee $0.11 is a metered wait component (RD-3(c)), not the $5 fee, so it stands; no ERP/tolls in the record, so FARE-2 not triggered; the rider was not overcharged on the base metered structure beyond the detour question. Escalation rather than a refund is required because the amount turns entirely on undetermined segment mapping; remaining over-consent kilometres ≈3.9 km ≈ $5.50 (3.9 × $1.41/km) is indicative only. The driver also never declared the amended route as a destination change (no edit-destination fee), which is relevant to metered-fare review; his 90-day route_disputes_upheld_90d = 0 and the profile cannot alone decide the case, so no flag is set pending human review.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
+   "RD-4",
    "RD-5",
-   "RD-3"
+   "G11",
+   "G12",
+   "G13"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Off-route segmentation and the mapping of the driven segments to the chat message are undetermined (thin GPS, gaps, no road-name facts), and the finding controls both the RD-2 refund amount and any RD-6 account flag (G12, G13).",
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "exempt",
-    "basis": [
-     "chat-1",
-     "chat-2"
-    ],
-    "reason": "Post-consent deviation: driver asked at 14:29:20 to go round via West Coast Highway, rider replied 'Sure, go ahead' at 14:30:00; GPS shows the car on the routed AYE corridor until ~14:29–14:30 and on the West Coast loop only after 14:30. Rider's own timely message to the named route → RD-5 exemption; RD-4 not needed (traffic band 4 does not meet RD-4(b) band ≤ 2 and there are no incidents)."
+    "finding": "undetermined",
+    "basis": [],
+    "reason": "First clear off-corridor movement (east/south from the Ayer Rajah/Jurong Town Hall corridor, GPS 14:24:25 → 14:25:25) precedes the driver's 14:30:55 chat message and the rider's 14:31:35 reply, so no RD-5 consent existed before it. The thin trace (gaps 14:24:25–14:24:55, 14:26:55–14:27:25, 14:29:55–14:30:25) makes exact segmentation unreliable, so this segment is undetermined rather than counted (G12)."
    },
    {
     "fact_id": "seg2",
     "finding": "exempt",
     "basis": [
-     "chat-1",
-     "chat-2"
+     "chat:2026-09-02T14:30:55+08:00",
+     "chat:2026-09-02T14:31:35+08:00"
     ],
-    "reason": "Remainder of the off-route travel through 14:43:10 (final re-join 1.2956/103.7762 → dropoff 1.2966/103.7764) is the continuation of the same consent route (RD-5); no separate unconsented detour is visible in the trace, and the residual vs the 8.569 km quoted route is map-matching/dispatch residual (RD-2: residual ≤ noise is not refunded)."
+    "reason": "Northbound AYE travel from ~14:31 (GPS 14:31:25 → 14:32:25) follows the rider's 14:31:35 reply to the driver's 14:30:55 proposal namely 'go round via Clementi Road'; a designated-route authorisation covers travel on the named road, so this portion is exempt under RD-5."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "counts",
+    "basis": [
+     "chat:2026-09-02T14:30:55+08:00",
+     "chat:2026-09-02T14:31:35+08:00"
+    ],
+    "reason": "After consent the car continued north on AYE to ~1.2959,103.7851 (GPS 14:37:25) then U-turned and came back south via Clementi Rd/West Coast to the dropoff — a direction that goes nowhere near NUS at the start. Consent to 'go round via Clementi Road' does not cover the driver's own loop away from the destination (RD-5: general/route authorisation does not cover the driver's own errand; deviation unrelated to the named road counts). Approx. 2–4 km extra; exact segmentation and hence the RD-2 refund depend on the AYE-through vs U-turn reading and are left to the reviewer (G13)."
+   },
+   {
+    "fact_id": "seg4",
+    "finding": "counts",
+    "basis": [
+     "chat:2026-09-02T14:30:55+08:00",
+     "chat:2026-09-02T14:31:35+08:00"
+    ],
+    "reason": "Return leg via Clementi Rd/West Coast back to NUS (GPS 14:37:55 → 14:39:55) that undoes the gratuitous northbound run; the out-and-back pair produced the bulk of the surplus ~4.4 km (driver GPS ≈12.8 km vs quoted 8.432 km / metered 10.6 km) and is not covered by the rider's agreement (RD-2)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider-1",
-    "reason": "'The driver only mentioned the different route after he had already turned off' is contradicted by the timed chat: the driver's proposal is 14:29:20 and the off-route West Coast running is only from ~14:30:25 (GPS), i.e. the message precedes the turn-off (system records/time stamps override statements)."
+    "id": "driver_verbal_consent",
+    "reason": "The driver's statement that the rider said sure before the turn is a claim only; no timestamped rider message precedes the off-route movement, and verbal/unrecorded consent does not constitute consent under RD-5 (G11)."
    },
    {
-    "id": "rider-2",
-    "reason": "'I was overcharged for the extra distance' — the distance is metered (RydeTAXI) and the whole off-route portion was pre-approved by the rider under RD-5, so under RD-2 the metered distance figure stands; refund due $0.00."
+    "id": "traffic_exemption",
+    "reason": "No LTA incident on the replaced optimal route; the AYE speed band 2 is recorded on the actual AYE segment used after the turn (window 14:10–14:28), not on the abandoned optimal route, and a band alone does not exempt (RD-4, G3)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS thinned to every 6th sample with multiple gaps exceeding 2× the normal interval (14:24:25–14:24:55, 14:26:55–14:27:25, 14:29:55–14:30:25, 14:31:25–14:31:55); no canonical `gps-detour-*` fact ids, no per-segment extra_km, and no road-name facts binding the driven path to Clementi Road; no far-distance toll/ERP field to verify."
  },
- "latency_s": 9.32,
- "input_tokens": 13149,
- "output_tokens": 1827,
+ "latency_s": 11.18,
+ "input_tokens": 14258,
+ "output_tokens": 2305,
  "requests": 1,
  "llm_calls": 1
 }

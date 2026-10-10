@@ -4,18 +4,24 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:17.457408+00:00",
+ "ts": "2026-10-10T13:17:34.259744+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 1.04,
-  "recommended_action": "Refund S$1.04 (metered in-trip waiting time) — but note the meter is not applicable: refund is S$1.04.",
-  "confidence": 0.62,
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the dispute: the Paya Lebar Square stop was rider-requested and named by her, so no detour refund is due; the extra fare over the quote is ordinary metered distance/time on a RydeTAXI and is not recoverable.",
+  "confidence": 0.7,
+  "reasoning": "Safety screen: nothing in the chat, complaint or driver statement is threatening, harassing, sexual or a dangerous-driving allegation — routine coordination only. safety_concern = none.\n\nService type is RydeTAXI, so the fare is metered (base 3.90 + distance 26.72 for 18.95 km + time 7.50 for 28.83 min + waiting 1.15 + platform fee 1.47 = 40.74) and route distance directly moves the fare. The rider's own complaint concedes she asked for the Paya Lebar Square stop and that the car did stop there: chat 12:21:10 \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes\", driver \"Ok can\" at 12:21:35.\n\nThe GPS trace shows one stationary block of 12:29:20–12:32:50 (0.0 km/h) at 1.31747N 103.89216E, i.e. ~3.5 min, consistent with the rider's own 3–4 minute errand. Track and quoted-route polyline coincide for the entire run apart from ~0.4 km of residual jitter after the stop (offset ~1.90–1.91 km / lat 0.0007°N, lon 0.0017°E at one sample of 12:26:50 vs 1.3268/103.90761), well within map-matching/GPS spread and not the \"several km\" deviation story. Net: 18.95 km actual vs 15.472 km quoted, all of it traceable to the rider-named stop and the metered route to it, not to an unexplained deviation.\n\nRD-3(a) applies: the rider named the place (Paya Lebar Square) and the car stopped there, so the whole segment driven to reach it is exempt and is not split into \"the stop\" and \"the road to it\" — no off-route segment to count under RD-1/RD-2. The stop time itself is metered waiting (RD-3(c), RydeTAXI): 1.15 charged, not refundable. No unexempted detour exists, so RD-2 yields 0 (no_action). Rider's belief that the detour was \"overcharged\" is rejected: as a metered taxi the extra distance/time to and from a stop she requested is chargeable, and FARE-1/FARE-2 find no unpublished add-on and no toll/ERP mismatch (tolls 0.00).\n\nRD-6 does not fire: refund is 0 and no RD-1 breach is recorded, and the driver's route_disputes_upheld_90d is 0 anyway.\n\nSegment findings: the Paya Lebar Square segment (seg1) = exempt, basis RD-3(a)/RD-5 (rider-named place, stopped as requested). No undetermined segment remains, so no escalation.\n\nConfidence 0.70: the record is self-consistent, but the driver's GPS arrival sample is minute-level (thinned to 30 s; per-sample timing is approximate) and the quoted-route distance reconciliation of the ~3.5 km gap without a full path-matching tool leaves some residual uncertainty — not enough to change the outcome.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3"
+   "RD-3",
+   "RD-5",
+   "RD-6",
+   "FARE-1",
+   "FARE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -24,24 +30,24 @@
     "fact_id": "seg1",
     "finding": "exempt",
     "basis": [],
-    "reason": "The Paya Lebar Square stop (GPS stationary 12:28:50–12:32:20 at 1.31747,103.89216) was requested by the rider in chat at 12:20:55 with the place named, and accepted by the driver at 12:21:25 — i.e. before the stop occurred. Under RD-3(a) a rider-named stop creates no off-route segment; the trace distance (≈15.4 km) equals the quoted route (15.472 km), so no extra_km at all."
+    "reason": "Rider named the place in chat at 12:21:10 ('Can you stop at Paya Lebar Square') and the driver accepted at 12:21:35; the car stopped there (12:29:20–12:32:50). RD-3(a) exempts the whole segment driven to reach the rider-named stop, and RD-5 consent is the rider's own message sent before the segment. Stop time is metered waiting under RD-3(c) for RydeTAXI and is not refundable."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider-detour-overcharge",
-    "reason": "The driver did not deviate from the quoted route: the GPS trace from pickup to drop-off is ≈15.4 km against a 15.472 km quoted ride-service route; the only divergence is the rider-requested Paya Lebar Square stop, which RD-3(a) exempts. Any fare difference comes from metered waiting/mileage, not from a detour."
-   },
-   {
-    "id": "driver-statement-verbal-stop",
-    "reason": "The driver's statement ('the rider asked me to stop') is corroborated by the chat with timestamps, so it is accepted here — but it is relied on only as corroboration, not as the source of the finding (chat/system records govern)."
+    "id": "rider_overcharge_claim",
+    "reason": "On a metered RydeTAXI the extra distance and time to and from a stop the rider herself requested and named are chargeable; no unexempted off-route segment exists (RD-3(a)), so there is nothing to refund under RD-2."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 7.4,
- "input_tokens": 15988,
- "output_tokens": 1508,
+ "latency_s": 5.95,
+ "input_tokens": 17044,
+ "output_tokens": 1275,
  "requests": 1,
  "llm_calls": 1
 }

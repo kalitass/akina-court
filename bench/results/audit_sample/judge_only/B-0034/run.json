@@ -2,46 +2,57 @@
  "arm": "judge_only",
  "case_id": "B-0034",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:46:01+00:00",
+ "started_at": "2026-10-10T13:33:42+00:00",
  "fingerprint": {
-  "case_sha256": "8d9668aa10aa8f6d",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "ba0f8ed8a7585e17",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:46:01+00:00"
+  "issued_at": "2026-10-10T13:33:42+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and record the driver's cancellation as an invalid no-show cancellation for this trip.",
-  "confidence": 0.9,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); note the driver's invalid no-show cancellation on the trip record for account-review tracking — no account flag this case.",
+  "confidence": 0.92,
+  "reasoning": "NS-0 routes this case: the driver cancelled and claimed a rider no-show, so it is decided under NS-1/NS-2; the record confirms cancelled_by = driver with $6.61 charged [F4][F7][NS-0].\n\nNS-1 (i) and (ii) hold: the driver tapped \"I'm Here\" at 13:02:35 and was 39 m from the pickup at that moment, matching his chat \"Reached, blue Toyota Prius, waiting at the pickup\" [F6][F1][F9][NS-1]. But NS-1 (iii) fails: after the tap the driver remained within 200 m for only 2 min 55 s (175 s) before cancelling at 13:05:30 — less than the required continuous wait of more than 3 minutes (180 s) [F6][F3][F4][NS-1]. The longer figures (first within 200 m at 13:01:00, cumulative 4 min 30 s inside the radius, 3 min 15 s stationary) measure time before the arrival confirmation, which NS-1 expressly excludes from (iii); only the post-tap interval counts [F2][F3][F4][NS-1]. The driver's chat \"More than 3 min already, I have to cancel\" and his post-trip statement are statements the shorter measured post-tap interval contradicts, and system records override statements [F10][F12][F6][NS-1]. The trace confirms the GPS samples run from confirmation to cancellation with no hole, so (iii) is measurable and settled [F2][F6][NS-1].\n\nWith NS-1 (i)–(iii) not all satisfied, NS-2 applies: the cancellation fee is refunded in full [F4][F7][NS-2]. Amount = the cancellation fee on record = $6.61 [F7][F4][NS-2]; there is no per-km computation because this is a fee, not a distance fare.\n\nflag_account is not triggered: the driver did press \"I'm Here\" while actually within the pickup radius (39 m), so there was no false arrival confirmation under NS-2 [F6][F1][NS-2]. RD-6 is inapplicable — this is a no-show fee dispute, not an established route-deviation refund [F4][F16][F17][RD-6]. The traffic and weather facts are irrelevant to the no-show elements: the driver was already at the pickup and the speed band shows only moderate traffic, which does not excuse the shortfall in wait time [F13][F14][F15][NS-1].",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
-   "F5",
    "F6",
    "F7",
-   "F8",
    "F9",
    "F10",
-   "F12"
+   "F12",
+   "F13",
+   "F14",
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-3",
-   "SAFE-1",
-   "SAFE-2"
+   "NS-7",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "eligibility": {
@@ -55,18 +66,20 @@
    }
   ],
   "what_would_change": [
-   "Had NS-1 (iii) held ((iii) stayed at the pickup > 3 min after the tap, until cancelling), the fee would stand and no refund would be due."
+   "Had NS-1 (iii) held ((iii) stayed at the pickup more than 3 min after the arrival confirmation, until cancelling (NS-1 default: more than 3 min)), the fee would stand and no refund would be due."
   ]
  },
- "latency_s": 7.19,
- "model_calls": 2,
+ "latency_s": 11.0,
+ "model_calls": 3,
  "provider_trace_ids": [
-  "1df16e26f6ce69dce0e9146a55fa1e8c",
-  "c3b3514bf32c16b503b99b6854327718"
+  "dd108544c3b171f0ce0764e76848dc6c",
+  "d97b51ce6a26f54c74125d4a33ab93a9",
+  "3cf157a2b2a35751519d12d1ca36e474"
  ],
  "provider_response_ids": [
-  "bd91a629-b670-4056-b1a8-16e74bda7e41",
-  "19ff55f4-98fc-4687-bd37-2a939fe1ed2e"
+  "b64ddfff-8d97-4966-9b35-8794bed017a7",
+  "618fa147-a163-4aaf-9209-ec0fd25e3eaf",
+  "f1345c96-7f20-4964-abae-95c3c303a7f4"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -79,25 +92,35 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 10280,
-   "completion_tokens": 1301,
-   "total_tokens": 11581,
+   "prompt_tokens": 11371,
+   "completion_tokens": 1176,
+   "total_tokens": 12547,
    "prompt_tokens_details": {
-    "cached_tokens": 8832
+    "cached_tokens": 11136
    },
-   "prompt_cache_hit_tokens": 8832,
-   "prompt_cache_miss_tokens": 1448
+   "prompt_cache_hit_tokens": 11136,
+   "prompt_cache_miss_tokens": 235
   },
   {
-   "prompt_tokens": 1184,
-   "completion_tokens": 228,
-   "total_tokens": 1412,
+   "prompt_tokens": 12724,
+   "completion_tokens": 1183,
+   "total_tokens": 13907,
+   "prompt_tokens_details": {
+    "cached_tokens": 12544
+   },
+   "prompt_cache_hit_tokens": 12544,
+   "prompt_cache_miss_tokens": 180
+  },
+  {
+   "prompt_tokens": 1088,
+   "completion_tokens": 253,
+   "total_tokens": 1341,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 928
+   "prompt_cache_miss_tokens": 832
   }
  ],
- "finished_at": "2026-10-09T19:46:08+00:00"
+ "finished_at": "2026-10-10T13:33:53+00:00"
 }

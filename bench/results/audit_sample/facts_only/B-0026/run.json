@@ -2,20 +2,21 @@
  "arm": "facts_only",
  "case_id": "B-0026",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:45:25+00:00",
+ "started_at": "2026-10-10T13:33:03+00:00",
  "fingerprint": {
-  "case_sha256": "a9fcdfe28b4e2662",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "7e8ed3e599eb10cd",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:45:25+00:00"
+  "issued_at": "2026-10-10T13:33:03+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; flag the driver's account for abuse of the \"I'm Here\" arrival button + flag_account",
-  "confidence": 0.97,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and flag the driver account for abuse of the \"I'm Here\" / waiting-fee button (NS-2); no legitimate no-show fee was ever earned (RD-6 not triggered — driver's prior upheld dispute was a no-show, not a route dispute).",
+  "confidence": 0.96,
+  "reasoning": "Safety screen: I read every chat message [F8, F9, F10], the complaint and the driver's statement [F12]. Nothing is a threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the dispute type is a fee dispute (no-show), not safety. safety_concern = none.\n\nNS-0 routing: cancelled_by = driver [F3], and the driver asserts rider no-show [F10, F12] → NS-1 / NS-2 apply.\n\nNS-1 as driver-cancels-for-no-show requires all three: (i) \"I'm Here\" tapped (or platform auto-arrival); (ii) GPS at the pickup point at the tap; (iii) >3 min of continuous waiting within range afterwards.\n- (i) is satisfied: driver tapped \"I'm Here\" at 12:06:15 [F5]. Note the record shows a driver tap, not a platform auto-arrival; driver_arrived_at is null [F4], so no platform arrival confirmation exists either.\n- (ii) fails: at the tap the driver was 600 m from the pickup point [F5], and his closest approach in the whole trip was 599 m at 12:06:55 [F1] — never within the 200 m arrival radius.\n- (iii) fails: he stayed within 200 m for 0 s after the tap [F5]; he was stationary 600 m away from 12:05:55 to 12:09:25 [F2].\nTwo of the three conditions are not met, and the GPS record (system data) overrides the driver's statement \"I pressed I'm Here and waited more than 3 minutes at the pickup\" [F12]. Even the cancellation itself, only 3 min 30 s after he became stationary and 3 min 10 s after the tap, does not match the stated 3+ min wait at the correct location.\n\nNS-2 consequence: since NS-1 (i)(ii)(iii) are not all satisfied, the $6.61 cancellation fee must be refunded in full → refund_full of $6.61 [F6]. In addition, because the driver tapped \"I'm Here\" while GPS placed him outside the pickup radius (600 m > 200 m) [F5], the case carries flag_account (misuse of the arrival/waiting button per NS-2). The rider's complaint [F9: \"I'm at the pickup point, no car here\"] is corroborated by the GPS record [F1, F2].\n\nSupporting/irrelevant facts: traffic shows only a mid-band speed reading on Jalan Besar (band 3, 20–29 km/h) [F13] and no incidents [F14]; neither supplies a reasonable cause for the no-show, and RD-4 is not in issue here. Weather fair [F15]. Profile facts [F16, F17] do not decide the case; RD-6 is not triggered because the driver's one prior upheld dispute is a no-show, not a route deviation.\n\nEvidence status: sufficient — GPS approach/stationary traces, the full timestamped \"I'm Here\" record, the cancellation timeline and the fare line settle every element; evidence_gap = null. Rider claim that the driver was never at the pickup point is upheld (rejected_claims: driver's F12 account of waiting at the pickup and the no-show assertion in F10).",
   "cited_facts": [
    "F1",
    "F2",
@@ -23,7 +24,6 @@
    "F4",
    "F5",
    "F6",
-   "F8",
    "F9",
    "F10",
    "F12"
@@ -40,22 +40,26 @@
   "rejected_claims": [
    {
     "id": "F12",
-    "reason": "Driver's post-trip statement that he pressed 'I'm Here' and waited 3+ minutes at the pickup is contradicted by system records: F5 shows the tap 601 m from the pickup with 0 s within 200 m, F1 shows a closest approach of 545 m, F2 shows the 3 min 30 s of stationary time was spent 600 m away, and F4 shows the platform never recorded arrival. System records override statements."
+    "reason": "Driver's statement that he pressed 'I'm Here' and waited >3 minutes at the pickup point is contradicted by the GPS record: at the tap (12:06:15) he was 600 m away [F5], his closest approach all trip was 599 m [F1], and the platform never recorded him at the pickup (driver_arrived_at null) [F4]. System records override statements."
    },
    {
-    "id": "F8",
-    "reason": "Driver's chat claim 'I'm here already' is contradicted by GPS: at the time of the message he was 600+ m from the pickup point (F1, F2, F5)."
+    "id": "F10",
+    "reason": "Driver's chat assertion that the rider's 3 minutes had elapsed as a no-show has no basis: the waiting must occur within the pickup radius, and he stayed within 200 m for 0 s [F5]."
    }
   ],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.54,
+ "latency_s": 5.86,
  "model_calls": 1,
  "provider_trace_ids": [
-  "0423088a1742085c2130e1fdc89cce2f"
+  "8102671b1434fa7dd3faff810a0cfd72"
  ],
  "provider_response_ids": [
-  "52e98985-960c-45e9-8cfb-589b077e9f7d"
+  "a211277f-26c1-4804-b923-dbe9302f937f"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -68,15 +72,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 8861,
-   "completion_tokens": 965,
-   "total_tokens": 9826,
+   "prompt_tokens": 9891,
+   "completion_tokens": 1246,
+   "total_tokens": 11137,
    "prompt_tokens_details": {
-    "cached_tokens": 8704
+    "cached_tokens": 9728
    },
-   "prompt_cache_hit_tokens": 8704,
-   "prompt_cache_miss_tokens": 157
+   "prompt_cache_hit_tokens": 9728,
+   "prompt_cache_miss_tokens": 163
   }
  ],
- "finished_at": "2026-10-09T19:45:29+00:00"
+ "finished_at": "2026-10-10T13:33:09+00:00"
 }

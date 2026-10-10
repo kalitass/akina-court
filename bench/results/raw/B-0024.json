@@ -4,54 +4,56 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:56.174717+00:00",
+ "ts": "2026-10-10T13:18:09.701877+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Escalate to a human reviewer: hold the fare review pending the SAFE-1 review of the driver's \"Shut up and let me drive.\" message, and separately verify the pre-pickup trace and the late-trip off-route loop before any refund is computed. If the fare review later proceeds, quote the rider about S$13.77 in vouchers per RD-2 (exact figure from the fact table's per-segment extra_km).",
-  "confidence": 0.7,
+  "recommended_action": "Refer to a human reviewer: route-deviation refund cannot be auto-computed while the SAFE-1 abuse finding stands. Route the abuse finding against the driver to Ryde's conduct/account team for review, keep the metered-fare overcharge claim open for manual fare review, and note that the rider described feeling unsafe.",
+  "confidence": 0.62,
+  "reasoning": "Safety screen: the driver's chat reply \"Shut up and let me drive.\" at 09:05:45, sent in answer to the rider's (civil) query \"Why are we going this way? This is not the route on the app.\", is hostile/abusive language aimed at the other party. Ryde's code of conduct bars abuse of any kind, so this is at least a suspected SAFE-1 violation and the case must go to a human rather than receive an automatic refund. The rider's \"felt unsafe\" is read as consequent to that exchange; there is no collision, injury or dangerous-driving allegation (SAFE-2 not engaged).\n\nRoute: requested pick-up at Marina Bay Sands, drop-off Tampines Mall, quoted route 15.88 km / 21.4 min. Trace (30 s thinning): the driver followed the quoted corridor up the northbound ECP/KPE stretch until the vicinity of 1.3233/103.8946 (~08:59:30), then doubled back on the same stretch (~09:00:00-09:02:00) and wandered between 09:02:00 and 09:10:00 before resuming eastward, reaching Tampines Mall at 09:21:00. Sampled GPS ground distance is ~27.5 km (dense 5 s grid would be slightly longer), against the 15.88 km quotation — a materially longer actual path, so the RD-1 picture is a large detour rather than matched noise. The fare record itself shows the meter charging 21.43 km at $1.41/km = $30.22, i.e. ~5.55 km beyond the quote; at the metered distance rate that is ~$7.83, so any RD-2 refund would be substantial, not nominal.\n\nExemptions do not resolve it: the driver's statement (\"I went where the GPS sent me; it rerouted\") is uncorroborated — no reroute log or navigation record — and no `traffic-incident-*` fact exists (incidents list empty). The KPE speed band in the record is band 4 (not band 1/2), and the PIE band-5 link's geometry matches the route the driver did partly take, not any part of the optimal route he left, so RD-4(a)/(b) give no exemption to any off-route portion. There is no rider message consenting to any route change before the deviation began, so RD-5 is not satisfied.\n\nBecause the classification of the segments (and therefore the refund amount and any account flag under RD-6) cannot be settled by an automatic ruling while the abuse finding stands, the whole case is escalated; the factual summary above is the input for the human reviewer. Confidence 0.62 reflects the clear abuse finding but an approximate segment accounting derived from a thinned trace.",
   "cited_facts": [],
   "cited_policy": [
    "SAFE-1",
    "RD-1",
    "RD-2",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "SAFE-1 hit: the driver told the rider to \"shut up\" during the trip and the rider states she felt unsafe; per SAFE-1 this is not auto-adjudicated and goes to a human with a factual summary. Independently, the fare side cannot be settled: no gps-detour-* fact ids / per-segment extra_km were supplied, the GPS is thinned to 30 s, and the pre-pickup trace raises a possible meter-running issue needing manual verification (evidence gap, G12). The reviewer should also decide whether the abuse finding warrants flagging the driver's account.",
+  "escalation_reason": "SAFE-1 suspected: abuse aimed at the rider in the in-app chat (\"Shut up and let me drive.\"). Per policy no automatic ruling is issued on a safety-flagged case; the route-deviation/overcharge computation (materially longer metered path: 21.43 km charged vs 15.88 km quoted, ~$7.83 meter excess at $1.41/km, no RD-4/RD-5 exemption) is supplied for the human reviewer to finalise together with the conduct finding.",
   "segment_findings": [
    {
     "fact_id": "seg1",
     "finding": "counts",
     "basis": [],
-    "reason": "08:59–09:05 eastbound PIE/KPE leg diverges ~1.5–2 km east of the quoted route (1.3282,103.8855 to 1.3169,103.8958) then returns west to rejoin at 1.3239,103.8944 — an out-and-back discrepancy with no traffic cause: PIE (SYN-0009) and KPE (SYN-0013) bands are band 4, not 1/2, and incidents is empty (RD-4), and no rider consent precedes it (only message 09:03:17, after; driver's GPS claim is not consent, RD-5/G11). Unexempted detour under RD-1, refundable per RD-2 at S$1.4101/km."
-   },
-   {
-    "fact_id": "seg2",
-    "finding": "undetermined",
-    "basis": [],
-    "reason": "Pre-pickup trace 08:42:10–08:47:40 loops through Bayfront Ave / Central Blvd, reaching ~1.9 km and ~15 min from the S$ pickup point (1.2839,103.8607) before arriving at 08:47:40, and the driver pressed I'm Here at 08:47:50. Whether this was meter-running before pickup and how it was charged cannot be settled from the thinned 30 s trace alone (RD-1/G12) — escalate."
-   },
-   {
-    "fact_id": "seg3",
-    "finding": "undetermined",
-    "basis": [],
-    "reason": "Unattributed residual between the traced detours (~8.2 km, about 50% over the 15.88 km estimate) and the ~2.5 km visible in the thinned sampling. No gps-detour-* fact ids or per-segment extra_km were supplied, so the RD-2 amount cannot be fixed — evidence gap (G12); escalate for fact-table reconciliation."
+    "reason": "The backward turn and local wandering (approx. 08:59:00-09:10:00) deviate from the quoted optimal route and add materially to the metered distance. RD-1: no reasonable cause shown — the driver's uncorroborated 'GPS rerouted' claim is not a record; RD-4(a) fails (no traffic-incident fact), RD-4(b) fails (KPE band 4, not 1/2; the PIE band-5 link matches the route actually driven, not the optimal route); RD-5 fails (no rider consent before the deviation). Given the safety escalation the exact segment boundaries and extra_km are for the human reviewer to finalise."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The claim 'I followed my GPS; it rerouted me' asserts reasonable cause, but RD-4 requires a traffic incident on the replaced optimal route (300 m match): incidents is empty and the nearby speed bands are band 4, which do not excuse the deviation (RD-4(b)). It is also a statement, not rider consent (G11)."
+    "id": "driver_statement_gps_reroute",
+    "reason": "The driver's account that the GPS rerouted him is uncorroborated: no navigation/reroute record, no traffic incident on the optimal route, and the only speed-band facts concern the route actually driven or show band 4. System records (GPS trace, fare) override statements."
+   },
+   {
+    "id": "overcharge_as_stated",
+    "reason": "The rider's 'I was overcharged' is directionally supported (metered 21.43 km vs 15.88 km quoted; ~$7.83 of meter excess at $1.41/km), but the exact RD-2 amount cannot be finalised automatically from a 30 s thinned trace, and the case is escalated for the safety finding before any refund executes."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "Driver chat at 09:05:45 in reply to the rider's route question: \"Shut up and let me drive.\" — hostile/abusive language aimed at the rider (SAFE-1, Ryde code of conduct barring abuse of any kind).",
+   "Rider complaint: \"...when I asked he told me to shut up. I was overcharged and felt unsafe.\""
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 18.16,
- "input_tokens": 33783,
- "output_tokens": 4305,
- "requests": 2,
+ "latency_s": 7.46,
+ "input_tokens": 15850,
+ "output_tokens": 1541,
+ "requests": 1,
  "llm_calls": 1
 }

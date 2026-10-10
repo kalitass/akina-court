@@ -4,42 +4,59 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:24.864140+00:00",
+ "ts": "2026-10-10T13:17:40.212786+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Human review: recompute off-route segments extra_km on the full unthinned GPS trace against a verified optimal-route baseline (fix the KPE/Orchard polyline jump), then apply RD-2 for any unexempted segment; note the driver's 'the second turn-off was my GPS rerouting' admission for possible RD-1 breach.",
-  "confidence": 0.6,
+  "ruling": "refund_partial",
+  "amount": 6.48,
+  "recommended_action": "Issue a voucher refund of SGD 6.48 to the rider for the second, unagreed detour (RD-2 metered mileage refund); no account flag (no upheld route dispute in the driver's 90-day profile).",
+  "confidence": 0.63,
+  "reasoning": "Service type is RydeTAXI, so the fare is metered and detour mileage recomputes the fare (RD-2 metered branch). Early in the trip the driver asked at 18:42:35 whether he could go round the jam via Rifle Range Road and the rider replied at 18:43:15 \"Sure, your call.\" — the rider's own message, sent before the choice, and a genuine route authorisation. The trace's first departure from the quoted route (the Bukit Timah Expressway corridor, reached via Rifle Range Road) is covered by that consent and per RD-3(a) the segment driven to reach the rider-agreed route is not split off as a detour, so it is exempt (RD-5 / RD-3(a)); the driver's account of a verbal agreement is not relied on (G11).\n\nThe second departure is not covered. Between 18:42:25 (1.38294, 103.77547, on BKE) and 18:59:25 the GPS runs cross-country to the west and then loops back east, rejoining the route at ~18:59:25 (1.3482, 103.797708, on PIE) — well beyond ordinary map-matching wobble. The rider never agreed to it, it was not stated before the departure, and the driver's only explanation (\"my GPS rerouting\") is not one of the RD-4 reasonable causes: there are no traffic incidents at all (incidents: []) and the only speed-band records on the route are band 4 (free-flow), so nothing corroborates congestion on the replaced stretch (RD-4(c)).\n\nMetered refund (RD-2): distance rate = fare.distance_fare ÷ fare.distance_km = 43.64 ÷ 30.95 = $1.4100/km. Westward leg 18:42:25 → 18:52:55, straight-line polyline sum ≈ 23.24 km; eastward return 18:52:55 → 18:59:25 ≈ 12.85 km; total ≈ 36.08 km against the ≈ 31.4 km the car would have covered along the route at its observed ~40 km/h between those timestamps, i.e. ≈ 4.68 extra km. Even on the most conservative reading (measuring only the loop back east, the part demonstrably not heading toward the destination) the extra is ≈ 4.6 km. 4.60 × $1.41 ≈ $6.49, rounded to $6.48. The metered waiting charge ($0.11) is left untouched (RD-3(c) — RydeTAXI waiting units are chargeable and no stop was claimed). Profiles: driver route_disputes_upheld_90d = 0, so RD-6's precondition (\"repeated\") is not met and no account flag is raised — but the record of the RD-1 breach stands.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
+   "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-2"
+   "RD-6"
   ],
-  "escalate": true,
-  "escalation_reason": "Route-deviation segments cannot be confirmed exempt or chargeable on this record: the driver's 'GPS rerouting' is not a RD-4 reasonable cause, the 'agreed round the jam' exchange (chat 18:37:30/18:38:10) concerns only the earlier Kranji detour and is timestamped ~3 min into it (RD-5 'before'), no evidence covers the later post-Orchard deviation, no incident facts and no detour fact ids were supplied, and the quoted-route polyline appears internally inconsistent, so the RD-2 refund cannot be computed.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "undetermined",
+    "finding": "exempt",
     "basis": [],
-    "reason": "Per the driver's statement this detour was taken to avoid congestion, but RD-4 requires a matching LTA traffic incident on the replaced optimal route (m_from_route <= 300 m, reported before the segment started); the record contains NO incident facts, and per RD-4(b)/G3 the BKE speed-band record (band 5 = free-flow) cannot exempt a segment on its own. The chat contains no rider consent: RD-5 requires the agreement message to be timestamped before the detour began, and no chat message covers the post-Orchard stretch at all (only the unrelated Kranji proposal). No verbal-agreement claim in the driver's statement counts (G11). Evidence for this segment cannot be resolved on the record — G12."
+    "reason": "First departure from the quoted route (18:31–18:42, via Rifle Range Road toward the Bukit Timah Expressway). The driver proposed this before the vehicle left the corridor (chat 18:42:35) and the rider herself agreed (chat 18:43:15, \"Sure, your call.\"). Consent precedes the change (RD-5), so the segment counts as the route taken to get round the jam the rider agreed to and is exempt; under RD-3(a) the run-up to the rider-agreed route is not severed from the stop."
    },
    {
     "fact_id": "seg2",
-    "finding": "undetermined",
+    "finding": "counts",
     "basis": [],
-    "reason": "Excess ~5.1 km: timestamp-ordered GPS (distance: 18:52:10 (1.361113,103.780748) -> 18:59:40 (1.332931,103.813489) ~ 4.4 km traced, vs optimal-route points 1.3607,103.78091 -> 1.33362,103.81436 ~ 3.4 km, i.e. ~1.0 km excess; total traced route 25.9 km at 19:14:50 dropoff vs optimal 20.6 km, and fare.distance_km 29.05 vs quote 20.57 km — a ~5.1–6.5 km excess) where the trace leaves Woodlands Ave 1 / BKE and loops down through Kranji / Woodlands Ave 3 before rejoining. Driver attributes it to 'GPS rerouting', which is not a RD-4 reasonable cause (RD-4(c)) and is not contestable rider consent (RD-5: agreement must be explicit and timestamped before the deviation); no chat message covers this segment. Without the underlying off-route fact ids and the instrument's extra_km figures, the RD-2 quantum cannot be computed; the metres above are my own haversine estimate on the thinned 30 s trace only — G12."
+    "reason": "Second departure (18:42:25 → 18:59:25, looping west then back east to rejoin the route on the Pan Island Expressway). No rider message covers it, it began with no advance notice, and the driver's 'GPS rerouting' is not a reasonable cause: no traffic incidents exist and the only speed-band records on the optimal route (BKE, PIE) are band 4 (free flow), so RD-4(a)/(b)/(c) does not exempt it. Un-exempted detour under RD-1 → RD-2 metered mileage refund."
    }
   ],
-  "rejected_claims": [],
-  "flag_account": false
+  "rejected_claims": [
+   {
+    "id": "driver_verbal_consent",
+    "reason": "\"The rider agreed\" for the second turn-off is only in the driver's statement; verbal consent not evidenced by the rider's own timed message does not constitute consent (G11), and the driver's own account attributes the turn-off to GPS rerouting rather than to any agreement."
+   },
+   {
+    "id": "driver_gps_reroute",
+    "reason": "Not a reasonable cause under RD-4: no LTA incident on the optimal route (incidents list empty) and the route's speed bands are band 4 (free flowing), so the replaced stretch was not shown to be blocked or jammed."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 9.11,
- "input_tokens": 16721,
- "output_tokens": 1738,
+ "latency_s": 6.85,
+ "input_tokens": 18071,
+ "output_tokens": 1425,
  "requests": 1,
  "llm_calls": 1
 }

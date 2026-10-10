@@ -4,18 +4,19 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:19:54.921363+00:00",
+ "ts": "2026-10-10T13:19:20.440780+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 10.36,
-  "recommended_action": "Refund $10.36 to the rider as a Ryde voucher for the unexempted detour distance on this RydeTAXI trip; note the driver's RD-1 shortest-route breach on file (no account flag — no prior upheld route dispute).",
-  "confidence": 0.75,
+  "amount": 7.06,
+  "recommended_action": "Refund S$7.06 (5.01 km × S$1.4098/km) to the rider as a voucher per NS-7, and record the driver's unexcused 5.01 km deviation as a breach of the shortest-and-most-direct-route obligation for Ryde's monitoring.",
+  "confidence": 0.82,
+  "reasoning": "Service type is RydeTAXI (metered), so the formula is RD-2 metered branch: unexempt segment extra_km × this trip's per-km rate (F4: distance fare ÷ distance km = $1.4098/km). Only the mileage unit is refunded; stop/wait time is dealt with separately.\n\nRoute deviation: F3 records one off-route segment 09:13–09:24, 6.58 km driven where the optimal route covers 1.57 km, adding 5.01 km [F3] (consistent with the trip-level +5.4 km at +50% [F1]). The deviation is unexplained unless an exemption applies.\n\nExemptions examined: RD-5 fails for lack of consent — F7 shows no in-app chat at all, so no pre-departure agreement exists; the driver's post-trip written claim that it was reasonable [F8] is a statement, not rider consent (G11). RD-3 fails: no rider-named stop or destination change appears anywhere in the record. RD-4 fails: the driver invokes congestion/flooding (\"Ayer Rajah Expressway was crawling\") [F8], but the only supporting traffic facts are speed bands on AYER RAJAH EXPRESSWAY (band 2, 10–19 km/h) [F9], CENTRAL EXPRESSWAY (band 5) [F10] and KENT RIDGE ROAD (band 3) [F11], and no traffic incident is recorded near the route [F12]. Under RD-4(a) an exemption needs a DataMall incident on the replaced optimal-route segment (m_from_route ≤ 300 m, reported before the segment start); there is none [F12]. Under RD-4(b) a speed band alone — even band 2 [F9], whose window 08:49–09:13 only partly overlaps the 09:13–09:24 detour — is corroborative at most and cannot exempt by itself in the MVP pending Ryde's confirmation (G3). Heavy rain [F13] is not a per-se clause ground either. The segment is therefore unexempted and counts as a deviation under RD-1/RD-2.\n\nAmount: 5.01 km [F3] × $1.4098/km [F4] = $7.0631 → $7.06. The fare's other excess-distance arithmetic uses 5.34 km ($7.53) [F4]; per RD-2 only extra_km of the unexempt segment is refundable, and the residual corridor/matching jitter is not. RD-6 account flag not applied: the driver's 90-day upheld route disputes are 0 [F15], so he is not a \"repeated\" route offender (this case may still be recorded internally).\n\nSafety screen: read F7/F8 and the complaint; no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — nothing triggering SAFE-1/SAFE-2. Evidence status sufficient (GPS, timeline, fare and traffic all present; the conflicting party statement is resolved by the system records and the absence of records tying the detour to any exemption).",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
-   "F5",
    "F6",
    "F7",
    "F8",
@@ -29,9 +30,10 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -43,27 +45,30 @@
      "F7",
      "F8",
      "F9",
-     "F12",
-     "F13"
+     "F12"
     ],
-    "reason": "Off-route segment 09:12–09:26 added 7.35 km (9.41 km vs 2.05 km optimal), max 1333 m off the optimal route. No rider consent exists: there are no in-app chat messages [F7] and the driver's post-trip claim of a flooding detour is a statement, not consent (RD-5 / G11). RD-4(a) fails because no traffic incident is recorded in the trip window [F12]; RD-4(b) is corroboration only and cannot exempt on its own — the Ayer Rajah band-2 record [F9] ends exactly when the detour began, and the other roads were band 4 [F10][F11]. Heavy rain [F13] is context only. Segment not exempted → RD-2 refund."
+    "reason": "Off-route segment 09:13–09:24 adds 5.01 km [F3]. No rider consent exists: there are no chat messages at all [F7], and the driver's post-hoc written claim of congestion/flooding [F8] is a statement, not pre-departure consent (RD-5, G11); no rider-named stop applies (RD-3). The claimed reasonable cause fails under RD-4: no traffic incident is recorded on the replaced optimal route [F12], and the Ayer Rajah Expressway band-2 record [F9] (window 08:49–09:13, only partly covering the segment) is corroborative only and cannot exempt alone (RD-4(b), G3). The segment is unexempted and refundable under RD-2 at 5.01 km × $1.4098/km = $7.06."
    }
   ],
   "rejected_claims": [
    {
     "id": "F8",
-    "reason": "Driver's claim that the detour was forced by congestion/flooding: RD-4 requires a DataMall incident on the replaced optimal stretch and none was recorded [F12]; a single band-2 speed record [F9] is corroboration only under RD-4(b)/G3, and the alternative roads were free-flowing [F10][F11]. Also, a post-trip written statement is not before-the-fact rider consent under RD-5."
+    "reason": "Driver's post-trip claim that AYE congestion/flooding justified the detour is unsupported as a clause-level exemption: no DataMall incident on the replaced optimal route [F12], and a speed band alone (band 2 [F9], window 08:49–09:13) is corroborative only under RD-4(b)/G3; a driver's statement is not rider consent either (RD-5, G11)."
    },
    {
-    "id": "F8",
-    "reason": "No rider consent to the routing change: there are zero in-app chat messages [F7]; the driver's assertion that 'any driver would have done the same' is not evidence of the rider agreeing to this segment (RD-5, G11)."
+    "id": "RD-6-flag",
+    "reason": "Not applied: the driver has 0 upheld route disputes in 90 days [F15], so this case does not make him a 'repeated' route offender (RD-6)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 6.63,
- "input_tokens": 8854,
- "output_tokens": 1442,
+ "latency_s": 6.66,
+ "input_tokens": 9880,
+ "output_tokens": 1502,
  "requests": 1,
  "llm_calls": 1
 }

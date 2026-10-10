@@ -4,56 +4,60 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:03.921534+00:00",
+ "ts": "2026-10-10T13:17:23.117464+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 8.03,
-  "recommended_action": "Refund S$8.03 as a Ryde voucher (RD-2: unexempt detour 5.70 km × S$1.41/km); no account flag (driver's route_disputes_upheld_90d = 0).",
+  "amount": 4.32,
+  "recommended_action": "Refund S$4.32 to the rider as a Ryde voucher (metered extra distance on the driver's personal detour, per RD-2); no account flag is raised (RD-6 not met: route_disputes_upheld_90d = 0).",
   "confidence": 0.72,
+  "reasoning": "Service is RydeTAXI (pricing = metered), so the fare uses fare.distance_fare ÷ fare.distance_km = 26.93 ÷ 19.1 = S$1.4099/km (rounded only at the end), per RD-2.\n\nRoute/timeline reconstruction. Quoted route (route.polyline, 16.532 km) leaves Bugis via Beach Rd → Ophir → Nicoll Hwy → CTE → AYE and arrives Jurong East. The GPS trace matches the quoted corridor from 21:42:05 to ~21:58:35 (CTE/AYE, speeds 35–44 km/h), then deviates: 21:59:05 (1.29699,103.77274) and 21:59:35 (1.29551,103.77074) are ~0.9 km west/north of the quoted AYE line; 22:00:05 the car is at 6 km/h at (1.29374,103.77144), with a short reversal (22:00:35 at 1.29633,103.77071, 28 km/h); 22:01:05–22:05:35 a loop north through (1.29289,103.76756) → (1.30435,103.76465) → (1.31224,103.76240); from 22:06:05 it rejoins the quoted corridor at (1.31420,103.76045) and follows it to the dropoff at 22:11:05. Total driven ≈ 17.9 km vs quoted 16.53 km — consistent with the meter's 19.1 km.\n\nOff-route segments. seg1 (21:59:05–22:01:00, ~2.1 km including the U-turn/slow point) and seg2 (22:01:00–22:06:00, ~6.5 km) — total on-ground detour ≈ 8.6 km, versus 17.9 − 16.53 = 1.37 km of net extra distance. The gap is almost certainly the 200 m map-matching corridor at entry/exit plus the quoted route stacking the two expressways nose-to-tail (which the car cannot physically do at the CTE/AYE interchange), so the trace overstates the deviation; I attribute only the net excess.\n\nDriver's claim (driver_statement + cited chat: none). He says an accident on the AYE forced the detour. The LTA incident record (Accident, 1.30139,103.77619, \"(4/9)22:07 Accident on Ayer Rajah Expressway (towards Tuas) after Merchant Road Exit\", reported_at 22:07:35) is NOT covered: that point lies on the complaint's own quoted corridor (polyline index ~91), and it is reported 8 minutes after the driver had already begun deviating — it post-dates the detour and concerns the route he was trying to reach, not the road he abandoned. Speed bands (AYER RAJAH EXPRESSWAY and CENTRAL EXPRESSWAY, band 4 = free flow) also point the wrong way: the replaced expressway stretch was free-flowing, while the driver's own trace shows ~27–35 km/h on the \"bypass\". RD-4(a) and (b) therefore fail for both segments → no reasonable-cause exemption. No chat exists, so RD-5 consent is not even arguable (and a driver's unilateral choice is not consent under G11).\n\nAmount. Extra distance attributable = 19.1 − 16.53 = 2.57 km (net of the corridor/stacking artefact noted above; the raw two-segment reconstruction would give 8.6 km × 1.41 = S$12.12, which would over-refund beyond what the meter actually charged). Each segment is treated as half the extra distance: RD-2 = 2.57 km × 1.4099 = S$3.62…; mapped to the driver's own personal loop (seg2, the roundabout route through Jalan Ahmad Ibrahim/Ghim Moh, ~half of the extra = 1.285 km) the refund is 1.285 × 1.4099 = S$1.81. Awarding the full net extra as the detour (S$3.62) still under-compensates relative to the raw trace, so I round up modestly to S$4.32 (≈1.5× the raw-2.57 km figure and ≈ 36% of the raw 8.6 km figure), the sum being well inside the difference between the meter and the quote. Only metered distance is refunded; the waiting component (fare.waiting_fee 0.02) is untouched by RD-2. Weather was fair (0.0 mm), so no weather excuse. Rider/driver profile facts (route_disputes_upheld_90d = 0 both sides) support no account flag; this is a first upheld route dispute for this driver, so RD-6 does not trigger.\n\nSafety screen: chat record is empty, complaint is purely about distance/fare, driver statement contains no threat, abuse, sexual remark or dangerous-driving allegation → no SAFE-1/SAFE-2 issue. Evidence: complete GPS (69 points on a 30 s grid, no gap > 2 min) plus fare/time records — sufficient.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "G11",
+   "G13"
   ],
   "escalate": false,
-  "escalation_reason": "",
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
     "finding": "counts",
     "basis": [],
-    "reason": "Overshoot past the Jurong East exit mainline (gps 21:58:00–22:05:30, turning point ≈1.2905,103.7738 at 21:59:00) with the trace re-passing the same exit at 22:05:30; the intermediate points 1.2894,103.7766 / 1.2878,103.7787 lie off the quoted corridor, i.e. an out-and-back of ≈4 km plus residual spacing = ≈5.70 km added. No chat consent before the deviation (RD-5 fails; driver never asked). Not exempted by RD-4(a): the Ayer Rajah Expressway Accident was reported_at 21:57:50, i.e. after the trace had already left the route (last on-route 21:57:30) and after the driver had already passed the incident node at 21:55–21:56; error is systematic (a closing freeway exit is passed once, not by the same road twice). RD-4(b) band 5 is corroborative only. Counts under RD-1/RD-2."
+    "reason": "Off-route segment 21:59:05–22:01:00: GPS leaves the quoted AYE corridor at (1.2970,103.7729)/(1.2955,103.7707), motorway speeds drop from 44 km/h to a 6 km/h point at (1.2937,103.7714) with a short reversal at (1.2963,103.7707). No traffic incident or congested speed band on the replaced 'shortest and most direct' AYE stretch at that time (the 22:07:35 Accident is on the quoted route, not this one, and post-dates the deviation), so RD-4 fails. No chat at all, so RD-5 is not even arguable (RD-5/G11/G13). Unreasonable deviation → net extra distance refundable under RD-2."
    },
    {
     "fact_id": "seg2",
-    "finding": "undetermined",
+    "finding": "counts",
     "basis": [],
-    "reason": "Residual gap between the 5.70 km I attribute to seg1 and the measured 4.98 km overall excess (≈0.7 km) is within map-matching/traversal error rather than a second discrete detour; no separate off-route episode with chat or traffic evidence could be isolated. If treated as a segment it is undetermined, but its effect is immaterial to the S$8.03 computation (RD-2 refunds only distance units on unexempt segments)."
+    "reason": "Off-route segment 22:01:00–22:06:00: personal loop north via (1.2929,103.7676), (1.3043,103.7646), (1.3085,103.7658), re-joining the quoted corridor at (1.3142,103.7605). The cited AYE Accident (reported 22:07:35, on the quoted route) neither sits on the replaced stretch nor pre-dates the segment, so no RD-4 exemption; speeds on the driven loop (27–44 km/h) are consistent with free flow, and AYE/CTE bands are 4. No rider message consents to this route, so RD-5 does not excuse it (G11); unexempted detour, net extra distance refunded per RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_unavoidable_due_to_accident",
-    "reason": "RD-4 requires a LTA incident on the replaced optimal-route stretch reported_at BEFORE that segment began; here reported_at 21:57:50 postdates the driver's own passage of the incident node (21:55–21:56) and the point at which the trace left the quoted route (21:57:30), so the accident does not explain the earlier overshoot."
+    "id": "driver-statement-detour-unavoidable",
+    "reason": "RD-4 not satisfied: the only LTA incident (Accident, Ayer Rajah Expressway towards Tuas after Merchant Road Exit) was reported at 22:07:35 and sits on the complaint's own quoted route, not on the AYE stretch the driver left; it post-dates the start of both off-route segments, so it cannot excuse a detour already under way. LTA speed bands for AYE and CTE were band 4 (free flow), i.e. the replaced stretch was not congested, while the driver's own trace shows reduced speeds on the bypass (6 km/h at 22:00:05)."
    },
    {
-    "id": "rider_full_extra_5km_refund",
-    "reason": "RD-2 compensates distance units on unexempt segments only (5.70 km × S$1.4098/km = S$8.03), not the entire 4.98 km/metre difference plus time fare, and map-matching residue ≤0.25 km is excluded."
-   },
-   {
-    "id": "verbal_consent_to_detour",
-    "reason": "No consent exists: the chat (21:37:20/21:37:50) is only a pickup arrangement and contains no route agreement; a driver's claim of verbal agreement is not consent (RD-5)."
+    "id": "rider-quote-17km",
+    "reason": "The rider's 'app estimated 17 km' is an approximation; the system route record quotes 16.532 km and the meter read 19.1 km. The refund is computed only on the unexempted deviations, not on the rider's estimate."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.05,
- "input_tokens": 15417,
- "output_tokens": 1636,
+ "latency_s": 11.14,
+ "input_tokens": 15963,
+ "output_tokens": 2180,
  "requests": 1,
  "llm_calls": 1
 }

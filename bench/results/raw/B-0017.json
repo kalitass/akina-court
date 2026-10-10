@@ -4,48 +4,52 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:37.336372+00:00",
+ "ts": "2026-10-10T13:17:50.168843+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 1.83,
-  "recommended_action": "Reject the rider's claim on the agreed Halus Link detour (covered by RD-5 consent), but refund the unconsented U-turn loop on the Tampines Expressway / Tampines Ave 10 (~1.30 km) plus its ERP-type overcharge, as a voucher per NS-7.",
-  "confidence": 0.72,
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the dispute: the fare was a fixed RydeX quote and the only off-route movement was covered by the rider's prior in-app consent; no fare adjustment and no account flag.",
+  "confidence": 0.6,
+  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is route_deviation, not safety. safety_concern = none.\n\nFare model (RD-0/RD-2): RydeX is a fixed-quote service — total charged $23.18 (base 3.90 + distance 13.88 + time 3.93 + platform 1.47). Distance changes do not change the fare. There are no tolls/ERP, no waiting fee, no edit-destination fee and no manual add-ons in the breakdown, so even on the route-deviation branch there is nothing monetary to refund; RD-2 non-metered branch would yield $0.00 → no_action.\n\nRoute: GPS (5 s samples, thinned to 30 s) shows the vehicle leaving the quoted corridor after ~10:02 (quoted polyline runs Punggol Rd → TPE; trace instead goes via Pasir Ris Industrial Drive area, ~1.3945/103.9069 at 10:02:50, before rejoining the TPE corridor near 1.3931/103.9132 at 10:06:20). That is one off-route segment (seg1, ~0.8–1.0 km extra).\n\nRD-5 consent: at 10:01:10, i.e. before the vehicle left the corridor, the driver asked \"Jam on Tampines Expressway is building up ahead, can I go round via Pasir Ris Industrial Drive 1?\" and the rider replied \"Sure, no problem.\" at 10:01:50. This is a rider-authored message, sent before the deviation began, agreeing to a specific named route. I tried to falsify it and cannot: (i) the location of the diversion at 10:02:50 (1.3945, 103.9069) is exactly the Pasir Ris Industrial Drive 1 area, i.e. the record does tie the driven segment to the named road, satisfying G13's correspondence requirement; there is no later stop or message naming a different road or place. Consent is therefore established and covers this segment. RD-4 is not relied on for the exemption (no LTA incident on the route; the TPE band-2 record can only corroborate, and RD-4(b) does not exempt alone), and the driver's statement is not used as proof of the rider's verbal agreement — the chat alone suffices.\n\nBecause the only off-route segment is covered by prior consent, there is no unexempted segment under RD-1, so RD-2 produces no refund. RD-6 is not triggered (refund not > 0 and no RD-1 violation recorded; driver's 90-day route_disputes_upheld_90d = 0 anyway). Profile facts did not decide anything.\n\nEvidence status: sufficient for the elements relied on (timed chat, complete GPS trace, fare breakdown). The deviation magnitude (extra_km) is not precisely derivable from the thinned 30 s trace and the route is a synthetic loop in the polyline data, so confidence is set at 0.6; the outcome is insensitive to it because the fare is fixed and consent covers the segment.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-5",
-   "FARE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "seg2",
+    "fact_id": "seg1",
     "finding": "exempt",
     "basis": [],
-    "reason": "Driver asked in writing BEFORE the deviation ('Traffic ahead on Tampines Expressway is building up, ok if I go round via Halus Link?', 10:01:00) and the rider's own message agreed ('Sure, go ahead.', 10:01:40), before the off-route trace begins at 10:01:50; the agreed content covers exactly this turn-off. RD-5 (with RD-3(a)) → no_action for this segment; added distance is at most ~0.3 km."
-   },
-   {
-    "fact_id": "seg1",
-    "finding": "counts",
-    "basis": [],
-    "reason": "Unrequested U-turn/overshoot on the Tampines Expressway corridor (~10:02:50 → 10:05:50, overshooting the correct exit at ~1.3850,103.9183 and returning NE ~1.3 km). It is separate from the consented Halus Link turn, there is no prior chat covering it and no RD-4 incident on record (TEX band 4, weather Fair) → not exempt under RD-1/RD-3/RD-4/RD-5; refund under RD-2 (non-metered branch) computed on ~1.30 km × SGD 1.41/km ≈ SGD 1.83."
+    "reason": "Off-route movement from ~10:02 to ~10:06 via Pasir Ris Industrial Drive 1 before rejoining the TPE corridor. The driver asked before turning off (10:01:10) and the rider expressly agreed (10:01:50), a rider-authored message sent before the segment began; the agreed named road matches where the trace actually went (1.3945, 103.9069 at 10:02:50), satisfying RD-5's correspondence requirement and G13. Exempt under RD-5; the fixed RydeX quote is unaffected in any event (RD-2)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_claim_whole_detour",
-    "reason": "The complaint claims the whole 'longer way round' was unauthorised and overcharged. The chat shows the rider personally agreed in writing, before the turn-off, to go round via Halus Link; under RD-5 that segment is exempt, so only the subsequent U-turn loop is refundable."
+    "id": "rider_detour_complaint",
+    "reason": "There was one off-route segment, but it was expressly agreed by the rider in-app before it began (RD-5), and the RydeX fare is a fixed quote unaffected by distance (RD-2 non-metered branch), so no refund is due."
+   },
+   {
+    "id": "driver_traffic_justification",
+    "reason": "No traffic-incident fact on the replaced optimal route and the TPE band-2 record alone cannot exempt (RD-4(a)/(b)); the exemption rests on the rider's consent, not on traffic."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.12,
- "input_tokens": 13017,
- "output_tokens": 1697,
+ "latency_s": 6.57,
+ "input_tokens": 14429,
+ "output_tokens": 1301,
  "requests": 1,
  "llm_calls": 1
 }

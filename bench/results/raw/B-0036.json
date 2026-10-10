@@ -4,20 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:18.242282+00:00",
+ "ts": "2026-10-10T13:18:36.273513+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case; no driver-side account action required on this record.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; the driver cancelled-by-rider claim fails — the driver never tapped \"I'm Here\" and at the moment of cancellation was ~2.5 km from Bedok Mall, so no no-show fee was chargeable.",
   "confidence": 0.9,
+  "reasoning": "Dispute type is no_show but the record shows the RIDER cancelled at 17:15:05 (trip.cancelled_by = \"rider\"), so NS-0 routes the case to NS-4 (on-demand, rider cancellation). Acceptance was 17:12:00, cancellation 17:15:05 → 3 min 5 s after matching, i.e. more than 3:00 (NS-4 threshold), so on the face of the timestamps the $6.61 fee is chargeable. However, the record contains no driver-side no-show elements at all: driver_arrived_at, driver_pressed_here_at, arrival_confirmed_by, wait_started_at and wait_expired_at are all null, and the driver's own statement says only \"the rider cancelled while I was still on the way\" — the driver never pressed \"I'm Here\" and never claimed a rider no-show. The GPS trace confirms this: at 17:12:00 the driver was at (1.31786, 103.90733), ~2.5 km from Bedok Mall, and at 17:15:05 he was at (1.32108, 103.91456), still ~1.8–2.2 km away and moving away along Sims Avenue East; he was never within the 200 m arrival radius. NS-3 therefore governs: the fee is a driver-side or unmatched-cancellation situation in which the passenger bears no $6.61; the rider's complaint (\"driver was still far away after more than 3 minutes\") is corroborated by the GPS, and the chat (\"Are you near?\" / driver: \"Coming, about 5 min\") is consistent, the driver being ~5 km away at 17:13:15. No ETA-based free-cancellation rule exists in Ryde policy (NS-8 is informational only, G7), but NS-3 suffices here. Amount = full cancellation fee $6.61 → refund_full. The driver's unsubstantiated fee retention is not an abuse-of-cancellation-button case (he did not tap \"I'm Here\" away from the pickup), so no flag_account. Note on evidence: the GPS provided is thinned to every 6th sample on a 30 s grid — not a gap under the G12 definition (30 s is the stated grid, far under 2 min) — and the cancellation time is corroborated by both timeline and driver statement, so no material record is missing; evidence_status = sufficient.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-4",
-   "NS-7"
+   "NS-3",
+   "NS-4"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -25,14 +25,22 @@
   "rejected_claims": [
    {
     "id": "driver_no_show_claim",
-    "reason": "The driver's statement does not allege rider no-show and is contradicted by the record: no 'I'm Here' press, no in-radius GPS, and the driver was ~2 km from Bedok Mall at cancellation, ~5 minutes away by his own chat message."
+    "reason": "The driver never pressed \"I'm Here\" (driver_pressed_here_at is null), was ~2.5 km from Bedok Mall at acceptance and still ~1.8 km away at cancellation per GPS, and did not claim a rider no-show — NS-1 (i)(ii)(iii) all fail, so no no-show fee can stand."
+   },
+   {
+    "id": "rider_late_cancel_claim",
+    "reason": "The 3:05 post-match cancellation would ordinarily support the fee under NS-4, but NS-0/NS-3 control because the record shows no valid no-show basis and the driver's GPS position confirms the rider's account that the driver was still far away."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.73,
- "input_tokens": 10826,
- "output_tokens": 1008,
+ "latency_s": 5.0,
+ "input_tokens": 11884,
+ "output_tokens": 1076,
  "requests": 1,
  "llm_calls": 1
 }

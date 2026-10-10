@@ -4,20 +4,22 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:50:15.316113+00:00",
+ "ts": "2026-10-10T13:26:50.062885+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag against the driver.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag against the driver (no fake arrival confirmation and no prior upheld no-show history that reaches the RD-6 threshold).",
   "confidence": 0.93,
+  "reasoning": "The cancellation was made by the driver, so the fee's validity runs through NS-0 to NS-1/NS-2 [F4][NS-0]. Both sides now converge on the arithmetic: the driver tapped \"I'm Here\" at 14:14:10 while 41 m from the pickup, satisfying NS-1 (i) and (ii), but the wait after that tap ran only to the 14:15:50 cancellation [F6][F4][NS-1]. That is 1 min 40 s inside the radius; even measured from the platform-recorded arrival at 14:13:25 it is 2 min 25 s, and the stationary window was only 2 min 0 s [F5][F2][F3][NS-1]. NS-1 (iii) requires more than 3 minutes continuously at the pickup after the arrival confirmation, so the requirement fails on every reading of the record.\n\nBecause NS-1 (i)(ii) are met but (iii) is not, NS-2 requires the $6.61 cancellation fee to be refunded in full [F7][NS-2]. The amount is fixed by the fare fact: cancellation fee charged $6.61, surge 1.0× so no other charge is in play [F7][F8][NS-2]. The driver's chat \"3 min up, cancelling the trip\" and his post-trip statement that he waited and cancelled as a no-show are statements, and they yield to the system timeline [F10][F12][F6][F4]; they do not create the missing waiting time.\n\nNo ancillary account flag is warranted. NS-2's flag attaches where the driver pressed \"I'm Here\" while outside the pickup radius (m_from_pickup_at_tap > 200 m), and the trace records 41 m with no fake confirmation, so that condition is not met [F6][F1][NS-2]. RD-6 requires an upheld route deviation in the last 90 days plus this case; the driver's profile shows route disputes upheld = 0 [F17][RD-6]. The single prior upheld no-show dispute does not convert this overcharge into \"repeated\" route deviation, so no flag_account [F17][RD-6].\n\nSafety screen: I read both chat messages, the driver's written statement and the rider's complaint. The messages are a plain arrival notice (\"I'm here at the pickup point, white Honda Vezel\") and a cancellation notice (\"3 min up, cancelling the trip\"); the statement is a version of events; the complaint is a fee grievance [F9][F10][F11][F12]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so the screen returns none and no escalation on safety grounds [F9][F10][F11].\n\nEvidence is sufficient: the record settles every element of the NS-1/NS-2 test — who cancelled [F4], the arrival confirmation with its distance and time [F6][F5], the continuous GPS coverage without a hole (trace) and the charged fee [F7]. The chat record is complete and fully timestamped [F11], so nothing needs to go to a person.",
   "cited_facts": [
+   "F4",
+   "F6",
    "F1",
+   "F5",
    "F2",
    "F3",
-   "F4",
-   "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
@@ -30,57 +32,54 @@
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-3",
    "NS-7",
-   "SAFE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "D1",
-    "reason": "The 5 min 50 s acceptance-to-cancellation gap (F4) and the 14:12:20 arrival record (F5) do not satisfy NS-1, which measures waiting at the pickup point after the arrival indication, not elapsed time since acceptance; the record shows only 2 min 30 s within 200 m and 1 min 40 s after the 14:13:10 tap (F2, F6, F3) [NS-1]."
-   },
-   {
     "id": "D3",
-    "reason": "Accepted only in part: F2/F1 do establish NS-1(ii), but they also fix the cumulative within-200 m time at 2 min 30 s, below the >3 minutes (≥3:01) NS-1(iii) requires, so the element cannot carry the fee [F2][F1][F6][NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Correctly identifies F10 and F12 as party statements, but the concession defeats the driver's own case: with the system records (F2, F3, F6) controlling, NS-1(iii) fails and NS-2 mandates the refund [F10][F12][F2][F3][F6][NS-1][NS-2]."
-   },
-   {
-    "id": "D6",
-    "reason": "The profile facts (571 trips, 4.58 rating, 0 upheld disputes) are not a route to no_action; under NS-2 the fee must be refunded once NS-1(iii) fails, and profile facts cannot decide the case [F17][NS-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "The driver's own concession is consistent with the outcome sought by the rider; it is not a basis for upholding the fee, since NS-1 requires all three elements cumulatively [F2][F3][F5][F6][NS-1]."
+    "reason": "The claim that the record refutes the rider's 'barely two minutes' complaint is wrong on the numbers: measured from the platform arrival at 14:13:25 to cancellation at 14:15:50 is 2 min 25 s, and the stationary window is 2 min 0 s, both below the more-than-3-minute requirement in NS-1 (iii) [F5][F2][F3][NS-1]. Its NS-4 citation is inapposite because the cancellation was by the driver, routed by NS-0 to NS-1/NS-2 [F4][NS-0]."
    },
    {
     "id": "C5",
-    "reason": "Traffic and weather facts (F13–F15) are not part of the NS-1 test and were not relied on; the refund rests solely on the unmet waiting-time element [F13][F14][F15][NS-1]."
+    "reason": "No traffic incident (F13) or speed-band record (F14) and fair weather (F15) do not support the driver's defence and do not bear on the timing point, which is settled against the fee by NS-1 (iii); this was conceded on both sides [F13][F14][F15][NS-1]."
    },
    {
-    "id": "C8",
-    "reason": "No flag_account is sought or granted; NS-2's supplementary flag requires a tap made while outside the pickup radius, and F6/F1 show the 14:13:10 tap was made 39 m from the pickup [F6][F1][NS-2]."
+    "id": "D5",
+    "reason": "Accepted insofar as there is no SAFE-1/SAFE-2 trigger in the chat or statement [F9][F10][F11], but a clean chat does not create the waiting time NS-1 (iii) requires, so it does not support keeping the fee [F6][F4][NS-1]."
+   },
+   {
+    "id": "C6",
+    "reason": "The ancillary flag_account request is rejected: NS-2's flag applies only where the arrival tap was made outside the pickup radius, and the record shows 41 m [F6][NS-2]; RD-6 needs an upheld route deviation in the last 90 days, and the driver's route upheld count is 0 [F17][RD-6]. The rider's and driver's profile facts cannot decide the case on their own [F16][F17][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F11",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag against the driver.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account flag against the driver (no fake arrival confirmation and no prior upheld no-show history that reaches the RD-6 threshold).",
   "confidence": 0.93,
+  "reasoning": "The cancellation was made by the driver, so the fee's validity runs through NS-0 to NS-1/NS-2 [F4][NS-0]. Both sides now converge on the arithmetic: the driver tapped \"I'm Here\" at 14:14:10 while 41 m from the pickup, satisfying NS-1 (i) and (ii), but the wait after that tap ran only to the 14:15:50 cancellation [F6][F4][NS-1]. That is 1 min 40 s inside the radius; even measured from the platform-recorded arrival at 14:13:25 it is 2 min 25 s, and the stationary window was only 2 min 0 s [F5][F2][F3][NS-1]. NS-1 (iii) requires more than 3 minutes continuously at the pickup after the arrival confirmation, so the requirement fails on every reading of the record.\n\nBecause NS-1 (i)(ii) are met but (iii) is not, NS-2 requires the $6.61 cancellation fee to be refunded in full [F7][NS-2]. The amount is fixed by the fare fact: cancellation fee charged $6.61, surge 1.0× so no other charge is in play [F7][F8][NS-2]. The driver's chat \"3 min up, cancelling the trip\" and his post-trip statement that he waited and cancelled as a no-show are statements, and they yield to the system timeline [F10][F12][F6][F4]; they do not create the missing waiting time.\n\nNo ancillary account flag is warranted. NS-2's flag attaches where the driver pressed \"I'm Here\" while outside the pickup radius (m_from_pickup_at_tap > 200 m), and the trace records 41 m with no fake confirmation, so that condition is not met [F6][F1][NS-2]. RD-6 requires an upheld route deviation in the last 90 days plus this case; the driver's profile shows route disputes upheld = 0 [F17][RD-6]. The single prior upheld no-show dispute does not convert this overcharge into \"repeated\" route deviation, so no flag_account [F17][RD-6].\n\nSafety screen: I read both chat messages, the driver's written statement and the rider's complaint. The messages are a plain arrival notice (\"I'm here at the pickup point, white Honda Vezel\") and a cancellation notice (\"3 min up, cancelling the trip\"); the statement is a version of events; the complaint is a fee grievance [F9][F10][F11][F12]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so the screen returns none and no escalation on safety grounds [F9][F10][F11].\n\nEvidence is sufficient: the record settles every element of the NS-1/NS-2 test — who cancelled [F4], the arrival confirmation with its distance and time [F6][F5], the continuous GPS coverage without a hole (trace) and the charged fee [F7]. The chat record is complete and fully timestamped [F11], so nothing needs to go to a person.",
   "cited_facts": [
+   "F4",
+   "F6",
    "F1",
+   "F5",
    "F2",
    "F3",
-   "F4",
-   "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
@@ -93,44 +92,40 @@
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-3",
    "NS-7",
-   "SAFE-1"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "D1",
-    "reason": "The 5 min 50 s acceptance-to-cancellation gap (F4) and the 14:12:20 arrival record (F5) do not satisfy NS-1, which measures waiting at the pickup point after the arrival indication, not elapsed time since acceptance; the record shows only 2 min 30 s within 200 m and 1 min 40 s after the 14:13:10 tap (F2, F6, F3) [NS-1]."
-   },
-   {
     "id": "D3",
-    "reason": "Accepted only in part: F2/F1 do establish NS-1(ii), but they also fix the cumulative within-200 m time at 2 min 30 s, below the >3 minutes (≥3:01) NS-1(iii) requires, so the element cannot carry the fee [F2][F1][F6][NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Correctly identifies F10 and F12 as party statements, but the concession defeats the driver's own case: with the system records (F2, F3, F6) controlling, NS-1(iii) fails and NS-2 mandates the refund [F10][F12][F2][F3][F6][NS-1][NS-2]."
-   },
-   {
-    "id": "D6",
-    "reason": "The profile facts (571 trips, 4.58 rating, 0 upheld disputes) are not a route to no_action; under NS-2 the fee must be refunded once NS-1(iii) fails, and profile facts cannot decide the case [F17][NS-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "The driver's own concession is consistent with the outcome sought by the rider; it is not a basis for upholding the fee, since NS-1 requires all three elements cumulatively [F2][F3][F5][F6][NS-1]."
+    "reason": "The claim that the record refutes the rider's 'barely two minutes' complaint is wrong on the numbers: measured from the platform arrival at 14:13:25 to cancellation at 14:15:50 is 2 min 25 s, and the stationary window is 2 min 0 s, both below the more-than-3-minute requirement in NS-1 (iii) [F5][F2][F3][NS-1]. Its NS-4 citation is inapposite because the cancellation was by the driver, routed by NS-0 to NS-1/NS-2 [F4][NS-0]."
    },
    {
     "id": "C5",
-    "reason": "Traffic and weather facts (F13–F15) are not part of the NS-1 test and were not relied on; the refund rests solely on the unmet waiting-time element [F13][F14][F15][NS-1]."
+    "reason": "No traffic incident (F13) or speed-band record (F14) and fair weather (F15) do not support the driver's defence and do not bear on the timing point, which is settled against the fee by NS-1 (iii); this was conceded on both sides [F13][F14][F15][NS-1]."
    },
    {
-    "id": "C8",
-    "reason": "No flag_account is sought or granted; NS-2's supplementary flag requires a tap made while outside the pickup radius, and F6/F1 show the 14:13:10 tap was made 39 m from the pickup [F6][F1][NS-2]."
+    "id": "D5",
+    "reason": "Accepted insofar as there is no SAFE-1/SAFE-2 trigger in the chat or statement [F9][F10][F11], but a clean chat does not create the waiting time NS-1 (iii) requires, so it does not support keeping the fee [F6][F4][NS-1]."
+   },
+   {
+    "id": "C6",
+    "reason": "The ancillary flag_account request is rejected: NS-2's flag applies only where the arrival tap was made outside the pickup radius, and the record shows 41 m [F6][NS-2]; RD-6 needs an upheld route deviation in the last 90 days, and the driver's route upheld count is 0 [F17][RD-6]. The rider's and driver's profile facts cannot decide the case on their own [F16][F17][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F11",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "events": 27,
@@ -139,9 +134,9 @@
   "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0027.record.json",
- "latency_s": 20.15,
- "input_tokens": 95253,
- "output_tokens": 6445,
- "requests": 10,
+ "latency_s": 19.67,
+ "input_tokens": 90944,
+ "output_tokens": 5914,
+ "requests": 9,
  "llm_calls": 6
 }

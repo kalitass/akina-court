@@ -4,33 +4,42 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:09.366809+00:00",
+ "ts": "2026-10-10T13:18:24.937429+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; advise the rider via RydeHELP that cancellation after the 3-minute grace period is chargeable, and that Ryde has no \"driver late vs ETA\" free-cancellation rule.",
+  "recommended_action": "Explain to the rider that $6.61 applies because the cancellation came 3 min 20 s after matching; note Ryde has no \"driver late vs ETA\" free-cancellation rule. No refund due.",
   "confidence": 0.88,
+  "reasoning": "Safety screen: chat is a two-message ETA exchange (\"How long will you be?\" / \"About 5 min, traffic\"), the rider's complaint is a fare objection, and the driver's statement (\"I was on my way when the rider cancelled\") contains no threat, abuse, harassment, sexual remark, or dangerous-driving allegation. safety_concern = none.\n\nClassification: cancelled_by = rider, so NS-0 routes the case to NS-4 (immediate booking, no scheduled-time field). Matching at 21:30:00, cancelled at 21:33:20 → elapsed 200 s = 3 min 20 s, which is beyond the 3-minute grace window. NS-4: cancellations made more than 3 minutes after matching → the $6.61 cancellation fee stands; cancellations within 3:00 are not chargeable, so the rider misses the free window by 20 seconds. Ryde publishes no \"driver later than ETA → free cancellation\" rule (NS-8, informational only, not citable), and NS-4 expressly says the driver's not having arrived is not a ground for free cancellation; the rider's remedy is a discretionary human appeal under NS-7.\n\nThe driver-side no-show mechanism (NS-1/NS-2) is not engaged: the driver never pressed \"I'm Here\" (driver_pressed_here_at = null), no arrival was confirmed, and the trip was cancelled by the rider, so there is nothing to refund under those clauses. The rider's \"driver was still far away\" claim is supported by the GPS trace (at 21:33:20 the driver was still ~4 km from the NUS pickup on Pasir Panjang, and the incident-free band 6 speed record corroborates slow going), but it is legally irrelevant under NS-4 for this service/fare type.\n\nRider profile shows disputes_90d = 0; the driver's single prior upheld no-show dispute does not trigger RD-6 (no route-deviation finding here, no refund > 0), so no account flag.\n\nEvidence status: sufficient — the timeline is complete (match, cancellation time, cancelling party) and the GPS trace covers the whole window on a 30 s grid with no gap; the only missing items (arrival taps, waiting-fee basis) are irrelevant because the rider cancelled before any arrival confirmation. Amount: null, the $6.61 stays as charged.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7"
+   "NS-4"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_late_or_no_show",
-    "reason": "The rider's claim that the driver was 'still far away' after 3 minutes does not fall within Ryde's published grounds for non-chargeable cancellation. NS-4 charges any rider cancellation made more than 3 minutes after matching, and Ryde has no rule waiving the fee for a driver who is later than the shown ETA (NS-8 is informational only, not citable). NS-1/NS-2/NS-6 are inapplicable: no 'I'm Here' press and no arrival/wait record exist, and cancelled_by is the rider."
+    "id": "rider_late_driver",
+    "reason": "The driver was indeed still en route (GPS at 21:33:20 ≈ 4 km from pickup), but Ryde has no rule granting free cancellation because the driver is beyond the ETA (NS-8 is informational and not citable), and NS-4 does not treat the driver's absence as a ground to waive the fee."
+   },
+   {
+    "id": "driver_no_show_counter",
+    "reason": "The driver did not press 'I'm Here' and no arrival was confirmed, but NS-1/NS-2 apply to a driver-initiated no-show cancellation; here cancelled_by = rider, so that branch is not engaged."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 3.99,
- "input_tokens": 11271,
- "output_tokens": 897,
+ "latency_s": 4.6,
+ "input_tokens": 12083,
+ "output_tokens": 958,
  "requests": 1,
  "llm_calls": 1
 }

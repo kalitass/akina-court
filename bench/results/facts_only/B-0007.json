@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:19:54.505258+00:00",
+ "ts": "2026-10-10T13:19:15.801119+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 1.13,
-  "recommended_action": "Refund S$1.13 to the rider as a Ryde voucher for the unexempted detour mileage; note the RD-1 breach on the driver's record (no account flag — no upheld route dispute in the last 90 days).",
-  "confidence": 0.8,
+  "amount": 2.69,
+  "recommended_action": "Issue a $2.69 voucher to the rider for the unexplained detour mileage (partial fare refund, per NS-7 voucher form) and advise the driver that route changes must be agreed with the rider before leaving the optimal route.",
+  "confidence": 0.62,
+  "reasoning": "Service type: RydeTAXI — metered, so extra distance enters the fare directly (RD-2 metered branch; F6 shows distance fare $18.60 / 13.19 km = $1.4102/km).\n\nOne off-route segment identified: F3, 22:58–23:05, 3.82 km driven where the optimal route covers 1.91 km, +1.91 km (up to 780 m off the optimal corridor).\n\nSafety screen: chat is entirely a pickup arrangement (F7/F8), driver's statement (F10) is a routing excuse — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nConsent (RD-5): the only rider messages are F7/F8, both pickup logistics; nothing shows the rider proposed or agreed to any route change before the detour began. F10 is the driver's post-trip statement that \"Central Expressway was crawling\" — a claim about a verbal/route choice, not rider consent (G11). Uncovered → the segment counts.\n\nReasonable cause (RD-4): the driver cites congestion on Central Expressway, and F11 records a band-1 (0–9 km/h) record for CENTRAL EXPRESSWAY during 22:37–22:58. But two requirements fail: (i) the record must tie the incident/band to the replaced portion of the optimal route, and the trip is Orchard Road → NUS; the facts give no link between the optimal 10.7 km route and Central Expressway (CTE runs north, away from NUS), so the 300 m route-match of RD-4(a) is not evidenced; (ii) the band window ends 22:58, exactly when the off-route segment begins at 22:58 — congestion had cleared as the detour started; and the segment lasted to 23:05 while the band record does not cover it. F14 confirms no traffic incidents. A lone band fact cannot exempt a segment on its own (RD-4(b); G3). So no exemption under RD-4 → the segment counts.\n\nAmount (RD-2 metered): refund = unexempt extra_km × per-km rate = 1.91 km × $1.4102/km = $2.6935 → $2.69. The remaining excess (actual 13.19 km billed vs the 1.91 km in this segment: 2.51 − 1.91 = 0.60 km, incl. map-matching jitter and corridor 200 m wander outside any identified segment) is not refunded; F4's full $3.54 is not awarded for the same reason. Stopping/waiting is not at issue (waiting $0.00, F6).\n\nRD-6: requires the case to be established against the driver (yes, refund > 0) AND profile `route_disputes_upheld_90d ≥ 1`. F17 shows 2 disputes but 0 upheld (route: 0) — clause not triggered, no flag_account.\n\nEvidence status: sufficient — GPS, timeline and fare records settle every element; chat is fully timestamped (F9).",
   "cited_facts": [
    "F1",
    "F2",
@@ -22,16 +24,19 @@
    "F9",
    "F10",
    "F11",
+   "F12",
    "F13",
    "F14",
-   "F15",
    "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "RD-6",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -43,26 +48,30 @@
      "F7",
      "F8",
      "F10",
-     "F14"
+     "F11"
     ],
-    "reason": "Off-route segment 22:57–23:01 added 0.80 km. No RD-4(a) traffic incident on the replaced optimal-route stretch (F14); the AYE speed-band record (F11) is only corroborative under RD-4(b) and cannot exempt alone. No rider consent before the detour began — the pre-detour chat is only about pickup (F7, F8) and the driver's post-trip 'AYE was crawling' statement (F10) is a claim, not consent under RD-5/G11. Segment is unexempted under RD-1."
+    "reason": "Off-route segment 22:58–23:05, +1.91 km. No RD-5 consent: the only rider messages (F7/F8) are pickup logistics and predate the detour, and the driver's post-trip statement (F10) is a claim, not consent (G11). No RD-4 exemption: F11's band-1 record for Central Expressway is not tied to the replaced portion of the Orchard→NUS optimal route, and its window (22:37–22:58) ends exactly at the segment start 22:58, with F14 recording no incident; a lone band fact cannot exempt (RD-4(b), G3). No RD-3 rider stop anywhere in the record. Segment therefore unexempt under RD-1 and priced under RD-2: 1.91 km × $1.4102 = $2.69."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F10",
-    "reason": "Driver's claim of severe AYE congestion does not exempt the segment: RD-4 requires a traffic incident (Accident/Roadwork/etc.) on the replaced optimal-route stretch within 300 m, and F14 records none. A speed band alone (F11) is only corroborative, and it is not matched to the optimal route for the detour window."
+    "id": "F4",
+    "reason": "Claimed excess of $3.54 (2.51 km × $1.4102) is not fully refundable under RD-2: only the 1.91 km tied to the identified unexempt segment (F3) is refunded ($2.69); the residual 0.60 km (map-matching jitter, corridor wander outside any identified segment) is excluded by RD-2's express carve-out."
    },
    {
-    "id": "F1/F4",
-    "reason": "The full +1.6 km / $2.33 excess is not refunded: RD-2 refunds only the unexempted segment mileage; the residual 0.8 km is map-matching/meter difference and is not refundable."
+    "id": "F10",
+    "reason": "Driver's post-trip justification (CTE crawling) does not exempt the segment: no fact ties the optimal Orchard→NUS route to Central Expressway (RD-4(a) route-match fails), the F11 band-1 window (22:37–22:58) ends just as the 22:58–23:05 detour begins, and a lone speed-band record cannot exempt (RD-4(b)). A driver's statement of verbal agreement is also not rider consent (RD-5 / G11)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.77,
- "input_tokens": 8915,
- "output_tokens": 1005,
+ "latency_s": 6.94,
+ "input_tokens": 9932,
+ "output_tokens": 1519,
  "requests": 1,
  "llm_calls": 1
 }

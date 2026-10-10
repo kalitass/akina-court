@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:21:13.696508+00:00",
+ "ts": "2026-10-10T13:20:46.078123+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 1.09,
-  "recommended_action": "Refund S$1.09 to the rider as a Ryde voucher (unexempted detour distance on the RydeTAXI meter) and issue a route-discipline reminder to the driver; no account flag (no upheld route dispute in the last 90 days).",
+  "amount": 2.74,
+  "recommended_action": "Issue a $2.74 Ryde voucher to the rider for the unexcused detour on the 09:47–09:53 segment; record the RD-1 breach on the driver's file (no account flag, no upheld route dispute in the last 90 days).",
   "confidence": 0.82,
+  "reasoning": "Safety screen: the only chat message [F7] is a pickup arrangement (kerb outside Mandarin Gallery, red jacket) — not a threat. The driver's statement [F9] is a factual denial, not abuse. The complaint contains no safety or dangerous-driving allegation. safety_concern = none; no escalation on SAFE grounds.\n\nEvidence: the record settles every element needed — GPS actual vs optimal distance [F1], one off-route segment with its duration, distance and extra km [F3], the fare breakdown, metered distance and per-km distance fare [F4][F6]. Nothing is missing or untimestamped [F7][F8]. evidence_status = sufficient.\n\nRoute deviation: RydeTAXI, so RD-2's metered branch applies — extra distance enters the meter. Segment [F3] 09:47–09:53 is an off-route segment: 3.83 km driven where the optimal route covers 1.89 km, +1.94 km, up to 777 m off the optimal route — well beyond the 0.2 km matching-noise layer, so RD-1 is engaged.\n\nExemptions examined and rejected:\n• RD-3 — no rider-named stop and no in-app destination edit; the sole chat message [F7] is a pickup point at the origin, not a mid-trip stop, so no segment is exempted on that basis.\n• RD-5 — there is no consent message from the rider at all (1 message, [F7][F8]), and a driver's untested \"my GPS rerouted me\" claim [F9] is a statement, not consent, and cannot stand in for the rider's own message. No general or named-road authorisation exists. Finding: counts.\n• RD-4 — no reasonable-cause exemption: [F12] records no traffic incidents near the route during the trip window. The speed-band facts [F10][F11] show band 4 (30–39 km/h), not band 1 or 2, and in any case a band fact alone does not exempt a segment (RD-4(b)); the banded roads also are not tied to the replaced portion of the optimal route. Not exempted.\n\nAmount (RD-2, metered formula): the unexcused segment's extra_km = 1.94 km × this trip's per-km rate. Per-km rate = distance fare ÷ distance km = $18.50 ÷ 13.12 km = $1.4101/km [F4][F6]. 1.94 × 1.4101 = $2.736 → $2.74. Note the billed excess is only $3.44 for 2.44 km [F4]; the 0.50 km difference beyond the segment (route-corridor/matching slippage not attributed to any segment) is not refunded under RD-2. Stop/waiting time is $0.00 [F6], so nothing to return there. ruling = refund_partial, $2.74.\n\nAccount flag: RD-6 requires, in addition to an upheld breach in this case, `route_disputes_upheld_90d ≥ 1`. The driver profile [F15] shows 1 upheld dispute but route: 0, and the rider profile [F14] shows 0 upheld — the threshold is not met. flag_account = false; record the RD-1 breach only.",
   "cited_facts": [
    "F1",
    "F3",
@@ -22,6 +24,7 @@
    "F10",
    "F11",
    "F12",
+   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -41,27 +44,38 @@
     "basis": [
      "F7",
      "F8",
-     "F9",
-     "F12"
+     "F9"
     ],
-    "reason": "Off-route segment 09:49–09:52 adds 0.77 km over the optimal route. No rider-named stop or route (RD-3(a) not met), driver chose the route himself (RD-3(b)), no rider consent message before the segment start — the only chat is a 09:35 pickup message (RD-5; driver's claim of a GPS reroute is not consent), and no traffic incident supports a reasonable-cause exemption (RD-4(c); band-4 records F10/F11 are not band 1/2 and do not exempt). Segment counts; refund its extra distance."
+    "reason": "09:47–09:53 off-route segment, +1.94 km, up to 777 m from the optimal route. No rider-named place or stop (RD-3 fails: the only rider message [F7] fixes the pickup kerb, not a mid-trip stop). No consent: there is no rider message authorising any route change — the record holds one timestamped rider message only [F7][F8], and the driver's post-trip 'my GPS rerouted me' statement [F9] is a claim, not consent (RD-5). No reasonable cause: no traffic incident near the route in the trip window [F12], and band 4 speeds [F10][F11] are neither band 1 nor 2 and do not tie to the replaced portion (RD-4). Unexempted under RD-1; refund under RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F4",
-    "reason": "Rider's claim for the full 1.6 km / $2.30 excess is reduced: RD-2 refunds only the identified unexempted segment's extra distance (0.77 km), not the whole trip-level excess, which includes map-matching residual."
+    "id": "F9",
+    "reason": "Driver's claim that GPS rerouting excuses the deviation: a route must still be the shortest and most direct absent reasonable cause (RD-1), and no traffic incident corroborates a re-route ([F12]; band 4 in [F10][F11] is not band 1/2 and is not tied to the replaced road). A driver statement also cannot substitute for the rider's own consent message (RD-5)."
    },
    {
-    "id": "F9",
-    "reason": "Driver's statement that the GPS reroute left the fare correct does not create a reasonable cause or rider consent; the GPS record (F1/F3) shows an unexplained deviation, and system records override statements."
+    "id": "claim-rider-detour-exempt",
+    "reason": "No rider message names a place, approves a route, or requests a stop; the single chat message [F7] concerns the pickup point, so no segment is exempted under RD-3 or RD-5."
+   },
+   {
+    "id": "claim-full-2.44km-refund",
+    "reason": "RD-2 refunds only the unexcused segment's extra_km (1.94 km, $2.74). The residual 0.50 km in the billed excess [F4] (corridor back-and-forth, map-matching slippage) is not attributed to any segment and is not refunded."
+   },
+   {
+    "id": "claim-flag-account",
+    "reason": "RD-6 needs a prior upheld route dispute within 90 days plus this case; the driver profile [F15] shows 1 upheld dispute but route: 0, so the repeated-violation threshold is not met."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 5.5,
- "input_tokens": 8831,
- "output_tokens": 1266,
+ "latency_s": 7.63,
+ "input_tokens": 9858,
+ "output_tokens": 1639,
  "requests": 1,
  "llm_calls": 1
 }

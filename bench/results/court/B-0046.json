@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:52:31.973866+00:00",
+ "ts": "2026-10-10T13:29:04.987584+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route the file to a human safety reviewer with the summary below; note the 995 / driver's commercial motor insurance / RydeHELP reporting paths to the rider; take no fare action ($21.04 fixed RydeX quote stands); do not flag either account.",
+  "recommended_action": "Send the file to a human safety reviewer as a dangerous-driving allegation under SAFE-2; treat the fixed RydeX fare as unchanged (no refund computed) and take account action only if the reviewer substantiates the report.",
   "confidence": 0.9,
+  "reasoning": "This is a dispute type of safety, and the rider's complaint alleges speeding, hard braking and shoulder overtaking — that is a dangerous-driving allegation, so SAFE-2 applies and the case cannot be auto-decided; both advocates concede the mechanism and request escalation [F6][SAFE-2]. The trace's ✓ element (SAFE-1 screening: complaint filed as a safety incident) and the allowed-outcome list (escalate) also bind this file [SAFE-1].\n\nWhat happened: pickup 21:22, drop-off 21:34 on a RydeX Jurong East MRT → NUS trip; the rider reports being scared and feeling unsafe throughout [F1]. The only quantitative records are F1 (8.3 km actual vs 8.4 km optimal, -0.1 km / -1%) and F2 (12.7 min vs 13.8 min estimate, -1.1 min) — these settle route and duration only; they contain no speed, acceleration, braking or shoulder-use data, so they neither corroborate nor rebut the driving-style allegation [F1][F2][SAFE-2]. A missing telematics slice and a null traffic lookup are gaps, not evidence for either side [F1][F2][SAFE-2].\n\nThe chat is complete (2 messages, both timestamped) and contains only the rider's pickup note and the driver's ETA reply — no complaint about speed or driving [F3][F4][F5][SAFE-1]. Silence there is not proof the ride was safe, and F6 (the driver's post-trip written statement that he drove normally and the rider never complained) is a party statement, not a system record of driving style, so it carries little weight on the safety question [F6][SAFE-1].\n\nProfiles do not decide this: F7 (rider clean, 0 disputes/0 upheld in 90 d) and F8 (driver 675 d, 4.85, 963 trips, 0 disputes/0 upheld) cut both ways and cannot resolve a first-hand safety report [F7][F8][RD-6].\n\nOn money: RydeX is a fixed quote and the file contains no fare fact, so no refund is computable from F1/F2 and none is proposed; both sides concede no fare ruling is sought [F1][F2][SAFE-2]. RD-1/RD-2 are not engaged by the distance record (no off-route segment fact exists), so no segment_findings are recorded [F1][RD-1][RD-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -23,68 +25,60 @@
   ],
   "cited_policy": [
    "SAFE-1",
-   "SAFE-2"
+   "SAFE-2",
+   "RD-1",
+   "RD-2",
+   "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "Rider alleges dangerous driving (speeding, hard braking, shoulder overtaking) on trip Jurong East MRT → NUS, 21:22–21:34, fare $21.04 fixed; SAFE-2 requires a human reviewer. Record contains no measurement of speed, braking or shoulder use: GPS shows only distance and time [F1][F2]; the complete, fully timestamped 2-message chat is pickup logistics only [F3][F4][F5]; the driver's post-trip statement denies any complaint was made [F6]; both profiles show 0 disputes / 0 upheld in 90 d [F7][F8]. Disputed: the manner of driving, which only the rider's complaint and the driver's denial speak to.",
+  "escalation_reason": "Dangerous-driving allegation (speeding, hard braking, shoulder overtaking) under SAFE-2 with no telematics or traffic record to settle it; the human reviewer should read the rider's complaint against F1 (8.3 km vs 8.4 km optimal, -1%), F2 (12.7 min vs 13.8 min, -1.1 min), the complete chat F3–F5, and the driver's post-trip statement F6 (party statement, not a system record). Report paths for the rider: 995 if medical help is needed, driver's commercial motor insurance for a medical claim, RydeHELP for the report [F1][F2][F3][F4][F5][F6].",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Not rejected as to outcome — escalation is granted under SAFE-2 on the rider's dangerous-driving allegation. Recorded only to note that the rider's own brief offers no independent evidence of the manoeuvres beyond the complaint narrative; SAFE-2 does not require corroboration for escalation, so this does not change the outcome [F5][F6][SAFE-2]."
-   },
-   {
-    "id": "C2",
-    "reason": "Not rejected — but the assertion that escalation 'rests on ... the absence of any record refuting it' is not adopted: missing evidence is never treated as favouring either side. Escalation rests on the dangerous-driving allegation itself, which SAFE-2 requires a human to review [F1][F5][SAFE-2]."
-   },
-   {
-    "id": "C3",
-    "reason": "Not rejected — the driver's post-trip statement cannot waive or displace a safety report under SAFE-1/SAFE-2; it is recorded as the driver's account and nothing more [F6][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "C4",
-    "reason": "Not rejected — with no off-route segment [F1] and no traffic fact, there is no routing violation and no routing excuse in this file, but RD-1/RD-4 govern route deviation, not the manner of driving, so they neither establish nor dispose of the safety complaint [F1][F2][RD-1][RD-4]."
-   },
-   {
-    "id": "C5",
-    "reason": "Not rejected — no fare defect is alleged or evidenced: the fare is a fixed RydeX quote and no unpublished add-on appears, so no amount is computable and only escalation is sought [F1][F2][FARE-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "Not rejected — F7/F8 are correctly treated as context only; profile facts cannot decide a case on their own, and no flag_account is sought or granted [F7][F8][RD-6]."
-   },
-   {
-    "id": "D1",
-    "reason": "Not rejected — the driver does not contest escalation, but his request that the summary 'record his clean record' cannot convert the file into a finding of no unsafe driving; the escalation stands on the allegation, and the summary carries both accounts [F6][F8][SAFE-2]."
-   },
-   {
-    "id": "D2",
-    "reason": "Rejected as a ground for resolution — the GPS record shows only 8.5 km vs 8.6 km optimal [F1] and 12.8 min vs a 14 min estimate [F2]; these measure distance and elapsed time, not speed profile, braking or lane use, so they neither corroborate nor disprove the dangerous-driving allegation, and SAFE-2 escalation is not defeated by a neutral distance/duration record [F1][F2][SAFE-2]."
-   },
-   {
-    "id": "D3",
-    "reason": "Rejected as a ground for resolution — the complete timestamped chat contains only pickup logistics [F3][F4][F5], which shows silence in the in-app channel, not that the alleged driving was safe or that the rider consented to it; a rider's not complaining in chat is not evidence of anything beyond silence, and the post-trip statement in [F6] is self-serving [F3][F4][F5][F6][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "Not rejected — the rider makes no threat/intimidation/harassment allegation against the driver and the chat holds none, so SAFE-1 is not triggered on that ground; escalation here rests on SAFE-2 dangerous driving, not on SAFE-1 [F3][F4][F5][F6][SAFE-1]"
-   },
-   {
     "id": "D5",
-    "reason": "Not rejected — no flag_account is sought by either side and the driver's history (3.5 y, 4.82 rating, 345 trips, 0 disputes / 0 upheld in 90 d) gives no basis; profile facts can never decide the case and the flag action is therefore not applied [F8][RD-6]"
+    "reason": "Profile facts (F8: 963 trips, 4.85 rating, 0 disputes/0 upheld in 90 d) never decide a case alone and cannot disprove a first-hand safety report; RD-6's account-flag precondition (an upheld case plus prior upheld route dispute) is not met, so F8 yields no outcome either way [F8][RD-6]."
    },
    {
     "id": "D6",
-    "reason": "Not rejected — the $21.04 was the fixed RydeX quote and no surcharge, excess distance or unpublished add-on appears, so there is nothing to refund; but this does not dispose of the safety complaint, which is escalated under SAFE-2 [F1][FARE-1][SAFE-2]"
+    "reason": "The request for 'no refund of the fare pending human review' mischaracterises the outcome: RydeX is a fixed quote with no fare fact in the file, so there is nothing to refund or affirm — the case is escalated under SAFE-2, and no_action is not an available outcome on the trace [F1][F2][SAFE-2]."
+   },
+   {
+    "id": "D4",
+    "reason": "The inference that no in-app complaint (F3, F4, F5) plus the driver's statement (F6) shows the driving was safe is rejected: silence during an allegedly unsafe ride is not proof of safety, and F6 is a party statement, not a system record of driving style [F3][F4][F5][F6][SAFE-1]."
+   },
+   {
+    "id": "D2",
+    "reason": "Correct but non-dispositive: F1 (8.3 km actual vs 8.4 km optimal) speaks only to route length; with no off-route segment fact in the file, RD-1/RD-2 are not engaged and the record answers nothing about speed, braking or shoulder use [F1][RD-1][RD-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "F2 (12.7 min vs 13.8 min, -1.1 min) is an end-to-end average and cannot exclude short bursts of speeding or hard braking, so it does not contradict the rider's account [F2][SAFE-2]."
+   },
+   {
+    "id": "C3",
+    "reason": "The absence of traffic/incident records is not corroboration of the speeding allegation; a missing record is treated as a gap, never as evidence for either side, so no finding follows from it [F1][F2][SAFE-2]."
+   },
+   {
+    "id": "C5",
+    "reason": "Reliance on F7/F8 to support or discount credibility is rejected: profiles never decide a case alone, and RD-6's flag precondition is not satisfied (no upheld case here), so no account action follows from either profile [F7][F8][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "F1",
+   "F2",
+   "F6"
+  ],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No telematics of driving style anywhere in the file: no speed, acceleration, harsh-braking or shoulder-use record, and no traffic/incident facts on the optimal route; the file therefore cannot settle whether the alleged dangerous driving occurred, which SAFE-2 requires a human to review."
  },
  "pre_verify_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route the file to a human safety reviewer with the summary below; note the 995 / driver's commercial motor insurance / RydeHELP reporting paths to the rider; take no fare action ($21.04 fixed RydeX quote stands); do not flag either account.",
+  "recommended_action": "Send the file to a human safety reviewer as a dangerous-driving allegation under SAFE-2; treat the fixed RydeX fare as unchanged (no refund computed) and take account action only if the reviewer substantiates the report.",
   "confidence": 0.9,
+  "reasoning": "This is a dispute type of safety, and the rider's complaint alleges speeding, hard braking and shoulder overtaking — that is a dangerous-driving allegation, so SAFE-2 applies and the case cannot be auto-decided; both advocates concede the mechanism and request escalation [F6][SAFE-2]. The trace's ✓ element (SAFE-1 screening: complaint filed as a safety incident) and the allowed-outcome list (escalate) also bind this file [SAFE-1].\n\nWhat happened: pickup 21:22, drop-off 21:34 on a RydeX Jurong East MRT → NUS trip; the rider reports being scared and feeling unsafe throughout [F1]. The only quantitative records are F1 (8.3 km actual vs 8.4 km optimal, -0.1 km / -1%) and F2 (12.7 min vs 13.8 min estimate, -1.1 min) — these settle route and duration only; they contain no speed, acceleration, braking or shoulder-use data, so they neither corroborate nor rebut the driving-style allegation [F1][F2][SAFE-2]. A missing telematics slice and a null traffic lookup are gaps, not evidence for either side [F1][F2][SAFE-2].\n\nThe chat is complete (2 messages, both timestamped) and contains only the rider's pickup note and the driver's ETA reply — no complaint about speed or driving [F3][F4][F5][SAFE-1]. Silence there is not proof the ride was safe, and F6 (the driver's post-trip written statement that he drove normally and the rider never complained) is a party statement, not a system record of driving style, so it carries little weight on the safety question [F6][SAFE-1].\n\nProfiles do not decide this: F7 (rider clean, 0 disputes/0 upheld in 90 d) and F8 (driver 675 d, 4.85, 963 trips, 0 disputes/0 upheld) cut both ways and cannot resolve a first-hand safety report [F7][F8][RD-6].\n\nOn money: RydeX is a fixed quote and the file contains no fare fact, so no refund is computable from F1/F2 and none is proposed; both sides concede no fare ruling is sought [F1][F2][SAFE-2]. RD-1/RD-2 are not engaged by the distance record (no off-route segment fact exists), so no segment_findings are recorded [F1][RD-1][RD-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -97,62 +91,53 @@
   ],
   "cited_policy": [
    "SAFE-1",
-   "SAFE-2"
+   "SAFE-2",
+   "RD-1",
+   "RD-2",
+   "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "Rider alleges dangerous driving (speeding, hard braking, shoulder overtaking) on trip Jurong East MRT → NUS, 21:22–21:34, fare $21.04 fixed; SAFE-2 requires a human reviewer. Record contains no measurement of speed, braking or shoulder use: GPS shows only distance and time [F1][F2]; the complete, fully timestamped 2-message chat is pickup logistics only [F3][F4][F5]; the driver's post-trip statement denies any complaint was made [F6]; both profiles show 0 disputes / 0 upheld in 90 d [F7][F8]. Disputed: the manner of driving, which only the rider's complaint and the driver's denial speak to.",
+  "escalation_reason": "Dangerous-driving allegation (speeding, hard braking, shoulder overtaking) under SAFE-2 with no telematics or traffic record to settle it; the human reviewer should read the rider's complaint against F1 (8.3 km vs 8.4 km optimal, -1%), F2 (12.7 min vs 13.8 min, -1.1 min), the complete chat F3–F5, and the driver's post-trip statement F6 (party statement, not a system record). Report paths for the rider: 995 if medical help is needed, driver's commercial motor insurance for a medical claim, RydeHELP for the report [F1][F2][F3][F4][F5][F6].",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "Not rejected as to outcome — escalation is granted under SAFE-2 on the rider's dangerous-driving allegation. Recorded only to note that the rider's own brief offers no independent evidence of the manoeuvres beyond the complaint narrative; SAFE-2 does not require corroboration for escalation, so this does not change the outcome [F5][F6][SAFE-2]."
-   },
-   {
-    "id": "C2",
-    "reason": "Not rejected — but the assertion that escalation 'rests on ... the absence of any record refuting it' is not adopted: missing evidence is never treated as favouring either side. Escalation rests on the dangerous-driving allegation itself, which SAFE-2 requires a human to review [F1][F5][SAFE-2]."
-   },
-   {
-    "id": "C3",
-    "reason": "Not rejected — the driver's post-trip statement cannot waive or displace a safety report under SAFE-1/SAFE-2; it is recorded as the driver's account and nothing more [F6][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "C4",
-    "reason": "Not rejected — with no off-route segment [F1] and no traffic fact, there is no routing violation and no routing excuse in this file, but RD-1/RD-4 govern route deviation, not the manner of driving, so they neither establish nor dispose of the safety complaint [F1][F2][RD-1][RD-4]."
-   },
-   {
-    "id": "C5",
-    "reason": "Not rejected — no fare defect is alleged or evidenced: the fare is a fixed RydeX quote and no unpublished add-on appears, so no amount is computable and only escalation is sought [F1][F2][FARE-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "Not rejected — F7/F8 are correctly treated as context only; profile facts cannot decide a case on their own, and no flag_account is sought or granted [F7][F8][RD-6]."
-   },
-   {
-    "id": "D1",
-    "reason": "Not rejected — the driver does not contest escalation, but his request that the summary 'record his clean record' cannot convert the file into a finding of no unsafe driving; the escalation stands on the allegation, and the summary carries both accounts [F6][F8][SAFE-2]."
-   },
-   {
-    "id": "D2",
-    "reason": "Rejected as a ground for resolution — the GPS record shows only 8.5 km vs 8.6 km optimal [F1] and 12.8 min vs a 14 min estimate [F2]; these measure distance and elapsed time, not speed profile, braking or lane use, so they neither corroborate nor disprove the dangerous-driving allegation, and SAFE-2 escalation is not defeated by a neutral distance/duration record [F1][F2][SAFE-2]."
-   },
-   {
-    "id": "D3",
-    "reason": "Rejected as a ground for resolution — the complete timestamped chat contains only pickup logistics [F3][F4][F5], which shows silence in the in-app channel, not that the alleged driving was safe or that the rider consented to it; a rider's not complaining in chat is not evidence of anything beyond silence, and the post-trip statement in [F6] is self-serving [F3][F4][F5][F6][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "Not rejected — the rider makes no threat/intimidation/harassment allegation against the driver and the chat holds none, so SAFE-1 is not triggered on that ground; escalation here rests on SAFE-2 dangerous driving, not on SAFE-1 [F3][F4][F5][F6][SAFE-1]"
-   },
-   {
     "id": "D5",
-    "reason": "Not rejected — no flag_account is sought by either side and the driver's history (3.5 y, 4.82 rating, 345 trips, 0 disputes / 0 upheld in 90 d) gives no basis; profile facts can never decide the case and the flag action is therefore not applied [F8][RD-6]"
+    "reason": "Profile facts (F8: 963 trips, 4.85 rating, 0 disputes/0 upheld in 90 d) never decide a case alone and cannot disprove a first-hand safety report; RD-6's account-flag precondition (an upheld case plus prior upheld route dispute) is not met, so F8 yields no outcome either way [F8][RD-6]."
    },
    {
     "id": "D6",
-    "reason": "Not rejected — the $21.04 was the fixed RydeX quote and no surcharge, excess distance or unpublished add-on appears, so there is nothing to refund; but this does not dispose of the safety complaint, which is escalated under SAFE-2 [F1][FARE-1][SAFE-2]"
+    "reason": "The request for 'no refund of the fare pending human review' mischaracterises the outcome: RydeX is a fixed quote with no fare fact in the file, so there is nothing to refund or affirm — the case is escalated under SAFE-2, and no_action is not an available outcome on the trace [F1][F2][SAFE-2]."
+   },
+   {
+    "id": "D4",
+    "reason": "The inference that no in-app complaint (F3, F4, F5) plus the driver's statement (F6) shows the driving was safe is rejected: silence during an allegedly unsafe ride is not proof of safety, and F6 is a party statement, not a system record of driving style [F3][F4][F5][F6][SAFE-1]."
+   },
+   {
+    "id": "D2",
+    "reason": "Correct but non-dispositive: F1 (8.3 km actual vs 8.4 km optimal) speaks only to route length; with no off-route segment fact in the file, RD-1/RD-2 are not engaged and the record answers nothing about speed, braking or shoulder use [F1][RD-1][RD-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "F2 (12.7 min vs 13.8 min, -1.1 min) is an end-to-end average and cannot exclude short bursts of speeding or hard braking, so it does not contradict the rider's account [F2][SAFE-2]."
+   },
+   {
+    "id": "C3",
+    "reason": "The absence of traffic/incident records is not corroboration of the speeding allegation; a missing record is treated as a gap, never as evidence for either side, so no finding follows from it [F1][F2][SAFE-2]."
+   },
+   {
+    "id": "C5",
+    "reason": "Reliance on F7/F8 to support or discount credibility is rejected: profiles never decide a case alone, and RD-6's flag precondition is not satisfied (no upheld case here), so no account action follows from either profile [F7][F8][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "F1",
+   "F2",
+   "F6"
+  ],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No telematics of driving style anywhere in the file: no speed, acceleration, harsh-braking or shoulder-use record, and no traffic/incident facts on the optimal route; the file therefore cannot settle whether the alleged dangerous driving occurred, which SAFE-2 requires a human to review."
  },
  "status": "escalated",
  "events": 27,
@@ -161,9 +146,9 @@
   "HARD: complaint filed as a safety incident → escalate (SAFE-1 / SAFE-2)"
  ],
  "record_path": "bench/results/court/B-0046.record.json",
- "latency_s": 22.39,
- "input_tokens": 85039,
- "output_tokens": 6683,
- "requests": 9,
- "llm_calls": 6
+ "latency_s": 18.89,
+ "input_tokens": 85800,
+ "output_tokens": 5205,
+ "requests": 8,
+ "llm_calls": 5
 }

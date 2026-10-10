@@ -4,17 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:49:04.451887+00:00",
+ "ts": "2026-10-10T13:25:23.703050+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 7.26,
-  "recommended_action": "Issue a $7.26 voucher refund to the rider for the unexempted off-route segment and send the driver's account for review (repeated route deviation) + flag_account",
-  "confidence": 0.9,
+  "amount": 3.0,
+  "recommended_action": "Issue a $3.00 voucher (RD-2 mileage refund) to the rider and send the driver's account for review under RD-6",
+  "confidence": 0.88,
+  "reasoning": "This is a metered RydeTAXI trip: the fare record shows base $3.90 + distance $15.14 for 10.74 km + time $4.29 + platform $1.47 = $24.80 [F6], so distance actually drives the fare and the RD-2 RydeTAXI branch governs the remedy, not a comparison between the 8.4 km quote and the meter [RD-2].\n\nOne off-route segment is recorded: 12:12–12:16, 2.93 km driven where the optimal route covers 0.80 km, adding 2.13 km and reaching up to 954 m off the optimal path [F3]. Nothing exempts it. The rider-requested stop route (RD-3) is unavailable: no stop is recorded in the segment and there is no rider message naming any place [F7][RD-3]. Consent under RD-5 also fails: the chat record contains no rider message at all [F7], and the driver's \"I went where the GPS sent me; it rerouted\" is a post-trip statement, which under G11 is a claim and not the rider's pre-segment agreement — so with a complete chat record and no rider agreement before 12:12:15, the segment counts [F8][RD-5]. The traffic excuse fails on its own terms: no incident was recorded near the route in the trip window [F11], and the only speed records are band 4 (30–39 km/h) and band 5 (40–49 km/h), never the band 1–2 severe range, with fair weather [F9][F10][F12][RD-4]. The segment is therefore un-exempted under RD-1 and refundable under RD-2 [RD-1][RD-2].\n\nAmount, per the trace formula: rate = distance fare ÷ distance km = $15.14 ÷ 10.74 km = $1.40968/km; 2.13 km × $1.40968/km = $3.0026 → $3.00 [F3][F4][F6][RD-2]. The residual ~0.18–0.2 km between the trip excess of 2.31 km ($3.26 billed) and the segment's 2.13 km is out-of-segment mileage that RD-2 does not refund, the time component of $4.29 is not a mileage unit, and waiting was $0.00 with no ERP/toll or unpublished add-on line, so no FARE-1 item arises [F4][F5][F6][RD-2][FARE-1].\n\nRD-6's additional action is triggered: this case upholds a route deviation against the driver (refund > 0), and the profile shows 2 upheld route disputes in the last 90 days, i.e. a repeated breach in the window [F14][RD-6]. The profile is used only for that added action, not to establish the deviation, which F1/F3 establish independently [F1][F3]. Safety screen: I read the complaint, the chat record and the driver's statement — the rider's \"He never asked\" and the driver's meter/GPS explanation contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F7][F8]; nothing to escalate [SAFE-1][SAFE-2]. Evidence is sufficient: the segment, the fare components and the rate are all recorded [F3][F4][F6].",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
@@ -23,9 +26,7 @@
    "F11",
    "F12",
    "F13",
-   "F14",
-   "F15",
-   "F16"
+   "F14"
   ],
   "cited_policy": [
    "RD-1",
@@ -34,7 +35,9 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "SAFE-1"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -44,42 +47,69 @@
     "finding": "counts",
     "basis": [
      "F7",
-     "F8",
-     "F9",
-     "F10"
+     "F8"
     ],
-    "reason": "The complete, fully timestamped chat holds only the rider's 12:03 pickup greeting [F7] and the driver's 12:03 arrival note [F8][F9], neither naming or agreeing to any route, and no rider message precedes the 12:12 segment start, so no consent under RD-5 exempts the segment; the driver's post-trip assertion that his GPS rerouted him [F10] is a claim, not consent, and no rider stop or destination change was requested, so RD-3 exempts nothing. The 5.15 km added on this segment is refundable under RD-2 [F3][RD-3][RD-5]."
+    "reason": "No rider-requested stop is measured in this segment and no rider message names any place, so RD-3 gives no exemption [F7][RD-3]. The only purported justification is the driver's post-trip statement that the GPS rerouted him, which is a claim and not the rider's own pre-segment consent under RD-5 (G11); the chat record is complete and contains no rider agreement before the 12:12 segment start, so the segment counts [F7][F8][RD-5]. No RD-4 incident exists on the replaced stretch and the recorded speed bands are 4 and 5, well outside band 1–2 [F9][F10][F11][RD-4]. The 2.13 km extra is refundable under RD-2 [RD-1][RD-2]."
    }
   ],
   "rejected_claims": [
    {
+    "id": "D1",
+    "reason": "Not rejected as to the metered framing — the fare record confirms meter components (base $3.90 + distance $15.14 for 10.74 km + time $4.29) [F6], and RD-2's RydeTAXI branch is applied; this claim is consistent with the ruling."
+   },
+   {
+    "id": "D2",
+    "reason": "Accepted: the single segment adds 2.13 km of the +2.3 km trip excess and the ~0.2 km residue is not refunded under RD-2 [F1][F3][RD-2]."
+   },
+   {
     "id": "D3",
-    "reason": "The driver sought no exemption and it fails on the facts: no incident on the replaced stretch [F13] and only band 4/band 5 speeds [F11][F12] means RD-4(a)/(b) are not met, so the segment remains unexempted under RD-4(c) [F11][F12][F13][RD-4]."
+    "reason": "Accepted as to consent: no rider message exists and the driver's statement is post-trip, so no RD-5 exemption arises [F7][F8][RD-5]."
+   },
+   {
+    "id": "D4",
+    "reason": "Accepted as to RD-4: with no incident near the route and only bands 4–5 in fair weather, neither (a) nor (b) exempts the segment [F9][F10][F11][F12][RD-4]."
    },
    {
     "id": "D5",
-    "reason": "Rejected as exculpatory: the driver's post-trip statement that his GPS rerouted him [F10] is a claim, not the rider's consent, and no traffic fact corroborates the substituted stretch [F13], so RD-4/RD-5 give him no relief [F10][F13][RD-4][RD-5]."
+    "reason": "Accepted in amount: 2.13 km × $1.40968/km = $3.00 is the RD-2 figure, with waiting $0.00 and no ERP/toll item [F3][F4][F6][RD-2]."
+   },
+   {
+    "id": "D6",
+    "reason": "Accepted as a cap direction but not as the refund figure: RD-2 refunds the un-exempted segment's extra_km only, so $3.00 (2.13 km) is granted rather than the whole billed $3.26 excess [F3][F4][RD-2]."
    },
    {
     "id": "D7",
-    "reason": "Accepted only in part: the rider requested no stop [F7][F8][F9] and no stop-time fee arose ($0.00 waiting) [F6], but this does not reduce liability — it leaves the whole 5.15 km of the segment unexempted and refundable under RD-2 [F3][F6][RD-2][RD-3]."
+    "reason": "Rejected: RD-6's condition is met by this case's upheld deviation plus the profile's 2 upheld route disputes in the 90-day window, so the account flag is a proper additional action; the profile is not used to decide the deviation itself [F14][F1][F3][RD-6]."
    },
    {
-    "id": "C6",
-    "reason": "The repetition referral is granted on the 90-day record showing 2 upheld route disputes [F16] plus this case [F16][RD-6], but the profile facts are used only for the flag_account add-on and cannot establish the deviation itself [F15][F16][RD-6]."
+    "id": "D8",
+    "reason": "Accepted: the complaint, chat record and driver statement contain no threat, harassment or dangerous-driving allegation and weather was fair, so no safety escalation arises [F7][F8][F12][SAFE-1][SAFE-2]."
+   },
+   {
+    "id": "C7",
+    "reason": "Accepted: the driver's profile records 2 upheld route disputes in 90 days and this case upholds another deviation, so the RD-6 flag is imposed based on the profile plus the established violation, not the profile alone [F14][F1][F3][RD-6]."
    }
   ],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 7.26,
-  "recommended_action": "Issue a $7.26 voucher refund to the rider for the unexempted off-route segment and send the driver's account for review (repeated route deviation) + flag_account",
-  "confidence": 0.9,
+  "amount": 3.0,
+  "recommended_action": "Issue a $3.00 voucher (RD-2 mileage refund) to the rider and send the driver's account for review under RD-6",
+  "confidence": 0.88,
+  "reasoning": "This is a metered RydeTAXI trip: the fare record shows base $3.90 + distance $15.14 for 10.74 km + time $4.29 + platform $1.47 = $24.80 [F6], so distance actually drives the fare and the RD-2 RydeTAXI branch governs the remedy, not a comparison between the 8.4 km quote and the meter [RD-2].\n\nOne off-route segment is recorded: 12:12–12:16, 2.93 km driven where the optimal route covers 0.80 km, adding 2.13 km and reaching up to 954 m off the optimal path [F3]. Nothing exempts it. The rider-requested stop route (RD-3) is unavailable: no stop is recorded in the segment and there is no rider message naming any place [F7][RD-3]. Consent under RD-5 also fails: the chat record contains no rider message at all [F7], and the driver's \"I went where the GPS sent me; it rerouted\" is a post-trip statement, which under G11 is a claim and not the rider's pre-segment agreement — so with a complete chat record and no rider agreement before 12:12:15, the segment counts [F8][RD-5]. The traffic excuse fails on its own terms: no incident was recorded near the route in the trip window [F11], and the only speed records are band 4 (30–39 km/h) and band 5 (40–49 km/h), never the band 1–2 severe range, with fair weather [F9][F10][F12][RD-4]. The segment is therefore un-exempted under RD-1 and refundable under RD-2 [RD-1][RD-2].\n\nAmount, per the trace formula: rate = distance fare ÷ distance km = $15.14 ÷ 10.74 km = $1.40968/km; 2.13 km × $1.40968/km = $3.0026 → $3.00 [F3][F4][F6][RD-2]. The residual ~0.18–0.2 km between the trip excess of 2.31 km ($3.26 billed) and the segment's 2.13 km is out-of-segment mileage that RD-2 does not refund, the time component of $4.29 is not a mileage unit, and waiting was $0.00 with no ERP/toll or unpublished add-on line, so no FARE-1 item arises [F4][F5][F6][RD-2][FARE-1].\n\nRD-6's additional action is triggered: this case upholds a route deviation against the driver (refund > 0), and the profile shows 2 upheld route disputes in the last 90 days, i.e. a repeated breach in the window [F14][RD-6]. The profile is used only for that added action, not to establish the deviation, which F1/F3 establish independently [F1][F3]. Safety screen: I read the complaint, the chat record and the driver's statement — the rider's \"He never asked\" and the driver's meter/GPS explanation contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F7][F8]; nothing to escalate [SAFE-1][SAFE-2]. Evidence is sufficient: the segment, the fare components and the rate are all recorded [F3][F4][F6].",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
@@ -88,9 +118,7 @@
    "F11",
    "F12",
    "F13",
-   "F14",
-   "F15",
-   "F16"
+   "F14"
   ],
   "cited_policy": [
    "RD-1",
@@ -99,7 +127,9 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "SAFE-1"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -109,43 +139,68 @@
     "finding": "counts",
     "basis": [
      "F7",
-     "F8",
-     "F9",
-     "F10"
+     "F8"
     ],
-    "reason": "The complete, fully timestamped chat holds only the rider's 12:03 pickup greeting [F7] and the driver's 12:03 arrival note [F8][F9], neither naming or agreeing to any route, and no rider message precedes the 12:12 segment start, so no consent under RD-5 exempts the segment; the driver's post-trip assertion that his GPS rerouted him [F10] is a claim, not consent, and no rider stop or destination change was requested, so RD-3 exempts nothing. The 5.15 km added on this segment is refundable under RD-2 [F3][RD-3][RD-5]."
+    "reason": "No rider-requested stop is measured in this segment and no rider message names any place, so RD-3 gives no exemption [F7][RD-3]. The only purported justification is the driver's post-trip statement that the GPS rerouted him, which is a claim and not the rider's own pre-segment consent under RD-5 (G11); the chat record is complete and contains no rider agreement before the 12:12 segment start, so the segment counts [F7][F8][RD-5]. No RD-4 incident exists on the replaced stretch and the recorded speed bands are 4 and 5, well outside band 1–2 [F9][F10][F11][RD-4]. The 2.13 km extra is refundable under RD-2 [RD-1][RD-2]."
    }
   ],
   "rejected_claims": [
    {
+    "id": "D1",
+    "reason": "Not rejected as to the metered framing — the fare record confirms meter components (base $3.90 + distance $15.14 for 10.74 km + time $4.29) [F6], and RD-2's RydeTAXI branch is applied; this claim is consistent with the ruling."
+   },
+   {
+    "id": "D2",
+    "reason": "Accepted: the single segment adds 2.13 km of the +2.3 km trip excess and the ~0.2 km residue is not refunded under RD-2 [F1][F3][RD-2]."
+   },
+   {
     "id": "D3",
-    "reason": "The driver sought no exemption and it fails on the facts: no incident on the replaced stretch [F13] and only band 4/band 5 speeds [F11][F12] means RD-4(a)/(b) are not met, so the segment remains unexempted under RD-4(c) [F11][F12][F13][RD-4]."
+    "reason": "Accepted as to consent: no rider message exists and the driver's statement is post-trip, so no RD-5 exemption arises [F7][F8][RD-5]."
+   },
+   {
+    "id": "D4",
+    "reason": "Accepted as to RD-4: with no incident near the route and only bands 4–5 in fair weather, neither (a) nor (b) exempts the segment [F9][F10][F11][F12][RD-4]."
    },
    {
     "id": "D5",
-    "reason": "Rejected as exculpatory: the driver's post-trip statement that his GPS rerouted him [F10] is a claim, not the rider's consent, and no traffic fact corroborates the substituted stretch [F13], so RD-4/RD-5 give him no relief [F10][F13][RD-4][RD-5]."
+    "reason": "Accepted in amount: 2.13 km × $1.40968/km = $3.00 is the RD-2 figure, with waiting $0.00 and no ERP/toll item [F3][F4][F6][RD-2]."
+   },
+   {
+    "id": "D6",
+    "reason": "Accepted as a cap direction but not as the refund figure: RD-2 refunds the un-exempted segment's extra_km only, so $3.00 (2.13 km) is granted rather than the whole billed $3.26 excess [F3][F4][RD-2]."
    },
    {
     "id": "D7",
-    "reason": "Accepted only in part: the rider requested no stop [F7][F8][F9] and no stop-time fee arose ($0.00 waiting) [F6], but this does not reduce liability — it leaves the whole 5.15 km of the segment unexempted and refundable under RD-2 [F3][F6][RD-2][RD-3]."
+    "reason": "Rejected: RD-6's condition is met by this case's upheld deviation plus the profile's 2 upheld route disputes in the 90-day window, so the account flag is a proper additional action; the profile is not used to decide the deviation itself [F14][F1][F3][RD-6]."
    },
    {
-    "id": "C6",
-    "reason": "The repetition referral is granted on the 90-day record showing 2 upheld route disputes [F16] plus this case [F16][RD-6], but the profile facts are used only for the flag_account add-on and cannot establish the deviation itself [F15][F16][RD-6]."
+    "id": "D8",
+    "reason": "Accepted: the complaint, chat record and driver statement contain no threat, harassment or dangerous-driving allegation and weather was fair, so no safety escalation arises [F7][F8][F12][SAFE-1][SAFE-2]."
+   },
+   {
+    "id": "C7",
+    "reason": "Accepted: the driver's profile records 2 upheld route disputes in 90 days and this case upholds another deviation, so the RD-6 flag is imposed based on the profile plus the established violation, not the profile alone [F14][F1][F3][RD-6]."
    }
   ],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
- "events": 26,
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.88 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0018.record.json",
- "latency_s": 20.37,
- "input_tokens": 86560,
- "output_tokens": 6403,
- "requests": 9,
+ "latency_s": 23.64,
+ "input_tokens": 103510,
+ "output_tokens": 6991,
+ "requests": 10,
  "llm_calls": 6
 }

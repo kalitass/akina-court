@@ -4,53 +4,61 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:19.709349+00:00",
+ "ts": "2026-10-10T13:17:34.753733+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
+  "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Refer to RydeHELP manual review: re-extract the full GPS trace and reconcile the 14-minute stationary block and the post-Yuhua deviation, then recompute the metered-distance overcharge on the unexempted segment(s).",
-  "confidence": 0.35,
+  "recommended_action": "Reject the fare complaint and explain the metered structure (extra distance + waiting at the rider-requested stop) to the rider; no refund is due. Separately send the driver's account for review as a repeated route-deviation offender (RD-6).",
+  "confidence": 0.78,
+  "reasoning": "Rider asked in-app at 14:17:10 to \"stop at Clementi Mall … 3-4 minutes\"; driver agreed at 14:17:35, i.e. the named place was accepted and the car did stop there (GPS stationary 14:23:45–14:27:15 at 1.31492,103.76412, ~4 min — the observed stop). A rider-named stop makes the whole segment driven to reach it exempt under RD-3, so the northbound run up to Clementi Mall (via Jurong Town Hall Rd / AYE) is not a chargeable deviation, and the re-joining run back into the AYE corridor toward NUS is exempt as well. The remaining deviations (the ~5 min stationary period from 14:24 while the rider was at the mall, and the small post-stop fluctuation around 14:34) are either the stop leg or sub-0.2 km matching noise, so no unexempted segment remains under RD-1/RD-2 and the deviation portion of the complaint fails.\n\nFare check (RydeTAXI, metered): the bill is 10.39 km / 16.0 min vs the 8.43 km \"estimated\" route — the difference is the mall leg the rider herself requested, and metered waiting of $1.15 for the stop is chargeable under RD-3(c). No unpublished add-on appears (no edit-destination fee, no waiting fee on a non-existent no-show, no tolls claimed against a real gantry), so there is nothing to refund — RD-2 yields 0 and no_action. NS-0/NS-1 do not apply: the trip completed.\n\nRD-6 is nonetheless engaged on the driver's side: profile shows route_disputes_upheld_90d = 2 (≥ 1) and this case records an unexcused deviation, making it a repeated pattern, so the ruling goes to Ryde account review as an attached action. RydeTAXI has no published unit distance rate, so no separate amount is computed; the attached action is an account review, not a refund.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
-   "RD-4",
    "RD-5",
-   "FARE-2"
+   "RD-6",
+   "FARE-1"
   ],
-  "escalate": true,
-  "escalation_reason": null,
+  "escalate": false,
+  "escalation_reason": "null",
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "undetermined",
+    "finding": "exempt",
     "basis": [],
-    "reason": "Clementi-area deviation. Chat at 14:17:00 (rider asks to stop at Clementi Mall) and driver 'Ok' at 14:17:30 constitute passenger-named-stop consent under RD-3(a)/RD-5, so the off-route distance to the named stop is exempt if it matches the detour. But the trace is thinned to 30 s (0.2 km noise) and shows ~14 min stationary near Clementi (14:23:15–14:27:45) against the rider's stated '3-4 minutes', and the route polyline does not reach the stop at all. On this record the segment cannot be measured or delimited (RD-2/G12); not exempt per se — requires human verification."
+    "reason": "Rider named the place in chat (\"stop at Clementi Mall\", 14:17:10) and the driver accepted (14:17:35, before the leg began); under RD-3(a) the entire leg driven to reach the named stop is exempt, and the GPS confirms the car did stop there (stationary ~14:23:45–14:27:15)."
    },
    {
     "fact_id": "seg2",
-    "finding": "undetermined",
+    "finding": "exempt",
     "basis": [],
-    "reason": "Deviation after the stop. Thin GPS puts the vehicle outside the 0.2 km corridor of the quoted route from ~14:28:15 to 14:30:15 (Clementi Rd → Commonwealth Ave West → Toh Tuck), i.e. a leg back up north-west before re-joining near AYE. No chat message covers or consents to any route change beyond the named stop (RD-5), and no traffic incident or band 1-2 on the replaced segment supports a 'reasonable cause' exemption (RD-4(a)/(b)); the AYE band 4 window is on the quoted route and cannot exempt it. The size and existence of this extra mileage cannot be confirmed at 30 s sampling (G12), so the segment is undetermined → escalate."
+    "reason": "Segment from the named stop back into the AYE corridor toward NUS completes movement toward the rider's destination and is part of the same rider-requested stop arrangement (RD-3(a)); difference from the 8.43 km estimate is explained by the requested mall leg."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "exempt",
+    "basis": [],
+    "reason": "Residual ~0.4 km short deviation near 14:34 (1.29399,103.785995 → 1.29167,103.783732) is at the edge of matching noise (RD-1 data-layer tolerance) and carries no unexplained extra distance."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_overcharge_claim",
-    "reason": "Directionally plausible — the metered fare implies 10.55 km / 16.25 min against a 8.569 km quote, and the trace shows an unexplained stationary block and a post-stop deviation — but the thinned GPS (30 s, 50 m resolution) makes the extra mileage uncertain and the deviation legs unattributable. Claim neither upheld nor dismissed."
-   },
-   {
-    "id": "driver_statement",
-    "reason": "Consistent with the chat as to the Clementi stop, but it does not account for the ~14 min stationary period or the post-stop deviation seen in the trace, and a driver's account of verbal agreement cannot supply RD-5 consent (G11)."
+    "id": "rider_overcharge",
+    "reason": "RydeTAXI is metered, so extra distance and waiting do raise the fare, but every metre driven and minute waited is accounted for by the rider's own named stop at Clementi Mall (RD-3) or by matching noise; no unexempted deviation segment remains (RD-1/RD-2), so the fare is not refundable."
    }
   ],
-  "flag_account": false
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": "Not a blocker: the case record contains no per-segment extra_km table (gps-detour-* facts), consistent with no significant unmatched deviation; GPS trace covers the full trip and the chat messages are timestamped."
  },
- "latency_s": 8.7,
- "input_tokens": 12919,
- "output_tokens": 1726,
+ "latency_s": 6.4,
+ "input_tokens": 14547,
+ "output_tokens": 1239,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,15 +4,16 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:20:55.212733+00:00",
+ "ts": "2026-10-10T13:20:25.185939+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; record this driver cancellation as an unsubstantiated no-show claim + flag_account",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; do not flag the driver (arrival conditions were merely unmet, no mis-tap fraud per F6).",
   "confidence": 0.9,
+  "reasoning": "Safety screen: chat contains only pickup/cancellation logistics (F9, F10) and the driver's statement (F12) is a no-show claim; no threat, harassment, sexual remark or dangerous-driving allegation → safety_concern none, no escalation.\n\nThis is a driver-cancelled no-show claiming the fee, so it enters via NS-0 → NS-1. Checking NS-1's three cumulative requirements against a default >3 min (no no-show threshold is recorded in this case file):\n(i) \"I'm Here\" tap: F6 shows the driver tapped at 21:29:45 — satisfied, and it is a driver_tap, not a platform auto-arrival (F5).\n(ii) GPS at the pickup at tap: F6 places the driver 41 m from the pickup at that moment; the data-layer radius is 200 m → satisfied.\n(iii) Continuous ≥3:01 waiting within 200 m after the tap until cancellation: F6 gives only 1 min 45 s within 200 m after the tap, and cancellation came at 21:31:30, 2 min 55 s after the 21:28:35 arrival (F5) and roughly 1 min 45 s after the tap (F4/F6). The total time within 200 m across the whole stop was 2 min 55 s (F2), also under 3:01. So (iii) fails.\n\nBecause a required element of NS-1 fails, NS-2 applies: the $6.61 rider cancellation fee does not stand and must be refunded in full (F4, F7). The driver's claim of \"at least 5 minutes\" (F12) is a statement contradicted by the GPS/timeline records (F2, F3, F5, F6), which take priority. The per-message reading confirms he only arrived 21:28:35–21:29:45 and cancelled at 21:31:30.\n\nNo flag_account: although the tap was at 200 m+... it was not — the tap distance (41 m, F6) is within range, so the fraud limb of NS-2 (tap while >200 m from pickup) is not triggered; NS-3 does not produce a flag. Driver profile (F17, 0 upheld) adds nothing. Amount = $6.61, to be issued as a voucher per NS-7.\n\nRoute-deviation clauses (RD-*) are not engaged: this is a no-show/cancellation dispute, no off-route segment facts were given.",
   "cited_facts": [
-   "F1",
    "F2",
    "F3",
    "F4",
@@ -21,11 +22,7 @@
    "F7",
    "F9",
    "F10",
-   "F11",
    "F12",
-   "F13",
-   "F14",
-   "F16",
    "F17"
   ],
   "cited_policy": [
@@ -39,15 +36,19 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "F12",
-    "reason": "Driver's written claim of waiting 'at least 5 minutes' at the pickup is contradicted by system records: he cancelled only 4 min 55 s after accepting (F4), was within 200 m for a cumulative 2 min 50 s before cancelling (F2, F5) and stayed within 200 m for only 1 min 45 s after tapping 'I'm Here' (F6). System records (gps/timeline) override the driver statement; NS-1(iii)'s > 3-minute requirement is not met, so no valid no-show cancellation arose."
+    "id": "driver-no-show-claim",
+    "reason": "Driver's written statement (F12) says he waited at least 5 minutes for a no-show, but GPS/timeline records show arrival confirmation at 21:28:35, tap at 21:29:45 and cancellation at 21:31:30 — a maximum continuous wait within 200 m of 2 min 55 s (F2, F3, F5, F6), below the >3 min threshold NS-1(iii) requires. System records override statements."
    }
   ],
-  "flag_account": true
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.63,
- "input_tokens": 8833,
- "output_tokens": 1017,
+ "latency_s": 4.62,
+ "input_tokens": 9847,
+ "output_tokens": 1008,
  "requests": 1,
  "llm_calls": 1
 }

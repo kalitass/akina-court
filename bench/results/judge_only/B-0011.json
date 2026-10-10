@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:45:00.920287+00:00",
+ "ts": "2026-10-10T13:21:15.894079+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no fare adjustment: the single off-route segment is exempt as the rider's own named stop at Clementi Mall, and the billed $1.04 waiting time is a legitimate metered RydeTAXI charge. Do not flag the driver for this trip.",
-  "confidence": 0.86,
+  "recommended_action": "Close the fare complaint as not upheld: the only off-route segment is the rider-named stop at Clementi Mall and is exempt; no refund and no account action.",
+  "confidence": 0.82,
+  "reasoning": "The case has exactly one off-route segment: 14:21–14:31, 3.81 km driven where the optimal route covers 2.11 km, +1.70 km [F4]. RD-1 makes each such segment reviewable segment by segment, and an unexplained segment would be refundable under RD-2.\n\nThe rider's message at 14:17, before the segment started, names a place and asks the driver to stop there — an errand of the rider's own on the way [F9], and the driver simply accepts [F10]. That is a rider-requested stop with a named place, which under RD-3(a) is not a detour at all; the whole way to that place is exempt, and the length of the drive there or the duration of the stop does not reduce the exemption. The stop itself is recorded at 14:23–14:27 (4 min 0 s) [F2], matching the rider's stated 3–4 minutes [F9]. Because the exemption comes from RD-3(a) (the rider named the place and the car stopped there), there is no off-route segment left for RD-2 to price; the general/specific route-agreement analysis under RD-5 is not needed on these facts.\n\nNo driver-caused deviation is therefore excused-cum-refundable: the segment is exempt, the remaining +0.30 km of the trip's distance reconciliation (2.0 km total vs 1.70 km segment per the fare record [F1][F3][F4]) is map-matching/route-corridor noise not attributed to any segment, and under RD-2 only non-exempt segment extra km are refundable. The billed distance excess of $2.76 [F5] therefore stays with the driver: $1.4100/km × 1.70 km = $2.40 of it belongs to the exempt rider-named detour, leaving $0.36 unexplained by any segment, and a zero-refundable computation under RD-2 yields no_action rather than a refund.\n\nThe waiting amount is on the meter and is not a surcharge to waive: metered waiting time units are collected as they accrue for RydeTAXI [F6], and RD-3(c) leaves stop duration on the meter for taxis, unlike the non-metered services where only the published $5 pickup wait applies. No unreported add-on appears in the fare breakdown [F8], and no ERP/toll over-collection is in evidence, so FARE-1 and FARE-2 give the rider nothing.\n\nThe traffic records do not rescue a different reading: the logged speed bands are band 4 on the Ayer Rajah Expressway and band 3 on Jurong Town Hall Road [F13][F14], and there is no incident near the route during the trip window [F15]. Under RD-4(a) an exemption needs a qualifying incident on the replaced optimal stretch, which the trace shows as absent; RD-4(b) speed bands are corroboration only and do not exempt on their own. This does not change the outcome, since the segment is already exempt under RD-3(a).\n\nThe driver's post-trip statement that the rider asked for the stop [F12] is not relied on as consent — a claim appearing only in the driver's statement cannot establish agreement (G11) — but the rider's own timestamped message [F9] with the complete chat record [F11] does. RD-6's flag_account condition is not triggered because no non-exempt segment was found and no refund is due: the driver's 2 upheld prior route disputes [F18] can only attach to an established breach, not create one.",
   "cited_facts": [
    "F1",
    "F2",
@@ -26,7 +28,6 @@
    "F13",
    "F14",
    "F15",
-   "F16",
    "F17",
    "F18"
   ],
@@ -37,7 +38,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7",
+   "FARE-1",
+   "FARE-2",
    "SAFE-1"
   ],
   "escalate": false,
@@ -52,26 +54,26 @@
      "F2",
      "F11"
     ],
-    "reason": "The whole 14:21–14:30 off-route stretch (+1.70 km, F4) is the leg to the rider's own named stop: at 14:17 the rider wrote \"Can you stop at Clementi Mall? I need to grab a parcel, 3-4 minutes.\" (F9) and the driver accepted with \"Ok\" (F10); the car did stop there, stationary 4 min 0 s at 14:23–14:27, 3159 m from pickup and 2452 m from drop-off (F2), and the chat record is complete with every message timestamped (F11). Under [RD-3] a stop the rider names and the car makes is not a detour — the segment driven to reach it is exempt in full, and neither the stop's length nor the extra kilometres reduce the exemption. The rider's own pre-segment message is the consent relied on, so no gap arises under [RD-5]; the driver's post-trip statement (F12) is not needed and adds nothing (G11)."
-   },
-   {
-    "fact_id": "F4",
-    "finding": "exempt",
-    "basis": [
-     "F9",
-     "F10"
-    ],
-    "reason": "[RD-5] scope check on the same segment: the only pre-segment exchange is the rider's named stop request (F9) accepted by the driver (F10); there is no unnamed driver-proposed excursion, no second detour after rejoining, and no destination other than the rider's named Clementi Mall, so the agreement covers exactly this stretch. The driver never had to name an alternative road, and extra distance from the optimal route is not evidence of a different destination [RD-5]."
+    "reason": "The rider sent a timestamped message at 14:17, before the segment began at 14:21, naming a specific place — 'Can you stop at Clementi Mall' — for her own errand [F9], and the driver accepted [F10]; the chat record is complete with every message timed [F11]. Under RD-3(a) a stop the rider named does not constitute a detour, and the whole way driven to reach it is exempt; the 4-minute stop at 14:23–14:27 [F2] matches the rider's stated 3–4 minutes [F9]. RD-5 route-agreement analysis is unnecessary here because RD-3(a) already disposes of the segment; nothing in the record places the agreement outside this stop."
    }
   ],
   "rejected_claims": [],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no fare adjustment: the single off-route segment is exempt as the rider's own named stop at Clementi Mall, and the billed $1.04 waiting time is a legitimate metered RydeTAXI charge. Do not flag the driver for this trip.",
-  "confidence": 0.86,
+  "recommended_action": "Close the fare complaint as not upheld: the only off-route segment is the rider-named stop at Clementi Mall and is exempt; no refund and no account action.",
+  "confidence": 0.82,
+  "reasoning": "The case has exactly one off-route segment: 14:21–14:31, 3.81 km driven where the optimal route covers 2.11 km, +1.70 km [F4]. RD-1 makes each such segment reviewable segment by segment, and an unexplained segment would be refundable under RD-2.\n\nThe rider's message at 14:17, before the segment started, names a place and asks the driver to stop there — an errand of the rider's own on the way [F9], and the driver simply accepts [F10]. That is a rider-requested stop with a named place, which under RD-3(a) is not a detour at all; the whole way to that place is exempt, and the length of the drive there or the duration of the stop does not reduce the exemption. The stop itself is recorded at 14:23–14:27 (4 min 0 s) [F2], matching the rider's stated 3–4 minutes [F9]. Because the exemption comes from RD-3(a) (the rider named the place and the car stopped there), there is no off-route segment left for RD-2 to price; the general/specific route-agreement analysis under RD-5 is not needed on these facts.\n\nNo driver-caused deviation is therefore excused-cum-refundable: the segment is exempt, the remaining +0.30 km of the trip's distance reconciliation (2.0 km total vs 1.70 km segment per the fare record [F1][F3][F4]) is map-matching/route-corridor noise not attributed to any segment, and under RD-2 only non-exempt segment extra km are refundable. The billed distance excess of $2.76 [F5] therefore stays with the driver: $1.4100/km × 1.70 km = $2.40 of it belongs to the exempt rider-named detour, leaving $0.36 unexplained by any segment, and a zero-refundable computation under RD-2 yields no_action rather than a refund.\n\nThe waiting amount is on the meter and is not a surcharge to waive: metered waiting time units are collected as they accrue for RydeTAXI [F6], and RD-3(c) leaves stop duration on the meter for taxis, unlike the non-metered services where only the published $5 pickup wait applies. No unreported add-on appears in the fare breakdown [F8], and no ERP/toll over-collection is in evidence, so FARE-1 and FARE-2 give the rider nothing.\n\nThe traffic records do not rescue a different reading: the logged speed bands are band 4 on the Ayer Rajah Expressway and band 3 on Jurong Town Hall Road [F13][F14], and there is no incident near the route during the trip window [F15]. Under RD-4(a) an exemption needs a qualifying incident on the replaced optimal stretch, which the trace shows as absent; RD-4(b) speed bands are corroboration only and do not exempt on their own. This does not change the outcome, since the segment is already exempt under RD-3(a).\n\nThe driver's post-trip statement that the rider asked for the stop [F12] is not relied on as consent — a claim appearing only in the driver's statement cannot establish agreement (G11) — but the rider's own timestamped message [F9] with the complete chat record [F11] does. RD-6's flag_account condition is not triggered because no non-exempt segment was found and no refund is due: the driver's 2 upheld prior route disputes [F18] can only attach to an established breach, not create one.",
   "cited_facts": [
    "F1",
    "F2",
@@ -87,7 +89,6 @@
    "F13",
    "F14",
    "F15",
-   "F16",
    "F17",
    "F18"
   ],
@@ -98,7 +99,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7",
+   "FARE-1",
+   "FARE-2",
    "SAFE-1"
   ],
   "escalate": false,
@@ -113,31 +115,30 @@
      "F2",
      "F11"
     ],
-    "reason": "The whole 14:21–14:30 off-route stretch (+1.70 km, F4) is the leg to the rider's own named stop: at 14:17 the rider wrote \"Can you stop at Clementi Mall? I need to grab a parcel, 3-4 minutes.\" (F9) and the driver accepted with \"Ok\" (F10); the car did stop there, stationary 4 min 0 s at 14:23–14:27, 3159 m from pickup and 2452 m from drop-off (F2), and the chat record is complete with every message timestamped (F11). Under [RD-3] a stop the rider names and the car makes is not a detour — the segment driven to reach it is exempt in full, and neither the stop's length nor the extra kilometres reduce the exemption. The rider's own pre-segment message is the consent relied on, so no gap arises under [RD-5]; the driver's post-trip statement (F12) is not needed and adds nothing (G11)."
-   },
-   {
-    "fact_id": "F4",
-    "finding": "exempt",
-    "basis": [
-     "F9",
-     "F10"
-    ],
-    "reason": "[RD-5] scope check on the same segment: the only pre-segment exchange is the rider's named stop request (F9) accepted by the driver (F10); there is no unnamed driver-proposed excursion, no second detour after rejoining, and no destination other than the rider's named Clementi Mall, so the agreement covers exactly this stretch. The driver never had to name an alternative road, and extra distance from the optimal route is not evidence of a different destination [RD-5]."
+    "reason": "The rider sent a timestamped message at 14:17, before the segment began at 14:21, naming a specific place — 'Can you stop at Clementi Mall' — for her own errand [F9], and the driver accepted [F10]; the chat record is complete with every message timed [F11]. Under RD-3(a) a stop the rider named does not constitute a detour, and the whole way driven to reach it is exempt; the 4-minute stop at 14:23–14:27 [F2] matches the rider's stated 3–4 minutes [F9]. RD-5 route-agreement analysis is unnecessary here because RD-3(a) already disposes of the segment; nothing in the record places the agreement outside this stop."
    }
   ],
   "rejected_claims": [],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
- "events": 9,
+ "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0011.record.json",
- "latency_s": 10.41,
- "input_tokens": 24110,
- "output_tokens": 2195,
- "requests": 3,
- "llm_calls": 3
+ "latency_s": 8.56,
+ "input_tokens": 13651,
+ "output_tokens": 1703,
+ "requests": 2,
+ "llm_calls": 2
 }

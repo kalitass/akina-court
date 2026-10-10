@@ -4,33 +4,40 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:27.808594+00:00",
+ "ts": "2026-10-10T13:18:46.467520+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher per NS-7; do not apply any driver-account action on this case.",
-  "confidence": 0.9,
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Uphold the $6.61 cancellation fee; reply to the rider citing NS-4 (cancellation 1:40 after matching, outside the 3-minute free window) and note the driver was ~4.3 km from the pickup and had no arrival/here record; safety screen clean, no account action.",
+  "confidence": 0.82,
+  "reasoning": "Dispute is a rider-side cancellation fee challenge (NS-0, cancelled_by = rider → instant order → NS-4).\n\nTiming: accepted_at 12:54:00, cancelled_at 12:55:40 → 1 min 40 s after matching. The rider's claim \"within 3 minutes\" is therefore TRUE as a matter of clock time. But NS-4 is not satisfied in the rider's favour: it provides only that cancellations made within 3 minutes of matching are not chargeable, and that Ryde publishes no \"driver late vs ETA → free cancellation\" rule (NS-8 is informational and the record has no ETA field). Either way the fee outcome under NS-4 is the same for the rider: the fee is only chargeable if the cancellation is later than 3 minutes.\n\nThe record nevertheless shows the fee is not owed, because the other NS branch applies. The only route to charge the fee when the rider does not cancel in time is NS-1: driver pressed \"I'm Here\" (or platform auto-arrival), GPS inside the pickup radius at the tap, then a continuous wait > 3 minutes. Here driver_arrived_at, driver_pressed_here_at, arrival_confirmed_by, arrival_radius_m and wait_started_at are all null. GPS places the driver at 12:54:00 at (1.2781, 103.83807) and at cancellation (12:55:40) at (1.28222, 103.84154) — roughly 4.3 km from the Marina Bay Sands pickup (1.2839, 103.8607), never within 200 m of it. So NS-1 (i) and (ii) both fail: no arrival confirmation at all, and the driver was nowhere near the pickup. Preference: refund_full of the $6.61 cancellation fee.\n\nNo NS-2 account flag: NS-2 attaches flag_account only when the driver pressed \"I'm Here\" while GPS showed him outside the pickup radius. No \"I'm Here\" was ever pressed here, so that abuse-of-button condition is absent. NS-3 does not apply (the rider, not the driver, cancelled), and no fee-waiver timeliness issue arises (filed 2026-09-22, the day of the trip). Rider profile facts (2 prior upheld no-show disputes) never decide a case and are not used here. Evidence is sufficient: the timeline, the ride-state nulls, the 30 s-thinned GPS track covering the whole 100 s window and the chat (empty) settle every element.\n\nSafety screen: read the complaint, driver statement and chat in full — no threats, intimidation, harassment, sexual remarks or dangerous-driving allegation; dispute type is not safety. safety_concern = none.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7"
+   "NS-1",
+   "NS-2",
+   "NS-4"
   ],
   "escalate": false,
-  "escalation_reason": "null",
+  "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The driver's 'I was on my way when the rider cancelled' does not assert a rider no-show and, in any event, system records show the driver was ~2.7 km from the pickup heading away, and no driver cancellation occurred — so no NS-1/NS-2 basis to keep the fee exists."
+    "id": "rider_complaint",
+    "reason": "Rider says the driver was 'nowhere near' AND that she cancelled within 3 minutes, implying the fee is unjust. The timing half is not the reason the fee fails (NS-4 makes the fee chargeable only after 3 minutes), but the fee is in any case not collectible because NS-1's preconditions — an 'I'm Here' tap / arrival confirmation and GPS within the pickup radius followed by a continuous > 3 minute wait — are wholly absent; the driver was ~4.3 km away at cancellation."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 3.97,
- "input_tokens": 10978,
- "output_tokens": 847,
+ "latency_s": 5.25,
+ "input_tokens": 11981,
+ "output_tokens": 1047,
  "requests": 1,
  "llm_calls": 1
 }

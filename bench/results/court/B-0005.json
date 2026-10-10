@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:47:22.828177+00:00",
+ "ts": "2026-10-10T13:23:25.009369+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 2.98,
-  "recommended_action": "Refund $2.98 to the rider via Ryde voucher (NS-7) for the unexempted 18:53–19:01 off-route segment; no account flag.",
+  "amount": 2.76,
+  "recommended_action": "Issue a $2.76 Ryde voucher (metered-distance refund) to the rider per NS-7 and record the RD-1 breach on the driver's file.",
   "confidence": 0.82,
+  "reasoning": "This is a RydeTAXI metered trip (Tanjong Pagar Centre → Changi Airport T3, charged $47.97) in which distance enters the fare, so an unexplained deviation directly raises the fare [F6][RD-2]. The GPS trace isolates exactly one off-route segment, 18:46–18:52, 3.50 km driven where the optimal route covers 1.54 km, adding 1.96 km [F3][RD-1]; the whole-trip excess of +2.1 km [F1] is not separately billable, and the billed excess of 2.17 km [F4] leaves only corridor/matching noise beyond the segment, which is not refunded [F4][RD-2].\n\nRD-4(a) does not exempt that segment. A lane-1 vehicle breakdown was reported at 18:27 on the East Coast Parkway, 0 m from the optimal route and within the trip window [F11][RD-4], but the rule requires the incident to justify the replaced stretch, and the substituted run in F3 is up to 752 m off the optimal route [F3]; the trace marks this element ✗, and the incident record does not cover the substitute roadway [F3][F11][RD-4]. The speed-band records (ECP and Airport Boulevard, band 5, 40–49 km/h) are far above the band 1–2 congestion threshold and are not an independent ground of exemption [F9][F10][RD-4], and the weather was fair with 0.0 mm rain [F12][RD-4]. The driver's post-trip statement about a \"breakdown on the route\" is a statement, not a system record, and does not supply the missing RD-4 element where it is not corroborated for the substituted stretch [F8][RD-4].\n\nRD-5 gives no exemption either. There are no in-app messages at all [F7], so no rider message sent before 18:46:55 agrees to this routing, and F8 is a post-trip statement (G11), not rider consent [F7][F8][RD-5]. A complete chat record with no rider agreement before the segment means the segment counts [F7][RD-5]. No rider-requested stop appears anywhere in the record, so RD-3 is not engaged [F7][F3][RD-3].\n\nThe refund follows RD-2: 1.96 extra km × $1.4099/km = $2.76, where $1.4099/km is this trip's rate ($33.33 distance fare ÷ 23.64 km) [F3][F4][F6][RD-2]. No flag_account attaches: the driver's route_disputes_upheld_90d is 0 [F14], so RD-6's \"repeated\" precondition is unmet, and the profile cannot decide the case in any event [F14][RD-6].",
   "cited_facts": [
    "F1",
    "F3",
@@ -21,7 +23,7 @@
    "F9",
    "F10",
    "F11",
-   "F13",
+   "F12",
    "F14"
   ],
   "cited_policy": [
@@ -30,7 +32,8 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -42,38 +45,46 @@
      "F7",
      "F8"
     ],
-    "reason": "The only rider-side record is an empty chat [F7]: no rider message before 18:53:40 names any road, area or route, so there is no RD-5 consent to the driver's reroute. The driver's own post-trip statement that he 'took another way' [F8] is a claim, not rider consent (G11). RD-3 is not triggered — no rider-requested stop exists in this segment and no waiting time was billed [F6]. The segment is therefore not excused under RD-3 or RD-5 and is refundable under RD-2."
+    "reason": "The only off-route segment (18:46–18:52, +1.96 km) has no RD-4 exemption: the F11 breakdown sits on the optimal route/ECP and does not cover the substituted stretch, and band 5 speeds (F9, F10) are not congestion [F3][F11][F9][RD-4]. RD-5 also fails: the chat record is empty, so no rider message before the segment agrees to the routing, and the driver's post-trip statement is not consent (G11) [F7][F8][RD-5]. RD-3 is not engaged — no rider-requested stop appears [F7][F3][RD-3]. The segment is unexempted and refundable in its metered extra_km [F3][RD-1][RD-2]."
    }
   ],
   "rejected_claims": [
    {
     "id": "D2",
-    "reason": "RD-4(a) is not satisfied by the 18:27 vehicle breakdown [F11]: the off-route segment did not begin until 18:53 [F3], so the incident does not cover the substituted optimal-route stretch the driver actually left."
+    "reason": "RD-4(a) requires the incident to justify the replaced stretch; the LTA breakdown in F11 sits on the optimal route (ECP, 0 m) and the substituted run in F3 lies up to 752 m away, so the incident does not cover the roadway actually driven [F3][F11][RD-4]."
    },
    {
     "id": "D3",
-    "reason": "Band 4 (30–39 km/h) records on East Coast Parkway and Airport Boulevard [F9][F10] are not the band 1–2 severe congestion of RD-4(b) and, as corroboration only, cannot exempt the segment [RD-4]."
+    "reason": "The traffic record does not corroborate the driver's account: ECP and Airport Boulevard were at speed band 5 (40–49 km/h) [F9][F10], far above the band 1–2 congestion threshold, and no incident is recorded on the substituted stretch [F11][RD-4]."
    },
    {
-    "id": "D4",
-    "reason": "An empty chat [F7] cannot supply rider consent, and the driver's post-trip statement that road conditions justified the reroute [F8] is a claim, not the rider's message before the segment that RD-5 requires (G11)."
+    "id": "D6",
+    "reason": "Rejected as a ground of no refund: with no rider message at all before the segment [F7], RD-5 grants no exemption and the driver's post-trip statement is not consent (G11); the unexempted segment therefore counts [F7][F8][RD-5]."
    },
    {
-    "id": "D5",
-    "reason": "The refund does not fall to $0.00: the sole segment [F3] is not exempt under RD-4 or RD-5, so 2.11 km × $1.41/km = $2.98 is refundable [F6][RD-2]."
+    "id": "D8",
+    "reason": "The non-metered branch of RD-2 and FARE-1 does not apply — this is a RydeTAXI metered trip where distance enters the fare, so the unexempted segment's extra_km is refundable under the metered branch of RD-2 [F6][F3][RD-2]."
    },
    {
-    "id": "D1",
-    "reason": "Accepted only as to quantum mechanics: the 0.29 km residue beyond the 2.11 km segment [F1][F3][F4] is indeed not refundable under RD-2 — but that does not make the segment itself free."
+    "id": "D9",
+    "reason": "No escalation ground: reading F7 (empty chat) and F8 (driver's post-trip explanation) shows no threat, intimidation, harassment or dangerous-driving allegation, so SAFE-1/SAFE-2 are not triggered [F7][F8][SAFE-1][SAFE-2]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 2.98,
-  "recommended_action": "Refund $2.98 to the rider via Ryde voucher (NS-7) for the unexempted 18:53–19:01 off-route segment; no account flag.",
+  "amount": 2.76,
+  "recommended_action": "Issue a $2.76 Ryde voucher (metered-distance refund) to the rider per NS-7 and record the RD-1 breach on the driver's file.",
   "confidence": 0.82,
+  "reasoning": "This is a RydeTAXI metered trip (Tanjong Pagar Centre → Changi Airport T3, charged $47.97) in which distance enters the fare, so an unexplained deviation directly raises the fare [F6][RD-2]. The GPS trace isolates exactly one off-route segment, 18:46–18:52, 3.50 km driven where the optimal route covers 1.54 km, adding 1.96 km [F3][RD-1]; the whole-trip excess of +2.1 km [F1] is not separately billable, and the billed excess of 2.17 km [F4] leaves only corridor/matching noise beyond the segment, which is not refunded [F4][RD-2].\n\nRD-4(a) does not exempt that segment. A lane-1 vehicle breakdown was reported at 18:27 on the East Coast Parkway, 0 m from the optimal route and within the trip window [F11][RD-4], but the rule requires the incident to justify the replaced stretch, and the substituted run in F3 is up to 752 m off the optimal route [F3]; the trace marks this element ✗, and the incident record does not cover the substitute roadway [F3][F11][RD-4]. The speed-band records (ECP and Airport Boulevard, band 5, 40–49 km/h) are far above the band 1–2 congestion threshold and are not an independent ground of exemption [F9][F10][RD-4], and the weather was fair with 0.0 mm rain [F12][RD-4]. The driver's post-trip statement about a \"breakdown on the route\" is a statement, not a system record, and does not supply the missing RD-4 element where it is not corroborated for the substituted stretch [F8][RD-4].\n\nRD-5 gives no exemption either. There are no in-app messages at all [F7], so no rider message sent before 18:46:55 agrees to this routing, and F8 is a post-trip statement (G11), not rider consent [F7][F8][RD-5]. A complete chat record with no rider agreement before the segment means the segment counts [F7][RD-5]. No rider-requested stop appears anywhere in the record, so RD-3 is not engaged [F7][F3][RD-3].\n\nThe refund follows RD-2: 1.96 extra km × $1.4099/km = $2.76, where $1.4099/km is this trip's rate ($33.33 distance fare ÷ 23.64 km) [F3][F4][F6][RD-2]. No flag_account attaches: the driver's route_disputes_upheld_90d is 0 [F14], so RD-6's \"repeated\" precondition is unmet, and the profile cannot decide the case in any event [F14][RD-6].",
   "cited_facts": [
    "F1",
    "F3",
@@ -84,7 +95,7 @@
    "F9",
    "F10",
    "F11",
-   "F13",
+   "F12",
    "F14"
   ],
   "cited_policy": [
@@ -93,7 +104,8 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -105,32 +117,39 @@
      "F7",
      "F8"
     ],
-    "reason": "The only rider-side record is an empty chat [F7]: no rider message before 18:53:40 names any road, area or route, so there is no RD-5 consent to the driver's reroute. The driver's own post-trip statement that he 'took another way' [F8] is a claim, not rider consent (G11). RD-3 is not triggered — no rider-requested stop exists in this segment and no waiting time was billed [F6]. The segment is therefore not excused under RD-3 or RD-5 and is refundable under RD-2."
+    "reason": "The only off-route segment (18:46–18:52, +1.96 km) has no RD-4 exemption: the F11 breakdown sits on the optimal route/ECP and does not cover the substituted stretch, and band 5 speeds (F9, F10) are not congestion [F3][F11][F9][RD-4]. RD-5 also fails: the chat record is empty, so no rider message before the segment agrees to the routing, and the driver's post-trip statement is not consent (G11) [F7][F8][RD-5]. RD-3 is not engaged — no rider-requested stop appears [F7][F3][RD-3]. The segment is unexempted and refundable in its metered extra_km [F3][RD-1][RD-2]."
    }
   ],
   "rejected_claims": [
    {
     "id": "D2",
-    "reason": "RD-4(a) is not satisfied by the 18:27 vehicle breakdown [F11]: the off-route segment did not begin until 18:53 [F3], so the incident does not cover the substituted optimal-route stretch the driver actually left."
+    "reason": "RD-4(a) requires the incident to justify the replaced stretch; the LTA breakdown in F11 sits on the optimal route (ECP, 0 m) and the substituted run in F3 lies up to 752 m away, so the incident does not cover the roadway actually driven [F3][F11][RD-4]."
    },
    {
     "id": "D3",
-    "reason": "Band 4 (30–39 km/h) records on East Coast Parkway and Airport Boulevard [F9][F10] are not the band 1–2 severe congestion of RD-4(b) and, as corroboration only, cannot exempt the segment [RD-4]."
+    "reason": "The traffic record does not corroborate the driver's account: ECP and Airport Boulevard were at speed band 5 (40–49 km/h) [F9][F10], far above the band 1–2 congestion threshold, and no incident is recorded on the substituted stretch [F11][RD-4]."
    },
    {
-    "id": "D4",
-    "reason": "An empty chat [F7] cannot supply rider consent, and the driver's post-trip statement that road conditions justified the reroute [F8] is a claim, not the rider's message before the segment that RD-5 requires (G11)."
+    "id": "D6",
+    "reason": "Rejected as a ground of no refund: with no rider message at all before the segment [F7], RD-5 grants no exemption and the driver's post-trip statement is not consent (G11); the unexempted segment therefore counts [F7][F8][RD-5]."
    },
    {
-    "id": "D5",
-    "reason": "The refund does not fall to $0.00: the sole segment [F3] is not exempt under RD-4 or RD-5, so 2.11 km × $1.41/km = $2.98 is refundable [F6][RD-2]."
+    "id": "D8",
+    "reason": "The non-metered branch of RD-2 and FARE-1 does not apply — this is a RydeTAXI metered trip where distance enters the fare, so the unexempted segment's extra_km is refundable under the metered branch of RD-2 [F6][F3][RD-2]."
    },
    {
-    "id": "D1",
-    "reason": "Accepted only as to quantum mechanics: the 0.29 km residue beyond the 2.11 km segment [F1][F3][F4] is indeed not refundable under RD-2 — but that does not make the segment itself free."
+    "id": "D9",
+    "reason": "No escalation ground: reading F7 (empty chat) and F8 (driver's post-trip explanation) shows no threat, intimidation, harassment or dangerous-driving allegation, so SAFE-1/SAFE-2 are not triggered [F7][F8][SAFE-1][SAFE-2]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "events": 27,
@@ -139,9 +158,9 @@
   "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0005.record.json",
- "latency_s": 20.24,
- "input_tokens": 86956,
- "output_tokens": 6461,
- "requests": 9,
+ "latency_s": 23.19,
+ "input_tokens": 113669,
+ "output_tokens": 6791,
+ "requests": 11,
  "llm_calls": 6
 }

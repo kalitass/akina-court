@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:46:04.850733+00:00",
+ "ts": "2026-10-10T13:22:16.810015+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde review for a false \"I'm Here\" tap + flag_account.",
-  "confidence": 0.94,
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde review for the fake \"I'm Here\" arrival confirmation + flag_account.",
+  "confidence": 0.97,
+  "reasoning": "NS-0 routes this case through the driver-cancelled / rider-no-show branch: cancelled_by = driver [F3], so NS-1 governs whether the $6.61 may stand.\n\nNS-1 requires all three of (i) an arrival confirmation, (ii) the driver inside the pickup radius at the moment of that confirmation, and (iii) more than 3 continuous minutes inside the radius afterwards until cancelling. Here (i) is met — the driver tapped \"I'm Here\" at 08:47:20 [F5] — but (ii) fails: at that tap he was 351 m from the pickup, and his closest approach in the whole trip was 319 m, never within 200 m [F5][F1]. (iii) fails too: he stayed within 200 m for 0 s after the tap, and the timeline's driver_arrived_at is null [F5][F4]. The trace marks both ✗.\n\nBecause NS-1 (ii) is not satisfied, NS-2 applies: the $6.61 cancellation fee is refunded in full [F6][F3]. The amount is the cancellation fee on record, $6.61 [F6][F3]; no kilometre rate applies because this is a no-show fee, not a route-deviation fare.\n\nNS-2 also attaches flag_account where the driver tapped \"I'm Here\" while GPS showed him outside the pickup range — 351 m at the tap and 350 m while stationary 08:47:00–08:51:00 [F5][F1][F2][F4]. The driver's statement that he \"pressed I'm Here and waited more than 3 minutes at the pickup\" [F12] is contradicted by the GPS records, which take precedence, and the chat shows the rider reporting no car at the pickup [F9] while the driver insisted he had \"reached already\" [F8][F10]. That is the abuse-of-arrival-button pattern NS-2 flags. RD-6 is not triggered: the driver's profile shows 0 disputes and 0 upheld, so no prior upheld route dispute exists [F17].\n\nThe SAFE-1 screen: I read all three chat messages [F8][F9][F10], the driver's statement [F12] and the complaint. Nothing threatening, intimidating, harassing or sexual, and no dangerous-driving allegation appears; the messages are a pickup-coordination exchange with no hostile language aimed at the other party. safety_concern = none.\n\nEvidence is sufficient: the GPS trace covers the wait from the arrival confirmation to cancellation with no hole, both the radius test at the tap and the continuous-wait test are measured, and every chat message is timestamped [F5][F11], so no element of the ruling is unsettled.",
   "cited_facts": [
    "F1",
    "F2",
@@ -21,28 +23,39 @@
    "F8",
    "F9",
    "F10",
-   "F12"
+   "F11",
+   "F12",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "FARE-1",
    "NS-7",
    "SAFE-1",
-   "SAFE-2"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde review for a false \"I'm Here\" tap + flag_account.",
-  "confidence": 0.94,
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde review for the fake \"I'm Here\" arrival confirmation + flag_account.",
+  "confidence": 0.97,
+  "reasoning": "NS-0 routes this case through the driver-cancelled / rider-no-show branch: cancelled_by = driver [F3], so NS-1 governs whether the $6.61 may stand.\n\nNS-1 requires all three of (i) an arrival confirmation, (ii) the driver inside the pickup radius at the moment of that confirmation, and (iii) more than 3 continuous minutes inside the radius afterwards until cancelling. Here (i) is met — the driver tapped \"I'm Here\" at 08:47:20 [F5] — but (ii) fails: at that tap he was 351 m from the pickup, and his closest approach in the whole trip was 319 m, never within 200 m [F5][F1]. (iii) fails too: he stayed within 200 m for 0 s after the tap, and the timeline's driver_arrived_at is null [F5][F4]. The trace marks both ✗.\n\nBecause NS-1 (ii) is not satisfied, NS-2 applies: the $6.61 cancellation fee is refunded in full [F6][F3]. The amount is the cancellation fee on record, $6.61 [F6][F3]; no kilometre rate applies because this is a no-show fee, not a route-deviation fare.\n\nNS-2 also attaches flag_account where the driver tapped \"I'm Here\" while GPS showed him outside the pickup range — 351 m at the tap and 350 m while stationary 08:47:00–08:51:00 [F5][F1][F2][F4]. The driver's statement that he \"pressed I'm Here and waited more than 3 minutes at the pickup\" [F12] is contradicted by the GPS records, which take precedence, and the chat shows the rider reporting no car at the pickup [F9] while the driver insisted he had \"reached already\" [F8][F10]. That is the abuse-of-arrival-button pattern NS-2 flags. RD-6 is not triggered: the driver's profile shows 0 disputes and 0 upheld, so no prior upheld route dispute exists [F17].\n\nThe SAFE-1 screen: I read all three chat messages [F8][F9][F10], the driver's statement [F12] and the complaint. Nothing threatening, intimidating, harassing or sexual, and no dangerous-driving allegation appears; the messages are a pickup-coordination exchange with no hostile language aimed at the other party. safety_concern = none.\n\nEvidence is sufficient: the GPS trace covers the wait from the arrival confirmation to cancellation with no hole, both the radius test at the tap and the continuous-wait test are measured, and every chat message is timestamped [F5][F11], so no element of the ruling is unsettled.",
   "cited_facts": [
    "F1",
    "F2",
@@ -53,38 +66,48 @@
    "F8",
    "F9",
    "F10",
-   "F12"
+   "F11",
+   "F12",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "FARE-1",
    "NS-7",
    "SAFE-1",
-   "SAFE-2"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "F12",
-    "reason": "Driver's claim that he pressed \"I'm Here\" and waited more than 3 minutes at the pickup is contradicted by the system records: he tapped 350 m from the pickup point and never entered the 200 m radius, so NS-1 (ii) and (iii) fail and the $6.61 fee is refunded under NS-2 [F5][F1][F2][NS-1][NS-2]."
+    "id": "D1",
+    "reason": "The driver's statement that he pressed \"I'm Here\" and waited more than 3 minutes at the pickup [F12] is contradicted by the GPS records: he was 351 m from the pickup at the tap and never came within 200 m, staying there 0 s [F5][F1][F2]. System records override statements, so NS-1 (ii) and (iii) fail and NS-2 requires refund of the $6.61 fee."
    }
   ],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: F12\n✓ ruling consistent with the policy certificate\nmodel confidence 0.94 (diagnostic only; automation is decided by the certificate)"
+  "dropped rejected_claims not in any live brief: D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.97 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0032.record.json",
- "latency_s": 6.75,
- "input_tokens": 11406,
- "output_tokens": 1361,
+ "latency_s": 7.02,
+ "input_tokens": 12471,
+ "output_tokens": 1373,
  "requests": 2,
  "llm_calls": 2
 }

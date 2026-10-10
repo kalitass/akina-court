@@ -1,0 +1,126 @@
+{
+ "n": 3,
+ "started_at": "2026-10-10T13:33:51.886+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.54.0",
+  "x-stainless-lang": "<redacted>",
+  "x-stainless-package-version": "<redacted>",
+  "x-stainless-os": "<redacted>",
+  "x-stainless-arch": "<redacted>",
+  "x-stainless-runtime": "<redacted>",
+  "x-stainless-runtime-version": "<redacted>",
+  "x-stainless-async": "<redacted>",
+  "x-stainless-retry-count": "<redacted>",
+  "x-stainless-read-timeout": "<redacted>",
+  "content-length": "3401"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0034. Final outcome: refund_full, amount $6.61 as a Ryde voucher. Account flag: no. Recommended action: Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); note the driver's invalid no-show cancellation on the trip record for account-review tracking — no account flag this case..\nReasoning:\nNS-0 routes this case: the driver cancelled and claimed a rider no-show, so it is decided under NS-1/NS-2; the record confirms cancelled_by = driver with $6.61 charged [F4][F7][NS-0].\n\nNS-1 (i) and (ii) hold: the driver tapped \"I'm Here\" at 13:02:35 and was 39 m from the pickup at that moment, matching his chat \"Reached, blue Toyota Prius, waiting at the pickup\" [F6][F1][F9][NS-1]. But NS-1 (iii) fails: after the tap the driver remained within 200 m for only 2 min 55 s (175 s) before cancelling at 13:05:30 — less than the required continuous wait of more than 3 minutes (180 s) [F6][F3][F4][NS-1]. The longer figures (first within 200 m at 13:01:00, cumulative 4 min 30 s inside the radius, 3 min 15 s stationary) measure time before the arrival confirmation, which NS-1 expressly excludes from (iii); only the post-tap interval counts [F2][F3][F4][NS-1]. The driver's chat \"More than 3 min already, I have to cancel\" and his post-trip statement are statements the shorter measured post-tap interval contradicts, and system records override statements [F10][F12][F6][NS-1]. The trace confirms the GPS samples run from confirmation to cancellation with no hole, so (iii) is measurable and settled [F2][F6][NS-1].\n\nWith NS-1 (i)–(iii) not all satisfied, NS-2 applies: the cancellation fee is refunded in full [F4][F7][NS-2]. Amount = the cancellation fee on record = $6.61 [F7][F4][NS-2]; there is no per-km computation because this is a fee, not a distance fare.\n\nflag_account is not triggered: the driver did press \"I'm Here\" while actually within the pickup radius (39 m), so there was no false arrival confirmation under NS-2 [F6][F1][NS-2]. RD-6 is inapplicable — this is a no-show fee dispute, not an established route-deviation refund [F4][F16][F17][RD-6]. The traffic and weather facts are irrelevant to the no-show elements: the driver was already at the pickup and the speed band shows only moderate traffic, which does not excuse the shortfall in wait time [F13][F14][F15][NS-1]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.718,
+ "finished_at": "2026-10-10T13:33:53.604+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Sat, 10 Oct 2026 13:33:52 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "3cf157a2b2a35751519d12d1ca36e474",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 a2c2ae15e1030d0678971e68a40255b6.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P7",
+  "x-amz-cf-id": "x2REkgrInd1XElQhkFok2wifJi041xOXkbtayefai1XZB0HZcw1h2w=="
+ },
+ "response_body": {
+  "id": "f1345c96-7f20-4964-abae-95c3c303a7f4",
+  "object": "chat.completion",
+  "created": 1791639232,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_HOORGMZ7Ynw8fVYxjR1r2842",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"Your cancellation fee is being refunded in full. You were charged $6.61 after the driver marked you as a no-show, but the trip record shows the driver cancelled, and the driver's location history shows he did not keep waiting at the pickup for the required time after confirming he had arrived. Because of that, the fee was not validly charged. You'll get $6.61 back as a Ryde voucher — no action needed on your side. Your account has no flag, and nothing else changes for you.\", \"driver\": \"The rider's cancellation fee of $6.61 is being refunded to the rider as a Ryde voucher, so this amount will not be paid out to you. You did confirm arrival at the pickup, but the location history shows you stayed within the pickup area for less than the required waiting time after that confirmation before you cancelled. That means the no-show fee did not apply. This will be noted on the trip record for account-review tracking; no flag is being placed on your account this time.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1088,
+   "completion_tokens": 253,
+   "total_tokens": 1341,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 832
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "7ceffe3e1a9220edc6b60969e980224622f0d1b255b5b772de011083881d3372"
+}

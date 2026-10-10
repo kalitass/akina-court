@@ -4,35 +4,38 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:20:31.690485+00:00",
+ "ts": "2026-10-10T13:19:56.866134+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Issue a $6.82 Ryde voucher (RD-2 metered mileage refund for the unexempted detour) to the rider; record the driver's RD-1 breach in the trip file but take no account action (route upheld count = 0, RD-6 not met); feed the Ayer Rajah Expressway incident record back to the routing/traffic layer so future quotes reflect the blockage.",
-  "confidence": 0.86,
+  "recommended_action": "Close file: the detour is exempt under RD-4(a) (breakdown on the optimal route) and also consented to under RD-5. Explain to the rider that the extra kilometres are metered RydeTAXI fare; no refund and no account flag.",
+  "confidence": 0.77,
+  "reasoning": "Safety screen: I read the chat (2 timestamped messages, both about route choice), the rider's complaint (a longer-route/fare complaint only) and the driver's post-trip statement. Nothing contains a threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so this is not a SAFE-1/SAFE-2 case.\n\nMerits: the only off-route segment is F3 (10:13-10:24, 7.21 km driven vs 2.29 km optimal, +4.92 km, max 1794 m off route). This is a RydeTAXI trip, so the meter makes extra kilometres part of the fare (policy sec.0) and the case turns on whether the segment is exempt.\n\nRD-4(a): the driver's claim of a breakdown (F11) is corroborated. F15 records a Vehicle breakdown on the Ayer Rajah Expressway (towards Tuas), reported 09:47, located 0 m from the optimal route - inside the 300 m matching radius, reported before the segment began and still active during it. F12 adds an AYER RAJAH EXPRESSWAY speed band 2 (10-19 km/h) covering 09:45-10:13. The cause hits the displaced stretch of the optimal route, so the segment is exempt: no_action on that basis. The chat messages speak of \"traffic building up\" (F8/F9) rather than a breakdown, but the exemption rests on F15, not on the driver's wording.\n\nRD-5 independently: the consent message was sent before the detour began (F9 at 10:10 vs F3 starting 10:13), from the rider's own account, and \"Sure, your call.\" is an express authorisation of the driver's proposed route via Clementi Avenue 2 - a general route authorisation for reaching the destination, which is what the segment is. Considered objection: no record ties the 10:13-10:24 segment to Clementi Avenue 2 (the file gives a start time but no road name for the segment, G13); on that reading the segment would be undetermined and would go to a human. That reading is not needed here because RD-4(a) already settles the segment on a system record.\n\nAmount: with the segment exempt, no extra_km is refundable under RD-2, so the refundable amount is $0 and the ruling is no_action, with no RD-1 breach recorded. All billed items are published RydeTAXI components - distance/time on the meter, waiting $0.13 (0.5 min x $0.26/min; RD-3(c), F5) and platform $1.47 (F7). F4's \"$7.99 excess distance\" (5.67 km x $1.4099/km) is simply the metered cost of the kilometres driven, not a separate overcharge, and nothing unbilled appears (FARE-1).\n\nAccount flag: RD-6 needs a refund > 0 or a recorded RD-1 breach, and F18 shows 0 upheld route disputes - neither condition is met, so no flag.\n\nEvidence status: sufficient. GPS covers the trip and the segment (F1-F3), every chat message is timestamped (F10), the traffic incident feed is present (F12, F15) and the fare breakdown is complete (F4-F7).",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F13",
-   "F14",
+   "F12",
    "F15",
-   "F16"
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
+   "RD-4",
    "RD-5",
-   "RD-4"
+   "RD-6",
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -41,33 +44,33 @@
     "fact_id": "F3",
     "finding": "exempt",
     "basis": [
-     "F7",
      "F8",
      "F9",
-     "F13"
+     "F12",
+     "F15"
     ],
-    "reason": "RD-5: the driver proposed the specific reroute at 10:06 ('go round via Prince George's Park?' [F7]) before the segment started at 10:09 [F3], the rider herself replied 'Sure, go ahead' [F8], and the chat record is complete and fully timestamped [F9] — a prior, specific rider consent covering exactly this segment. Independently, RD-4(a): LTA feed records a Vehicle breakdown on Ayer Rajah Expressway reported 09:47, 0 m from the optimal route [F13], i.e. within the 300 m match radius and still listed inside the trip window, so the deviation had reasonable cause. Band 5 / band 4 speeds [F11][F12] are far above the band 1–2 congestion levels and cannot support exemption on their own (RD-4(b))."
+    "reason": "RD-4(a): a Vehicle breakdown (F15, reported 09:47, 0 m from the optimal route i.e. inside the 300 m radius, before the 10:13 segment start and active through it) plus a speed band 2 (10-19 km/h) on the Ayer Rajah Expressway covering 09:45-10:13 (F12) corroborate a reasonable cause on the displaced stretch of the optimal route; the segment is exempt. Independently under RD-5, the rider's own message sent at 10:10, before the segment started at 10:13, \"Sure, your call.\" (F9), answering the driver's proposal to go round via Clementi Avenue 2 (F8), is prior express consent to the route change (general route authorisation); no record ties the segment to a named road, but the traffic record already settles it."
    }
   ],
   "rejected_claims": [
    {
-    "id": "complaint-1",
-    "reason": "Rider claims she was overcharged because the fare exceeded the app estimate. The vehicle is a RydeTAXI, which bills on the meter, so a longer route raises the fare by construction (RD-2) and the estimate is not a fixed price. Since the sole off-route segment is exempt under RD-5 (prior, specific rider consent) and RD-4(a) (matched breakdown incident on the optimal route), no unexempted segment exists and no mileage refund is payable."
+    "id": "C1",
+    "reason": "Rider's claim that the longer way round was unjustified and the 7.99 difference (F4) should be refunded: the only off-route segment (F3) is exempt under RD-4(a) - the Ayer Rajah Expressway breakdown in F15 sits on the optimal route - and was also consented to in advance (F9 vs the 10:13 start of F3) under RD-5, so RD-2 yields 0 refundable and no RD-1 breach is recorded."
    },
    {
-    "id": "F10",
-    "reason": "Driver's post-trip written statement that 'the whole road was slow' as the reason for the detour is not relied upon: an after-the-fact driver statement is not rider consent (G11), and the severe-congestion limb of RD-4 fails anyway on band 5 / band 4 speeds. The segment is exempt on his 10:06 chat notice plus the matched 09:47 breakdown incident, not on his statement."
-   },
-   {
-    "id": "F4",
-    "reason": "The billed $7.03 excess-distance line is arithmetic, not a chargeable defect: it equals 5.0 km × $1.41/km on a metered taxi and is not a refundable item once the deviation is exempt."
+    "id": "C2",
+    "reason": "Driver's post-trip assertion that the whole road was slow and he took another way is not relied on, and is not treated as proof of verbal consent: RD-5 consent is established from the rider's own timestamped message (F9), not from the driver's statement (F11)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 9.52,
- "input_tokens": 8908,
- "output_tokens": 1895,
- "requests": 1,
+ "latency_s": 13.0,
+ "input_tokens": 23017,
+ "output_tokens": 3193,
+ "requests": 2,
  "llm_calls": 1
 }

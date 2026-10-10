@@ -2,20 +2,21 @@
  "arm": "facts_only",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:45:13+00:00",
+ "started_at": "2026-10-10T13:32:50+00:00",
  "fingerprint": {
-  "case_sha256": "ddeb7f012f4eb7ba",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "ccb902d41402fdce",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:45:13+00:00"
+  "issued_at": "2026-10-10T13:32:50+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.17,
-  "recommended_action": "Refund $4.17 to the rider as a Ryde voucher (NS-7) for the 2.96 km unexcused off-route segment, and record the driver's RD-1 shortest-route breach on his file.",
+  "amount": 4.51,
+  "recommended_action": "Refund $4.51 (metered extra distance on the unexempt off-route segment) to the rider as a Ryde voucher; record the RD-1 breach on the driver's file. No account flag — driver's upheld-route count is 0.",
   "confidence": 0.86,
+  "reasoning": "Safety screen: the only chat is a pickup arrangement (backpack, blue Prius) [F7][F8]; the driver's post-trip statement [F10] is a fare/GPS explanation, and the complaint [F1 complaint text] contains no threat, abuse, sexual remark or dangerous-driving allegation. safety_concern = none; no SAFE-1/SAFE-2 escalation.\n\nService type is RydeTAXI, so fare is meter-based (policy §0): deviation kilometres flow directly into the fare, and RD-2's taxi branch applies (refund only the distance unit of the unexempt segment).\n\nRoute deviation: one off-route segment [F3], 09:24–09:30, 3.78 km driven against 0.71 km optimal, +3.07 km, up to 688 m off the optimal route. No exemption applies:\n- RD-5 consent: the chat [F7][F8][F9] contains only pickup logistics; the rider never agreed to any route change before the segment began (nothing timestamped before 09:24 mentions a route). The driver's \"the GPS rerouted me\" [F10] is a post-trip statement and, in any event, a driver's own account is not rider consent [G11].\n- RD-4 reasonable cause: the only traffic facts are speed bands (band 5, 40–49 km/h) on ECP [F11] and Airport Boulevard [F12] — neither is a `traffic-incident-*` fact, and no incidents are recorded [F13]. Under RD-4(b) speed bands alone do not exempt a segment, so RD-4(c) applies and the segment counts.\n- RD-3: no rider-named stop or destination change exists anywhere in the record.\n\nAmount (RD-2, RydeTAXI): Σ unexempt extra_km × trip per-km rate = 3.20 km × $1.4101/km = $4.5123 ≈ $4.51 [F3][F4]. Distance-fare arithmetic cross-checks: $34.42 ÷ 24.41 km = $1.4101/km [F6]. Consistent with F4, which bills exactly the 3.20 km excess. Non-segment mileage wobble (fare-excess vs segment sums) is not refunded under RD-2, and waiting is $0.00 [F6], so no RD-3(c) item arises. Result: refund_partial of $4.51, not the rider's full \"+3.2 km\"-style claim of the whole extra fare — $4.51 happens to equal the billed excess here, and nothing further is supported.\n\nRD-6 flag check: the driver has 2 disputes in 90 d with 1 upheld, but the upheld count for route is 0 [F16]. Since no prior upheld route dispute exists, RD-6's \"repeated\" condition (route_disputes_upheld_90d ≥ 1) is not met, so no flag_account; only the RD-1 breach is recorded.\n\nEvidence status: sufficient — GPS gives the segment start/end, distances and the optimal-route comparison [F1][F3], the fare record gives the per-km rate [F4][F6], and the chat is complete and fully timestamped [F9]; no evidence_gap.",
   "cited_facts": [
    "F1",
    "F3",
@@ -27,7 +28,8 @@
    "F10",
    "F11",
    "F12",
-   "F14"
+   "F13",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -35,8 +37,7 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "NS-7"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -48,32 +49,38 @@
      "F7",
      "F8",
      "F9",
-     "F10",
-     "F11",
-     "F12"
+     "F10"
     ],
-    "reason": "Off-route segment 09:32–09:38 with 2.96 km extra and no chat record of rider consent before the detour (RD-5; F7, F8 driver's post-trip claim is not consent per G11). No rider-named stop or destination change (RD-3). Traffic facts are only band 4 (30–39 km/h), above the band 1–2 threshold, and no incidents were recorded (RD-4(a),(b); F9–F11). Therefore the segment's extra_km is not exempt and is refunded under RD-2."
+    "reason": "Off-route segment 09:24–09:30: 3.78 km driven vs 0.71 km optimal, +3.07 km. No RD-5 consent — the chat [F7][F8][F9] covers pickup logistics only and the driver's own post-trip 'GPS rerouted' claim [F10] is not rider consent (G11). No RD-4 reasonable cause — only speed-band facts [F11][F12], no traffic incident [F13], and speed bands do not exempt a segment alone. No RD-3 named stop. Unexempt; its extra distance is refunded under RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F8",
-    "reason": "Driver's post-trip assertion that his GPS rerouted him and the fare is correct. It is a statement, not rider consent (RD-5, G11), and 'the GPS rerouted me' is not a documented reasonable cause; no traffic incident or band 1–2 congestion supported it (RD-4)."
+    "id": "F10",
+    "reason": "Driver claims he followed GPS rerouting; this is a post-trip statement, not rider consent, and there is no traffic-incident fact tying the detour to the superseded optimal-route stretch [F13], so RD-4/RD-5 do not exempt the segment."
    },
    {
-    "id": "F9-F10",
-    "reason": "Speed band 4 (30–39 km/h) is above the RD-4(b) band 1–2 ceiling and congestion on other roads cannot exempt a detour; traffic thus does not excuse the segment."
+    "id": "F11",
+    "reason": "ECP speed band 5 is moderate traffic (40–49 km/h), not a DataMall incident; under RD-4(b) a speed band alone cannot exempt a segment."
+   },
+   {
+    "id": "F12",
+    "reason": "Airport Boulevard speed band 5 likewise is not a traffic incident and covers no incident on the replaced optimal route; no RD-4(a) exemption."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 5.42,
+ "latency_s": 6.38,
  "model_calls": 1,
  "provider_trace_ids": [
-  "621ed5c00ae4ee1a062a38cfd54685aa"
+  "0e23589f084a24e1e89d546c2d12d463"
  ],
  "provider_response_ids": [
-  "cc6b39aa-7391-4f0c-be00-912d49f60230"
+  "eaf1269e-c51a-4e54-b696-9d89a410fc66"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -86,15 +93,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 8793,
-   "completion_tokens": 1168,
-   "total_tokens": 9961,
+   "prompt_tokens": 9885,
+   "completion_tokens": 1441,
+   "total_tokens": 11326,
    "prompt_tokens_details": {
-    "cached_tokens": 8576
+    "cached_tokens": 9728
    },
-   "prompt_cache_hit_tokens": 8576,
-   "prompt_cache_miss_tokens": 217
+   "prompt_cache_hit_tokens": 9728,
+   "prompt_cache_miss_tokens": 157
   }
  ],
- "finished_at": "2026-10-09T19:45:18+00:00"
+ "finished_at": "2026-10-10T13:32:56+00:00"
 }

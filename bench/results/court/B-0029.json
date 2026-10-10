@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:50:35.471655+00:00",
+ "ts": "2026-10-10T13:26:55.431448+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag against the driver on this record — the prior upheld no-show disputes stay on file for any future review.",
-  "confidence": 0.95,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) within the dispute window.",
+  "confidence": 0.93,
+  "reasoning": "The cancellation was made by the rider [F2], so the fee can only stand through NS-0's rider branch, which routes an on-demand booking to NS-4 [NS-0]. NS-4 makes a rider cancellation free only if it happens within 3 minutes of matching, and chargeable only after that; here acceptance was 18:23:00 and cancellation 18:25:30, i.e. 2 min 30 s (150 s) after matching [F2], so no cancellation fee was payable and the $6.61 on the fare record [F5] must be refunded in full [NS-4][NS-7].\n\nThe no-show branch does not rescue the fee either. The driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and driver_arrived_at is null [F3], so NS-1(i) is not satisfied; the driver's closest approach to the pickup was 1816 m and he never came within 200 m [F1], so the GPS-at-pickup condition NS-1(ii) fails; and with no arrival there was no continuous 3-minute wait after a tap, so NS-1(iii) fails too [NS-1]. Any one failure of NS-1 sends the fee to a full refund under NS-2 [NS-2]. The driver's chat at 18:24 saying \"5 min more, traffic is slow\" [F8] and his post-trip statement \"I was on my way when the rider cancelled\" [F10] are consistent with him being nowhere near; in any event a statement cannot outweigh a GPS record, which places him 1816 m away at the moment of cancellation [F1][F3][F4].\n\nThe congestion material does not create an exemption: there were no recorded traffic incidents near the route during the trip window [F12], and the only speed record is band 4 (30–39 km/h) on Jurong East Avenue 1, which is neither an incident nor a severe-congestion band corroborating one [F11] (weather was fair, 0.0 mm [F13]). In any case NS-4 governs a rider cancellation inside the 3-minute window regardless of driver lateness, and Ryde publishes no driver-late-vs-ETA waiver rule [NS-4][NS-7].\n\nThe amount is fixed by the fare record: the cancellation fee charged is $6.61 with no surge (1.0×), so the refund is $6.61 [F5][F6][NS-2]. No account flag arises: the driver never pressed \"I'm Here\" at a location outside the pickup radius, because he never pressed it at all [F4], and the profiles on both sides show 0 disputes and 0 upheld in 90 days [F14][F15], so NS-2's flag condition and RD-6 are not triggered [NS-2][NS-7].\n\nSafety screen: I read every message in the record — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], and the driver's written statement [F10] — and the complaint as filed. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the exchange is a routine pickup-timing query. No RD-3/RD-5 segment findings arise because this is not a route-deviation case.",
   "cited_facts": [
    "F1",
    "F2",
@@ -32,36 +34,49 @@
    "NS-1",
    "NS-2",
    "NS-4",
-   "NS-7",
-   "RD-4",
-   "RD-6",
-   "SAFE-1",
-   "SAFE-2"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C7",
-    "reason": "The requested adjunct flag has no basis: NS-2 requires that the driver pressed \"I'm Here\" while GPS showed him away from the pickup (tl-here has a value and within_200m is false), and F4 shows no such tap existed, so the flag condition fails. F15 (2 upheld no-show disputes in 90 d) is profile history only and cannot ground an action for this case; there is no route-deviation finding to trigger RD-6."
+    "id": "C2",
+    "reason": "Not rejected as an outcome, but its legal route is wrong: the driver's non-arrival [F3][F4] goes to the NS-1 no-show branch, which fails; the charge itself is governed by NS-4 because the cancellation was rider-initiated within 3 minutes [F2] — NS-1 is not the clause that decides the fee here."
    },
    {
-    "id": "D5",
-    "reason": "Not rejected in outcome but the RD-4 framing is inapplicable as a defence for the driver: F11 shows only band 3 (20–29 km/h) with no incident [F12] and fair weather [F13], and RD-4 excuses routing rather than the NS-1 arrival failure shown by F1/F3/F4. The point is noted only to show traffic does not assist the driver."
+    "id": "C3",
+    "reason": "The GPS point is accurate but it is applied to the wrong test: the 200 m radius under NS-1(ii) is only an element of a driver-claimed no-show cancellation, which the driver never made; the decisive provision is NS-4 [F1][F2]."
+   },
+   {
+    "id": "C5",
+    "reason": "Correct on the facts (no incidents [F12], band 4 only [F11]) but immaterial to liability: the rider-cancellation rule in NS-4 does not turn on congestion or on RD-4-style exemptions, so the traffic findings cannot carry or defeat the refund claim [NS-4]."
    },
    {
     "id": "D6",
-    "reason": "Accepted only insofar as no flag is warranted; the assertion that the driver 'did press or fire a false I'm Here' is contradicted by F4 (driver_pressed_here_at is null), and NS-2's flag trigger therefore fails on the record."
+    "reason": "The outcome is right but the cited clause is not: NS-3 concerns a driver cancelling without a valid reason, which did not happen here — the cancellation was by the rider [F2], so NS-0 routes the case to NS-4, not NS-3."
+   },
+   {
+    "id": "D7",
+    "reason": "Its non-flag request is accepted, but the records it relies on (profile history [F15], complete timestamped chat [F9]) are confirmatory only; the ground for refusing a flag against the driver is that he never pressed the arrival button at all [F4], so NS-2's wrong-location flag condition is unmet [NS-2]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8",
+   "F10"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag against the driver on this record — the prior upheld no-show disputes stay on file for any future review.",
-  "confidence": 0.95,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) within the dispute window.",
+  "confidence": 0.93,
+  "reasoning": "The cancellation was made by the rider [F2], so the fee can only stand through NS-0's rider branch, which routes an on-demand booking to NS-4 [NS-0]. NS-4 makes a rider cancellation free only if it happens within 3 minutes of matching, and chargeable only after that; here acceptance was 18:23:00 and cancellation 18:25:30, i.e. 2 min 30 s (150 s) after matching [F2], so no cancellation fee was payable and the $6.61 on the fare record [F5] must be refunded in full [NS-4][NS-7].\n\nThe no-show branch does not rescue the fee either. The driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and driver_arrived_at is null [F3], so NS-1(i) is not satisfied; the driver's closest approach to the pickup was 1816 m and he never came within 200 m [F1], so the GPS-at-pickup condition NS-1(ii) fails; and with no arrival there was no continuous 3-minute wait after a tap, so NS-1(iii) fails too [NS-1]. Any one failure of NS-1 sends the fee to a full refund under NS-2 [NS-2]. The driver's chat at 18:24 saying \"5 min more, traffic is slow\" [F8] and his post-trip statement \"I was on my way when the rider cancelled\" [F10] are consistent with him being nowhere near; in any event a statement cannot outweigh a GPS record, which places him 1816 m away at the moment of cancellation [F1][F3][F4].\n\nThe congestion material does not create an exemption: there were no recorded traffic incidents near the route during the trip window [F12], and the only speed record is band 4 (30–39 km/h) on Jurong East Avenue 1, which is neither an incident nor a severe-congestion band corroborating one [F11] (weather was fair, 0.0 mm [F13]). In any case NS-4 governs a rider cancellation inside the 3-minute window regardless of driver lateness, and Ryde publishes no driver-late-vs-ETA waiver rule [NS-4][NS-7].\n\nThe amount is fixed by the fare record: the cancellation fee charged is $6.61 with no surge (1.0×), so the refund is $6.61 [F5][F6][NS-2]. No account flag arises: the driver never pressed \"I'm Here\" at a location outside the pickup radius, because he never pressed it at all [F4], and the profiles on both sides show 0 disputes and 0 upheld in 90 days [F14][F15], so NS-2's flag condition and RD-6 are not triggered [NS-2][NS-7].\n\nSafety screen: I read every message in the record — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], and the driver's written statement [F10] — and the complaint as filed. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the exchange is a routine pickup-timing query. No RD-3/RD-5 segment findings arise because this is not a route-deviation case.",
   "cited_facts": [
    "F1",
    "F2",
@@ -83,41 +98,53 @@
    "NS-1",
    "NS-2",
    "NS-4",
-   "NS-7",
-   "RD-4",
-   "RD-6",
-   "SAFE-1",
-   "SAFE-2"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C7",
-    "reason": "The requested adjunct flag has no basis: NS-2 requires that the driver pressed \"I'm Here\" while GPS showed him away from the pickup (tl-here has a value and within_200m is false), and F4 shows no such tap existed, so the flag condition fails. F15 (2 upheld no-show disputes in 90 d) is profile history only and cannot ground an action for this case; there is no route-deviation finding to trigger RD-6."
+    "id": "C2",
+    "reason": "Not rejected as an outcome, but its legal route is wrong: the driver's non-arrival [F3][F4] goes to the NS-1 no-show branch, which fails; the charge itself is governed by NS-4 because the cancellation was rider-initiated within 3 minutes [F2] — NS-1 is not the clause that decides the fee here."
    },
    {
-    "id": "D5",
-    "reason": "Not rejected in outcome but the RD-4 framing is inapplicable as a defence for the driver: F11 shows only band 3 (20–29 km/h) with no incident [F12] and fair weather [F13], and RD-4 excuses routing rather than the NS-1 arrival failure shown by F1/F3/F4. The point is noted only to show traffic does not assist the driver."
+    "id": "C3",
+    "reason": "The GPS point is accurate but it is applied to the wrong test: the 200 m radius under NS-1(ii) is only an element of a driver-claimed no-show cancellation, which the driver never made; the decisive provision is NS-4 [F1][F2]."
+   },
+   {
+    "id": "C5",
+    "reason": "Correct on the facts (no incidents [F12], band 4 only [F11]) but immaterial to liability: the rider-cancellation rule in NS-4 does not turn on congestion or on RD-4-style exemptions, so the traffic findings cannot carry or defeat the refund claim [NS-4]."
    },
    {
     "id": "D6",
-    "reason": "Accepted only insofar as no flag is warranted; the assertion that the driver 'did press or fire a false I'm Here' is contradicted by F4 (driver_pressed_here_at is null), and NS-2's flag trigger therefore fails on the record."
+    "reason": "The outcome is right but the cited clause is not: NS-3 concerns a driver cancelling without a valid reason, which did not happen here — the cancellation was by the rider [F2], so NS-0 routes the case to NS-4, not NS-3."
+   },
+   {
+    "id": "D7",
+    "reason": "Its non-flag request is accepted, but the records it relies on (profile history [F15], complete timestamped chat [F9]) are confirmatory only; the ground for refusing a flag against the driver is that he never pressed the arrival button at all [F4], so NS-2's wrong-location flag condition is unmet [NS-2]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8",
+   "F10"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
- "events": 26,
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0029.record.json",
- "latency_s": 20.46,
- "input_tokens": 93398,
- "output_tokens": 6023,
+ "latency_s": 18.78,
+ "input_tokens": 99020,
+ "output_tokens": 5595,
  "requests": 10,
  "llm_calls": 6
 }
