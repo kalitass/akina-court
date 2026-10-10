@@ -117,20 +117,3 @@ def judge_prompt(dispute: dict, trip_summary: str, table: FactTable, briefs: lis
                  "the ? elements are yours to decide (and may be undetermined), the amount follows the formula in the trace, "
                  "and escalate is always open to you when the record does not let you decide.")
     return "\n".join(parts)
-
-
-NOTICE_SYSTEM = """You draft two short notices for review: one to the rider, one to the driver.
-Each ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,
-the recommended amount, and what it means for the recipient. Never claim a voucher, refund, or account change
-has already been executed by this prototype. Mention account review only if the structured flag_account field is true. Do not cite
-ids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —
-do not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {"rider": "...", "driver": "..."}"""
-
-
-def build_notice_writer() -> Agent[None, dict]:
-    from pydantic import BaseModel
-
-    class Notices(BaseModel):
-        rider: str
-        driver: str
-    return Agent(make_model("judge"), output_type=Notices, name="notices", instructions=NOTICE_SYSTEM, retries=2)

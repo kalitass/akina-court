@@ -99,11 +99,11 @@ Machine-readable summary with denominators and caveats: `web/submission.json`.
 The RydeResolve sample (`data/samples/DISP-002.md`, a no-show charge dispute) imports as is and runs through the same court:
 
 ```bash
-.venv/bin/python -m core.ingest data/samples/DISP-002.md     # official JSON → data/cases/DISP-002.json (OneMap route fetched or cached)
+.venv/bin/python -m core.ingest data/samples/DISP-002.md     # organisers-shared synthetic sample → data/cases/DISP-002.json (OneMap route fetched or cached)
 .venv/bin/python scripts/run_case.py DISP-002                 # full court; expected ruling in data/expected/DISP-002.json
 ```
 
-Result: cancellation charge upheld (`no_action`), as the sample's own "Expected ruling" states. The dataset's own policy block (5-minute free wait, 8-minute no-show threshold, $5.00 fee) is imported as `policy_params` and the policy check reads it where the Ryde clauses say 3 minutes / $6.61, saying so in the trace. The platform's auto-arrival event is recorded as `arrival_confirmed_by = platform_auto` (radius 10 m) and satisfies the arrival element alongside a driver's "I'm Here" tap; the platform wait timer and the logged call attempts become facts of their own. What the sample does not carry (traffic, weather, fare lines) stays empty and is listed in the case's provenance. Replay: `/replay.html?case=DISP-002&phase=court`.
+The archived run recorded `no_action`, matching the sample's "Expected ruling", but its notices and history facts are outdated; the public replay is paused until a complete rerun is verified. The sample's 5-minute free wait and $5.00 fee are read by the policy check where the Ryde clauses say 3 minutes / $6.61. Its separate `no_show_threshold_min = 8` field is stored but not used in the current rule; its meaning needs organiser clarification before changing the charging logic. The platform's auto-arrival event is recorded as `arrival_confirmed_by = platform_auto` (radius 10 m) and satisfies the arrival element alongside a driver's "I'm Here" tap; the platform wait timer and logged call attempts become facts of their own. Lifetime profile totals have an unknown time window and cannot trigger 90-day signals. What the sample does not carry (traffic, weather, fare lines) stays empty and is listed in the case's provenance. Current facts: `/facts.html?case=DISP-002`.
 
 ## Run it
 
@@ -145,7 +145,7 @@ No key needed to browse: `runs/` ships the six demo rulings and eight pre-record
 |---|---|
 | `core/facts/tools.py` | case → numbered fact table (pure code) |
 | `core/policy_engine.py` | clauses as predicates → allowed outcomes, amount formula, open questions |
-| `core/agents/` | Rider / Driver Advocate (tools, append-only rebuttal), Judge (no tools), notice writer |
+| `core/agents/` | Rider / Driver Advocate (tools, append-only rebuttal), Judge (no tools); notices are generated from verified ruling fields in code |
 | `core/verify.py`, `core/orchestrate.py` | citation checks, judge self-correction, pre-execution policy check, state machine, events, fault injection |
 | `core/counterfactual.py`, `core/receipt.py` | case transforms for audits; reproducibility fingerprints |
 | `core/stretch/` | pluggable: precedent store, bad-faith signals, SLA routing, human feedback (env flags) |
