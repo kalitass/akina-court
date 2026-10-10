@@ -15,7 +15,7 @@ const AUTORUN = Q.get('autorun') === '1';
 const CF = Q.get('cf') || null;
 const SHOW = Q.get('mode') !== 'expert';   // judge view (plain language) unless ?mode=expert
 const TITLES = {   // judge-facing names; the C-000n id stays in Expert view and the URL
-  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Two dollars over the estimate',
+  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Five dollars over the estimate',
   'C-0004': '"Arrived" 613 m away', 'C-0005': 'Two minutes away, $6.61 fee', 'C-0006': '"Sit down or I lock the doors"', 'DISP-002': "Organisers' sample: the Tiong Bahru no-show" };
 const caseTitle = id => TITLES[id] || (id.startsWith('B-') ? `Benchmark case ${id.slice(2).replace(/^0+/, '')}` : id);
 const $ = id => document.getElementById(id);
