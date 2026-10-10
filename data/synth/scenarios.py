@@ -946,6 +946,8 @@ def build_route(spec, rates, rp, idx, rng, grng):
         gps = [p for p in gps if datetime.fromisoformat(p["ts"]) <= cut]
         case["gps"] = gps
         found = measure_detours(slice_gps(gps, iso(pickup_at), iso(dropoff_at)), opt)   # the manifest shows the segments the fact tool will see
+        for f in found:
+            f.pop("_raw", None)              # an unrounded float differs in its last digit across machines; the manifest keeps the rounded figures
     meta = {"segments": found, "stretch_roads": stretch_roads, "detour_roads": detour_road, "exempt_by_scenario": exempt_by_scenario,
             "finding_by_scenario": finding_by_scenario, "extra_km": round(extra_km, 2), "stop_place": stop_place, "plan": plan_of(loops)}
     return case, meta
