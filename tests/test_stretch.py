@@ -60,7 +60,7 @@ def all_off(monkeypatch):
 
 
 def _ruling(action: str, amount=None, conf=0.95, rec_action="x", escalate=False) -> Ruling:
-    return Ruling(ruling=action, amount=amount, recommended_action=rec_action, confidence=conf, reasoning="t", flag_account="flag_account" in rec_action,
+    return Ruling(ruling=action, amount=amount, recommended_action=rec_action, confidence=conf, reasoning="t", safety_concern="none", evidence_status="sufficient", flag_account="flag_account" in rec_action,
                   cited_facts=["F1"], cited_policy=["RD-1"], escalate=escalate,
                   escalation_reason="r" if escalate else None)
 

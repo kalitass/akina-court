@@ -85,11 +85,24 @@ def _escalate(r: Ruling, reason: str) -> Ruling:
     return r.model_copy(update={"ruling": "escalate", "amount": None, "escalate": True, "escalation_reason": reason})
 
 
+def all_cited(ruling: Ruling) -> tuple[set[str], set[str]]:
+    """Every fact id and clause id the ruling relies on, wherever it wrote them: the top-level lists, the reasoning,
+    each segment finding's basis and reason, the safety basis, the rejected claims and the evidence gap."""
+    facts = set(ruling.cited_facts) | set(ruling.safety_basis)
+    clauses = set(ruling.cited_policy)
+    texts = [ruling.reasoning, ruling.evidence_gap or ""] + [sf.reason for sf in ruling.segment_findings] + [rc.reason for rc in ruling.rejected_claims]
+    for t in texts:
+        f, c = cited_in(t)
+        facts |= f; clauses |= c
+    for sf in ruling.segment_findings:
+        facts |= set(sf.basis)
+    return facts, clauses
+
+
 def citation_problems(ruling: Ruling, table: FactTable, clause_ids: set[str]) -> list[str]:
-    """Human-readable list of non-existent fact / clause ids the ruling relies on (empty = clean).
+    """Human-readable list of non-existent fact / clause ids the ruling relies on anywhere (empty = clean).
     The orchestrator feeds this back to the judge for one self-correction before escalating."""
-    cited_f = set(ruling.cited_facts) | cited_in(ruling.reasoning)[0]
-    cited_p = set(ruling.cited_policy) | cited_in(ruling.reasoning)[1]
+    cited_f, cited_p = all_cited(ruling)
     out = []
     bad_f = sorted(cited_f - table.ids())
     bad_p = sorted(cited_p - clause_ids)
@@ -106,11 +119,15 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
                   briefs: tuple[CaseBrief, ...] = (), certificate=None) -> tuple[Ruling, list[str]]:
     lines: list[str] = []
     ids = table.ids()
+    if table.dispute_type != "route_deviation" and ruling.segment_findings:
+        lines.append(f"dropped {len(ruling.segment_findings)} segment finding(s): not a route case")
+        ruling = ruling.model_copy(update={"segment_findings": []})
     if ruling.ruling in ("no_action", "escalate") and ruling.amount is not None:
         ruling = ruling.model_copy(update={"amount": None})
+    elif ruling.amount is not None:
+        ruling = ruling.model_copy(update={"amount": round(ruling.amount + 1e-9, 2)})   # money is kept to the cent
     vals = _fact_values(table)
-    cited_f = set(ruling.cited_facts) | cited_in(ruling.reasoning)[0]
-    cited_p = set(ruling.cited_policy) | cited_in(ruling.reasoning)[1]
+    cited_f, cited_p = all_cited(ruling)
 
     # ---- hard rules ----
     bad_f = sorted(cited_f - ids)

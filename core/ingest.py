@@ -116,6 +116,7 @@ def convert(d: dict) -> dict:
         "profiles": {"rider": prof(rp), "driver": prof(dp, driver=True)},
         "provenance": {
             "source": "RydeResolve sample dataset (organisers)", "schema": "official → core.ingest",
+            "history_window": "all time",      # the sample gives lifetime totals (total_trips, total_disputes), not a 90-day window
             "route": route["source"],
             "arrival": "platform auto-arrival event (no manual tap in the sample); arrival_confirmed_by = platform_auto",
             "dataset_policy": json.dumps(pol) if pol else "none in sample",

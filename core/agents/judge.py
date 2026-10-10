@@ -23,7 +23,8 @@ RULES
   cite only the numbered policy clauses (RD-, NS-, FARE-, SAFE-).
 - For every claim of the losing side, give a rejected_claims entry with the reason (fact + clause).
 - amount (SGD) must be computed from numbers in a gps or fare fact; write the arithmetic in reasoning
-  (e.g. "2.83 km × $1.41/km = $3.99 [F5][F6][RD-2]"). Round to cents.
+  (e.g. "$13.14 ÷ 9.32 km = $1.4099/km; 2.83 km × $1.4099/km = $3.99 [F5][F9][RD-2]" — the rate is the fare record's
+  distance fare ÷ distance km, as the trace states it; never a rounded rate). Round to cents.
 - ruling must be one of: {ACTIONS}. recommended_action is a short imperative for Ryde ops; append
   "+ flag_account" when a clause (RD-6, NS-2) calls for it, AND set the structured field `flag_account: true` — only the
   structured field creates an account action; free text never does. Never put flag_account in `ruling`.
@@ -31,7 +32,8 @@ RULES
   re-check your citations and may adjust it.
 - SAFETY SCREEN, every case: read every chat message, the driver's statement and the complaint for threats,
   intimidation, harassment, sexual remarks or dangerous-driving allegations (SAFE-1, SAFE-2). Record your reading in
-  safety_concern: "none", "suspected" or "confirmed", with the fact ids in safety_basis. No keyword decides this: a
+  safety_concern: "none" (read and found nothing), "suspected" or "confirmed", with the fact ids in safety_basis — the
+  field is required; "none" is a finding, never a default ("unscreened" is written by code when no judge ran; never use it). No keyword decides this: a
   hint word in a fact value only marks a line for you to read in context ("I'll find you at the lobby" is a pickup
   arrangement, not a threat; "you will regret it" needs no keyword to be one). Ryde's code of conduct bars "abuse of
   any kind": hostile or abusive language aimed at the other party (telling them to shut up, insults, intimidation) is
@@ -40,36 +42,45 @@ RULES
   If safety_concern is suspected or confirmed, or the dispute type is safety, do NOT rule: ruling = "escalate",
   escalate = true, reasoning = a factual summary for the human reviewer (what happened, when, what is disputed, which
   facts to check), citing ids.
-- EVIDENCE: when the trace says the evidence is insufficient, or you cannot settle a question from the record, rule
-  escalate and say what is missing in evidence_gap. Never treat missing evidence as if it favoured either side.
+- EVIDENCE, every case: set evidence_status. "sufficient" = the record settles every element your ruling needs
+  (evidence_gap must then be null — do not write "no gap" in it). "insufficient" = a record a clause needs is missing
+  (the trace says so, or you find it: no GPS, a hole, an untimed message) — name it in evidence_gap and rule escalate.
+  "unknown" = you cannot tell whether the record settles it — rule escalate. Only "sufficient" can carry a ruling.
+  Never treat missing evidence as if it favoured either side.
 - cited_facts / cited_policy: list only the ids you actually applied — every clause in cited_policy must be one whose
   conditions you checked against a fact in reasoning. Do not pad the list with clauses you merely mention.
 - rejected_claims[].id must be the exact claim id from a brief (C1, D3 ...), nothing else.
 - amount must be null for no_action and escalate.
+- Every id you write anywhere — basis and reason of each segment finding, safety_basis, rejected_claims — is checked
+  against the materials like the top-level lists; an id that does not exist voids the ruling.
 - READING THE CHAT is your job, not code's. Whether a message agrees, asks, refuses or threatens is a reading of its
   words in context: "That works for me" agrees; "I am not okay with this detour" refuses; "ok if I go via X?" asks.
   Paraphrase, Singlish and negation all count. Cite the message fact id you read.
 - Rider-named stops (RD-3): when the rider names the place and the car stops there, the segment driven to reach it is not a detour —
   its extra km are exempt in full (finding = exempt). Do not split a segment into "the stop" and "the way there".
-- Consent scope (RD-5): consent covers the route the driver actually NAMED before leaving the optimal route ("go round by X" covers
-  the X corridor); it does not stretch to a different, unnamed excursion. RD-3(b) is about rider-requested STOPS, not about
-  driver-proposed routes — do not use it to deny a driver-proposed, rider-agreed route. Consent must be the RIDER's
-  message sent BEFORE the segment started; a driver's statement that the rider agreed verbally is a claim, not consent
-  (G11) — such a segment counts. A driver's message after the detour began, or a rider message with no timestamp
-  when timing matters, cannot establish consent: find undetermined if the record cannot settle it.
+- Consent (RD-5) must be the RIDER's message sent BEFORE the segment started; a driver's statement that the rider
+  agreed verbally is a claim, not consent (G11) — such a segment counts. A driver's message after the detour began, or
+  a rider message with no timestamp when timing matters, cannot establish consent. RD-3(b) is about rider-requested
+  STOPS, not driver-proposed routes — do not use it to deny a driver-proposed, rider-agreed route.
+- Consent SCOPE (RD-5) is a reading of the words, in three kinds: (1) a GENERAL route choice ("take whichever way is
+  faster", "up to you") covers a route chosen to get there, not an errand of the driver's own — a stop away from the
+  route or a loop that reaches nothing still counts; (2) a SPECIFIC named road or area ("ok, go via X") covers driving
+  on X only, and the record must tie the segment to X — a stop on X, a message placing the car on X, a road name in a
+  fact. Timing alone does not: the fact table carries no road names for the driven path, so if nothing ties them the
+  finding is undetermined (G13), not exempt. And if the record places the segment somewhere ELSE — a stop away from X,
+  the driver's own statement naming another road or place, a rider-requested stop the driver chose the location of —
+  the agreement to X does not cover it: counts (RD-5: agreeing to "the PIE" never includes a trip to a far shop);
+  (3) scope you cannot read: undetermined. A complete chat record with no rider agreement before the segment: counts.
 - segment_findings: for route_deviation cases, one entry per off-route segment fact (the gps facts that say
   "Off-route segment ..."): fact_id; finding = "exempt" (RD-3/RD-4/RD-5 excuses it), "counts" (refundable under RD-2)
   or "undetermined" (the record does not settle it — the case then goes to a person); basis = the chat / statement
   fact ids your finding rests on (code checks they exist, who wrote them and that they came before the segment);
-  reason with clause ids. Empty for other types. Any undetermined finding → ruling = "escalate".
-- "undetermined" is for one thing only: a message whose meaning or timing the record cannot settle. It is never for
-  elements the trace marks ✓ or ✗ (an RD-4 incident screen, a measured segment, a tap) — those are settled by code, and
-  you do not need road geometry and will never have it: when the driver named a road / area before leaving the route
-  and the rider agreed before the segment started, the next off-route segment IS that route (the exchange ties itself
-  to the segment by timing) and is exempt, unless the record shows a different destination — a stop far from that road,
-  or a second detour after rejoining. Extra kilometres, the distance from the optimal route, or the absence of a map
-  are not such evidence: a named alternative road is off the optimal route by definition. When the chat record is
-  complete and holds no rider agreement, find counts.
+  reason with clause ids. Empty for other types.
+- "undetermined" is for what the record cannot settle: a message's meaning or timing, or whether an agreed route is
+  the one driven. It is never for elements the trace marks ✓ or ✗ (an RD-4 incident screen, a measured segment, an
+  arrival confirmation) — those are settled by code. The trace tells you whether a finding changes the outcome: when
+  it changes the amount or the flag, an undetermined finding means escalate; when it changes neither (fixed fare, no
+  prior), you may leave it undetermined and still rule.
 
 OUTPUT: a Ruling. English.
 
@@ -110,7 +121,8 @@ def judge_prompt(dispute: dict, trip_summary: str, table: FactTable, briefs: lis
         parts.extend("  " + l for l in certificate_lines)
         parts.append("")
     if judge_items:
-        parts.append("QUESTIONS YOU MUST DECIDE (interpretive elements the code cannot decide; answer each in segment_findings):")
+        parts.append("QUESTIONS YOU MUST DECIDE (interpretive elements the code cannot decide; answer each where it says: "
+                     "RD-3 / RD-5 items in segment_findings, the SAFE-1 screen in safety_concern, an EVIDENCE item in evidence_status):")
         parts.extend("  - " + q for q in judge_items)
         parts.append("")
     parts.append("Issue your Ruling. Your outcome and amount must be consistent with the trace: ✓/✗ elements are settled; "

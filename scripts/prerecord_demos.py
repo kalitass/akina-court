@@ -12,7 +12,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
+
+# The benchmark and the stored demo runs are the bare court: no precedent store feeding earlier rulings into later
+# prompts, no SLA queue or bad-faith signals writing extra facts or repo files. Whatever the shell exports is ignored.
+for _k in [k for k in os.environ if k.startswith("STRETCH_")]:
+    os.environ.pop(_k)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

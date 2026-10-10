@@ -43,7 +43,23 @@ def load(runs_dir: Path = RUNS_DIR) -> list[Override]:
 
 
 def load_record(case_id: str, runs_dir: Path = RUNS_DIR) -> CaseRecord:
-    return CaseRecord.model_validate_json((runs_dir / f"{case_id}.json").read_text(encoding="utf-8"))
+    return CaseRecord.load(runs_dir / f"{case_id}.json")
+
+
+def ruling_from_override(body: dict, previous: Optional[Ruling] = None) -> Ruling:
+    """A reviewer's decision as a Ruling. The reviewer may state safety_concern / evidence_status; otherwise a ruled
+    outcome means the person found the evidence sufficient, an escalate keeps the status unknown, and the safety
+    reading carries over from the court's ruling (a person who disagrees states it in the body)."""
+    action = body["ruling"]
+    esc = action == "escalate"
+    prev_safety = previous.safety_concern if previous is not None else "none"
+    safety = body.get("safety_concern") or ("none" if prev_safety == "unscreened" and not esc else prev_safety)
+    status = body.get("evidence_status") or ("unknown" if esc else "sufficient")
+    return Ruling(ruling=action, amount=None if esc or action == "no_action" else body.get("amount"),
+                  recommended_action=body.get("recommended_action", "per reviewer"), confidence=1.0, reasoning=body.get("reasoning", ""),
+                  cited_facts=list(body.get("cited_facts", [])), cited_policy=list(body.get("cited_policy", [])), escalate=esc,
+                  safety_concern=safety, safety_basis=list(body.get("safety_basis", [])), evidence_status=status,
+                  evidence_gap=body.get("evidence_gap") if status != "sufficient" else None)
 
 
 def record_override(case_id: str, human_ruling: Ruling, reviewer: str, note: str = "",
@@ -73,7 +89,7 @@ def stats(runs_dir: Path = RUNS_DIR) -> dict[str, dict]:
             totals.setdefault(e.dispute_type, set()).add(e.case_id)
     else:
         for p in runs_dir.glob("C-*.json"):
-            rec = CaseRecord.model_validate_json(p.read_text(encoding="utf-8"))
+            rec = CaseRecord.load(p)
             totals.setdefault(rec.facts.dispute_type, set()).add(rec.case_id)
     latest: dict[str, Override] = {}
     for o in load(runs_dir):                     # list is chronological; the last entry per case wins

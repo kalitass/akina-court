@@ -23,7 +23,7 @@
 **RD-1** 事实表中每一个"off-route segment"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是"在无合理事由时走最短最直接路线"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。
 <sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)："in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 "ensure that the shortest and most direct route is taken"）、C4（CDG Zig "the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act"）、D1（NYC TLC §80-16(a)(2) "shortest reasonable route"）；Ryde 自身只规定司机可按 GPS 选"最快或最高效路线"（A7），无阈值（见空缺 G1）。</sub>
 
-**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差，≤ 0.25 km 的地图匹配残差）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。
+**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差：路线走廊 200 m 内的来回、地图匹配抖动等未归入任何段的里程）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。
 <sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对"collected a fare … above the metered fare"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde："Drivers who overcharge riders … may face account suspension"）、A11（"Overcharging of additional fees" 被算法标记）、D3（Uber 对"route deviates from the predicted route"导致的多收"happy to review these cases if you feel you were overcharged"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>
 
 **RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内"编辑目的地 / 加停靠点"请求且司机接受）：
@@ -38,7 +38,7 @@
 (c) 无 (a) → 该段按 RD-2 处理。
 <sub>来源：派生自 B1 r.23(1)(c) 的"reasonable cause"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9："SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19"；Traffic Incidents 数据集）；Ryde 只允许司机"按 GPS 选最快或最高效路线"（A7）、未规定举证方式。</sub>
 
-**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定"之前"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意"走 PIE"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中"乘客口头同意了"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时，法官判 `undetermined`，案件转人工（G12）。
+**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定"之前"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意"走 PIE"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中"乘客口头同意了"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定。同意的范围分三种：**一般路线授权**（"哪条快走哪条"）覆盖为到达目的地而选的路线，不覆盖司机自己的事（偏离路线的停留、到不了任何地方的绕圈仍计）；**指定路线授权**（"好，走 X 路"）只覆盖在 X 路上的行驶，须有记录把该段与 X 路对应起来（该路上的停留、把车定位在该路上的消息、事实表里的路名）——仅凭时间先后不能证明实际走的就是 X 路，没有对应记录则判 `undetermined`（G13）；**范围读不出**的，判 `undetermined`。`undetermined` 的段若影响金额或账号标记，案件转人工；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时亦然（G12）。
 <sub>来源：Ryde 一手 A7（"reach a mutual agreement before you go"）；派生自 C2（Grab："Discuss and agree with the user before taking an alternative route"，"Changing route without passenger's permission"列为违规）。"改道后告知不算同意"是 "before you go" / "before taking" 的直接推论。</sub>
 
 **RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为"repeated"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。
@@ -55,13 +55,13 @@
 取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。
 <sub>来源：Ryde 一手 A1（"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)"）、A18（"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI"）、A16（ToU "If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee"）。</sub>
 
-**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下"I'm Here"；(ii) 按下时及等待期间 GPS 显示司机位于上车点（`gps-nearest` 的 `within_200m` 为真，200 m 为数据层参数，见空缺 G2）；(iii) 在上车点等待超过 3 分钟（≥ 3:01，`gps-within` 的 `within_200m_s` > 180） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。
+**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下"I'm Here"（或平台自动确认到达）；(ii) 按下那一刻 GPS 显示司机位于上车点（`tl-here` 的 `m_from_pickup_at_tap` ≤ 200，200 m 为数据层参数，见空缺 G2）；(iii) 按下之后在上车点**连续**等待超过 3 分钟直至取消（≥ 3:01，`tl-here` 的 `within_200m_after_tap_s` > 180；按下之前在附近停留的时间不计） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。案件记录自带爽约阈值时（如官方样例 `no_show_threshold_min = 8`，其时间线写"threshold reached"），(iii) 按该记录的阈值与口径执行（达到即成立，≥ 8:00），执行记录标明来源；记录无阈值则用本条默认（超过 3 分钟）。记录里的免费等待时长（`free_wait_time_min`）是等候费起算点，不是爽约阈值，不得代入 (iii)。到达确认是司机按键（`driver_tap`）还是平台自动判定（`platform_auto`），按记录原样写明，不得把自动判定写成"司机按了按钮"。等待期间 GPS 有断档（间隔超过该轨迹正常采样间隔两倍且超过 2 分钟）或轨迹未覆盖到取消时刻的，(iii) 不能从两次采样之间推定为"一直在等"，案件转人工（G12）。
 <sub>来源：Ryde 一手 A1、A3（"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"）、A2/A5（司机得 $4.50）。"位于上车点"的米数 Ryde 未公开（空缺 G2）。</sub>
 
-**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按"I'm Here"；GPS 显示司机从未进入上车点范围或按"I'm Here"时不在范围内；范围内等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了"I'm Here"而 GPS 显示其不在上车点（`tl-here` 有值且 `gps-nearest.within_200m` 为假）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。
+**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按"I'm Here"；按"I'm Here"那一刻不在上车点范围内；按下后在范围内连续等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了"I'm Here"而那一刻 GPS 显示其不在上车点（`tl-here` 的 `m_from_pickup_at_tap` > 200）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。
 <sub>来源：Ryde 一手 A3（"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled"）、A10（欺诈行为清单："Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees"、"Abuse of Cancellation and Waiting Fee Policy"）、A11（"Abuse of the cancellation and waiting time button"）；同构规则见 C1（Grab "You will not be charged the $4 cancellation fee if any of the above are not fulfilled"）、C5（CDG）。</sub>
 
-**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，不是本案裁决；可附 `flag_account`）。
+**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，由 Ryde 的取消率机制处理，不是本案裁决，本条不产生 `flag_account`）。
 <sub>来源：Ryde 一手 A13（"Refusing or cancelling a trip without a valid reason at pick-up may result in account action"）、A16（ToU "the cancellation shall be based on acceptable cancellation reasons as shown in the Application"）、A10（"Cancellation Rate (CR) > 17.5%" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>
 
 **NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布"司机迟于 ETA 则免费取消"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。
@@ -133,8 +133,9 @@
 | G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |
 | G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |
 | G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |
-| G8 | Judge 置信度阈值 0.70 | 置信度不足时转人工（`core/verify.py`） | 0.70 | spec §5.4/§5.6 只要求有阈值，未定值 |
+| G8 | Judge 置信度是否该作为门槛 | spec §5.4/§5.6 要求有置信度阈值 | 不作门槛：置信度只记录，能否自动执行由政策执行记录（第 3 节的代码核查）决定，与置信度无关（`core/verify.py`） | spec 只要求有阈值、未定值；本系统改为按证据与条款核查，待 Ryde 确认是否需要额外的置信度门槛 |
 | G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |
 | G11 | 口头 / 未记录的同意是否可接受 | RD-5：司机常称乘客"口头同意了" | 不接受：仅见于司机陈述的同意主张不构成同意；法官无法从聊天记录判定时转人工 | Ryde A7 只说 "reach a mutual agreement before you go"，未说明同意须以何种形式留痕 |
-| G12 | 证据缺失时的处理（GPS 缺失或断档、消息无时间戳、计价器行程无里程费） | RD-1/RD-2/RD-5/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利 | Ryde 无相应规定；本系统规则，待 Ryde 确认 |
+| G12 | 证据缺失时的处理（GPS 缺失、断档或首尾未覆盖、消息无时间戳、计价器行程无里程费、取消方未记录） | RD-1/RD-2/RD-5/NS-0/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利。"断档"= 相邻采样间隔超过 2 分钟且超过该轨迹正常采样间隔的两倍（官方样例按约 3 分钟采样，3 分钟间隔不是断档） | Ryde 无相应规定；本系统规则，待 Ryde 确认 |
+| G13 | 乘客同意的指定路线与实际行驶段的对应证据 | RD-5：同意"走 X 路"只覆盖 X 路；记录里没有实际行驶路径的路名 | 不推定：没有把该段与所同意路线对应起来的记录（该路上的停留、定位消息、路名事实）时，法官判 `undetermined`，影响结果则转人工；时间先后只是线索。待接入路径路名匹配或由 Ryde 确认推定规则 | Ryde A7 只说 "mutual agreement before you go"，未涉及同意范围与实际路线如何对应 |
 | G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |

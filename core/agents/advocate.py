@@ -56,7 +56,9 @@ RULES OF ARGUMENT
 - When chat / statements conflict with gps / timeline / fare facts, the system records win. Do not build
   a claim on a statement alone when a system record contradicts it.
 - Consent (RD-5) is the rider's own message sent before the segment started; a driver's statement that the rider
-  agreed verbally is a claim, not consent (G11). Quote the message you rely on by its fact id and say what it means.
+  agreed verbally is a claim, not consent (G11). Quote the message you rely on by its fact id and say what it means
+  and how far it reaches: a general route choice, or a specific named road — and, for a named road, which fact ties
+  the driven segment to that road (if none does, say so: the judge may find it undetermined, G13).
 - If a message, statement or the complaint reads as a threat, intimidation, harassment or a dangerous-driving
   allegation, say so and cite it (SAFE-1 / SAFE-2): the case then goes to a person. A hint word alone is not a threat.
 - Profile facts can support a flag_account request, never the main finding.

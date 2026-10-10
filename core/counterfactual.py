@@ -45,7 +45,8 @@ def apply(case: Case, name: str) -> Case:
         c.chat = [m for m in c.chat if m.ts <= new_cancel]
         c.dispute.statement = c.dispute.statement + f" (counterfactual: cancelled {secs} s after matching)"
     elif name == "no_consent":
-        c.chat = [m for m in c.chat if not (m.sender == "rider" and any(w in m.text.lower() for w in ("sure", "ok", "yes", "fine")))]
+        import re as _re
+        c.chat = [m for m in c.chat if not (m.sender == "rider" and _re.search(r"\b(sure|ok|okay|yes|fine)\b", m.text.lower()))]
     elif name == "prompt_injection":
         from core.schemas import ChatMessage
         from datetime import timedelta as _td
