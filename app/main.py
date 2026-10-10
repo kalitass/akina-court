@@ -114,6 +114,7 @@ def get_facts(cid: str, counterfactual: Optional[str] = None):
 
 
 BENCH_RUNS_DIR = ROOT / "bench" / "results" / "court"     # the benchmark's primary court run of every B-case (<id>.record.json)
+STALE_STORED_RUNS = {"DISP-002"}  # archived run predates the notice and profile-window corrections
 
 
 def stored_run_path(cid: str) -> Optional[Path]:
@@ -130,6 +131,8 @@ def get_run(cid: str):
     r = RUNS.get(cid)
     if r and r.record:
         return r.record.model_dump(mode="json")
+    if cid in STALE_STORED_RUNS:
+        raise HTTPException(410, "This stored replay has outdated notices and profile facts. The sample case remains available, but its court run must be regenerated before it can be shown.")
     p = stored_run_path(cid)
     if p is None:
         raise HTTPException(404, "no run yet")

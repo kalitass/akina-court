@@ -37,13 +37,17 @@ const CASEQ = CF ? `${CID}~${CF}` : CID;                       // which case (po
 const RID0 = Q.get('run') || CASEQ;                           // which stored run to replay (?run= for pre-recorded fault-injection demos)
 const [caseJ, factsJ, runJ, controls, policyTxt] = await Promise.all([
   api(`/api/cases/${encodeURIComponent(CASEQ)}`), api(`/api/cases/${encodeURIComponent(CASEQ)}/facts`),
-  api(`/api/runs/${encodeURIComponent(RID0)}`).catch(e => e.status === 404 ? null : Promise.reject(e)),
+  api(`/api/runs/${encodeURIComponent(RID0)}`).catch(e => e.status === 404 || e.status === 410 ? null : Promise.reject(e)),
   api('/api/demo-controls').catch(() => ({ inject:{}, counterfactual:{} })),
   fetch('/api/policy').then(r => r.ok ? r.text() : '').catch(() => ''),
 ]);
 const POLICY = {}; for (const line of policyTxt.split('\n')) { const m = line.trim().match(/^\*\*([A-Z]+-\d+)\*\*\s*(.*)$/); if (m) POLICY[m[1]] = m[2].replace(/\*\*|`/g, '').slice(0, 260); }
 let RECORD = runJ;            // CaseRecord of the run being shown (null until a run exists)
 let RUN_ID = RID0;
+if (CID === 'DISP-002' && !runJ) {
+  document.body.innerHTML = `<main style="max-width:660px;margin:12vh auto;padding:32px;font:16px/1.6 system-ui"><h1>Sample replay awaiting regeneration</h1><p>The stored DISP-002 court run predates corrections to its notices and profile history. We have paused this replay so it cannot be mistaken for current output. The organisers' synthetic sample and its computed facts remain available.</p><p><a href="/facts.html?case=DISP-002">View sample facts</a> · <a href="/replay.html?case=C-0004">Watch the other no-show case</a> · <a href="/">Home</a></p></main>`;
+  return;
+}
 let MODEL = null;
 
 function compact(c, ft, run){
@@ -560,7 +564,7 @@ function renderEvent(e, inst){
       setTimeout(() => { const b = w.querySelector('.bar i'); if (b) b.style.width = b.dataset.w; }, inst ? 0 : 400);
       break; }
     case 'summary': w.innerHTML = head(e, 'Final') + `<div class="card" style="font-size:12.5px;line-height:1.5">${cite((e.title||'').replace(/^Final:\s*/, ''))}<div style="margin-top:6px;color:var(--muted);font-size:11px">${cite(e.body||'')}</div></div>`; break;
-    case 'notify': { if (/Notices sent/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(e.body); w.innerHTML = head(e) + ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join(''); }
+    case 'notify': { if (/Notices (?:sent|drafted)/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(e.body); w.innerHTML = head(e) + ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join(''); }
       else w.innerHTML = head(e) + `<div class="banner route">⏱ ${esc(e.title)}<span class="sub">${cite(e.body||'')}</span></div>`; break; }
     case 'escalate': w.innerHTML = head(e) + `<div class="banner esc">⚠ ${esc(e.title)} — ${esc(e.body||'')}</div>`; break;
     default: w.innerHTML = head(e) + `<div class="card">${cite(e.body||'')}</div>`;
@@ -638,7 +642,7 @@ function renderShow(e, inst){
       const w = card(e, /Proposed/i.test(e.title) ? 'Judge proposes a ruling' : 'Ruling', `<div class="ruling"><div class="head"><div><div class="out">${/Proposed/i.test(e.title) ? 'Proposed ruling · not yet verified' : 'Ruling'}</div><div class="amt">${r.amount != null ? '$' + (+r.amount).toFixed(2) : esc(OUTW[r.ruling]||r.ruling||'')}${r.amount != null ? `<small>${esc(OUTW[r.ruling]||r.ruling)}</small>` : ''}</div></div><div class="conf" style="font-size:11px">${/Proposed/i.test(e.title) ? 'awaiting code check' : ''}</div></div>${sf.length ? `<div class="segf">${sf.map(f => `<div><span class="seglab ${fCls(f)}" style="animation:none">${esc(segName(f.fact_id))} · ${fWord(f)}</span><span>${cite(clip(f.reason||'', 170))}</span></div>`).join('')}</div>` : ''}${judgeNotes(r)}<div class="body"><p>${cite(clip(paras[0] || '', 340))}</p>${paras.length > 1 || (paras[0]||'').length > 340 ? more('full reasoning', paras.map(p => `<p>${cite(p)}</p>`).join('')) : ''}</div><div class="act ${esc_?'esc':''}"><b>${esc_?'Action':'Remedy'}:</b> ${cite(stripIds(r.recommended_action||''))}</div>${(r.rejected_claims||[]).length ? `<div class="rej">${more(`${r.rejected_claims.length} claim${r.rejected_claims.length>1?'s':''} rejected`, r.rejected_claims.map(c => `<div>${cite(clip(c.reason, 200))}</div>`).join(''))}</div>` : ''}</div>`);
       setTimeout(() => { const b = w.querySelector('.bar i'); if (b) b.style.width = b.dataset.w; }, inst ? 0 : 400); return w; }
     case 'summary': return null;
-    case 'notify': { if (/Notices sent/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(body); return card(e, 'Plain-language notices to both parties', ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join('')); }
+    case 'notify': { if (/Notices (?:sent|drafted)/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(body); return card(e, 'Plain-language notices to both parties', ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join('')); }
       if (/skipped/i.test(e.title)) return card(e, e.title, `<div class="card"><div class="line muted">${esc(body)}</div></div>`);
       const q = (e.title.match(/Routed to (\w+)/)||[])[1]; const Q_ = { auto_resolve:['⚡ Executed automatically', 'done'], review_24h:['👤 Queued for a human reviewer · 24 h service level', 'route'], urgent_safety:['🚨 Urgent safety queue · 2 h service level', 'esc'], review_urgent:['👤 Urgent human review', 'esc'] }[q] || [e.title, 'route'];
       const plainBody = stripIds(body).replace(/\b(refund_partial|refund_full|no_action|fee_waived|escalate|flag_account)\b/g, m => OUTW[m] || m).replace(/at confidence ([\d.]+)/, 'model confidence $1 (diagnostic only)').replace(/execute automatically/, 'the certificate allows automatic execution');

@@ -136,10 +136,12 @@ class RiderProfile(BaseModel):
     disputes_upheld_90d: int
     route_disputes_upheld_90d: int = 0
     no_show_disputes_upheld_90d: int = 0
+    disputes_window_days: Optional[int] = 90  # synthetic case files use 90-day counts; imported samples can override
 
 
 class DriverProfile(RiderProfile):
     trips_90d: int
+    trips_window_days: Optional[int] = 90
 
 
 class Profiles(BaseModel):

@@ -8,7 +8,7 @@ import pytest
 from core.facts import tools
 from core.facts.tools import (
     SOURCE_ORDER, build_fact_table, facts_for_tool, get_chat_facts, get_fare_facts,
-    get_no_show_facts, get_route_facts, get_traffic_facts, haversine_m,
+    get_no_show_facts, get_profile_facts, get_route_facts, get_traffic_facts, haversine_m,
 )
 from core.schemas import Case
 
@@ -326,3 +326,18 @@ def test_call_attempts_are_counted_in_chat_facts():
     calls = by_id(facts, "chat-calls")
     assert calls.value == {"calls_driver": 2, "calls_rider": 0, "messages_driver": 1, "messages_rider": 0}
     assert "[call]" in by_id(facts, "chat-2").text
+
+
+def test_synthetic_case_profile_window_is_90_days():
+    case = Case.model_validate_json((CASES_DIR / "C-0001.json").read_text())
+    texts = [fact.text for fact in get_profile_facts(case)]
+    assert all("in 90 d" in text for text in texts)
+
+
+def test_organisers_sample_profile_window_is_unknown():
+    from core.ingest import convert, load_official
+    sample = CASES_DIR.parent / "samples" / "DISP-002.md"
+    case = Case.model_validate(convert(load_official(sample)))
+    texts = [fact.text for fact in get_profile_facts(case)]
+    assert all("window unknown" in text for text in texts)
+    assert all("in 90 d" not in text for text in texts)

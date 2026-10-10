@@ -107,7 +107,7 @@ async function select(cid){CUR=cid;$('#toreplay').href=`/replay.html?case=${cid}
  if(MAPI){MAPI.map.remove();}$('#map').innerHTML='';MAPI=RydeMap.mount($('#map'),CASE,FACTS,{onHover:s=>$('#info').textContent=s,padding:{top:60,bottom:30,left:40,right:200}});
  MAPI.map.on('load',()=>RydeMap.timeline($('#tlsvg'),CASE,FACTS,MAPI,null,s=>$('#info').textContent=s));
  renderFacts();resetCourt();
- const r=await fetch(`/api/runs/${cid}`);if(r.ok){const rec=await r.json();rec.events.forEach(onEvent);finish(rec);setState('done','last run (replayed)');}else {setState('idle','no run yet');renderOverride(null);loadQueue();}}
+ const r=await fetch(`/api/runs/${cid}`);if(r.ok){const rec=await r.json();rec.events.forEach(onEvent);finish(rec);setState('done','last run (replayed)');}else {setState('idle',r.status===410?'Stored replay awaiting regeneration':'no run yet');renderOverride(null);loadQueue();}}
 function renderFacts(){const fs=FACTS.facts;$('#nfacts').textContent=fs.length;const isKey=f=>{const v=f.value||{};return f.source==='gps'&&('extra_km' in v||('m_from_pickup' in v&&'duration_s' in v)||'nearest_m' in v)||f.source==='chat'&&(((v.flags||[]).length&&'idx' in v)||v.count===0)||f.source==='traffic'&&('reported_at' in v||v.severe||v.count===0)||f.source==='timeline';};
  const groups=[['key','Key facts',fs.filter(isKey)],...['gps','timeline','fare','chat','traffic','weather','profile'].map(s=>[s,s,fs.filter(f=>f.source===s)])];
  $('#facts').innerHTML=groups.filter(g=>g[2].length).map(([k,t,list])=>`<details class="grp${k==='key'?' key':''}"${k==='key'?' open':''}><summary><b>${t}</b><span class="cnt">${list.length}</span></summary>${list.map(f=>`<div class="fact" data-id="${f.id}"><b>${f.id}</b>${head(f)}</div>`).join('')}</details>`).join('');

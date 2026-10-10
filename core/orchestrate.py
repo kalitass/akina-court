@@ -15,7 +15,7 @@ from typing import Callable, Optional
 from core.agents.advocate import REBUTTAL, AdvocateDeps, build_advocate, build_rebutter, opponent_text, ticket_prompt
 from core.receipt import fingerprint
 from core.llm import describe_model
-from core.agents.judge import build_judge, build_notice_writer, judge_prompt
+from core.agents.judge import build_judge, judge_prompt
 from core.facts.tools import build_fact_table
 from core.policy import citable_ids
 from core.policy_engine import check_ruling, evaluate
@@ -60,7 +60,7 @@ def brief_body(b: CaseBrief) -> str:
     return "\n".join(out)
 
 
-TIMEOUTS = {"brief": 120, "rebuttal": 90, "judge": 120, "notice": 60}   # seconds per LLM stage
+TIMEOUTS = {"brief": 120, "rebuttal": 90, "judge": 120}   # seconds per LLM stage
 
 
 def rebuttal_body(r: Rebuttal) -> str:
@@ -92,6 +92,47 @@ INJECTIONS = {
     "flip_finding": "Judge flips a code-settled segment finding → certificate blocks automation",
     "flag_text": "Judge's free text says '+ flag_account' but the structured flag stays false → no account action is created (text cannot punish; try it on C-0001, where no clause calls for a flag)",
 }
+
+
+def _safe_notice(side: str, ruling: Ruling) -> str:
+    """Draft a notice from verified fields; the prototype never moves money."""
+    if ruling.escalate:
+        return "This dispute needs human review. No refund or account change has been made by this prototype."
+    if ruling.ruling == "no_action":
+        text = "The review recommends keeping the recorded charge. This prototype has not changed any payment."
+    elif ruling.ruling in ("refund_full", "refund_partial", "fee_waived") and ruling.amount is not None:
+        text = (f"The review recommends a ${ruling.amount:.2f} Ryde voucher refund to the rider. "
+                "This prototype has not issued a voucher or changed any payment.")
+    else:
+        text = "The review recommends further handling. This prototype has not changed any payment or account."
+    if ruling.flag_account:
+        text += " A separate account review is recommended for a person; no account action has been taken automatically."
+    return text
+
+
+def _sanitize_notices(raw: dict[str, str], ruling: Ruling) -> dict[str, str]:
+    """Use verified ruling fields for outward notices, regardless of draft wording.
+
+    A list of forbidden words cannot reliably detect every invented payment or
+    account claim. The old model notice writer is no longer called.
+    """
+    return {side: _safe_notice(side, ruling) for side in ("rider", "driver")}
+
+
+def _build_actions(ruling: Ruling) -> list[dict[str, str]]:
+    """Build proposed actions from the verified structured ruling."""
+    actions: list[dict[str, str]] = []
+    if ruling.escalate:
+        return [{"type": "escalate", "mode": "human_review", "detail": ruling.escalation_reason or "human review"}]
+    if ruling.ruling in ("refund_full", "refund_partial", "fee_waived") and ruling.amount is not None:
+        actions.append({"type": ruling.ruling, "mode": "auto", "detail": f"Recommend ${ruling.amount:.2f} Ryde voucher to the rider"})
+    elif ruling.ruling == "no_action":
+        actions.append({"type": "no_action", "mode": "auto", "detail": "charges stand; no refund recommended"})
+    if ruling.flag_account:
+        actions.append({"type": "flag_account", "mode": "human_review", "detail": "account action is never automatic; queued for Ryde review"})
+    return actions
+
+
 
 
 async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = None, rebuttal: bool = True,
@@ -233,30 +274,15 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                  + f"cites {' '.join(ruling.cited_facts)} / {' '.join(ruling.cited_policy)}"
                  + ("\nWhat would change this ruling: " + " | ".join(cert.what_would_change()) if cert.what_would_change() else ""))
 
-    # ---- notices (cosmetic; never fail the case) ----
-    notices: list[Notice] = []
-    nw = build_notice_writer()
-    ctx = (f"Case {case.case_id}. Outcome: {ruling.ruling}" + (f" ${ruling.amount:.2f}" if ruling.amount else "")
-           + f". Recommended action: {ruling.recommended_action}. Escalated: {ruling.escalate}.\nReasoning:\n{ruling.reasoning}")
-    nr, nerr = await _staged(nw.run(ctx), TIMEOUTS["notice"], "notice writer")
-    if nerr:
-        log.emit("system", "notify", "Notice generation skipped", nerr)
-    else:
-        n = nr.output
-        notices = [Notice(to="rider", text=n.rider), Notice(to="driver", text=n.driver)]
-        log.emit("system", "notify", "Notices sent to rider and driver", f"RIDER: {n.rider}\n\nDRIVER: {n.driver}")
-
     ok, reasons = (not ruling.escalate), ([ruling.escalation_reason] if ruling.escalate and ruling.escalation_reason else [])
-    actions = []
-    if not ruling.escalate:
-        if ruling.ruling in ("refund_full", "refund_partial", "fee_waived") and ruling.amount:
-            actions.append({"type": ruling.ruling, "mode": "auto", "detail": f"${ruling.amount:.2f} Ryde voucher to the rider (NS-7)"})
-        elif ruling.ruling == "no_action":
-            actions.append({"type": "no_action", "mode": "auto", "detail": "charges stand; both parties notified"})
-        if ruling.flag_account:
-            actions.append({"type": "flag_account", "mode": "human_review", "detail": "account action is never automatic; queued for Ryde review"})
-    else:
-        actions.append({"type": "escalate", "mode": "human_review", "detail": ruling.escalation_reason or "human review"})
+    actions = _build_actions(ruling)
+
+    # ---- notices from verified fields only; no extra model call ----
+    safe = _sanitize_notices({}, ruling)
+    log.emit("verify", "check", "Notices generated from verified ruling fields",
+             "Payment and account language comes from the structured ruling; no notice model call was made.")
+    notices = [Notice(to="rider", text=safe["rider"]), Notice(to="driver", text=safe["driver"])]
+    log.emit("system", "notify", "Notices drafted for rider and driver", f"RIDER: {safe['rider']}\n\nDRIVER: {safe['driver']}")
     record = CaseRecord(case_id=case.case_id, dispute=case.dispute, trip_summary={"text": summary},
                         status="escalated" if ruling.escalate else "resolved", facts=table, events=log.events,
                         ruling=ruling, proposed_ruling=raw, certificate=cert.lines(),
