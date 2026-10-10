@@ -4,43 +4,46 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:20:21.796893+00:00",
+ "ts": "2026-10-10T17:39:27.500455+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and remind the driver that cancellation fees are only valid where the driver has reached the pickup point, per Ryde's arrival rules.",
-  "confidence": 0.95,
-  "reasoning": "Safety screen: the chat (F7, F8) and the driver's statement (F10) contain no threat, harassment, abuse or dangerous-driving allegation; dispute type is no_show, not safety. safety_concern = none.\n\nService type is RydeX (non-taxi), cancelled_by = rider, so NS-0 routes the fee to NS-4. Accepted 17:12:00, rider cancelled 17:15:05 — 3 min 5 s after matching [F2], i.e. beyond the 3-minute grace window, so the $6.61 fee [F5] is prima facie chargeable under NS-4. Ryde has no published \"driver later than ETA → free cancellation\" rule (NS-8, informative only; no ETA fact here), so the rider's lateness argument cannot by itself waive the fee.\n\nHowever, the record shows the driver never arrived: the closest approach was 1725 m [F1], driver_arrived_at is null [F3], and no arrival confirmation exists — no \"I'm Here\" tap and no platform auto-arrival [F4]. The driver's statement [F10] is a claim, not consent or an arrival record, and system records (timeline/GPS) override statements. Ryde's stated basis for charging is arrival at the pickup point; on this record the arrival element is not evidenced. On the plain application of the fee's precondition (no arrival confirmation, driver >1.7 km away, F3/F4/F1), the fee is not collectable.\n\nAmount: only the disputed $6.61 cancellation fee [F5] is refunded in full; no surge applies [F6], and traffic/weather facts (F11–F13) do not affect this fee.\n\nNo flag_account: NS-2's flag applies where the driver tapped \"I'm Here\" outside the pickup radius — here the driver never tapped at all [F4], and the driver's profile shows 0 upheld disputes [F15], so no clause calls for an account flag. Cancel-rate/account action is Ryde's own mechanism (NS-3), not part of this ruling.",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send to the appeals queue for manual review of the $6.61 cancellation fee: the rider cancelled at 3 min 5 s (just past the 3-minute threshold, NS-4) while GPS shows the driver was still 1,725 m away and never recorded an arrival [F1][F3][F4]. Confirm no-show/cancellation-fee handling with Ryde; if upheld as a technical threshold charge, offer the rider the RydeHELP fee-waiver/voucher route within the 30-day window (NS-7).",
+  "confidence": 0.55,
+  "reasoning": "Safety screen: chat is a routine pickup query and a driver ETA reply; the driver's statement is neutral. Nothing threatening, harassing, sexual or alleging dangerous driving. No safety escalation.\n\nThis is a rider-cancelled instant booking (RydeX, non-metered). Under NS-0, cancelled_by = rider on an on-demand trip is governed by NS-4, not NS-1/NS-2 (those apply only to driver-cancelled no-show claims; the driver here did not cancel).\n\nNS-4 arithmetic: accepted 17:12:00, rider cancelled 17:15:05 = 3 min 5 s after matching, i.e. more than 3 minutes. Cancellations within 3:00 are free; beyond 3:00 the $6.61 cancellation fee stands. 17:15:05 is at or past the boundary, so on the face of the timeline the fee is chargeable.\n\nHowever, the record also shows the driver never approached the pickup point: closest approach 1725 m at the moment of cancellation [F1], no recorded arrival [F3], and no \"I'm Here\" tap or automatic arrival [F4]. Ryde has published no rule that a delayed driver entitles the rider to free cancellation (NS-8 is explicitly non-citable and inapplicable — Ryde has no ETA-based waiver, and the case file carries no ETA field); the rider's remedy is the human appeal route (NS-7, 30-day window, voucher form). The traffic fact [F11] concerns an unrelated road (Sims Avenue East, band 4 = 30–39 km/h), not the driver's route to Bedok Mall, and does not bear on the cancellation timing.\n\nBecause NS-4 mechanically allows the fee while the driver was demonstrably still 1.7 km away and never arrived, this is a case where the disputed fee turns on facts the policy does not resolve in the rider's favour and the amount would otherwise be charged on a technicality. The record is otherwise complete (times, GPS approach distance, fare, timestamped chat — F2, F5, F9), so evidence is sufficient; but the fee decision warrants human review rather than automated execution. I therefore escalate with the facts set out.\n\nNothing in the profile facts decides this (rider 1 dispute in 90 d, 0 upheld; driver 0 disputes), and no clause (RD-6, NS-2) is triggered, so no account flag.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
    "F8",
+   "F9",
    "F10",
+   "F11",
+   "F12",
+   "F14",
    "F15"
   ],
   "cited_policy": [
    "NS-0",
    "NS-4",
-   "RD-5"
+   "NS-7"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Rider-cancelled instant trip: NS-4 puts the cancellation at 3 min 5 s after matching, just past the 3-minute free-cancellation window, while the record shows the driver was still 1,725 m from pickup and never arrived (no tap, no automatic arrival). The $6.61 fee is chargeable on timing alone, but a human should decide whether to waive it given the driver's non-arrival; no NS/RD clause resolves this, and NS-8 (ETA-based waiver) is non-citable and unavailable.",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_late_driver_waiver",
-    "reason": "Ryde has no rule granting free cancellation when the driver is late relative to ETA (NS-8 is informative only, not citable); the rider's complaint of lateness alone does not waive the fee. The refund rests instead on the absent arrival confirmation (F3, F4) and the 1725 m closest approach (F1)."
+    "id": "F10",
+    "reason": "Driver's post-trip statement that the rider cancelled while he was en route is consistent with the system record but does not support a rider no-show charge: the driver never cancelled, NS-1/NS-2 do not apply, and the statement carries no weight against the GPS record of non-arrival."
    },
    {
-    "id": "driver_statement_no_show",
-    "reason": "Driver's post-hoc statement that the rider cancelled while he was on the way (F10) is not supported by any arrival record (F3, F4) and system records override statements; it also cannot establish the NS-1 arrival elements."
+    "id": "F11",
+    "reason": "Sims Avenue East speed band 4 (30–39 km/h) concerns a different road than the driver's route to Bedok Mall; it neither excuses the delayed arrival nor affects the cancellation timing."
    }
   ],
   "flag_account": false,
@@ -49,9 +52,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.87,
- "input_tokens": 9766,
- "output_tokens": 964,
+ "latency_s": 6.06,
+ "input_tokens": 10157,
+ "output_tokens": 1254,
  "requests": 1,
  "llm_calls": 1
 }

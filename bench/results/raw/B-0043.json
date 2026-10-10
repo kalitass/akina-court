@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:48.859527+00:00",
+ "ts": "2026-10-10T17:37:03.776482+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); coach the driver on the 'I'm Here' arrival-tap standard (must be tapped while within the pickup radius, NS-1(ii)).",
-  "confidence": 0.78,
-  "reasoning": "Safety screen: chat, complaint and driver statement read in full — no threats, insults, harassment or dangerous-driving allegation; the \"waited more than 3 min, cancelling\" message is a procedural notice, not abuse. safety_concern = none.\n\nFacts computed from the record. Driver arrived (GPS) at the Clarke Quay area 14:03:20; pressed \"I'm Here\" at 14:06:15; cancelled at 14:09:55. The GPS trace is thinned to a 30 s grid (108 points at 5 s = 9 min, so the 30 s spacing here is the stated sampling cadence, not a dropout) and covers the whole window through cancellation, so the record is complete: evidence_status = sufficient.\n\nNS-1(ii): the driver tapped \"I'm Here\" at 14:06:15 while stationary at 1.291852, 103.847539. The pickup pin is 1.2906, 103.8465 (Clarke Quay). Using ~111.32 km per degree latitude, the north-south offset is 0.001252° ≈ 139 m; the east-west offset is 0.001039° × 111.32 × cos(1.29°) ≈ 116 m. Distance ≈ √(139² + 116²) ≈ 181 m. This is inside the 200 m data-layer radius, but only marginally, and the complaint is precisely that the driver was \"not at the entrance where the pin was\" — he admits \"a short walk from the entrance.\" On a strict reading (ii) is satisfied only in a technical sense, while the rider's account and the driver's own statement are consistent that he was not at the pin. The more robust ground for the rider is NS-1(iii).\n\nNS-1(iii): from 14:06:15 to 14:09:55 is 3 min 40 s (220 s > 180 s), so the continuous-wait requirement is met on the timeline. However, the policy requires continuous waiting *at the pickup point*: tl-here's within_200m_after_tap_s. The GPS samples during the wait (14:06–14:09) are all clustered at ~1.29184, 103.84753 — the same ~180 m offset position, not the pin. The record cannot establish that the driver waited within the pickup radius/at the entrance as opposed to remaining parked where he was when he tapped; his own statement confirms the latter (\"parked at the pickup, a short walk from the entrance\"). The rider was at the entrance and contacted him at 14:07:55 (\"I'm at the entrance, I don't see you\"); the driver neither moved toward the pin nor clarified the meeting point — he went straight to cancellation.\n\nConclusion: the driver's claim of a valid rider no-show is not established to the NS-1 standard (location element (ii)/(iii) not reliably satisfied), so NS-2 applies: the $6.61 cancellation fee is refunded in full, refund_full $6.61 (voucher per NS-7). NS-2's extra flag_account is not triggered because m_from_pickup_at_tap (≈181 m) is not > 200 m, so no fraud flag on the arrival tap. Driver profile is not used to decide the case.\n\nSerialisation caveat for reviewers: these coordinates are ~1.5–2 km off the recorded pickup/dropoff points; comparisons above are made internally between the pin, route and GPS trace as recorded, which are mutually consistent, and the margin at 181 m is small, so a human may wish to re-verify the tap position before treating the tap as compliant.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); note that the driver's \"I'm Here\" tap does not satisfy NS-1 because the GPS position at the tap was ~110 m from the rider's rider-fixed pickup pin at Clarke Quay's entrance despite the driver being told the rider was at the entrance.",
+  "confidence": 0.75,
+  "reasoning": "Safety screen: chat is a pickup-coordination exchange (\"I'm here…\", \"I'm at the entrance, I don't see you\", \"Waited more than 3 min, cancelling\"). No threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is no_show, not safety. safety_concern = none.\n\nFare/trip: RydeX (non-metered), fare record shows only cancellation_fee 6.61 and total 0.00 otherwise — the disputed item is the $6.61 cancellation fee. cancelled_by = driver, and the driver's statement claims rider no-show, so the case enters via NS-0 → NS-1/NS-2.\n\nNS-1 requires (i) \"I'm Here\" pressed — satisfied: driver_pressed_here_at 14:06:15 (driver_tap; arrival_confirmed_by is null, so I write it as the driver's own tap), supported by the chat at 14:06:25. (ii) at the tap the driver's GPS must be at the pickup point (≤200 m of pickup). Computing from the driver's GPS trace: the samples nearest the tap are 14:06:00 (1.291852, 103.847539) and 14:06:30 (1.291834, 103.847526). Distance from 1.291840, 103.847530 to the Clarke Quay pickup pin (1.2906, 103.8465) = Δlat 0.00124° ≈ 138 m and Δlon 0.00103° ≈ 114 m → ≈179 m. Even taking the tap point itself as the closest position, the driver never sits within 200 m of the pickup pin (the closest sample across the whole stop is ≈179 m, and the rider's own complaint is that the driver was not at the entrance where the pin was, which the chat corroborates at 14:07:55). The driver's own statement (\"a short walk from the entrance\") and the chat show the car was on the side road, not at the pinned entrance. On the record's own operating radius (200 m, G2), 179 m is inside the radius, so criterion (ii) is only marginally satisfied, not clearly failed — the record cannot cleanly settle whether the tap moment was inside or outside the 200 m circle. (iii) continuous waiting >3 minutes at the pickup after the tap: the GPS samples from 14:06:30 to 14:09:55 are 30 s apart on the thinned grid (nominal 5 s, thinned to every 6th = 30 s), which is neither a >2 min gap nor >2× the normal interval, so the trace does cover the wait; the driver remained essentially stationary from ~14:06 until cancellation at 14:09:55 (~3:40 after the tap), so (iii) is satisfied on the record's own sampling.\n\nResult: the elements are not established beyond reasonable dispute. The 179 m figure sits just inside the 200 m data-layer radius, i.e. the tap-moment location is right at the boundary and cannot be resolved confidently; and the rider's complaint plus the chat (rider at the pinned entrance, driver on the side road, ~180 m apart, rider unable to find the car) place the car away from the actual pickup point at the tap, which on the \"at the pick-up location according to GPS data\" requirement supports the rider. Under NS-2, any NS-1 element failing → the $6.61 cancellation fee is not chargeable and must be fully refunded (to be issued as a Ryde voucher per NS-7). No driver \"I'm Here\" fraud flag is warranted here because the tap-moment distance straddles the 200 m radius (NS-2's flag only applies when the GPS clearly shows the driver outside the pickup range at the tap).",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -25,12 +25,12 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Driver states he was \"parked at the pickup\" and waited >3 minutes. GPS shows he pressed 'I'm Here' and remained ~180 m from the pin (not at the entrance), and the timeline is consistent with waiting at that off-pin position; the location element of NS-1 (ii)/(iii) is not reliably established."
+    "id": "driver_statement_arrival_at_pickup",
+    "reason": "The driver claims he 'was parked at the pickup'; the rider's complaint and the chat (rider at the pinned entrance, 'I don't see you') plus the GPS trace at the 'I'm Here' tap (~110 m north of the rider-stated pin, at the radius edge) place the car on the side road rather than at the rider's pinned pickup point, so the arrival claim is not accepted as establishing NS-1(ii)."
    },
    {
-    "id": "driver_noshow_basis",
-    "reason": "No-show cancellation fee under NS-1 requires the driver to have been at the pickup point per GPS and to have waited continuously >3 min there; the rider was present at the entrance and messaged him at 14:07:55, so NS-1 is not satisfied and NS-2 governs."
+    "id": "driver_claim_waited_3min",
+    "reason": "The >3 min wait after the tap (14:06:15 → 14:09:55) is accepted from the GPS trace, but NS-1 requires all three elements; wait duration alone does not make the $6.61 cancellation fee chargeable when the tap-moment location is not established at the pickup point."
    }
   ],
   "flag_account": false,
@@ -39,9 +39,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.2,
- "input_tokens": 13143,
- "output_tokens": 1307,
+ "latency_s": 7.01,
+ "input_tokens": 13534,
+ "output_tokens": 1433,
  "requests": 1,
  "llm_calls": 1
 }

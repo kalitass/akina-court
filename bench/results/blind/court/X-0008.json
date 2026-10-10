@@ -4,17 +4,18 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:31:18.745848+00:00",
+ "ts": "2026-10-10T17:54:59.165681+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send to human review: confirm the covered 09:04–09:14 off-route segment (F4) against the metered distance fare, recompute any RD-2 refund on the unexempted segment's extra_km, and check the driver's recent route-dispute history for RD-6.",
-  "confidence": 0.4,
-  "reasoning": "Commute was RydeTAXI, so the fare is metered and deviation distance genuinely enters the charge [F7][RD-2]. The covered record shows one off-route segment, 09:04–09:14, driving 5.23 km where the optimal route covers 1.08 km and adding 4.15 km, reaching up to 1989 m off route — too large to be map-matching noise [F4][RD-1]. That segment is not exempt: no traffic incident is recorded near the route in the trip window [F14][RD-4], the only speed bands are band 3 (20–29 km/h) on Eu Tong Sen Street and Sentosa Gateway, i.e. not the band 1–2 congestion bands, and are corroborative at most [F12][F13][RD-4], and the weather was fair [F15][RD-4].\n\nThere is no rider consent for that reroute. The complete, fully timestamped chat contains only the rider's 08:47 pickup message and the driver's 08:48 ETA/colour reply, neither mentioning any route or road, both before the 09:04 segment start [F8][F9][F10][RD-5]. The driver's post-trip statement that the GPS rerouted him is a bare claim and yields to the chat and GPS records; it cannot create consent [F11][RD-5]. The segment therefore stands as an unexempted deviation and counts [F4][RD-2].\n\nThe reason this cannot be decided automatically is coverage: the GPS trace ends 4 min 0 s before the 09:20:45 drop-off, so whatever was driven on the unrecorded final stretch is not on record and the distance picture is incomplete [F1][RD-2]. The record is therefore insufficient for the refund computation, and the trace permits only escalation [F1][RD-2]. Had the record been complete, the refund base would be the unexempted segment's extra distance at this trip's per-km rate — 4.15 km × $1.4100/km = $5.85 — but the billed excess-distance line is 4.99 km × $1.4100/km = $7.04, and the two figures cannot be reconciled on this record, so the human reviewer must fix the quantum from the covered segment and the meter slip [F4][F5][F7][RD-2].\n\nNo account flag is recorded here: RD-6 requires a refund payable on this case or a recorded RD-1 breach, and this case produces no executable refund; the profile merely records 3 disputes with 1 upheld in 90 d and cannot decide anything [F17][RD-6].",
+  "recommended_action": "Refer to a Ryde human reviewer: the measured off-route segment F4 (09:04–09:14, 4.15 km extra, unexempted) supports a provisional refund_partial of $5.85 under RD-2, but the GPS trace does not cover the last 4 minutes of the trip (F1), so the uncovered stretch cannot be measured; confirm the recorded metrics and fare before any voucher is issued.",
+  "confidence": 0.55,
+  "reasoning": "The complaint is one unexempted detour on a RydeTAXI metered trip: the record shows one off-route segment 09:04–09:14 driving 5.23 km where the optimal route covers 1.08 km, adding 4.15 km [F4], against an optimal route of 7.2 km and actual 10.2 km [F2]; the metered fare carries extra distance straight into the fare [F5][F7][RD-2]. No exemption applies: the chat is complete and timestamped but contains only the rider's pickup greeting and the driver's 8-minute ETA, with no rider message before 09:04 consenting to any route or named road [F8][F9][F10], the driver's post-trip statement is not rider consent [F11], and there is no traffic incident near the route in the window with only band 3 (20–29 km/h) speeds and fair weather, so RD-4 gives no reasonable-cause defence [F12][F13][F14][F15][RD-5][RD-4]. On that segment RD-2 fixes the refund at the segment's extra km × this trip's per-km rate: $17.16 ÷ 12.17 km = $1.4100/km, and 4.15 km × $1.4100/km = $5.8515 ≈ $5.85 [F4][F5][F7][RD-2], with only the mileage unit refunded (the wait fee billed is $0.00) [F7][RD-3].\n\nThe procedural screen, however, fails: the GPS trace does not cover the whole trip — the last sample is 4 min 0 s before the 09:20:45 drop-off [F1]. The trace marks RD-1 coverage as ✗ and records the missing stretch as unmeasurable, so the record does not settle every element the ruling needs (the trip's full driven distance and the resulting fare cannot be reconciled against the covered portion alone) and the only permissible outcome is a referral [RD-2][RD-1].\n\nThe safety screen was performed on my own reading: the chat messages are a pickup greeting and an ETA, the driver's statement is a bare denial of routing fault, and the complaint is a fare grievance; none contains a threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 / SAFE-2 escalation applies [F8][F9][F11][SAFE-1][SAFE-2].\n\nOn the account flag: RD-6 requires route_disputes_upheld_90d ≥ 1 before this case; the driver's profile shows 3 disputes in 90 days with 1 upheld but route disputes 0 [F17], so the \"repeated route deviation\" condition is not met and no account flag is issued [F17][RD-6]. Should the human reviewer uphold the segment and enter it as a route dispute, RD-6 would then be assessed on the updated count [F17][RD-6].",
   "cited_facts": [
    "F1",
+   "F2",
    "F4",
    "F5",
    "F7",
@@ -31,49 +32,41 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": true,
-  "escalation_reason": "evidence insufficient: GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the recorded 09:20:45 drop-off [F1], so the final stretch of the journey and any distance/off-route behaviour on it cannot be measured. The covered record also leaves the quantum unsettled — the covered off-route segment adds 4.15 km [F4] while the fare bills 4.99 km of excess distance [F5][F7].",
+  "escalation_reason": "evidence insufficient: GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the 09:20:45 drop-off [F1], so the uncovered stretch cannot be measured and the trip's full driven distance/fare cannot be reconciled against the covered portion; the provisional RD-2 computation of $5.85 on segment F4 [F4][F5][F7] cannot be executed until a reviewer confirms the record.",
   "segment_findings": [
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9",
      "F10",
      "F11"
     ],
-    "reason": "Off-route segment 09:04–09:14 added 4.15 km and reached 1989 m off the optimal route — an unexplained deviation under RD-1 [F4]. No rider consent exists: the complete, timestamped chat contains only the 08:47 pickup message and the 08:48 driver reply, no route or road mentioned, and the driver's post-trip reroute claim is a statement, not rider consent [F8][F9][F10][F11][RD-5]. No traffic incident near the route and only band 3 speed bands with fair weather, so no reasonable-cause exemption [F12][F13][F14][F15][RD-4]. The segment counts as refundable under RD-2 [F4][RD-1][RD-2]."
+    "reason": "The off-route segment 09:04–09:14 (5.23 km driven vs 1.08 km optimal, +4.15 km) has no rider consent: the complete, timestamped chat contains only the rider's pickup greeting and the driver's ETA, with no rider message sent before the segment start agreeing to a route or a named road [F8][F9][F10], and the driver's post-trip statement that the GPS rerouted is a claim, not rider consent [F11]; no traffic incident or band 1/2 congestion supports a reasonable-cause exemption [F12][F13][F14][F15]; therefore the segment is unexempted and refundable under RD-2 [F4][RD-5][RD-4][RD-2]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C2",
-    "reason": "Accepted as to the covered segment (it counts under RD-1/RD-2 [F4]), but its effect on the amount cannot be finalised: the GPS trace is incomplete [F1], so the case escalates rather than being decided [RD-2]."
-   },
-   {
-    "id": "C6",
-    "reason": "The 4.15 km × $1.4100/km = $5.85 base rests on the covered segment alone [F4][F5], but the same fare record bills 4.99 km of excess distance ($7.04) [F5][F7]; with the trace incomplete [F1] the quantum cannot be fixed here, so no amount is awarded [RD-2]."
-   },
-   {
     "id": "C7",
-    "reason": "Rejected: RD-6 requires a refund payable on this case or a recorded RD-1 breach [RD-6], and this case produces no executable refund because the record is incomplete [F1]; the profile (3 disputes, 1 upheld, route count 0) cannot itself carry the flag [F17][RD-6]."
-   },
-   {
-    "id": "D1",
-    "reason": "Accepted in part — the mileage-linked sum in dispute is the fare record's excess-distance figure rather than the whole fare [F5][F7] — but the record's incompleteness [F1] prevents any award, so it does not support a decision for the driver [RD-2]."
+    "reason": "The arithmetic is accepted ($17.16 ÷ 12.17 km = $1.4100/km; 4.15 km × $1.4100/km = $5.85) [F4][F5][F7][RD-2], but the trace shows the GPS record does not cover the whole trip — the last sample precedes drop-off by 4 min 0 s [F1] — so the amount cannot execute on this record and the case must be referred to a human reviewer rather than paid out."
    },
    {
     "id": "D7",
-    "reason": "Rejected as a ground for denying the deviation: the driver's post-trip statement that the GPS rerouted him is a claim that yields to the chat and GPS records and cannot excuse the segment [F11][F4][RD-5]; the incomplete trace [F1] is a reason to escalate, not a reason to find the deviation explained."
+    "reason": "Correct that the flag does not attach: the driver's 90-day record shows route disputes upheld 0, so the RD-6 precondition route_disputes_upheld_90d ≥ 1 is not met before this case, even though the profile also shows 1 upheld dispute of another kind [F17][RD-6]. This does not, however, cure the evidentiary gap in the fare record [F1][RD-2]."
    },
    {
-    "id": "D8",
-    "reason": "Accepted that profile facts cannot decide the case [F17][RD-6], but it does not rescue the driver on the merits: the covered segment remains an unexempted deviation [F4][RD-1], and the case is escalated on the record gap [F1][RD-2]."
+    "id": "D9",
+    "reason": "Accepted in part: the uncovered tail cannot be measured and no further deviation can be found against the driver there [F1]. That same gap is a defect in this record, not a reason to leave the fare as charged, since the trace shows the trip-coverage element fails and the outcome must be a referral [F1][RD-1][RD-2]."
    }
   ],
   "flag_account": false,
@@ -84,16 +77,17 @@
    "F11"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the recorded 09:20:45 drop-off [F1], so the final stretch of the journey and any distance/off-route behaviour on it cannot be measured. The covered record also leaves the quantum unsettled — the covered off-route segment adds 4.15 km [F4] while the fare bills 4.99 km of excess distance [F5][F7]."
+  "evidence_gap": "GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the 09:20:45 drop-off [F1], so the uncovered stretch cannot be measured and the trip's full driven distance/fare cannot be reconciled against the covered portion; the provisional RD-2 computation of $5.85 on segment F4 [F4][F5][F7] cannot be executed until a reviewer confirms the record."
  },
  "pre_verify_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send to human review: confirm the covered 09:04–09:14 off-route segment (F4) against the metered distance fare, recompute any RD-2 refund on the unexempted segment's extra_km, and check the driver's recent route-dispute history for RD-6.",
-  "confidence": 0.4,
-  "reasoning": "Commute was RydeTAXI, so the fare is metered and deviation distance genuinely enters the charge [F7][RD-2]. The covered record shows one off-route segment, 09:04–09:14, driving 5.23 km where the optimal route covers 1.08 km and adding 4.15 km, reaching up to 1989 m off route — too large to be map-matching noise [F4][RD-1]. That segment is not exempt: no traffic incident is recorded near the route in the trip window [F14][RD-4], the only speed bands are band 3 (20–29 km/h) on Eu Tong Sen Street and Sentosa Gateway, i.e. not the band 1–2 congestion bands, and are corroborative at most [F12][F13][RD-4], and the weather was fair [F15][RD-4].\n\nThere is no rider consent for that reroute. The complete, fully timestamped chat contains only the rider's 08:47 pickup message and the driver's 08:48 ETA/colour reply, neither mentioning any route or road, both before the 09:04 segment start [F8][F9][F10][RD-5]. The driver's post-trip statement that the GPS rerouted him is a bare claim and yields to the chat and GPS records; it cannot create consent [F11][RD-5]. The segment therefore stands as an unexempted deviation and counts [F4][RD-2].\n\nThe reason this cannot be decided automatically is coverage: the GPS trace ends 4 min 0 s before the 09:20:45 drop-off, so whatever was driven on the unrecorded final stretch is not on record and the distance picture is incomplete [F1][RD-2]. The record is therefore insufficient for the refund computation, and the trace permits only escalation [F1][RD-2]. Had the record been complete, the refund base would be the unexempted segment's extra distance at this trip's per-km rate — 4.15 km × $1.4100/km = $5.85 — but the billed excess-distance line is 4.99 km × $1.4100/km = $7.04, and the two figures cannot be reconciled on this record, so the human reviewer must fix the quantum from the covered segment and the meter slip [F4][F5][F7][RD-2].\n\nNo account flag is recorded here: RD-6 requires a refund payable on this case or a recorded RD-1 breach, and this case produces no executable refund; the profile merely records 3 disputes with 1 upheld in 90 d and cannot decide anything [F17][RD-6].",
+  "recommended_action": "Refer to a Ryde human reviewer: the measured off-route segment F4 (09:04–09:14, 4.15 km extra, unexempted) supports a provisional refund_partial of $5.85 under RD-2, but the GPS trace does not cover the last 4 minutes of the trip (F1), so the uncovered stretch cannot be measured; confirm the recorded metrics and fare before any voucher is issued.",
+  "confidence": 0.55,
+  "reasoning": "The complaint is one unexempted detour on a RydeTAXI metered trip: the record shows one off-route segment 09:04–09:14 driving 5.23 km where the optimal route covers 1.08 km, adding 4.15 km [F4], against an optimal route of 7.2 km and actual 10.2 km [F2]; the metered fare carries extra distance straight into the fare [F5][F7][RD-2]. No exemption applies: the chat is complete and timestamped but contains only the rider's pickup greeting and the driver's 8-minute ETA, with no rider message before 09:04 consenting to any route or named road [F8][F9][F10], the driver's post-trip statement is not rider consent [F11], and there is no traffic incident near the route in the window with only band 3 (20–29 km/h) speeds and fair weather, so RD-4 gives no reasonable-cause defence [F12][F13][F14][F15][RD-5][RD-4]. On that segment RD-2 fixes the refund at the segment's extra km × this trip's per-km rate: $17.16 ÷ 12.17 km = $1.4100/km, and 4.15 km × $1.4100/km = $5.8515 ≈ $5.85 [F4][F5][F7][RD-2], with only the mileage unit refunded (the wait fee billed is $0.00) [F7][RD-3].\n\nThe procedural screen, however, fails: the GPS trace does not cover the whole trip — the last sample is 4 min 0 s before the 09:20:45 drop-off [F1]. The trace marks RD-1 coverage as ✗ and records the missing stretch as unmeasurable, so the record does not settle every element the ruling needs (the trip's full driven distance and the resulting fare cannot be reconciled against the covered portion alone) and the only permissible outcome is a referral [RD-2][RD-1].\n\nThe safety screen was performed on my own reading: the chat messages are a pickup greeting and an ETA, the driver's statement is a bare denial of routing fault, and the complaint is a fare grievance; none contains a threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 / SAFE-2 escalation applies [F8][F9][F11][SAFE-1][SAFE-2].\n\nOn the account flag: RD-6 requires route_disputes_upheld_90d ≥ 1 before this case; the driver's profile shows 3 disputes in 90 days with 1 upheld but route disputes 0 [F17], so the \"repeated route deviation\" condition is not met and no account flag is issued [F17][RD-6]. Should the human reviewer uphold the segment and enter it as a route dispute, RD-6 would then be assessed on the updated count [F17][RD-6].",
   "cited_facts": [
    "F1",
+   "F2",
    "F4",
    "F5",
    "F7",
@@ -110,49 +104,41 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": true,
-  "escalation_reason": "GPS trace does not cover the whole trip (last sample 4 min 0 s before the 09:20:45 drop-off, F1), so the off-route/extra-distance picture cannot be fully measured; the trace marks RD-1 coverage as failed and the case must go to a human reviewer.",
+  "escalation_reason": "Route-deviation dispute where the trace marks trip coverage as ✗: the GPS trace ends 4 min 0 s before drop-off [F1], so the record does not settle every element needed to execute the RD-2 refund; the measured segment F4 (09:04–09:14, +4.15 km, no rider consent [F8][F9][F10], no RD-4 cause [F14][F12][F13][F15]) provisionally supports refund_partial of 4.15 km × ($17.16 ÷ 12.17 km = $1.4100/km) = $5.85 [F4][F5][F7][RD-2]. Check: (a) the raw GPS/meter trace for the final 4 minutes and the full metered distance (12.17 km per F7 vs 10.2 km measured per F2); (b) whether the 4.99 km/$7.04 excess in F5 should additionally be reconciled; (c) do not attach an RD-6 account flag on the current profile (route_disputes_upheld_90d = 0) [F17][RD-6]; (d) no safety element on my reading of F8–F11, so no SAFE-1/SAFE-2 referral.",
   "segment_findings": [
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9",
      "F10",
      "F11"
     ],
-    "reason": "Off-route segment 09:04–09:14 added 4.15 km and reached 1989 m off the optimal route — an unexplained deviation under RD-1 [F4]. No rider consent exists: the complete, timestamped chat contains only the 08:47 pickup message and the 08:48 driver reply, no route or road mentioned, and the driver's post-trip reroute claim is a statement, not rider consent [F8][F9][F10][F11][RD-5]. No traffic incident near the route and only band 3 speed bands with fair weather, so no reasonable-cause exemption [F12][F13][F14][F15][RD-4]. The segment counts as refundable under RD-2 [F4][RD-1][RD-2]."
+    "reason": "The off-route segment 09:04–09:14 (5.23 km driven vs 1.08 km optimal, +4.15 km) has no rider consent: the complete, timestamped chat contains only the rider's pickup greeting and the driver's ETA, with no rider message sent before the segment start agreeing to a route or a named road [F8][F9][F10], and the driver's post-trip statement that the GPS rerouted is a claim, not rider consent [F11]; no traffic incident or band 1/2 congestion supports a reasonable-cause exemption [F12][F13][F14][F15]; therefore the segment is unexempted and refundable under RD-2 [F4][RD-5][RD-4][RD-2]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C2",
-    "reason": "Accepted as to the covered segment (it counts under RD-1/RD-2 [F4]), but its effect on the amount cannot be finalised: the GPS trace is incomplete [F1], so the case escalates rather than being decided [RD-2]."
-   },
-   {
-    "id": "C6",
-    "reason": "The 4.15 km × $1.4100/km = $5.85 base rests on the covered segment alone [F4][F5], but the same fare record bills 4.99 km of excess distance ($7.04) [F5][F7]; with the trace incomplete [F1] the quantum cannot be fixed here, so no amount is awarded [RD-2]."
-   },
-   {
     "id": "C7",
-    "reason": "Rejected: RD-6 requires a refund payable on this case or a recorded RD-1 breach [RD-6], and this case produces no executable refund because the record is incomplete [F1]; the profile (3 disputes, 1 upheld, route count 0) cannot itself carry the flag [F17][RD-6]."
-   },
-   {
-    "id": "D1",
-    "reason": "Accepted in part — the mileage-linked sum in dispute is the fare record's excess-distance figure rather than the whole fare [F5][F7] — but the record's incompleteness [F1] prevents any award, so it does not support a decision for the driver [RD-2]."
+    "reason": "The arithmetic is accepted ($17.16 ÷ 12.17 km = $1.4100/km; 4.15 km × $1.4100/km = $5.85) [F4][F5][F7][RD-2], but the trace shows the GPS record does not cover the whole trip — the last sample precedes drop-off by 4 min 0 s [F1] — so the amount cannot execute on this record and the case must be referred to a human reviewer rather than paid out."
    },
    {
     "id": "D7",
-    "reason": "Rejected as a ground for denying the deviation: the driver's post-trip statement that the GPS rerouted him is a claim that yields to the chat and GPS records and cannot excuse the segment [F11][F4][RD-5]; the incomplete trace [F1] is a reason to escalate, not a reason to find the deviation explained."
+    "reason": "Correct that the flag does not attach: the driver's 90-day record shows route disputes upheld 0, so the RD-6 precondition route_disputes_upheld_90d ≥ 1 is not met before this case, even though the profile also shows 1 upheld dispute of another kind [F17][RD-6]. This does not, however, cure the evidentiary gap in the fare record [F1][RD-2]."
    },
    {
-    "id": "D8",
-    "reason": "Accepted that profile facts cannot decide the case [F17][RD-6], but it does not rescue the driver on the merits: the covered segment remains an unexempted deviation [F4][RD-1], and the case is escalated on the record gap [F1][RD-2]."
+    "id": "D9",
+    "reason": "Accepted in part: the uncovered tail cannot be measured and no further deviation can be found against the driver there [F1]. That same gap is a defect in this record, not a reason to leave the fare as charged, since the trace shows the trip-coverage element fails and the outcome must be a referral [F1][RD-1][RD-2]."
    }
   ],
   "flag_account": false,
@@ -163,18 +149,18 @@
    "F11"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the recorded 09:20:45 drop-off [F1], so the final stretch of the journey and any distance/off-route behaviour on it cannot be measured. The covered record also leaves the quantum unsettled — the covered off-route segment adds 4.15 km [F4] while the fare bills 4.99 km of excess distance [F5][F7]."
+  "evidence_gap": "GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the 09:20:45 drop-off [F1], so the uncovered stretch cannot be measured and the trip's full driven distance/fare cannot be reconciled against the covered portion; the provisional RD-2 computation of $5.85 on segment F4 [F4][F5][F7] cannot be executed until a reviewer confirms the record."
  },
  "status": "escalated",
  "events": 27,
- "void_claims": 1,
+ "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: evidence insufficient: GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the recorded 09:20:45 drop-off [F1], so the final stretch of the journey and any distance/off-route behaviour on it cannot be measured. The covered record also leaves the quantum unsettled — the covered off-route segment adds 4.15 km [F4] while the fare bills 4.99 km of excess distance [F5][F7]."
+  "judge escalates → human review: evidence insufficient: GPS trace does not cover the whole trip: the last sample is 4 min 0 s before the 09:20:45 drop-off [F1], so the uncovered stretch cannot be measured and the trip's full driven distance/fare cannot be reconciled against the covered portion; the provisional RD-2 computation of $5.85 on segment F4 [F4][F5][F7] cannot be executed until a reviewer confirms the record."
  ],
  "record_path": "bench/results/blind/court/X-0008.record.json",
- "latency_s": 20.86,
- "input_tokens": 101798,
- "output_tokens": 6545,
- "requests": 9,
+ "latency_s": 24.11,
+ "input_tokens": 93535,
+ "output_tokens": 7542,
+ "requests": 8,
  "llm_calls": 5
 }

@@ -4,56 +4,46 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:32.980505+00:00",
+ "ts": "2026-10-10T17:35:49.273004+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 7.45,
-  "recommended_action": "Refund S$7.45 (voucher) to the rider for 5.284 km of unexempted detour on this RydeTAXI metered trip; note the driver's RD-1 breach (record only, no account flag).",
-  "confidence": 0.68,
-  "reasoning": "Service type is RydeTAXI (metered), so extra distance enters the fare and RD-2's taxi branch applies: refund = Σ(unexempted segment extra_km) × (distance_fare ÷ distance_km) = 5.284 × (22.50 ÷ 15.96) = 5.284 × 1.409774 = S$7.45.\n\nSegments. The quoted route is the NUH→AYE→CTE→Raffles Place corridor (10.624 km). The GPS trace shows the driver leaving it early: he loops north around Kent Ridge (09:00–09:02), picks up at NUS at 09:03, then runs west on the AYE past his own turn-off — deviating south through Clementi Road / Pasir Panjang (09:14–09:20, where the trace sits 1.6–2.6 km south of the quoted corridor) — before rejoining and taking the CTE. Fact table gives one off-route segment totalling +5.32 km of excess distance.\n\nDriver's weather/expressway defence (RD-4). The AYE band-2 record (SYN-EE9E22, 2–3.6 km) sits on the quoted corridor and its window covers 09:10–09:13, so the AYE is partly corroborated as slow — but RD-4(b) alone does not exempt (G3), and the record cannot support the much larger portion of the detour (the Kent Ridge loop and the Clementi/Pasir Panjang stretch, roughly 4 km) as any avoidance of a slow link on the replaced corridor. No traffic incident exists (incidents = []). The driver's own account names the AYE as what he avoided, so his explanation does not reach the segment placed elsewhere.\n\nConsent (RD-5): the chat record is empty, so there is no rider message agreeing to any route change. A verbal agreement in the driver's statement is a claim, not consent (G11). Nothing in the record ties the driven detour to any agreed road.\n\nArithmetic on the amount: the fare carries 15.96 km (~5.3 km over the 10.624 km quoted route). Attributing the record's whole off-route excess to the unexempted segment is the conservative-for-the-driver adjustment to the fact table's 3.8–4.2 km; it still leaves the 0.44 km of excess outside any segment unrefunded per RD-2. Waiting fee is $0.00 and tolls $0.00 (no unconsumed metered waiting recorded; ERP handling is FARE-2, not triggered). No app edit-destination fee exists for RydeTAXI (RD-3(c)).\n\nRD-6 does not apply: driver route_disputes_upheld_90d = 0 (the two upheld disputes are of other types), so there is one upheld route dispute, not \"repeated\" — no flag_account. Safety screen: chat empty, driver statement contains no threat, abuse, harassment or dangerous-driving allegation, and the dispute type is not safety, so safety_concern = none.\n\nConfidence: the off-route measurements and the fare arithmetic are settled by system records (GPS + fare), but the segment km figures come from the fact table I could not re-run, and the alignment of the band-2 link with the detour timing leaves some room; hence 0.68.",
-  "cited_facts": [
-   "gps-detour-seg1"
-  ],
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send to a human reviewer with the route/GPS comparison: the quoted route (10.624 km) is a straight AYE run to Raffles Place, while the metered trip ran 15.96 km with a large unexplained loop; the driver claims AYE flooding but the only AYE record (speed_band 2) neither reaches the contested portion of the optimal route nor meets the RD-4(a) incident requirement, and the driver refused to explain the loop. Ask the reviewer to fix the off-route segments against the optimal-route trace, verify whether any traffic/road-block record supports the AYE claim, and if the deviation is upheld, compute the refund as Σ(unexempt extra_km) × (distance_fare 22.50 ÷ distance_km 15.96 = S$1.41/km) per RD-2.",
+  "confidence": 0.5,
+  "reasoning": "Service type is RydeTAXI, so RD-2's metered branch applies: the fare is meter-based (distance_km 15.96, distance_fare 22.50 → S$1.41/km) and extra kilometres feed directly into the fare. The complaint (11 km quoted vs 16 km metered) matches the records: quoted route total_km 10.624, fare.distance_km 15.96 — an excess of about 5.3 km. No chat exists at all, so no rider consent to any route change and no rider-named stop; the driver's only justification is \"Ayer Rajah Expressway was crawling and flooding in the heavy rain, so I went round it.\"\n\nRD-4 review of that justification: the only incident list is empty, so RD-4(a) fails outright. The traffic bands give an AYE record (speed_band 2, window 08:49:05–09:13:55) and a CTE record (band 5, window 08:49:05–09:34:45); band 2 would only be corroborative under RD-4(b) and cannot exempt a segment on its own. The rider's quoted route reaches AYE's western end around 1.2837/103.8127 (GPS ~09:10) and leaves it near 1.2784/103.8240 (~09:14), i.e. after the band-2 window closes at 09:13:55, on a stretch that the CTE record (band 5 = free-flow) also covers. The driver's own explanation does not account for the large early loop away from the optimal route — GPS from ~09:03:05 to ~09:08:35 runs south-west through Kent Ridge/Normanton Park to about 1.2842/103.8012, west of the AYE entry point, before rejoining — and no record ties that loop to AYE congestion. So the claim of \"reasonable cause\" is only partially, and not verifiably, supported.\n\nHowever, I cannot settle the case myself: the fact table's pre-computed off-route segments (gps-detour-*) and the per-segment extra_km were not provided in this record, the GPS trace supplied is thinned to every 6th sample (73 of 429 points on a 30 s grid), and the quoted polyline contains a discontinuity (a jump straight to the Raffles Place endpooint) that prevents a clean geometric match. RD-2's refund is Σ(unexempt extra_km) × per-km rate; without per-segment extra_km I have no number to refund, and RD-1 forbids me from inventing a threshold instead. Per G12/G13 and the missing-evidence rule (which never favours either side), and consistent with RD-2's own carve-out that lane-reversal/jitter kilometres inside the 200 m corridor are not refunded, the case goes to a human with the computation framed above. A segment I cannot place against the words/records is 'undetermined', and an undetermined finding that changes the amount or the flag escalates.\n\nSafety screen: the chat is empty, the complaint and the driver statement contain no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation; dispute type is route_deviation, not safety. safety_concern = none.\n\nProfile: driver route_disputes_upheld_90d = 0, so even if RD-2 were to yield a refund, RD-6's 'repeated' condition is not met and no account flag is warranted at this stage.",
+  "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-4",
    "RD-5",
    "RD-6",
-   "G3",
-   "G11"
+   "G12",
+   "G13"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Evidence is insufficient to settle RD-2: no off-route segment facts / extra_km in the record, thinned and partially discontinuous traces. Per G12 missing evidence is not resolved in either party's favour, so a human must fix the segments, test the driver's RD-4 justification against AYE traffic records, and then apply the S$1.41/km calculation.",
   "segment_findings": [
    {
-    "fact_id": "gps-detour-seg1",
-    "finding": "counts",
+    "fact_id": "seg1",
+    "finding": "undetermined",
+    "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "One off-route segment with extra_km > the RD-1 noise tolerance; no rider consent in chat (RD-5, G11) and the driver's congestion claim is not corroborated by any traffic incident on the replaced corridor and only weakly by the AYE speed band (RD-4(a),(b), G3). Rides as an unexempted detour under RD-1/RD-2."
+    "reason": "Early loop: GPS ~09:03:05–09:08:35 runs south-west from the pickup area through Kent Ridge / Normanton Park to about 1.2842,103.8012, west of the optimal route's AYE entry, before rejoining. No chat message exists (chat is empty), so no rider message precedes this segment and no consent is recorded (RD-5). The driver's only stated reason is AYE crawling/flooding, which does not cover this loop away from the AYE entry; the only AYE record is speed_band 2 whose window ends 09:13:55. Whether this loop counts under RD-2 cannot be quantified because no gps-detour-* fact or extra_km is given, hence undetermined under G12/G13; if upheld it will affect the refund amount."
    }
   ],
-  "rejected_claims": [
-   {
-    "id": "driver_weather_defence",
-    "reason": "RD-4(b) band evidence alone does not exempt (G3); no traffic incident on the replaced corridor; the band-2 window covers only a small stretch of the corridor and cannot explain the Kent Ridge loop or the Clementi/Pasir Panjang stretch of the detour."
-   },
-   {
-    "id": "driver_verbal_consent",
-    "reason": "Chat record is empty; a verbal agreement asserted only in the driver's statement is a claim, not consent (RD-5, G11)."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "The record does not include the pre-computed off-route segment facts (gps-detour-* identifiers and their extra_km) required to quantify RD-2, and the supplied GPS trace is thinned to every 6th sample (73 of 429 points, 30 s grid) while the quoted-route polyline contains a discontinuity. Without per-segment extra_km the refund amount cannot be computed and no segment can be matched to the driver's AYE-congestion claim."
  },
- "latency_s": 6.84,
- "input_tokens": 16003,
- "output_tokens": 1333,
+ "latency_s": 8.08,
+ "input_tokens": 16394,
+ "output_tokens": 1613,
  "requests": 1,
  "llm_calls": 1
 }

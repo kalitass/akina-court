@@ -4,40 +4,43 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:46.467520+00:00",
+ "ts": "2026-10-10T17:37:00.883182+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; reply to the rider citing NS-4 (cancellation 1:40 after matching, outside the 3-minute free window) and note the driver was ~4.3 km from the pickup and had no arrival/here record; safety screen clean, no account action.",
-  "confidence": 0.82,
-  "reasoning": "Dispute is a rider-side cancellation fee challenge (NS-0, cancelled_by = rider → instant order → NS-4).\n\nTiming: accepted_at 12:54:00, cancelled_at 12:55:40 → 1 min 40 s after matching. The rider's claim \"within 3 minutes\" is therefore TRUE as a matter of clock time. But NS-4 is not satisfied in the rider's favour: it provides only that cancellations made within 3 minutes of matching are not chargeable, and that Ryde publishes no \"driver late vs ETA → free cancellation\" rule (NS-8 is informational and the record has no ETA field). Either way the fee outcome under NS-4 is the same for the rider: the fee is only chargeable if the cancellation is later than 3 minutes.\n\nThe record nevertheless shows the fee is not owed, because the other NS branch applies. The only route to charge the fee when the rider does not cancel in time is NS-1: driver pressed \"I'm Here\" (or platform auto-arrival), GPS inside the pickup radius at the tap, then a continuous wait > 3 minutes. Here driver_arrived_at, driver_pressed_here_at, arrival_confirmed_by, arrival_radius_m and wait_started_at are all null. GPS places the driver at 12:54:00 at (1.2781, 103.83807) and at cancellation (12:55:40) at (1.28222, 103.84154) — roughly 4.3 km from the Marina Bay Sands pickup (1.2839, 103.8607), never within 200 m of it. So NS-1 (i) and (ii) both fail: no arrival confirmation at all, and the driver was nowhere near the pickup. Preference: refund_full of the $6.61 cancellation fee.\n\nNo NS-2 account flag: NS-2 attaches flag_account only when the driver pressed \"I'm Here\" while GPS showed him outside the pickup radius. No \"I'm Here\" was ever pressed here, so that abuse-of-button condition is absent. NS-3 does not apply (the rider, not the driver, cancelled), and no fee-waiver timeliness issue arises (filed 2026-09-22, the day of the trip). Rider profile facts (2 prior upheld no-show disputes) never decide a case and are not used here. Evidence is sufficient: the timeline, the ride-state nulls, the 30 s-thinned GPS track covering the whole 100 s window and the chat (empty) settle every element.\n\nSafety screen: read the complaint, driver statement and chat in full — no threats, intimidation, harassment, sexual remarks or dangerous-driving allegation; dispute type is not safety. safety_concern = none.",
+  "recommended_action": "Uphold the $6.61 rider cancellation fee; inform the rider the free-cancellation window is 3 minutes from matching, which elapsed at 12:57:00 while the cancellation was logged at 12:55:40... (see reasoning) — no adjustment due; no account action on either party.",
+  "confidence": 0.86,
+  "reasoning": "Cancellation branch: NS-0 routes a rider-side cancellation of an on-demand (RydeX, non-taxi) trip to NS-4. Matching occurred at accepted_at 2026-09-22T12:54:00+08:00; the 3-minute free-cancellation window under NS-4 expires at 12:57:00. The trip record shows cancelled_at = 12:55:40, i.e. 1 min 40 s after matching (≤ 3:00), and cancelled_by = \"rider\". On the face of the cancellation timestamp the rider is within the free window and the $6.61 cancellation_fee should not stand → that would be refund_full/fee_waived of $6.61.\n\nHowever the system records (which override statements) contradict the logged timestamp: the GPS trace shows the vehicle still moving, 2.2 km from the pickup at the logged cancellation time. Last sample ts 12:55:40 lat 1.28222 lon 103.84154 (speed 0.0) — straight-line distance to pickup (1.2839, 103.8607) ≈ 2.2 km; at 12:55:30 it was travelling at 29.0 km/h. The logged cancelled_at therefore cannot be the real cancellation event: either the rider cancelled later than 12:55:40 (outside the 3-minute window) or the timestamp is wrong. Either way a single fact required to apply NS-4/NS-0 (the actual time of cancellation) is not reliably recorded, and G12 applies: missing/unreliable evidence never favours either side — escalate rather than refund.\n\nThe rider's stated reason (\"driver was nowhere near\") is not a ground for a free cancellation under Ryde's policy: no rule gives the rider a free cancel because the driver has not arrived or is below ETA (NS-8 is informational only, no ETA field exists, and the rider's own profile shows 2 prior upheld no-show disputes — profile facts never decide a case, and this one points against, not for, the rider).\n\nTraffic/route material is irrelevant: there is no gps-detour segment (trip never started, no dropoff), so RD-1..RD-6 and FARE-1..FARE-3 are not engaged, and the fare recorded is only the cancellation fee with no other add-ons.\n\nSafety screen: chat is empty; the rider's complaint and the driver's statement (\"I was on my way when the rider cancelled\") contain no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation (SAFE-1/SAFE-2). No safety concern.\n\nEvidence status: the cancellation-vs-GPS inconsistency is a genuine gap (unreliable cancelled_at), so this must go to a human reviewer rather than be auto-executed; missing evidence favours neither side. No flag_account on either side: the driver never pressed \"I'm Here\" and never claimed no-show, and NS-2's flag applies only where a driver taps \"I'm Here\" while outside the pickup radius — not this case.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-4"
+   "NS-4",
+   "G12"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Cancellation time is unreliable (GPS shows the driver still en route 2.2 km away at the logged cancelled_at), so it cannot be determined whether the rider cancelled within the NS-4 3-minute free window (which expired at 12:57:00). A human reviewer should verify the cancellation event time from the dispatch log before refunding or upholding the $6.61 fee.",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "Rider says the driver was 'nowhere near' AND that she cancelled within 3 minutes, implying the fee is unjust. The timing half is not the reason the fee fails (NS-4 makes the fee chargeable only after 3 minutes), but the fee is in any case not collectible because NS-1's preconditions — an 'I'm Here' tap / arrival confirmation and GPS within the pickup radius followed by a continuous > 3 minute wait — are wholly absent; the driver was ~4.3 km away at cancellation."
+    "id": "rider_claim_under_3min",
+    "reason": "Rider's complaint asserts cancellation within 3 minutes; the logged cancelled_at (12:55:40) is irreconcilable with the GPS trace placing the driver mid-drive 2.2 km from the pickup at that instant, so the timestamp cannot be relied on and the claim is neither accepted nor rejected — escalated."
+   },
+   {
+    "id": "rider_claim_driver_far_away",
+    "reason": "The driver being far from/nowhere near the pickup is not a ground for free cancellation under Ryde's policy; no driver-ETA-lateness rule exists (NS-8 is informational only and there is no ETA field)."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "cancelled_at (12:55:40, 1:40 after matching) is contradicted by the GPS trace: the driver is still driving (29 km/h at 12:55:30, speed 0 at 12:55:40) and 2.2 km from the pickup at that moment, so the recorded cancellation time is not the actual event. Without a reliable cancellation timestamp the NS-4 3-minute test cannot be applied; also no arrival/\"I'm Here\" record and no chat to corroborate."
  },
- "latency_s": 5.25,
- "input_tokens": 11981,
- "output_tokens": 1047,
+ "latency_s": 6.58,
+ "input_tokens": 12372,
+ "output_tokens": 1381,
  "requests": 1,
  "llm_calls": 1
 }

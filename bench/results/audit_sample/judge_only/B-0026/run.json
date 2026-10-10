@@ -2,21 +2,21 @@
  "arm": "judge_only",
  "case_id": "B-0026",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:33:36+00:00",
+ "started_at": "2026-10-10T17:57:10+00:00",
  "fingerprint": {
   "case_sha256": "7e8ed3e599eb10cd",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:33:36+00:00"
+  "issued_at": "2026-10-10T17:57:10+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde review for a fake arrival confirmation + flag_account",
-  "confidence": 0.96,
-  "reasoning": "The driver cancelled this RydeX trip and kept the $6.61 cancellation fee on the ground that the rider was a no-show [F3][F6]. Under NS-0 the case therefore enters through NS-1/NS-2 [F3][NS-0]. NS-1 requires all three elements: an arrival confirmation, GPS placing the driver at the pickup point at the moment of the tap, and a continuous wait of more than 3 minutes inside the pickup radius until cancelling [F5][F4][NS-1]. Only the first element is satisfied — the driver tapped \"I'm Here\" at 12:06:15 [F5][NS-1]. On the second, the tap was made 600 m from the pickup point, the driver's closest approach in the whole trip was 599 m, and the platform never recorded him at the pickup point [F5][F1][F4][NS-1]. On the third, he spent 0 s continuously within 200 m of the pickup after the tap, far short of the 180 s threshold, though he sat stationary 600 m away from 12:05:55 to 12:09:25 [F5][F2][NS-1]. NS-1 (ii) and (iii) therefore both fail, and NS-2 requires the $6.61 to be refunded in full [F5][F1][F3][NS-1][NS-2]. The chat confirms the rider was actually at the pickup point while the driver asserted he was \"here already\" from elsewhere [F8][F9][F10]. Because the driver pressed the arrival button while GPS showed him outside the pickup range, the case additionally carries a flag_account action under NS-2 [F5][F1][NS-2]. The refund is a single fixed item of $6.61 taken from the fare record, so the amount is $6.61, not a per-km computation [F3][F6][NS-2], and is issued as a Ryde voucher under NS-7 [NS-7]. The traffic and weather records (band 3 on Jalan Besar, no incidents, fair weather) are irrelevant to a no-show case and do not explain the driver's position [F13][F14][F15]. The driver's written statement that he pressed \"I'm Here\" and waited more than 3 minutes at the pickup is a claim contradicted by the GPS and timeline records, which prevail [F12][F3][F5][NS-1].",
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and send the driver's account for review of the fake \"I'm Here\" arrival confirmation + flag_account",
+  "confidence": 0.93,
+  "reasoning": "NS-0 routes this case: the driver cancelled and asserted a rider no-show, so it goes to NS-1/NS-2 [F3][RD-3 no] — more precisely [F3][NS-0]. Under NS-1 the fee stands only if all three elements hold. (i) is satisfied on its face: the trace shows a driver_tap at 12:06:15 [F5][NS-1]. But (ii) fails decisively: at the tap the GPS put the car 600 m from the pickup, and the closest approach during the entire wait was 599 m — never within 200 m [F5][F1][NS-1]. Element (iii) also fails: the driver stayed within 200 m for 0 s after the tap [F5][NS-1], and the platform never recorded any arrival at the pickup point, with driver_arrived_at null [F4][NS-1]. The physical record contradicts the driver's own written claim that he \"pressed I'm Here and waited more than 3 minutes at the pickup\" [F12]; system records override statements, and the rider's contemporaneous message \"I'm at the pickup point, no car here\" is consistent with the GPS [F9][F1][NS-1]. With (ii) and (iii) both unmet, NS-2 (or NS-3) applies and the $6.61 cancellation fee must be refunded in full [F6][NS-2]. Because the driver tapped \"I'm Here\" while GPS showed him outside the pickup radius, NS-2 separately requires flag_account for abuse of the arrival/cancellation button [F5][F1][NS-2]; the trace also marks this ✓ and the profile field route_disputes_upheld_90d ≥ 1 is satisfied for the driver (1 upheld no-show in 90 d), reinforcing RD-6 as grounds for account review — though RD-6 is not needed for the ruling itself [F17][RD-6]. The refund is issued as a voucher, and this remains a recommendation to Ryde [F6][NS-7]. Amount: the contested item is the fixed cancellation fee of $6.61 recorded in the fare fact, and no mileage/distance arithmetic is needed because the item is a flat fee [F3][F6][NS-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -27,16 +27,17 @@
    "F8",
    "F9",
    "F10",
+   "F11",
    "F12",
-   "F13",
-   "F14",
-   "F15"
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-3",
+   "NS-7",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -48,8 +49,7 @@
    "F8",
    "F9",
    "F10",
-   "F12",
-   "F1"
+   "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -74,15 +74,15 @@
    "Had NS-1 (ii) and (iii) both held ((ii) within 200 m of pickup AT THE MOMENT of the arrival confirmation; (iii) stayed at the pickup more than 3 min after the arrival confirmation, until cancelling (NS-1 default: more than 3 min)), the fee would stand and no refund would be due."
   ]
  },
- "latency_s": 6.46,
+ "latency_s": 6.59,
  "model_calls": 2,
  "provider_trace_ids": [
-  "d5998dd651ab319d1a9249d96c82b79b",
-  "f323bd6ee5b3bfb821ac113a920b4bf8"
+  "2670cc77e3b9902097b5a2564fe79064",
+  "9e96c26518bab83da625d61a0c78e7c1"
  ],
  "provider_response_ids": [
-  "6bc427fb-6837-4a8e-9913-781be2df6d9e",
-  "c820ca0f-fc21-40dc-ad8d-83c46a3d52ea"
+  "9e6f5368-14fe-4624-86ab-127d932e052a",
+  "01ba8f2a-80a5-4c9c-b499-01d8ab8f813e"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -95,25 +95,25 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 11379,
-   "completion_tokens": 1189,
-   "total_tokens": 12568,
+   "prompt_tokens": 11770,
+   "completion_tokens": 1052,
+   "total_tokens": 12822,
    "prompt_tokens_details": {
-    "cached_tokens": 11136
+    "cached_tokens": 11520
    },
-   "prompt_cache_hit_tokens": 11136,
-   "prompt_cache_miss_tokens": 243
+   "prompt_cache_hit_tokens": 11520,
+   "prompt_cache_miss_tokens": 250
   },
   {
-   "prompt_tokens": 1049,
-   "completion_tokens": 257,
-   "total_tokens": 1306,
+   "prompt_tokens": 1009,
+   "completion_tokens": 288,
+   "total_tokens": 1297,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 793
+   "prompt_cache_miss_tokens": 753
   }
  ],
- "finished_at": "2026-10-10T13:33:42+00:00"
+ "finished_at": "2026-10-10T17:57:17+00:00"
 }

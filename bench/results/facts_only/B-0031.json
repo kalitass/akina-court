@@ -4,23 +4,29 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:20:13.500437+00:00",
+ "ts": "2026-10-10T17:39:17.441382+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); system records show the driver never pressed \"I'm Here\" and never waited the required 3+ minutes after an arrival confirmation, so the no-show fee did not validly accrue.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; record the driver's failure to satisfy the NS-1 arrival/waiting prerequisites (no \"I'm Here\" tap, no platform arrival confirmation) in the driver's record.",
   "confidence": 0.93,
-  "reasoning": "Safety screen: the chat is a plain pickup/coordination exchange (\"At the pickup point, silver Toyota Altis\", \"Waited 4 min, cancelling\") — no threat, abuse, harassment or dangerous-driving allegation, and the dispute type is no_show, not safety. No escalation on SAFE grounds.\n\nRoute of the dispute: cancelled_by = driver and the driver asserts a rider no-show, so NS-0 sends the case to NS-1 / NS-2. NS-1 requires all three: (i) the driver pressed \"I'm Here\" (or a platform automatic arrival confirmation), (ii) GPS placing the driver within 200 m of the pickup at that moment, and (iii) a continuous wait of more than 3 minutes within 200 m after the tap until cancellation. Requirement (i) fails outright: F6 records that driver_pressed_here_at is null — the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival. The driver's own statement concedes this (\"I forgot to press the I'm Here button but I was there\") [F12]. A driver's statement is a claim, not a system record, and cannot supply the missing arrival confirmation (the GPS/timeline records override it). Because (i) is not satisfied, NS-1 cannot be met and the $6.61 no-show fee is not validly established → NS-2: full refund of $6.61, refund_full.\n\nFor completeness, the physical-presence facts would otherwise have helped the driver: within 200 m the driver accumulated 5 min 20 s [F2], and he was stationary 4 min 0 s, 40 m from the pickup, immediately before cancelling [F3]. But NS-1 is conjunctive, and (i) is a hard precondition (\"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she …\"). Note also that the only \"arrival\" on the record is a platform-recorded approach (F5) — and F6 expressly rules out any platform automatic arrival confirmation, so (i) is not salvaged that way either. The fee is therefore refunded in full and issued as a Ryde voucher per NS-7 (no cash).\n\nAccount flag: NS-2's flag_account is triggered only where the driver did press \"I'm Here\" while GPS showed him more than 200 m from the pickup. Here he never pressed the button at all (F6, F12), so that specific abuse condition is not met and no flag is applied. RD-6 does not apply (this is not an upheld route-deviation case); F17 (0 upheld disputes) would not support it in any event. The rider's profile [F16] is not relied upon — profiles cannot decide a case.\n\nEvidence status: sufficient. The record settles every element needed — the cancellation event and its charge [F4, F7], and the decisive absence of an arrival confirmation [F6], confirmed by the driver's own written statement [F12]. No GPS gap relevant to the ruling was identified; the 3-minute / 200 m measurements are complete and do not affect the outcome because (i) already fails.",
+  "reasoning": "Safety screen: the two chat messages are ordinary pickup/waiting arrangements (\"At the pickup point, silver Toyota Altis\", \"Waited 4 min, cancelling\") and the written driver statement is neutral — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nCancellation branch: cancelled_by = driver and the driver asserts a rider no-show, so NS-0 routes the case to NS-1/NS-2. NS-1 requires (i) the driver pressed \"I'm Here\" (or a platform auto-arrival), (ii) GPS placing the driver within the pickup radius at that moment, and (iii) more than 3 continuous minutes of waiting within range thereafter. Here (i) fails outright: F6 records no arrival confirmation at all — the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null). The driver admits this in F12 (\"I forgot to press the I'm Here button but I was there\"), and a written statement cannot supply the missing tap — the record, not the statement, governs. The platform-arrival event in F5/F2 is a GPS-derived proximity record, not an arrival confirmation under NS-1(i), and F12 confirms no tap was made. Since NS-1 (i) is not satisfied, NS-2 applies: the $6.61 cancellation fee must be fully refunded (refund_full, $6.61, per NS-7 as a voucher).\n\nNote on NS-2's additional flag: the extra `flag_account` attaches only where the driver DID press \"I'm Here\" while GPS showed him outside the pickup radius (m_from_pickup_at_tap > 200). Here there is no tap at all (F6), so that condition is not met and no account flag is warranted; F1/F3 (34–40 m from pickup) also show he was genuinely nearby. Rider and driver profiles (F16/F17: 0 upheld disputes in 90 days) are consistent with no repeat-violation flag. RD-6 is not engaged (no route deviation in this case, no upheld dispute history).\n\nThe rider's \"I was on my way down\" is immaterial: the fee fails on the driver-side prerequisites regardless of the rider's conduct. Evidence is complete for every element relied on (GPS fix, timeline, fare, chat with timestamps: F11), so evidence_status = sufficient.\n\nAmount: the entirety of the disputed item is the $6.61 cancellation fee [F4][F7]; no other charge is at issue (F8 surge 1.0×).",
   "cited_facts": [
-   "F4",
-   "F6",
-   "F7",
-   "F12",
+   "F1",
    "F2",
    "F3",
+   "F4",
    "F5",
+   "F6",
+   "F7",
+   "F8",
+   "F9",
+   "F10",
+   "F11",
+   "F12",
+   "F16",
    "F17"
   ],
   "cited_policy": [
@@ -35,11 +41,11 @@
   "rejected_claims": [
    {
     "id": "F12",
-    "reason": "Driver's statement that he 'was there' and that the rider no-showed is a claim, not consent- or arrival-evidence; system records (F6: driver_pressed_here_at null, no platform auto-arrival) override statements, and NS-1(i) requires an arrival confirmation that does not exist here."
+    "reason": "Driver's written statement that he was at the pickup point and waited is a claim; NS-1(i) requires a recorded arrival confirmation (tap or platform auto-arrival), which F6 shows never occurred. System records (timeline) override statements."
    },
    {
     "id": "F5",
-    "reason": "The platform-recorded approach at 22:41:30 is an arrival-time marker, not an 'I'm Here' tap or automatic arrival confirmation; F6 expressly states no automatic arrival was recorded, so NS-1(i) remains unmet."
+    "reason": "The platform 'arrival' entry is a GPS proximity record, not the arrival confirmation required by NS-1(i); F6 confirms no tap and no automatic arrival was recorded."
    }
   ],
   "flag_account": false,
@@ -48,9 +54,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.4,
- "input_tokens": 9873,
- "output_tokens": 1150,
+ "latency_s": 4.75,
+ "input_tokens": 10264,
+ "output_tokens": 1045,
  "requests": 1,
  "llm_calls": 1
 }

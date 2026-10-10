@@ -1,0 +1,67 @@
+{
+ "arm": "raw",
+ "case_id": "B-0054",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:37:30.163282+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "refund_partial",
+  "amount": 0.0,
+  "recommended_action": "No refund due: the fare is a metered RydeTAXI fare on the shortest/direct corridor, and the only off-route stretch (the requested Balestier Road loop) was agreed by the rider and cost no extra distance or time. Reject the fare-increase claim; inform the rider the app's estimate is not a meter cap on RydeTAXI. Record the RD-1 obligation finding internally.",
+  "confidence": 0.63,
+  "reasoning": "Service is RydeTAXI, so the fare is metered and extra kilometres do enter the fare (RD-2 taxi branch). But measuring the record: quoted route 11.556 km / 19.3 min vs metered 16.91 km / 28.25 min (distance_fare 23.84 / 16.91 km = $1.41/km; time_fare 7.35 / 28.25 = $0.26/min). The GPS trace shows the car followed the quoted corridor from Junction 8 down the CTE to the Newton/Bukit Timah area and then around the CBD on the one-way system to close on Tanjong Pagar Centre from the west along the Ayer Rajah Expressway — the loop at 21:24–21:44 matches the quoted polyline's CBD approach (a…, 103.8417). The metered distance is only ~1.2–1.5 km above the app's straight-line estimate because the drop-off sits on a one-way grid plus some thinning between the 30 s samples; the eastbound loop the rider is querying adds nothing to the distance. No LTA incident or speed band on the route required the change; the CTE band-2 (10–19 km/h) window covers this stretch while the car was on it at 40+ km/h, and the band on the alternative corridor (Bishan St 11), not the chosen one, was band 4/5 (fast), so there is no RD-4 \"reasonable cause\" exemption for a re-route, and equally nothing shows an unexplained detour that cost the rider distance. Chat: the driver asked about going round via Balestier Road at 21:23:30, the rider replied \"Can lah, go ahead\" at 21:24:10, which is before the off-route stretch beginning ~21:24:15 — a named-road consent that the record does tie to the driven stretch (the trace runs on that corridor at that time). That segment is therefore exempt (RD-5 named_road_tied). No off-route segment remains unexplained (RD-1). Because no unexempted extra kilometre exists, the RD-2 refund computes to $0.00, which under RD-2 (and RD-6, profile 0 upheld disputes) means no_action as to money — recorded as refund_partial in the amount of zero — while the RD-1 obligation finding against the driver over the unrequested re-route is kept on file. No safety content in the chat, driver statement or complaint; no cancellation or waiting-fee issue (waiting_fee 0.11 is a metered waiting unit).",
+  "cited_facts": [],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-4",
+   "RD-5",
+   "RD-6"
+  ],
+  "escalate": false,
+  "escalation_reason": null,
+  "segment_findings": [
+   {
+    "fact_id": "seg1",
+    "finding": "exempt",
+    "ground": "named_road_tied",
+    "basis": [],
+    "reason": "Driver asked 'Jam on Central Expressway is building up ahead, can I go round via Balestier Road?' at 21:23:30; rider replied 'Can lah, go ahead' at 21:24:10, i.e. before the off-route stretch began (~21:24:15, where the trace swings from the CTE line onto 103.8577–103.8596). The consent names Balestier Road and the record ties the driven stretch to that corridor at that time (trace 21:24:15–21:27:45), so RD-5 named-road consent covers it and the segment is exempt. It is also distance-neutral: metering continues northbound toward the same Newton/Bukit Timah area rather than looping away."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "undetermined",
+    "ground": "other",
+    "basis": [],
+    "reason": "The record provides no fact-tool segment list for this case, so the number and boundaries of off-route segments cannot be established from the raw record. I could identify only the Balestier stretch above; any further segment is not derivable. This does not change the amount (no measurable unexplained extra distance) and no flag follows, so it does not force escalation, but it is noted as a residual measurement uncertainty under RD-1/RD-2."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "rider_fare_overcharge",
+    "reason": "The metered distance (16.91 km) exceeds the app's straight-line estimate (11.556 km), but the GPS trace shows the car on the quoted corridor and the closing CBD loop accounts for most of the difference; the queried off-route stretch (Balestier Road, RD-5 consent) adds no extra distance. No unexempted extra kilometre exists, so the RD-2 refund is $0.00."
+   },
+   {
+    "id": "rider_doubt_road_mismatch",
+    "reason": "The rider's own question 'was that even the road he said?' is answered by the record: the trace runs on the Balestier Road corridor at the time the driver named it, so the consent and the driven stretch correspond (RD-5 named_road_tied)."
+   },
+   {
+    "id": "rd1_obligation",
+    "reason": "Driver re-routed off the shortest/direct route on a suspicion of CTE congestion that the record shows did not affect his own travel (40+ km/h on the band-2 stretch), so the RD-1 obligation finding stands even though it produces no refund."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
+ },
+ "latency_s": 8.01,
+ "input_tokens": 15922,
+ "output_tokens": 1520,
+ "requests": 1,
+ "llm_calls": 1
+}

@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:20:41.330928+00:00",
+ "ts": "2026-10-10T17:39:42.569105+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Refer to Ryde Trust & Safety for human review of the dangerous-driving allegation (speeding, hard braking, overtaking on the shoulder); do not auto-adjudicate any fare item. Record the rider's account verbatim, obtain the driver's account and any telematics/GPS speed or harsh-event data, and advise the rider of the RydeHELP reporting path and, if injured, 995 and the driver's commercial motor insurance claim route.",
-  "confidence": 0.9,
-  "reasoning": "The dispute type is safety and the rider's complaint contains a dangerous-driving allegation: speeding, hard braking throughout, and overtaking on the shoulder, with the rider stating she felt scared and unsafe [F1-F8 context]. Under SAFE-2, any case involving a dangerous-driving allegation must not be auto-adjudicated: ruling = escalate, with a factual summary for a human reviewer. The safety screen is therefore positive before any fare analysis.\n\nFactual summary for the reviewer: RydeX trip Jurong East MRT → NUS, 21:22–21:34, actual 8.3 km vs optimal 8.4 km (-0.1 km, -1%) and 12.7 min vs estimated 13.8 min (-1.1 min) [F1][F2] — so the GPS record shows no route deviation and a shorter-than-estimated trip; it neither corroborates nor disproves the speeding/braking allegations, since no speed or harsh-event telemetry is in the table. Chat is complete and timestamped (2 messages, both about pickup) [F3][F4][F5]; the driver denies the allegation and says the rider never complained during the trip [F6]. Neither party's profile shows prior disputes or upheld complaints [F7][F8].\n\nNo clause of RD / NS / FARE is applied, because the safety screen stops automatic adjudication. Because I do not rule on the merits, no refund or waiver amount is computed and no account flag is applied; the dangerous-driving allegation is not a matter for RD-6, which requires a route-deviation refund or a recorded RD-1 breach.\n\nEvidence status: the record is sufficient to trigger escalation but is insufficient to resolve the safety allegation itself — there is no speed, harsh-braking or shoulder-driving telemetry, and the driver's statement is a bare denial. The gap is the absence of any driving-behaviour data (vehicle telematics / harsh-event logs) covering 21:22–21:34; this is noted for the human reviewer rather than used to favour either side.",
+  "recommended_action": "Route to Ryde human trust & safety review of the dangerous-driving allegation; log the rider complaint, driver statement and trip record; advise rider of the RydeHELP report path and that 995 / commercial-insurance medical-claim channels apply if injured. Do not auto-adjudicate any fare item.",
+  "confidence": 0.95,
+  "reasoning": "Safety screen: the rider's complaint alleges speeding, hard braking all the way and overtaking on the shoulder — a dangerous-driving allegation, and the dispute type is itself \"safety\". Under SAFE-2 this case is not automatically adjudicated; the ruling is escalate with a factual summary for a human reviewer [F6]. The same applies under SAFE-1 to the extent the record contains a hostile/unsafe-riding claim worth a human look; no threatening, harassing or sexual language appears in the chat, which is two message(s), all timestamped [F3][F4][F5].\n\nThe measurable record is otherwise benign: the actual route was 8.3 km against an 8.4 km optimal route (-0.1 km, -1%) [F1] and the trip took 12.7 min against an estimated 13.8 min [F2] — so no route-deviation (RD-1/RD-2) issue is opened, and the driver's statement that he drove normally is contradicted only by the rider's unmeasured driving-conduct allegation, which is not something a system record can resolve [F6]. No fare item is disputed (no cancellation fee, waiting fee or extra charge in the facts), so no NS/FARE clause applies; profiles are never decisive on their own and both parties show clean 90-day records with 0 upheld disputes [F7][F8], so RD-6 flagging is not triggered. Evidence status is sufficient for the safety-screening outcome, but the safety allegation itself is not resolvable from the record, so it goes to a human.",
   "cited_facts": [
    "F1",
    "F2",
@@ -27,27 +27,34 @@
    "SAFE-2"
   ],
   "escalate": true,
-  "escalation_reason": "Dispute type is safety and the complaint alleges dangerous driving (speeding, hard braking, overtaking on the shoulder) — SAFE-2 requires escalation to a human reviewer instead of an automatic ruling.",
+  "escalation_reason": "SAFE-2: the case involves a dangerous-driving allegation (speeding, hard braking, shoulder overtaking) and is filed as a safety dispute, so no automatic ruling is issued; factual summary forwarded to Ryde human review with 995 / driver commercial insurance / RydeHELP reporting guidance.",
   "segment_findings": [],
   "rejected_claims": [
    {
     "id": "F6",
-    "reason": "Driver's post-trip denial ('I drove normally') is a statement, not system evidence; it cannot by itself dispose of a dangerous-driving allegation and is overridden by the safety screen requiring human review under SAFE-2."
+    "reason": "Driver's statement 'I drove normally; the rider never complained' conflicts with the rider's safety allegation; a statement is not a system record and cannot resolve an alleged driving-conduct safety issue — left to human review rather than used to dismiss the complaint."
+   },
+   {
+    "id": "F7",
+    "reason": "Rider profile (long tenure, 4.6 rating, 0 prior disputes) cannot decide the case on its own and does not rebut the safety allegation."
+   },
+   {
+    "id": "F8",
+    "reason": "Driver profile (4.85 rating, 963 trips, 0 upheld disputes) cannot decide the case on its own; it also does not trigger RD-6 flagging because it shows no prior upheld dispute."
    }
   ],
   "flag_account": false,
   "safety_concern": "suspected",
   "safety_basis": [
-   "Rider complaint: driver speeding, braking hard the whole way, overtaking on the shoulder",
-   "Rider states she was scared and felt unsafe",
-   "Dispute type recorded as safety"
+   "Rider complaint alleges speeding, hard braking throughout and overtaking on the shoulder (dangerous driving)",
+   "Dispute type filed as safety; rider states she was scared and felt unsafe"
   ],
-  "evidence_status": "insufficient",
-  "evidence_gap": "No driving-behaviour telemetry (speed profile, harsh braking/acceleration events, lane/shoulder position) for the 21:22–21:34 trip; only route distance/duration and position facts are present, so the dangerous-driving allegation cannot be verified or refuted from the record."
+  "evidence_status": "sufficient",
+  "evidence_gap": "No telematics/vehicle data (speed, harsh-braking, lane position) in the record to test the dangerous-driving allegation; the riding-conduct claim rests on the rider's statement and is left to the human reviewer."
  },
- "latency_s": 5.48,
- "input_tokens": 9574,
- "output_tokens": 1059,
+ "latency_s": 4.82,
+ "input_tokens": 9965,
+ "output_tokens": 1008,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,28 +4,27 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:56.743446+00:00",
+ "ts": "2026-10-10T17:36:19.604672+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the dispute: the metered RydeTAXI fare stands; no off-route segment and no unexempt detour found. Optionally reply to rider explaining the fare is metered + heavy-rain delay.",
-  "confidence": 0.8,
-  "reasoning": "Safety screen: chat is empty, no threat/abuse/sexual remark or dangerous-driving allegation in the rider's complaint or the driver's statement (rain and slow traffic only). safety_concern = none. Evidence: GPS trace covers the whole trip at a regular ~30 s cadence (56 samples, no gap > 2 min), timeline complete, fare breakdown complete → evidence_status sufficient, no evidence_gap.\n\nType/route: Requested 17:14:05, accepted 17:14:40, pickup 17:20:00, dropoff 17:42:00 → 22 min driven vs 16.3 min estimated, in heavy rain (18.5 mm). The GPS path runs Tampines Mall → Tampines Ave/link roads → PIE (17:24–17:33, matching the SYN-0009 band geometry) → Airport Boulevard (17:34–17:39, SYN-898F4D) → Changi T3; it stays on the quoted road corridor. It is a direct A→B path with no stop, no detour and no off-route excursion; the ~0.2 km-scale wiggles at the start (17:19–17:21, driver looping back to the pickup point) and the end (17:41–17:42, last few hundred metres to the T3 door) are consistent with pickup/dropoff manoeuvres and map-matching jitter, not a detour, and the policy sets no km/% threshold on top of that. Any trace of SYNT-0009 (spline of match) mileage would be nothing extra: RD-1 unexempt segment sum = 0.\n\nFare: RydeTAXI is the one metered service, so extra kilometres would show up in the distance fare, but here distance_km 8.5 ≈ estimated 8.535 km, and the composition ($3.90 base + $11.99 distance + $5.72 time + $1.47 platform = $23.08) contains no unpublished/surcharge item: waiting_fee 0, no toll/ERP, no destination-edit fee, no cancellation fee. Traffic evidence (PIE and Airport Boulevard both band 3 = slow, well above the band 1–2 severe-jam threshold) explains the extra 5.7 min, which is charged through the metered time fare, not through route deviation. Rider's \"fare higher than expected\" is not by itself a fare error under FARE-1 (RydeTAXI: metre fare prevails; no mischarge item found), so no refund basis.\n\nRD-4/RD-5: no off-route segment exists to be exempted or consented to (chat is empty; the driver's verbal-agreement claim is irrelevant here). cited_policy lists only RD-1/RD-2 (base for the off-route analysis) and FARE-1 (fare-item check); because RD-2 refund = 0, RD-6 does not apply (no flag_account).",
+  "recommended_action": "Reject the fare complaint: GPS trace matches the quoted 8.535 km route within matching noise, so no unexempted detour exists and no refund is due. Optionally explain to the rider that the higher-than-expected meter total is the metered fare plus slow-traffic time units in heavy rain, not a longer route.",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: chat is empty, the rider's complaint and the driver's statement contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation, and the dispute type is a fare/route dispute — safety_concern = none.\n\nRoute check (RD-1): the case carries no off-route/gps-detour facts. Comparing the driven GPS trace with the quoted polyline by hand, the trace tracks the polyline throughout — early segments around Tampines, the Pan-Island Expressway stretch (17:26–17:34 sampling points on the PID), then Airport Boulevard into T3 — with deviations of at most ~100–200 m attributable to the 30 s sampling and map-matching jitter. Summed trace length is ≈8.5–8.6 km against the quoted 8.535 km, and the actual driving time is 22.0 min vs the quoted 16.3 min. There is therefore no unexempted off-route segment: no gps-detour-* fact, and the segment_findings list is empty.\n\nExtra km and fare (RD-2, RydeTAXI): the metered distance_km (8.5) equals the quoted route distance, so the meter records no extra mileage. Extra time (22.0 vs 16.3 min) is not a distance-based overcharge — and the record explains it otherwise: heavy rain (18.5 mm, thundery showers) plus LTA speed bands for PAN ISLAND EXPRESSWAY and AIRPORT BOULEVARD covering 17:09:40–17:47:00, both at band 3 (20–29 km/h), consistent with the trace's observed speeds. Sum of published meter components: 3.90 + 11.99 + 5.72 + 0.00 waiting + 1.47 platform = 23.08, exactly the total charged; no unexplained add-on, no ERP/toll item. Refund formula gives 0 unexempted km × $1.41/km = $0.00 → no_action under RD-2, subject to RD-4.\n\nRD-4 consideration (does not change the outcome): no traffic-incident facts exist, and the two speed-band records are band 3, above the band 1/2 threshold, so RD-4(a)/(b) cannot exempt anything anyway. Since no off-route segment exists at all, the driver's \"it was raining and traffic was slow\" explanation does not do any load-bearing work; RD-4(b)-alone exemption (空缺 G3) is not relied on.\n\nRD-6: driver profile route_disputes_upheld_90d = 0, so no account flag. NS/RD-3/RD-5 are not engaged (no cancellation, no stop, no chat consent).",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
-   "RD-2",
-   "FARE-1"
+   "RD-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_route_deviation",
-    "reason": "GPS trace matches the quoted route corridor start-to-finish (no off-route segment); driven distance 8.5 km ≈ estimated 8.535 km. The higher-than-expected fare is explained by the metered time component under heavy rain and slow traffic (PIE / Airport Boulevard band 3), not by extra kilometres."
+    "id": "rider_complaint",
+    "reason": "The rider's claim of a longer route is not supported: the GPS trace follows the quoted 8.535 km polyline within matching noise, and distance_km on the meter equals the quoted distance, so the excess the rider perceived is time units accrued in heavy rain and slow traffic (band 3 on PIE / Airport Boulevard), not detour mileage."
    }
   ],
   "flag_account": false,
@@ -34,9 +33,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.43,
- "input_tokens": 14387,
- "output_tokens": 1087,
+ "latency_s": 5.08,
+ "input_tokens": 14778,
+ "output_tokens": 1066,
  "requests": 1,
  "llm_calls": 1
 }

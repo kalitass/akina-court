@@ -4,165 +4,183 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:31:47.896278+00:00",
+ "ts": "2026-10-10T17:55:24.574400+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Hold the $6.61 cancellation fee in dispute, do not execute any refund or account action, and route to a human reviewer to establish who ended the booking (cancelled_by is blank) before deciding between NS-1 and NS-4/NS-3.",
-  "confidence": 0.9,
-  "reasoning": "The trace cannot tell whether this fee is a driver-declared no-show under NS-1 or a rider cancellation under NS-4/NS-3: F4 records \"Cancelled by None\" at 17:32:45, and NS-0 only opens the NS group through the `cancelled_by` branch [F4][NS-0]. With the cancelling party unrecorded, the two branches cannot be told apart, and G12 requires that missing but necessary records are not resolved in favour of either side [F4][NS-0].\n\nOn the merits, the NS-1 elements that are measurable in fact all pass: the tap at 17:28:05 was 42 m from the pickup, inside the 200 m radius [F6], and the driver then stayed within 200 m for 4 min 40 s until the cancellation at 17:32:45, i.e. more than 3 minutes of continuous waiting [F6][F4]. There is no GPS gap: the driver was stationary 40 m from the pickup from 17:27:45 to 17:32:45 [F3], so the referral condition in NS-1 does not fire and the \"arrival was platform-auto at 17:27:05\" point is not a defect — the wait after the driver's own tap satisfies (iii) on its own [F5][F6][F3][NS-1]. The rider's \"on my way down\" complaint [F4] is a statement, and the record is silent on her position; it cannot displace the system records [F3][F5][NS-1].\n\nWhere the record fails is the entry condition itself: with `cancelled_by = None`, Ryde cannot say whether the fee rests on NS-1 (driver declares no-show, fee stands) or whether the booking was ended on the driver side, which under NS-3 would mean the rider bears no cancellation fee at all and the $6.61 must be refunded in full [F4][NS-1][NS-3]. That gap changes the outcome and therefore goes to a person, as the trace itself concludes [F4][NS-0]. Nothing in the record supports the driver-side flag in NS-2: the tap was inside 200 m [F6], so no `m_from_pickup_at_tap > 200` condition arises [F6][NS-2].\n\nSafety screen: I read the driver's chat message \"At the pickup now, silver Toyota Altis\" [F9], the driver's post-trip statement that he pressed \"I'm Here\" and waited and the rider never boarded [F11], and the rider's complaint that the booking disappeared from her app while she was on her way down [F4]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in any of them, and the complaint is a fare grievance rather than a safety report [F9][F11][F4][SAFE-1].",
+  "recommended_action": "Send the case to a human reviewer: obtain the cancellation-side record (cancelled_by) for booking accepted 17:24:00 and cancelled 17:32:45, confirm which arrival event governs (platform arrival 17:27:05 vs driver tap 17:28:05), and hold the $6.61 charge pending review; do not execute a refund or affirm the fee on the current record.",
+  "confidence": 0.68,
+  "reasoning": "The charge in dispute is the $6.61 cancellation fee recorded at [F7] and [F4]. Under NS-0 the fee can only be charged through one of the enumerated branches: rider cancellation (NS-4 for an immediate booking) or a driver cancellation on a claimed rider no-show (NS-1/NS-2). Here the timeline records \"cancelled by None\" [F4], so the branch cannot be identified, and the trace marks NS-0 ✗ for that reason.\n\nThe driver's account that he pressed \"I'm Here\" and waited [F11] is met by system records on location and duration: the tap at 17:28:05 was 42 m from the pickup [F6], the vehicle was stationary 40 m from the pickup from 17:27:45 to the cancellation [F3], closest approach 4 m [F1], and the driver stayed within 200 m for 4 min 40 s after the tap [F6] (5 min 40 s cumulative within 200 m [F2]). On those numbers alone NS-1 (i)–(iii) would appear satisfied, and even on the rider's most favourable reading the post-tap continuous in-radius wait of 4 min 40 s exceeds the default 3-minute threshold of NS-1(iii).\n\nBut NS-1 is only reachable through NS-0's driver-claims-no-show branch, and the record does not establish that this was a driver-side no-show cancellation rather than a rider-side cancellation: NS-4 and NS-1 cannot be told apart on [F4]. That is a missing record the clause needs, not an inference either side may win — under NS-1 (and the same requirement echoed in NS-2) the branch precondition must be recorded. The rider's app-glitch narrative (the booking \"disappearing\") is only a complaint narrative with no system support in [F4]–[F6], so it cannot itself defeat the fee; equally, the absence of the cancelled_by value cannot be read in the driver's favour.\n\nProfile facts are not decisive: the rider's clean 90-day record [F15] and the driver's 1 upheld no-show dispute [F16] cannot decide whether this fee stands under NS-1, and RD-6's account flag depends on the case being made out against the driver (which it is not), so no flag is warranted.\n\nSafety screen: I read the only chat message — the driver's 17:28 \"At the pickup now, silver Toyota Altis.\" [F9], a complete single timestamped record [F10] — the driver's post-trip statement [F11] and the rider's complaint; there is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is \"none\" [F9][F10][F11].\n\nBecause the record does not settle the branch element NS-0/NS-1 requires, the only consistent outcome is escalation: the $6.61 charge to be reviewed by a person against the cancellation-side record.",
   "cited_facts": [
+   "F1",
+   "F2",
    "F3",
    "F4",
-   "F5",
    "F6",
+   "F7",
    "F9",
+   "F10",
    "F11",
+   "F15",
    "F16"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-3",
-   "SAFE-1"
+   "NS-4",
+   "NS-7",
+   "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "evidence insufficient: The cancellation record does not state who cancelled: F4 shows `cancelled_by = None`, so NS-1 (driver-declared no-show, fee stands) and NS-4/NS-3 (rider or driver-side cancellation with no fee payable) cannot be told apart. The record needed is the `cancelled_by` attribution (or another system record establishing who ended the booking at 17:32:45).",
+  "escalation_reason": "evidence insufficient: The cancellation-side record is missing: the timeline shows \"cancelled by None\" [F4], so NS-0's branches cannot be distinguished — NS-1 (driver cancels claiming rider no-show) and NS-4 (rider cancels) cannot be told apart. Without cancelled_by, the $6.61 fee cannot be attributed to either branch, and the governing arrival event (platform arrival 17:27:05 [F5] vs driver tap 17:28:05 [F6]) is also left unresolved on the face of the record.",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "The claimed defect does not exist: the 200 m arrival condition is met on the system record — the driver tapped 'I'm Here' at 17:28:05 at 42 m from the pickup [F6], inside the radius NS-1(ii) requires, and the wait that follows is measured from that tap [F6][F4][NS-1]. The rider advocate himself concedes the radius and duration."
-   },
-   {
-    "id": "C2",
-    "reason": "The driver's statement [F11] is not contradicted: it is the GPS record, not the statement, that places the tap inside 200 m [F6], and the statement of the arrival basis agrees with the driver's own tap timestamp rather than depending on the platform auto-record [F5][F6][F11][NS-1]. No consent/verbal-claim issue arises in a no-show case (G11 concerns RD-5)."
-   },
-   {
     "id": "C3",
-    "reason": "NS-1(iii) runs from the driver's own valid arrival marker, not from the earlier platform auto-confirmation: the tap at 17:28:05 was inside 200 m [F6] and the driver then remained within 200 m for 4 min 40 s until cancellation at 17:32:45 [F6][F4], which exceeds the required wait. The policy contains no requirement that the tap coincide with the first moment of entry into the radius, and no missing 'fully compliant waiting sequence' follows from the two timestamps [F5][F6][NS-1]."
+    "reason": "The rider's own computation confirms the post-tap continuous in-radius wait of 4 min 40 s [F6], which is over the NS-1(iii) threshold rather than a ground for refund; the claim assists the driver, not the rider, and cannot support a refund under NS-1."
    },
    {
     "id": "C4",
-    "reason": "The absence of a rider message and of any notice of an accruing fee does not defeat the charge: NS-1 requires no notice to the rider at all, only a tap on location and a continuous wait over 3 minutes [F6][F4][F9][F10][NS-1]. The complaint that the booking 'disappeared' [F4] is likewise a statement unsupported by any system record of the rider's position."
+    "reason": "The 17:27:05 platform arrival log [F5] and the 17:28:05 driver tap [F6] do not change the outcome on NS-1's wait element (both exceed 3 minutes before the 17:32:45 cancellation [F4]); the real gap is the missing cancelled_by value [F4] under NS-0, not a contradiction that refunds the fee."
    },
    {
     "id": "C5",
-    "reason": "Traffic and weather conditions are irrelevant to NS-1 and cut neither way: no incident recorded and band 3 on Lorong 1 Toa Payoh [F12][F13][F14][NS-1] do not bear on whether the tap-on-location plus 3-minute wait conditions were met, which they were [F6][F4]."
+    "reason": "Consent under RD-5 concerns route deviation, not a no-show fee; NS-1 rests on arrival, location and continuous wait [F2][F3][F6], so the absence of rider agreement in the chat [F9][F10] does not by itself waive the fee."
    },
    {
-    "id": "C6",
-    "reason": "The driver's 90-day record [F16] cannot decide this case and does not trigger any account action here: profile facts may not be used to determine liability, and NS-2's flag applies only where the tap shows the driver outside the pickup radius, which it does not [F6][F16][NS-2]."
+    "id": "C7",
+    "reason": "Profile facts cannot decide a case: the rider's clean 90-day record [F15] and the driver's 1 upheld no-show dispute [F16] do not establish or defeat the NS-1 elements; NS-1 turns on the system records of arrival and wait."
    },
    {
-    "id": "D6",
-    "reason": "The driver advocate's assertion that the fee is enforceable cannot be adopted at this point: with `cancelled_by = None` [F4], NS-0's entry branch is unestablished, so NS-1 cannot yet be applied to validate the $6.61 [F4][NS-0][NS-1]. The established system records do not settle who ended the booking."
+    "id": "C10",
+    "reason": "The alleged app glitch rests only on the complaint narrative with no system support in [F4]–[F6]; the record cannot confirm it, and NS-7 governs timing of fee disputes, not the escalation ground here (the gap is the missing cancelled_by value [F4])."
+   },
+   {
+    "id": "C8",
+    "reason": "The rider's admission that both readings of the arrival anchor yield a wait over the threshold [F2][F6] concedes the NS-1(iii) element; it cannot ground refund_full, and the case turns on the unresolved NS-0 branch instead."
+   },
+   {
+    "id": "D3",
+    "reason": "The driver cannot rest on both anchors at once: the 4 min 40 s post-tap wait [F6] and the 5 min 40 s cumulative wait [F2] are measured from different events, and NS-0's branch (driver-claims-no-show vs rider cancellation) remains unestablished on [F4]."
+   },
+   {
+    "id": "D4",
+    "reason": "The claim that the rider 'never made contact' is not established by the chat record: [F9][F10] show only one driver message with no rider message in evidence, and absence of a message is not proof of rider conduct; NS-1 turns on the driver's wait, not the rider's silence."
    },
    {
     "id": "D7",
-    "reason": "Entitlement to keep the $6.61 under NS-1 presupposes a driver-declared no-show, and that entry condition is not on the record [F4][NS-0]. If the booking was ended driver-side, NS-3 gives the rider the full refund instead [F4][NS-3]."
+    "reason": "The premise that this is a rider-side no-show fails on [F4], which records cancelled_by = None; NS-0 permits the $6.61 only through the rider-cancellation branch (NS-4) or the driver-claims-no-show branch (NS-1/NS-2), and on this record neither is established."
    },
    {
-    "id": "D9",
-    "reason": "No account action follows, but the rider's clean history does not by itself resolve the case: profile facts never decide a case, and the missing `cancelled_by` attribution [F4][F15] is what prevents a merits outcome here [NS-0][NS-1]."
+    "id": "D5",
+    "reason": "The record cannot be said to be complete for decision: the decisive branch element cancelled_by is absent [F4] and the governing arrival event (17:27:05 [F5] vs 17:28:05 [F6]) is unresolved, so NS-1's precondition is not settled and NS-7/NS-0 route the fee dispute to human review rather than affirming the charge."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
    "F9",
-   "F11",
-   "F4"
+   "F10",
+   "F11"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "The cancellation record does not state who cancelled: F4 shows `cancelled_by = None`, so NS-1 (driver-declared no-show, fee stands) and NS-4/NS-3 (rider or driver-side cancellation with no fee payable) cannot be told apart. The record needed is the `cancelled_by` attribution (or another system record establishing who ended the booking at 17:32:45)."
+  "evidence_gap": "The cancellation-side record is missing: the timeline shows \"cancelled by None\" [F4], so NS-0's branches cannot be distinguished — NS-1 (driver cancels claiming rider no-show) and NS-4 (rider cancels) cannot be told apart. Without cancelled_by, the $6.61 fee cannot be attributed to either branch, and the governing arrival event (platform arrival 17:27:05 [F5] vs driver tap 17:28:05 [F6]) is also left unresolved on the face of the record."
  },
  "pre_verify_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Hold the $6.61 cancellation fee in dispute, do not execute any refund or account action, and route to a human reviewer to establish who ended the booking (cancelled_by is blank) before deciding between NS-1 and NS-4/NS-3.",
-  "confidence": 0.9,
-  "reasoning": "The trace cannot tell whether this fee is a driver-declared no-show under NS-1 or a rider cancellation under NS-4/NS-3: F4 records \"Cancelled by None\" at 17:32:45, and NS-0 only opens the NS group through the `cancelled_by` branch [F4][NS-0]. With the cancelling party unrecorded, the two branches cannot be told apart, and G12 requires that missing but necessary records are not resolved in favour of either side [F4][NS-0].\n\nOn the merits, the NS-1 elements that are measurable in fact all pass: the tap at 17:28:05 was 42 m from the pickup, inside the 200 m radius [F6], and the driver then stayed within 200 m for 4 min 40 s until the cancellation at 17:32:45, i.e. more than 3 minutes of continuous waiting [F6][F4]. There is no GPS gap: the driver was stationary 40 m from the pickup from 17:27:45 to 17:32:45 [F3], so the referral condition in NS-1 does not fire and the \"arrival was platform-auto at 17:27:05\" point is not a defect — the wait after the driver's own tap satisfies (iii) on its own [F5][F6][F3][NS-1]. The rider's \"on my way down\" complaint [F4] is a statement, and the record is silent on her position; it cannot displace the system records [F3][F5][NS-1].\n\nWhere the record fails is the entry condition itself: with `cancelled_by = None`, Ryde cannot say whether the fee rests on NS-1 (driver declares no-show, fee stands) or whether the booking was ended on the driver side, which under NS-3 would mean the rider bears no cancellation fee at all and the $6.61 must be refunded in full [F4][NS-1][NS-3]. That gap changes the outcome and therefore goes to a person, as the trace itself concludes [F4][NS-0]. Nothing in the record supports the driver-side flag in NS-2: the tap was inside 200 m [F6], so no `m_from_pickup_at_tap > 200` condition arises [F6][NS-2].\n\nSafety screen: I read the driver's chat message \"At the pickup now, silver Toyota Altis\" [F9], the driver's post-trip statement that he pressed \"I'm Here\" and waited and the rider never boarded [F11], and the rider's complaint that the booking disappeared from her app while she was on her way down [F4]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in any of them, and the complaint is a fare grievance rather than a safety report [F9][F11][F4][SAFE-1].",
+  "recommended_action": "Send the case to a human reviewer: obtain the cancellation-side record (cancelled_by) for booking accepted 17:24:00 and cancelled 17:32:45, confirm which arrival event governs (platform arrival 17:27:05 vs driver tap 17:28:05), and hold the $6.61 charge pending review; do not execute a refund or affirm the fee on the current record.",
+  "confidence": 0.68,
+  "reasoning": "The charge in dispute is the $6.61 cancellation fee recorded at [F7] and [F4]. Under NS-0 the fee can only be charged through one of the enumerated branches: rider cancellation (NS-4 for an immediate booking) or a driver cancellation on a claimed rider no-show (NS-1/NS-2). Here the timeline records \"cancelled by None\" [F4], so the branch cannot be identified, and the trace marks NS-0 ✗ for that reason.\n\nThe driver's account that he pressed \"I'm Here\" and waited [F11] is met by system records on location and duration: the tap at 17:28:05 was 42 m from the pickup [F6], the vehicle was stationary 40 m from the pickup from 17:27:45 to the cancellation [F3], closest approach 4 m [F1], and the driver stayed within 200 m for 4 min 40 s after the tap [F6] (5 min 40 s cumulative within 200 m [F2]). On those numbers alone NS-1 (i)–(iii) would appear satisfied, and even on the rider's most favourable reading the post-tap continuous in-radius wait of 4 min 40 s exceeds the default 3-minute threshold of NS-1(iii).\n\nBut NS-1 is only reachable through NS-0's driver-claims-no-show branch, and the record does not establish that this was a driver-side no-show cancellation rather than a rider-side cancellation: NS-4 and NS-1 cannot be told apart on [F4]. That is a missing record the clause needs, not an inference either side may win — under NS-1 (and the same requirement echoed in NS-2) the branch precondition must be recorded. The rider's app-glitch narrative (the booking \"disappearing\") is only a complaint narrative with no system support in [F4]–[F6], so it cannot itself defeat the fee; equally, the absence of the cancelled_by value cannot be read in the driver's favour.\n\nProfile facts are not decisive: the rider's clean 90-day record [F15] and the driver's 1 upheld no-show dispute [F16] cannot decide whether this fee stands under NS-1, and RD-6's account flag depends on the case being made out against the driver (which it is not), so no flag is warranted.\n\nSafety screen: I read the only chat message — the driver's 17:28 \"At the pickup now, silver Toyota Altis.\" [F9], a complete single timestamped record [F10] — the driver's post-trip statement [F11] and the rider's complaint; there is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is \"none\" [F9][F10][F11].\n\nBecause the record does not settle the branch element NS-0/NS-1 requires, the only consistent outcome is escalation: the $6.61 charge to be reviewed by a person against the cancellation-side record.",
   "cited_facts": [
+   "F1",
+   "F2",
    "F3",
    "F4",
-   "F5",
    "F6",
+   "F7",
    "F9",
+   "F10",
    "F11",
+   "F15",
    "F16"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-3",
-   "SAFE-1"
+   "NS-4",
+   "NS-7",
+   "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "Dispute type no_show with `cancelled_by = None` [F4]: the entry condition of NS-0 cannot be met, so it is undetermined whether the $6.61 rests on a valid NS-1 no-show (driver tapped \"I'm Here\" 42 m from pickup at 17:28:05 and waited 4 min 40 s within 200 m until cancellation at 17:32:45 [F6][F4][F3]) or on a cancellation that carries no fee under NS-3. Human review should establish who ended the booking and, if driver-side, apply NS-3 (full refund of $6.61) or NS-1 (fee stands) accordingly; the driver's 90-day record of 1 upheld no-show dispute [F16] is context only and does not decide the case. Amount left undetermined pending that attribution.",
+  "escalation_reason": "Booking accepted 17:24:00, cancelled 17:32:45 with the $6.61 cancellation fee recorded [F4][F7], but cancelled_by = None, so NS-0 cannot route the fee to NS-1 or NS-4. The driver's \"I'm Here\" tap at 17:28:05 was 42 m from pickup [F6] and the vehicle sat 40 m from pickup for the final 5 minutes [F3], which would satisfy NS-1(i)–(iii) if the driver-side no-show branch applied; the rider claims her booking disappeared before cancellation but has no system record of it. Human reviewer to check: the cancellation-side record (who cancelled and on what reason code) and which arrival event governs the wait computation (F5 vs F6), then apply NS-1 or NS-4/NS-3 accordingly. No safety concern found in the chat, statement or complaint [F9][F10][F11].",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "The claimed defect does not exist: the 200 m arrival condition is met on the system record — the driver tapped 'I'm Here' at 17:28:05 at 42 m from the pickup [F6], inside the radius NS-1(ii) requires, and the wait that follows is measured from that tap [F6][F4][NS-1]. The rider advocate himself concedes the radius and duration."
-   },
-   {
-    "id": "C2",
-    "reason": "The driver's statement [F11] is not contradicted: it is the GPS record, not the statement, that places the tap inside 200 m [F6], and the statement of the arrival basis agrees with the driver's own tap timestamp rather than depending on the platform auto-record [F5][F6][F11][NS-1]. No consent/verbal-claim issue arises in a no-show case (G11 concerns RD-5)."
-   },
-   {
     "id": "C3",
-    "reason": "NS-1(iii) runs from the driver's own valid arrival marker, not from the earlier platform auto-confirmation: the tap at 17:28:05 was inside 200 m [F6] and the driver then remained within 200 m for 4 min 40 s until cancellation at 17:32:45 [F6][F4], which exceeds the required wait. The policy contains no requirement that the tap coincide with the first moment of entry into the radius, and no missing 'fully compliant waiting sequence' follows from the two timestamps [F5][F6][NS-1]."
+    "reason": "The rider's own computation confirms the post-tap continuous in-radius wait of 4 min 40 s [F6], which is over the NS-1(iii) threshold rather than a ground for refund; the claim assists the driver, not the rider, and cannot support a refund under NS-1."
    },
    {
     "id": "C4",
-    "reason": "The absence of a rider message and of any notice of an accruing fee does not defeat the charge: NS-1 requires no notice to the rider at all, only a tap on location and a continuous wait over 3 minutes [F6][F4][F9][F10][NS-1]. The complaint that the booking 'disappeared' [F4] is likewise a statement unsupported by any system record of the rider's position."
+    "reason": "The 17:27:05 platform arrival log [F5] and the 17:28:05 driver tap [F6] do not change the outcome on NS-1's wait element (both exceed 3 minutes before the 17:32:45 cancellation [F4]); the real gap is the missing cancelled_by value [F4] under NS-0, not a contradiction that refunds the fee."
    },
    {
     "id": "C5",
-    "reason": "Traffic and weather conditions are irrelevant to NS-1 and cut neither way: no incident recorded and band 3 on Lorong 1 Toa Payoh [F12][F13][F14][NS-1] do not bear on whether the tap-on-location plus 3-minute wait conditions were met, which they were [F6][F4]."
+    "reason": "Consent under RD-5 concerns route deviation, not a no-show fee; NS-1 rests on arrival, location and continuous wait [F2][F3][F6], so the absence of rider agreement in the chat [F9][F10] does not by itself waive the fee."
    },
    {
-    "id": "C6",
-    "reason": "The driver's 90-day record [F16] cannot decide this case and does not trigger any account action here: profile facts may not be used to determine liability, and NS-2's flag applies only where the tap shows the driver outside the pickup radius, which it does not [F6][F16][NS-2]."
+    "id": "C7",
+    "reason": "Profile facts cannot decide a case: the rider's clean 90-day record [F15] and the driver's 1 upheld no-show dispute [F16] do not establish or defeat the NS-1 elements; NS-1 turns on the system records of arrival and wait."
    },
    {
-    "id": "D6",
-    "reason": "The driver advocate's assertion that the fee is enforceable cannot be adopted at this point: with `cancelled_by = None` [F4], NS-0's entry branch is unestablished, so NS-1 cannot yet be applied to validate the $6.61 [F4][NS-0][NS-1]. The established system records do not settle who ended the booking."
+    "id": "C10",
+    "reason": "The alleged app glitch rests only on the complaint narrative with no system support in [F4]–[F6]; the record cannot confirm it, and NS-7 governs timing of fee disputes, not the escalation ground here (the gap is the missing cancelled_by value [F4])."
+   },
+   {
+    "id": "C8",
+    "reason": "The rider's admission that both readings of the arrival anchor yield a wait over the threshold [F2][F6] concedes the NS-1(iii) element; it cannot ground refund_full, and the case turns on the unresolved NS-0 branch instead."
+   },
+   {
+    "id": "D3",
+    "reason": "The driver cannot rest on both anchors at once: the 4 min 40 s post-tap wait [F6] and the 5 min 40 s cumulative wait [F2] are measured from different events, and NS-0's branch (driver-claims-no-show vs rider cancellation) remains unestablished on [F4]."
+   },
+   {
+    "id": "D4",
+    "reason": "The claim that the rider 'never made contact' is not established by the chat record: [F9][F10] show only one driver message with no rider message in evidence, and absence of a message is not proof of rider conduct; NS-1 turns on the driver's wait, not the rider's silence."
    },
    {
     "id": "D7",
-    "reason": "Entitlement to keep the $6.61 under NS-1 presupposes a driver-declared no-show, and that entry condition is not on the record [F4][NS-0]. If the booking was ended driver-side, NS-3 gives the rider the full refund instead [F4][NS-3]."
+    "reason": "The premise that this is a rider-side no-show fails on [F4], which records cancelled_by = None; NS-0 permits the $6.61 only through the rider-cancellation branch (NS-4) or the driver-claims-no-show branch (NS-1/NS-2), and on this record neither is established."
    },
    {
-    "id": "D9",
-    "reason": "No account action follows, but the rider's clean history does not by itself resolve the case: profile facts never decide a case, and the missing `cancelled_by` attribution [F4][F15] is what prevents a merits outcome here [NS-0][NS-1]."
+    "id": "D5",
+    "reason": "The record cannot be said to be complete for decision: the decisive branch element cancelled_by is absent [F4] and the governing arrival event (17:27:05 [F5] vs 17:28:05 [F6]) is unresolved, so NS-1's precondition is not settled and NS-7/NS-0 route the fee dispute to human review rather than affirming the charge."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
    "F9",
-   "F11",
-   "F4"
+   "F10",
+   "F11"
   ],
   "evidence_status": "insufficient",
-  "evidence_gap": "The cancellation record does not state who cancelled: F4 shows `cancelled_by = None`, so NS-1 (driver-declared no-show, fee stands) and NS-4/NS-3 (rider or driver-side cancellation with no fee payable) cannot be told apart. The record needed is the `cancelled_by` attribution (or another system record establishing who ended the booking at 17:32:45)."
+  "evidence_gap": "The cancellation-side record is missing: the timeline shows \"cancelled by None\" [F4], so NS-0's branches cannot be distinguished — NS-1 (driver cancels claiming rider no-show) and NS-4 (rider cancels) cannot be told apart. Without cancelled_by, the $6.61 fee cannot be attributed to either branch, and the governing arrival event (platform arrival 17:27:05 [F5] vs driver tap 17:28:05 [F6]) is also left unresolved on the face of the record."
  },
  "status": "escalated",
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: evidence insufficient: The cancellation record does not state who cancelled: F4 shows `cancelled_by = None`, so NS-1 (driver-declared no-show, fee stands) and NS-4/NS-3 (rider or driver-side cancellation with no fee payable) cannot be told apart. The record needed is the `cancelled_by` attribution (or another system record establishing who ended the booking at 17:32:45)."
+  "judge escalates → human review: evidence insufficient: The cancellation-side record is missing: the timeline shows \"cancelled by None\" [F4], so NS-0's branches cannot be distinguished — NS-1 (driver cancels claiming rider no-show) and NS-4 (rider cancels) cannot be told apart. Without cancelled_by, the $6.61 fee cannot be attributed to either branch, and the governing arrival event (platform arrival 17:27:05 [F5] vs driver tap 17:28:05 [F6]) is also left unresolved on the face of the record."
  ],
  "record_path": "bench/results/blind/court/X-0012.record.json",
- "latency_s": 23.29,
- "input_tokens": 101474,
- "output_tokens": 7100,
+ "latency_s": 24.1,
+ "input_tokens": 102523,
+ "output_tokens": 7574,
  "requests": 9,
  "llm_calls": 5
 }

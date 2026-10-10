@@ -177,7 +177,7 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-10T13:22:24.682121Z",
+   "ts": "2026-10-10T17:42:01.439813Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
@@ -191,7 +191,7 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-10T13:22:24.682755Z",
+   "ts": "2026-10-10T17:42:01.441061Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "facts",
@@ -205,7 +205,7 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-10T13:22:24.682838Z",
+   "ts": "2026-10-10T17:42:01.441226Z",
    "elapsed": "00:00.0",
    "actor": "verify",
    "kind": "check",
@@ -225,7 +225,7 @@
   },
   {
    "seq": 4,
-   "ts": "2026-10-10T13:22:24.682860Z",
+   "ts": "2026-10-10T17:42:01.441274Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "brief",
@@ -249,21 +249,21 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-10T13:22:30.057476Z",
-   "elapsed": "00:05.4",
+   "ts": "2026-10-10T17:42:06.599427Z",
+   "elapsed": "00:05.2",
    "actor": "judge",
    "kind": "ruling",
-   "title": "Proposed ruling: refund_full $6.61 (model confidence 0.93)",
-   "body": "The trace fixes the branch: cancelled_by = rider on this immediate booking [F2], so the case enters through NS-0 and is governed by NS-4. The trace marks NS-4 as failed — the rider cancelled 175 s (2 min 55 s) after acceptance, inside the 3-minute free-cancellation window [F2]. Under NS-4 a rider cancellation within 3:00 of matching is not chargeable, so the $6.61 fee on record [F5] has no basis.\n\nThe driver's own conduct confirms this is not a no-show case: the platform never recorded him at the pickup point [F3], he never tapped \"I'm Here\" and no automatic arrival was recorded [F4], and his closest approach was 2189 m — never inside 200 m [F1]. The NS-1 conditions (i)(ii)(iii) therefore cannot be satisfied, and NS-2's consequence of a full $6.61 refund to the rider follows [F1][F3][F4][NS-2]. NS-3 likewise places no cancellation fee on the rider when the driver does not establish a rider no-show [F3][F4][NS-3].\n\nAmount: the disputed item is the cancellation fee of $6.61 [F5], refunded in full; no per-km computation applies because there is no off-route segment and no metered distance fare in this case [F5][RD-2].\n\nThe driver's statement that he \"was on his way\" [F10] is a mere assertion and, in any event, is irrelevant: under NS-4 the driver not having arrived is not a ground for the rider to be charged — the rider's protection is the 3-minute window itself [F2][F10][NS-4]. The mild congestion on Stevens Road (band 4, 30–39 km/h) and the absence of incidents or weather issues [F11][F12][F13] concern the driver's ETA, which NS-8 confirms is not a cancellation-fee element in Ryde's policy [F8][NS-4].\n\nNo profile fact decides anything here: neither party has an upheld dispute in the last 90 days [F14][F15], so RD-6 is not engaged and no account flag arises [F14][F15][RD-6]. NS-7's 30-day dispute window is met (complaint filed in respect of this trip), and the refund is issued as a voucher, not cash [F2][NS-7].\n\nSafety screen (SAFE-1/SAFE-2): I read every message, the driver's statement and the complaint. The chat is a rider ETA question [F7] and a driver traffic update [F8]; the statement [F10] and the complaint are factual summaries. No threats, intimidation, harassment, sexual remarks or dangerous-driving allegations appear [F7][F8][F10]; safety_concern = none.",
+   "title": "Proposed ruling: refund_full $6.61 (model confidence 0.95)",
+   "body": "The complaint is a cancellation-fee dispute filed by the rider after she cancelled a RydeX booking. NS-0 routes the case by `cancelled_by`; the record shows the rider cancelled [F2], so the immediate-booking branch NS-4 governs. There is no driver no-show claim here, so NS-1/NS-2 do not apply: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and the driver never came within 200 m of the pickup [F1][F3] — these facts are consistent with the rider's account but do not themselves decide the fee.\n\nNS-4 is decisive: a rider cancellation made within 3 minutes of matching (≤ 3:00) is not chargeable. The rider cancelled 2 min 55 s (175 s) after acceptance [F2], i.e. inside the 3-minute free window, so the $6.61 cancellation fee charged [F5] does not meet the condition for a lawful cancellation fee. Ryde publishes no \"driver late versus ETA\" free-cancellation rule, and none is available to the rider here, but it is not needed: the 3-minute grace period alone defeats the charge.\n\nThe trace element NS-4 is recorded as ✗ (\"rider cancelled more than 3 min after matching\") on a computed 175 s. The 175 s figure and the ✗ market are the same arithmetic — the ✗ is a labelling slip, not a finding that the cancellation fell outside the window. Reading the trace's own numbers (175 s vs the 180 s threshold), the condition for charging is not met, so the refund follows from NS-4 as written, not from any re-weighing of evidence. I flag this so the code re-check reconciles the ✗ marker with the 175 s value rather than treating them as two different findings.\n\nAmount: the only sum in issue is the cancellation fee $6.61, carried by the fare record [F5] and the timeline [F2]. Refund of the full contested item = $6.61 (RD-2's per-km formula is inapplicable: there is no off-route segment, no meter, and no excess-distance claim — this is a flat-fee dispute resolved under NS-4, and NS-7 directs the refund be issued as a Ryde voucher).\n\nAccount action: the driver's conduct is not a case of a false no-show claim (he never pressed \"I'm Here\"), and the profile facts [F14][F15] show no upheld disputes on either side, so RD-6 and NS-2's flag condition are not met; no `flag_account` is warranted.\n\nSafety screen (SAFE-1): I read all three messages and the post-trip driver statement — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], driver's written statement \"I was on my way when the rider cancelled\" [F10]. Nothing is hostile, threatening, intimidating, harassing, sexual, or a dangerous-driving allegation; the exchange is an ordinary ETA enquiry. safety_concern = none.\n\nEvidence (G12): the record is complete for the ruling — the acceptance and cancellation timestamps are on a single timeline [F2], the fee is on the fare record [F5], the chat is fully timestamped [F9], and the GPS/timeline show no arrival [F1][F3][F4]. No record needed by NS-4 is missing, so evidence_status = sufficient.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "refund_full",
     "amount": 6.61,
-    "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-    "confidence": 0.93,
-    "reasoning": "The trace fixes the branch: cancelled_by = rider on this immediate booking [F2], so the case enters through NS-0 and is governed by NS-4. The trace marks NS-4 as failed — the rider cancelled 175 s (2 min 55 s) after acceptance, inside the 3-minute free-cancellation window [F2]. Under NS-4 a rider cancellation within 3:00 of matching is not chargeable, so the $6.61 fee on record [F5] has no basis.\n\nThe driver's own conduct confirms this is not a no-show case: the platform never recorded him at the pickup point [F3], he never tapped \"I'm Here\" and no automatic arrival was recorded [F4], and his closest approach was 2189 m — never inside 200 m [F1]. The NS-1 conditions (i)(ii)(iii) therefore cannot be satisfied, and NS-2's consequence of a full $6.61 refund to the rider follows [F1][F3][F4][NS-2]. NS-3 likewise places no cancellation fee on the rider when the driver does not establish a rider no-show [F3][F4][NS-3].\n\nAmount: the disputed item is the cancellation fee of $6.61 [F5], refunded in full; no per-km computation applies because there is no off-route segment and no metered distance fare in this case [F5][RD-2].\n\nThe driver's statement that he \"was on his way\" [F10] is a mere assertion and, in any event, is irrelevant: under NS-4 the driver not having arrived is not a ground for the rider to be charged — the rider's protection is the 3-minute window itself [F2][F10][NS-4]. The mild congestion on Stevens Road (band 4, 30–39 km/h) and the absence of incidents or weather issues [F11][F12][F13] concern the driver's ETA, which NS-8 confirms is not a cancellation-fee element in Ryde's policy [F8][NS-4].\n\nNo profile fact decides anything here: neither party has an upheld dispute in the last 90 days [F14][F15], so RD-6 is not engaged and no account flag arises [F14][F15][RD-6]. NS-7's 30-day dispute window is met (complaint filed in respect of this trip), and the refund is issued as a voucher, not cash [F2][NS-7].\n\nSafety screen (SAFE-1/SAFE-2): I read every message, the driver's statement and the complaint. The chat is a rider ETA question [F7] and a driver traffic update [F8]; the statement [F10] and the complaint are factual summaries. No threats, intimidation, harassment, sexual remarks or dangerous-driving allegations appear [F7][F8][F10]; safety_concern = none.",
+    "recommended_action": "Refund the $6.61 rider cancellation fee as a Ryde voucher; no account action against either party.",
+    "confidence": 0.95,
+    "reasoning": "The complaint is a cancellation-fee dispute filed by the rider after she cancelled a RydeX booking. NS-0 routes the case by `cancelled_by`; the record shows the rider cancelled [F2], so the immediate-booking branch NS-4 governs. There is no driver no-show claim here, so NS-1/NS-2 do not apply: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and the driver never came within 200 m of the pickup [F1][F3] — these facts are consistent with the rider's account but do not themselves decide the fee.\n\nNS-4 is decisive: a rider cancellation made within 3 minutes of matching (≤ 3:00) is not chargeable. The rider cancelled 2 min 55 s (175 s) after acceptance [F2], i.e. inside the 3-minute free window, so the $6.61 cancellation fee charged [F5] does not meet the condition for a lawful cancellation fee. Ryde publishes no \"driver late versus ETA\" free-cancellation rule, and none is available to the rider here, but it is not needed: the 3-minute grace period alone defeats the charge.\n\nThe trace element NS-4 is recorded as ✗ (\"rider cancelled more than 3 min after matching\") on a computed 175 s. The 175 s figure and the ✗ market are the same arithmetic — the ✗ is a labelling slip, not a finding that the cancellation fell outside the window. Reading the trace's own numbers (175 s vs the 180 s threshold), the condition for charging is not met, so the refund follows from NS-4 as written, not from any re-weighing of evidence. I flag this so the code re-check reconciles the ✗ marker with the 175 s value rather than treating them as two different findings.\n\nAmount: the only sum in issue is the cancellation fee $6.61, carried by the fare record [F5] and the timeline [F2]. Refund of the full contested item = $6.61 (RD-2's per-km formula is inapplicable: there is no off-route segment, no meter, and no excess-distance claim — this is a flat-fee dispute resolved under NS-4, and NS-7 directs the refund be issued as a Ryde voucher).\n\nAccount action: the driver's conduct is not a case of a false no-show claim (he never pressed \"I'm Here\"), and the profile facts [F14][F15] show no upheld disputes on either side, so RD-6 and NS-2's flag condition are not met; no `flag_account` is warranted.\n\nSafety screen (SAFE-1): I read all three messages and the post-trip driver statement — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], driver's written statement \"I was on my way when the rider cancelled\" [F10]. Nothing is hostile, threatening, intimidating, harassing, sexual, or a dangerous-driving allegation; the exchange is an ordinary ETA enquiry. safety_concern = none.\n\nEvidence (G12): the record is complete for the ruling — the acceptance and cancellation timestamps are on a single timeline [F2], the fee is on the fare record [F5], the chat is fully timestamped [F9], and the GPS/timeline show no arrival [F1][F3][F4]. No record needed by NS-4 is missing, so evidence_status = sufficient.",
     "cited_facts": [
      "F1",
      "F2",
@@ -272,31 +272,17 @@
      "F5",
      "F7",
      "F8",
+     "F9",
      "F10",
      "F14",
      "F15"
     ],
     "cited_policy": [
      "NS-0",
-     "NS-1",
-     "NS-2",
-     "NS-3",
      "NS-4",
-     "NS-7",
-     "RD-2",
-     "RD-6",
-     "SAFE-1"
+     "NS-7"
     ],
-    "rejected_claims": [
-     {
-      "id": "C1",
-      "reason": "Rider advocate requested no_action; on the record the fee has no basis. The trace's NS-4 element is ✗ — cancellation at 175 s after matching, within the 3:00 free window [F2] — and the driver never reached the pickup point (2189 m closest approach, no arrival record) [F1][F3][F4][NS-4][NS-2]."
-     },
-     {
-      "id": "D1",
-      "reason": "Driver advocate requested no_action. The fee cannot stand: the driver never tapped 'I'm Here' and no auto-arrival was recorded, and he never came within 200 m of the pickup [F3][F4][F1], so NS-1 (i)(ii)(iii) fail and the $6.61 must be refunded under NS-2; his post-trip assertion that he was on his way [F10] is not consent or a fee ground under NS-4."
-     }
-    ],
+    "rejected_claims": [],
     "flag_account": false,
     "segment_findings": [],
     "safety_concern": "none",
@@ -314,12 +300,12 @@
   },
   {
    "seq": 6,
-   "ts": "2026-10-10T13:22:30.057655Z",
-   "elapsed": "00:05.4",
+   "ts": "2026-10-10T17:42:06.599519Z",
+   "elapsed": "00:05.2",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "dropped rejected_claims not in any live brief: C1, D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)",
+   "body": "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -334,12 +320,12 @@
   },
   {
    "seq": 7,
-   "ts": "2026-10-10T13:22:30.057689Z",
-   "elapsed": "00:05.4",
+   "ts": "2026-10-10T17:42:06.599540Z",
+   "elapsed": "00:05.2",
    "actor": "judge",
    "kind": "summary",
-   "title": "Final: refund_full $6.61 · Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-   "body": "eligible for automation; cites F1 F2 F3 F4 F5 F7 F8 F10 F14 F15 / NS-0 NS-1 NS-2 NS-3 NS-4 NS-7 RD-2 RD-6 SAFE-1\nWhat would change this ruling: Had the rider cancelled more than 3 minutes after matching, NS-4 would have upheld the $6.61 fee.",
+   "title": "Final: refund_full $6.61 · Refund the $6.61 rider cancellation fee as a Ryde voucher; no account action against either party.",
+   "body": "eligible for automation; cites F1 F2 F3 F4 F5 F7 F8 F9 F10 F14 F15 / NS-0 NS-4 NS-7\nWhat would change this ruling: Had the rider cancelled more than 3 minutes after matching, NS-4 would have upheld the $6.61 fee.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -348,12 +334,12 @@
   },
   {
    "seq": 8,
-   "ts": "2026-10-10T13:22:31.939435Z",
-   "elapsed": "00:07.3",
+   "ts": "2026-10-10T17:42:08.496977Z",
+   "elapsed": "00:07.1",
    "actor": "system",
    "kind": "notify",
    "title": "Notices sent to rider and driver",
-   "body": "RIDER: Good news — we're refunding the $6.61 cancellation fee in full. You cancelled about three minutes after your driver accepted, which is inside the free-cancellation window, so the fee shouldn't have applied. Your driver also never reached the pickup point or marked himself as arrived, so this was never treated as a no-show on your part. The $6.61 comes back as a Ryde voucher on your account. No action is being taken against your account, and nothing further is needed from you.\n\nDRIVER: We've reviewed the disputed cancellation fee on this trip and refunded the $6.61 to the rider as a Ryde voucher. The deciding point is that the rider cancelled about three minutes after you accepted, which falls inside the free-cancellation window, so no cancellation fee applied. Your distance from the pickup point and traffic conditions didn't change that outcome. This is a fare adjustment only — no action is being taken against your account and no penalty applies. You'll see this reflected in your trip records.",
+   "body": "RIDER: Good news — your cancellation fee is being refunded.\n\nYou cancelled 2 minutes 55 seconds after a driver accepted your RydeX booking, and cancellations within 3 minutes of matching aren't charged. We also saw no record of the driver arriving or coming near your pickup, though that wasn't what decided your case — the 3-minute window did.\n\nWe're refunding the full $6.61 as a Ryde voucher. No action is being taken on your account.\n\nThanks for flagging this — it helps us keep fees fair.\n\nDRIVER: We've reviewed the cancellation on this trip and want to keep you informed.\n\nThe rider cancelled 2 minutes 55 seconds after you accepted, which falls inside the 3-minute window where no cancellation fee applies. Because of that, the $6.61 fee is being refunded to the rider as a Ryde voucher.\n\nNothing here counts against you: you never marked yourself as arrived and no false no-show claim was made, so your account stays as it is with no action or flag.\n\nNo reply needed. Thanks for driving with Ryde.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -364,9 +350,9 @@
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-  "confidence": 0.93,
-  "reasoning": "The trace fixes the branch: cancelled_by = rider on this immediate booking [F2], so the case enters through NS-0 and is governed by NS-4. The trace marks NS-4 as failed — the rider cancelled 175 s (2 min 55 s) after acceptance, inside the 3-minute free-cancellation window [F2]. Under NS-4 a rider cancellation within 3:00 of matching is not chargeable, so the $6.61 fee on record [F5] has no basis.\n\nThe driver's own conduct confirms this is not a no-show case: the platform never recorded him at the pickup point [F3], he never tapped \"I'm Here\" and no automatic arrival was recorded [F4], and his closest approach was 2189 m — never inside 200 m [F1]. The NS-1 conditions (i)(ii)(iii) therefore cannot be satisfied, and NS-2's consequence of a full $6.61 refund to the rider follows [F1][F3][F4][NS-2]. NS-3 likewise places no cancellation fee on the rider when the driver does not establish a rider no-show [F3][F4][NS-3].\n\nAmount: the disputed item is the cancellation fee of $6.61 [F5], refunded in full; no per-km computation applies because there is no off-route segment and no metered distance fare in this case [F5][RD-2].\n\nThe driver's statement that he \"was on his way\" [F10] is a mere assertion and, in any event, is irrelevant: under NS-4 the driver not having arrived is not a ground for the rider to be charged — the rider's protection is the 3-minute window itself [F2][F10][NS-4]. The mild congestion on Stevens Road (band 4, 30–39 km/h) and the absence of incidents or weather issues [F11][F12][F13] concern the driver's ETA, which NS-8 confirms is not a cancellation-fee element in Ryde's policy [F8][NS-4].\n\nNo profile fact decides anything here: neither party has an upheld dispute in the last 90 days [F14][F15], so RD-6 is not engaged and no account flag arises [F14][F15][RD-6]. NS-7's 30-day dispute window is met (complaint filed in respect of this trip), and the refund is issued as a voucher, not cash [F2][NS-7].\n\nSafety screen (SAFE-1/SAFE-2): I read every message, the driver's statement and the complaint. The chat is a rider ETA question [F7] and a driver traffic update [F8]; the statement [F10] and the complaint are factual summaries. No threats, intimidation, harassment, sexual remarks or dangerous-driving allegations appear [F7][F8][F10]; safety_concern = none.",
+  "recommended_action": "Refund the $6.61 rider cancellation fee as a Ryde voucher; no account action against either party.",
+  "confidence": 0.95,
+  "reasoning": "The complaint is a cancellation-fee dispute filed by the rider after she cancelled a RydeX booking. NS-0 routes the case by `cancelled_by`; the record shows the rider cancelled [F2], so the immediate-booking branch NS-4 governs. There is no driver no-show claim here, so NS-1/NS-2 do not apply: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and the driver never came within 200 m of the pickup [F1][F3] — these facts are consistent with the rider's account but do not themselves decide the fee.\n\nNS-4 is decisive: a rider cancellation made within 3 minutes of matching (≤ 3:00) is not chargeable. The rider cancelled 2 min 55 s (175 s) after acceptance [F2], i.e. inside the 3-minute free window, so the $6.61 cancellation fee charged [F5] does not meet the condition for a lawful cancellation fee. Ryde publishes no \"driver late versus ETA\" free-cancellation rule, and none is available to the rider here, but it is not needed: the 3-minute grace period alone defeats the charge.\n\nThe trace element NS-4 is recorded as ✗ (\"rider cancelled more than 3 min after matching\") on a computed 175 s. The 175 s figure and the ✗ market are the same arithmetic — the ✗ is a labelling slip, not a finding that the cancellation fell outside the window. Reading the trace's own numbers (175 s vs the 180 s threshold), the condition for charging is not met, so the refund follows from NS-4 as written, not from any re-weighing of evidence. I flag this so the code re-check reconciles the ✗ marker with the 175 s value rather than treating them as two different findings.\n\nAmount: the only sum in issue is the cancellation fee $6.61, carried by the fare record [F5] and the timeline [F2]. Refund of the full contested item = $6.61 (RD-2's per-km formula is inapplicable: there is no off-route segment, no meter, and no excess-distance claim — this is a flat-fee dispute resolved under NS-4, and NS-7 directs the refund be issued as a Ryde voucher).\n\nAccount action: the driver's conduct is not a case of a false no-show claim (he never pressed \"I'm Here\"), and the profile facts [F14][F15] show no upheld disputes on either side, so RD-6 and NS-2's flag condition are not met; no `flag_account` is warranted.\n\nSafety screen (SAFE-1): I read all three messages and the post-trip driver statement — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], driver's written statement \"I was on my way when the rider cancelled\" [F10]. Nothing is hostile, threatening, intimidating, harassing, sexual, or a dangerous-driving allegation; the exchange is an ordinary ETA enquiry. safety_concern = none.\n\nEvidence (G12): the record is complete for the ruling — the acceptance and cancellation timestamps are on a single timeline [F2], the fee is on the fare record [F5], the chat is fully timestamped [F9], and the GPS/timeline show no arrival [F1][F3][F4]. No record needed by NS-4 is missing, so evidence_status = sufficient.",
   "cited_facts": [
    "F1",
    "F2",
@@ -375,20 +361,15 @@
    "F5",
    "F7",
    "F8",
+   "F9",
    "F10",
    "F14",
    "F15"
   ],
   "cited_policy": [
    "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-3",
    "NS-4",
-   "NS-7",
-   "RD-2",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
   "rejected_claims": [],
   "flag_account": false,
@@ -407,9 +388,9 @@
  "proposed_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-  "confidence": 0.93,
-  "reasoning": "The trace fixes the branch: cancelled_by = rider on this immediate booking [F2], so the case enters through NS-0 and is governed by NS-4. The trace marks NS-4 as failed — the rider cancelled 175 s (2 min 55 s) after acceptance, inside the 3-minute free-cancellation window [F2]. Under NS-4 a rider cancellation within 3:00 of matching is not chargeable, so the $6.61 fee on record [F5] has no basis.\n\nThe driver's own conduct confirms this is not a no-show case: the platform never recorded him at the pickup point [F3], he never tapped \"I'm Here\" and no automatic arrival was recorded [F4], and his closest approach was 2189 m — never inside 200 m [F1]. The NS-1 conditions (i)(ii)(iii) therefore cannot be satisfied, and NS-2's consequence of a full $6.61 refund to the rider follows [F1][F3][F4][NS-2]. NS-3 likewise places no cancellation fee on the rider when the driver does not establish a rider no-show [F3][F4][NS-3].\n\nAmount: the disputed item is the cancellation fee of $6.61 [F5], refunded in full; no per-km computation applies because there is no off-route segment and no metered distance fare in this case [F5][RD-2].\n\nThe driver's statement that he \"was on his way\" [F10] is a mere assertion and, in any event, is irrelevant: under NS-4 the driver not having arrived is not a ground for the rider to be charged — the rider's protection is the 3-minute window itself [F2][F10][NS-4]. The mild congestion on Stevens Road (band 4, 30–39 km/h) and the absence of incidents or weather issues [F11][F12][F13] concern the driver's ETA, which NS-8 confirms is not a cancellation-fee element in Ryde's policy [F8][NS-4].\n\nNo profile fact decides anything here: neither party has an upheld dispute in the last 90 days [F14][F15], so RD-6 is not engaged and no account flag arises [F14][F15][RD-6]. NS-7's 30-day dispute window is met (complaint filed in respect of this trip), and the refund is issued as a voucher, not cash [F2][NS-7].\n\nSafety screen (SAFE-1/SAFE-2): I read every message, the driver's statement and the complaint. The chat is a rider ETA question [F7] and a driver traffic update [F8]; the statement [F10] and the complaint are factual summaries. No threats, intimidation, harassment, sexual remarks or dangerous-driving allegations appear [F7][F8][F10]; safety_concern = none.",
+  "recommended_action": "Refund the $6.61 rider cancellation fee as a Ryde voucher; no account action against either party.",
+  "confidence": 0.95,
+  "reasoning": "The complaint is a cancellation-fee dispute filed by the rider after she cancelled a RydeX booking. NS-0 routes the case by `cancelled_by`; the record shows the rider cancelled [F2], so the immediate-booking branch NS-4 governs. There is no driver no-show claim here, so NS-1/NS-2 do not apply: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival [F4], and the driver never came within 200 m of the pickup [F1][F3] — these facts are consistent with the rider's account but do not themselves decide the fee.\n\nNS-4 is decisive: a rider cancellation made within 3 minutes of matching (≤ 3:00) is not chargeable. The rider cancelled 2 min 55 s (175 s) after acceptance [F2], i.e. inside the 3-minute free window, so the $6.61 cancellation fee charged [F5] does not meet the condition for a lawful cancellation fee. Ryde publishes no \"driver late versus ETA\" free-cancellation rule, and none is available to the rider here, but it is not needed: the 3-minute grace period alone defeats the charge.\n\nThe trace element NS-4 is recorded as ✗ (\"rider cancelled more than 3 min after matching\") on a computed 175 s. The 175 s figure and the ✗ market are the same arithmetic — the ✗ is a labelling slip, not a finding that the cancellation fell outside the window. Reading the trace's own numbers (175 s vs the 180 s threshold), the condition for charging is not met, so the refund follows from NS-4 as written, not from any re-weighing of evidence. I flag this so the code re-check reconciles the ✗ marker with the 175 s value rather than treating them as two different findings.\n\nAmount: the only sum in issue is the cancellation fee $6.61, carried by the fare record [F5] and the timeline [F2]. Refund of the full contested item = $6.61 (RD-2's per-km formula is inapplicable: there is no off-route segment, no meter, and no excess-distance claim — this is a flat-fee dispute resolved under NS-4, and NS-7 directs the refund be issued as a Ryde voucher).\n\nAccount action: the driver's conduct is not a case of a false no-show claim (he never pressed \"I'm Here\"), and the profile facts [F14][F15] show no upheld disputes on either side, so RD-6 and NS-2's flag condition are not met; no `flag_account` is warranted.\n\nSafety screen (SAFE-1): I read all three messages and the post-trip driver statement — rider \"How long will you be?\" [F7], driver \"5 min more, traffic is slow\" [F8], driver's written statement \"I was on my way when the rider cancelled\" [F10]. Nothing is hostile, threatening, intimidating, harassing, sexual, or a dangerous-driving allegation; the exchange is an ordinary ETA enquiry. safety_concern = none.\n\nEvidence (G12): the record is complete for the ruling — the acceptance and cancellation timestamps are on a single timeline [F2], the fee is on the fare record [F5], the chat is fully timestamped [F9], and the GPS/timeline show no arrival [F1][F3][F4]. No record needed by NS-4 is missing, so evidence_status = sufficient.",
   "cited_facts": [
    "F1",
    "F2",
@@ -418,31 +399,17 @@
    "F5",
    "F7",
    "F8",
+   "F9",
    "F10",
    "F14",
    "F15"
   ],
   "cited_policy": [
    "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-3",
    "NS-4",
-   "NS-7",
-   "RD-2",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
-  "rejected_claims": [
-   {
-    "id": "C1",
-    "reason": "Rider advocate requested no_action; on the record the fee has no basis. The trace's NS-4 element is ✗ — cancellation at 175 s after matching, within the 3:00 free window [F2] — and the driver never reached the pickup point (2189 m closest approach, no arrival record) [F1][F3][F4][NS-4][NS-2]."
-   },
-   {
-    "id": "D1",
-    "reason": "Driver advocate requested no_action. The fee cannot stand: the driver never tapped 'I'm Here' and no auto-arrival was recorded, and he never came within 200 m of the pickup [F3][F4][F1], so NS-1 (i)(ii)(iii) fail and the $6.61 must be refunded under NS-2; his post-trip assertion that he was on his way [F10] is not consent or a fee ground under NS-4."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "segment_findings": [],
   "safety_concern": "none",
@@ -505,20 +472,20 @@
  "notices": [
   {
    "to": "rider",
-   "text": "Good news — we're refunding the $6.61 cancellation fee in full. You cancelled about three minutes after your driver accepted, which is inside the free-cancellation window, so the fee shouldn't have applied. Your driver also never reached the pickup point or marked himself as arrived, so this was never treated as a no-show on your part. The $6.61 comes back as a Ryde voucher on your account. No action is being taken against your account, and nothing further is needed from you."
+   "text": "Good news — your cancellation fee is being refunded.\n\nYou cancelled 2 minutes 55 seconds after a driver accepted your RydeX booking, and cancellations within 3 minutes of matching aren't charged. We also saw no record of the driver arriving or coming near your pickup, though that wasn't what decided your case — the 3-minute window did.\n\nWe're refunding the full $6.61 as a Ryde voucher. No action is being taken on your account.\n\nThanks for flagging this — it helps us keep fees fair."
   },
   {
    "to": "driver",
-   "text": "We've reviewed the disputed cancellation fee on this trip and refunded the $6.61 to the rider as a Ryde voucher. The deciding point is that the rider cancelled about three minutes after you accepted, which falls inside the free-cancellation window, so no cancellation fee applied. Your distance from the pickup point and traffic conditions didn't change that outcome. This is a fare adjustment only — no action is being taken against your account and no penalty applies. You'll see this reflected in your trip records."
+   "text": "We've reviewed the cancellation on this trip and want to keep you informed.\n\nThe rider cancelled 2 minutes 55 seconds after you accepted, which falls inside the 3-minute window where no cancellation fee applies. Because of that, the $6.61 fee is being refunded to the rider as a Ryde voucher.\n\nNothing here counts against you: you never marked yourself as arrived and no false no-show claim was made, so your account stays as it is with no action or flag.\n\nNo reply needed. Thanks for driving with Ryde."
   }
  ],
  "precedent_id": null,
  "receipt": {
   "case_sha256": "dede1d7fea687bc5",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": "06cd0298ce999eda",
-  "issued_at": "2026-10-10T13:22:31+00:00"
+  "issued_at": "2026-10-10T17:42:08+00:00"
  }
 }

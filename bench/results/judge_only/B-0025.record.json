@@ -243,7 +243,7 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-10T13:22:00.027350Z",
+   "ts": "2026-10-10T17:41:36.211607Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
@@ -257,7 +257,7 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-10T13:22:00.068333Z",
+   "ts": "2026-10-10T17:41:36.259014Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "facts",
@@ -271,7 +271,7 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-10T13:22:00.068631Z",
+   "ts": "2026-10-10T17:41:36.259181Z",
    "elapsed": "00:00.0",
    "actor": "verify",
    "kind": "check",
@@ -294,7 +294,7 @@
   },
   {
    "seq": 4,
-   "ts": "2026-10-10T13:22:00.068723Z",
+   "ts": "2026-10-10T17:41:36.259203Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "brief",
@@ -318,28 +318,30 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-10T13:22:04.738226Z",
-   "elapsed": "00:04.7",
+   "ts": "2026-10-10T17:41:41.935201Z",
+   "elapsed": "00:05.7",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling contradicts the policy certificate — returned to judge once",
-   "body": "segment F3 has 3 findings: give exactly one",
+   "body": "segment F3: ground 'named_road_untied' means undetermined under the policy, but the finding is counts: either the ground or the finding is wrong",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "refund_partial",
     "amount": 6.94,
-    "recommended_action": "Refund $6.94 to the rider as a Ryde voucher (NS-7) for the unexcused portion of the 10:13–10:24 off-route segment; no account flag (RD-6 not triggered).",
-    "confidence": 0.72,
-    "reasoning": "This is a metered RydeTAXI trip, so the fare is not a fixed quote and deviation kilometres feed the meter directly [F7]; RD-2 therefore allows a partial refund of the distance units attributable to any unexempt off-route segment [RD-2]. One off-route segment exists in the record: 10:13–10:24, 7.21 km driven against 2.29 km of optimal route, +4.92 km [F3], matching the computed RD-1 check [RD-1].",
+    "recommended_action": "Refund $6.94 (voucher per NS-7) for the unexempted 4.92 km off-route segment; no account flag (no prior upheld route dispute).",
+    "confidence": 0.75,
+    "reasoning": "This is a RydeTAXI metered trip, so extra distance entered the fare directly [F1][F7][RD-2]. The trace settles that one off-route segment exists (10:13–10:24, 7.21 km driven where the optimal route covers 2.29 km, +4.92 km) [F3][RD-1], and that no RD-4 incident exemption applies: the only incident (vehicle breakdown, 09:47, 0 m from the optimal route) is reported *after* the affected road's speed-band window 09:45–10:13 and the speed band alone cannot exempt [F12][F15][RD-4].\n\nThe consent question is the decisive one. The driver's question was specific: \"mind if I go round via Clementi Avenue 2?\" [F8], and the rider's only reply was \"Sure, your call.\" [F9], sent at 10:10, before the segment began at 10:13 — so the timing requirement of RD-5 is met [RD-5]. But the words are a deferral to the driver's judgment about the named detour, not agreement to an unnamed 7.21 km loop: the record places the driven stretch nowhere, no fact ties it to Clementi Avenue 2, and no stop was measured on it [F3][F10][RD-5]. Under RD-5 kind (2) the agreement to \"go round via Clementi Avenue 2\" covers only driving on that road, and with nothing tying the segment to it (G13) the segment cannot be exempted — I read it as counting against the driver rather than leaving it undetermined, because a blanket \"your call\" cannot be stretched to cover an unexplained 4.92 km loop that reaches no rider-named place [F3][F9][RD-5][RD-3].\n\nAmount: $31.30 ÷ 22.20 km = $1.40988/km (the trace states the rate as distance_fare ÷ distance_km); 4.92 km × $1.40988/km = $6.9366 → $6.94 [F4][F7][RD-2]. The billed excess of $7.99 (5.67 km) is not refunded in full because part of it falls outside the measured segment (route-corridor and matching slack) [F4][RD-2]. The waiting charge $0.13 is a metered waiting unit of a RydeTAXI trip and is not refundable [F5][RD-3]. The driver's post-trip statement that \"the whole road was slow\" and \"check the LTA incident feed\" is a statement made after the fact, unsupported by a qualifying incident as the trace requires, so it does not exempt the segment [F11][RD-4].",
     "cited_facts": [
      "F1",
      "F3",
      "F4",
+     "F5",
      "F7",
      "F8",
      "F9",
+     "F10",
      "F11",
      "F12",
      "F15",
@@ -348,41 +350,26 @@
     "cited_policy": [
      "RD-1",
      "RD-2",
+     "RD-3",
      "RD-4",
      "RD-5",
-     "RD-6"
+     "RD-6",
+     "NS-7"
     ],
     "rejected_claims": [],
     "flag_account": false,
     "segment_findings": [
      {
       "fact_id": "F3",
-      "finding": "exempt",
-      "basis": [
-       "F8",
-       "F9"
-      ],
-      "reason": "Before the segment began at 10:13 [F3], the driver proposed a route change and the rider replied “Sure, your call.” at 10:10 [F8][F9]. That reply is an unqualified general authorisation of the route change (“your call”), which under RD-5 covers the route chosen to get to the destination rather than a specific named road; it was given by the rider ahead of the segment and the chat record is complete and fully timestamped [F10]."
-     },
-     {
-      "fact_id": "F3",
       "finding": "counts",
+      "ground": "named_road_untied",
       "basis": [
        "F8",
        "F9",
+       "F10",
        "F11"
       ],
-      "reason": "The rider's authorisation covered a route chosen to get to Jurong East [F8][F9]; the driver's own account afterwards describes a breakdown “on the route” and the detour only as “another way” [F11], and the only breakdown in the record is on the Ayer Rajah Expressway, 0 m from the optimal route — i.e. on the very stretch being replaced — with no location placing the driven path on Clementi Avenue 2 [F15]. Nothing in the record ties the driven 7.21 km to the proposed route, and a deviation this large (up to 1794 m off the optimal route, +5.7 km total, +14.9 min) [F1][F2][F3] is not covered by an authorisation to choose the way; the excess distance attributable to it remains refundable under RD-2 [RD-2][RD-5]."
-     },
-     {
-      "fact_id": "F3",
-      "finding": "counts",
-      "basis": [
-       "F11",
-       "F12",
-       "F15"
-      ],
-      "reason": "The driver's “reasonable cause” claim does not qualify under RD-4(a): the RD-4(a) screen fails — the only incident (vehicle breakdown reported 09:47) sits 0 m from the optimal route on the Ayer Rajah Expressway stretch that was replaced, so nothing supports the substituted stretch [F15], and the Ayer Rajah Expressway speed-band 2 record alone cannot exempt a segment [F12][RD-4]."
+      "reason": "The rider's pre-segment message at 10:10 ('Sure, your call.') [F9] answers the driver's proposal to go 'round via Clementi Avenue 2' [F8], so a rider reply exists before the 10:13 segment start [RD-5]. But an agreement to a specific named road covers driving on that road only: nothing in the record ties the 7.21 km driven stretch to Clementi Avenue 2 (no stop on it, no locating message, no road name for the driven path), and the driver's own post-trip statement describes 'another way' without naming the road actually used [F3][F11][G13]. A blanket 'your call' [F9] cannot extend to an unexplained 4.92 km loop reaching no rider-named place, so the segment is not exempt and counts under RD-2 [RD-5][RD-1]."
      }
     ],
     "safety_concern": "none",
@@ -400,24 +387,27 @@
   },
   {
    "seq": 6,
-   "ts": "2026-10-10T13:22:09.581176Z",
-   "elapsed": "00:09.6",
+   "ts": "2026-10-10T17:41:47.164887Z",
+   "elapsed": "00:11.0",
    "actor": "judge",
    "kind": "ruling",
-   "title": "Proposed ruling: escalate (model confidence 0.55)",
-   "body": "This is a metered RydeTAXI trip, so the fare is not a fixed quote and deviation kilometres enter the meter [F7]; RD-2 would refund the distance units of any unexempt off-route segment [RD-2]. Exactly one off-route segment exists: 10:13–10:24, 7.21 km driven against 2.29 km of optimal route, +4.92 km, up to 1794 m off the optimal route [F3], matching the RD-1 check [RD-1]. The whole case turns on whether the rider's message covers that segment.",
+   "title": "Proposed ruling: escalate (model confidence 0.60)",
+   "body": "This is a RydeTAXI metered trip, so extra mileage entered the fare [F1][F7][RD-2]. The trace settles that one off-route segment exists (10:13–10:24; 7.21 km driven where the optimal route covers 2.29 km; +4.92 km) [F3][RD-1], and settles that no RD-4 incident exemption applies: the only incident — a vehicle breakdown at 09:47, 0 m from the optimal route — was reported after the Ayer Rajah Expressway speed-band window 09:45–10:13, and a speed band alone does not exempt [F12][F15][RD-4][RD-4(b)].\n\nWhat the record does not settle is the scope of the rider's consent. The driver asked specifically \"mind if I go round via Clementi Avenue 2?\" [F8] and the rider replied \"Sure, your call.\" at 10:10, before the segment start at 10:13 [F9][F10]. So a rider message does precede the segment [RD-5]. But under RD-5 an agreement to a specific named road covers driving on that road only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, no stop was measured in the segment, and the driver's own post-trip statement names no road, saying only 'I took another way' [F3][F10][F11]. Timing alone cannot tie the 4.92 km loop to Clementi Avenue 2, so the finding is undetermined (G13), and because that finding changes the amount, the case goes to a person [RD-5][G13].\n\nAmount if the segment were held to count (for the reviewer): $31.30 ÷ 22.20 km = $1.40988/km; 4.92 km × $1.40988/km = $6.9366 → $6.94 [F4][F7][RD-2]. The metered waiting charge $0.13 is a RydeTAXI waiting unit and is not refundable either way [F5][RD-3]. No account flag: the driver has 0 upheld route disputes in 90 days, so RD-6 is not met [F18][RD-6].",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "escalate",
     "amount": null,
-    "recommended_action": "Send to a human reviewer before any refund executes: confirm from the driver's path/GPS record whether the driven 10:13–10:24 segment actually ran on Clementi Avenue 2, then apply RD-5 to that segment (if it ran elsewhere the segment counts and $6.94 is refundable on the metered total under RD-2; if it ran on Clementi Avenue 2 the segment is exempt and no refund follows).",
-    "confidence": 0.55,
-    "reasoning": "This is a metered RydeTAXI trip, so the fare is not a fixed quote and deviation kilometres enter the meter [F7]; RD-2 would refund the distance units of any unexempt off-route segment [RD-2]. Exactly one off-route segment exists: 10:13–10:24, 7.21 km driven against 2.29 km of optimal route, +4.92 km, up to 1794 m off the optimal route [F3], matching the RD-1 check [RD-1]. The whole case turns on whether the rider's message covers that segment.",
+    "recommended_action": "Send to a human reviewer: check whether the driven off-route stretch can be tied to Clementi Avenue 2 (or placed elsewhere) before deciding the RD-2 refund; the segment's exemption status determines whether ~$6.94 is refunded.",
+    "confidence": 0.6,
+    "reasoning": "This is a RydeTAXI metered trip, so extra mileage entered the fare [F1][F7][RD-2]. The trace settles that one off-route segment exists (10:13–10:24; 7.21 km driven where the optimal route covers 2.29 km; +4.92 km) [F3][RD-1], and settles that no RD-4 incident exemption applies: the only incident — a vehicle breakdown at 09:47, 0 m from the optimal route — was reported after the Ayer Rajah Expressway speed-band window 09:45–10:13, and a speed band alone does not exempt [F12][F15][RD-4][RD-4(b)].\n\nWhat the record does not settle is the scope of the rider's consent. The driver asked specifically \"mind if I go round via Clementi Avenue 2?\" [F8] and the rider replied \"Sure, your call.\" at 10:10, before the segment start at 10:13 [F9][F10]. So a rider message does precede the segment [RD-5]. But under RD-5 an agreement to a specific named road covers driving on that road only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, no stop was measured in the segment, and the driver's own post-trip statement names no road, saying only 'I took another way' [F3][F10][F11]. Timing alone cannot tie the 4.92 km loop to Clementi Avenue 2, so the finding is undetermined (G13), and because that finding changes the amount, the case goes to a person [RD-5][G13].\n\nAmount if the segment were held to count (for the reviewer): $31.30 ÷ 22.20 km = $1.40988/km; 4.92 km × $1.40988/km = $6.9366 → $6.94 [F4][F7][RD-2]. The metered waiting charge $0.13 is a RydeTAXI waiting unit and is not refundable either way [F5][RD-3]. No account flag: the driver has 0 upheld route disputes in 90 days, so RD-6 is not met [F18][RD-6].",
     "cited_facts": [
      "F1",
      "F3",
+     "F4",
+     "F5",
+     "F7",
      "F8",
      "F9",
      "F10",
@@ -429,9 +419,11 @@
     "cited_policy": [
      "RD-1",
      "RD-2",
+     "RD-3",
      "RD-4",
      "RD-5",
-     "RD-6"
+     "RD-6",
+     "NS-7"
     ],
     "rejected_claims": [],
     "flag_account": false,
@@ -439,12 +431,14 @@
      {
       "fact_id": "F3",
       "finding": "undetermined",
+      "ground": "named_road_untied",
       "basis": [
        "F8",
        "F9",
+       "F10",
        "F11"
       ],
-      "reason": "The rider's agreement at 10:10 predates the segment's 10:13 start and is a complete, fully timestamped message [F9][F10][F3], but its scope under RD-5 is unreadable from this record: the agreed route is a specific named road (Clementi Avenue 2) [F8], and no fact ties the driven 7.21 km [F3] to it — the driver's own statement refers to the Ayer Rajah Expressway and only “another way” [F11] — so the segment cannot be placed on the agreed road (G13). Because the finding changes the amount ($4.92 km × $1.4099/km = $6.94), the case goes to a person [RD-5]."
+      "reason": "The rider's message at 10:10 ('Sure, your call.') [F9] precedes the 10:13 segment start [F10], answering the driver's proposal to go 'round via Clementi Avenue 2' [F8], so a pre-segment rider reply exists (RD-5). But agreement to a specific named road covers driving on that road only and the record must tie the segment to it: no stop was measured in the segment, no message places the car on Clementi Avenue 2, and the driver's post-trip statement names no road ('I took another way') [F3][F11]. Nothing ties the driven 7.21 km stretch to Clementi Avenue 2 and nothing places it elsewhere, so the finding is undetermined (G13) and the case goes to a person [RD-5]."
      }
     ],
     "safety_concern": "none",
@@ -453,21 +447,21 @@
      "F9",
      "F11"
     ],
-    "evidence_status": "unknown",
-    "evidence_gap": "No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11].",
+    "evidence_status": "sufficient",
+    "evidence_gap": null,
     "escalate": true,
-    "escalation_reason": "RD-5 scope is undetermined for segment F3 and it changes the amount: the rider's “Sure, your call.” at 10:10 [F9] replies to the driver's specific proposal to go “round via Clementi Avenue 2” [F8], sent before the segment began at 10:13 [F10][F3], which ties the agreement to that named road; but nothing in the record places the driven path on Clementi Avenue 2 — the driver's own statement says he took “another way” because of a breakdown “on the route” [F11], and the only breakdown in the record is 0 m from the optimal route on the replaced Ayer Rajah Expressway stretch [F15]. RD-4 does not settle it either: the RD-4(a) screen fails under the trace, and the speed-band record alone cannot exempt [F12][RD-4]. Required: the driver's path/GPS trace for 10:13–10:24."
+    "escalation_reason": "The off-route segment's exemption turns on RD-5 consent scope: the rider agreed at 10:10 to a specific route via Clementi Avenue 2, but no fact ties the driven stretch (F3) to that road and none places it elsewhere, so the segment is undetermined (G13). Because that finding changes the refund amount (~$6.94), a human reviewer must resolve whether the segment is exempt or counts before any refund executes."
    },
    "certificate": null
   },
   {
    "seq": 7,
-   "ts": "2026-10-10T13:22:09.581314Z",
-   "elapsed": "00:09.6",
+   "ts": "2026-10-10T17:41:47.165018Z",
+   "elapsed": "00:11.0",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "judge escalates → human review: segment finding undetermined for F3; evidence unknown: No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11].",
+   "body": "judge escalates → human review: segment finding undetermined for F3",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -485,12 +479,12 @@
   },
   {
    "seq": 8,
-   "ts": "2026-10-10T13:22:09.581329Z",
-   "elapsed": "00:09.6",
+   "ts": "2026-10-10T17:41:47.165031Z",
+   "elapsed": "00:11.0",
    "actor": "verify",
    "kind": "escalate",
    "title": "Routed to human review",
-   "body": "segment finding undetermined for F3; evidence unknown: No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11].",
+   "body": "segment finding undetermined for F3",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -499,12 +493,12 @@
   },
   {
    "seq": 9,
-   "ts": "2026-10-10T13:22:09.581358Z",
-   "elapsed": "00:09.6",
+   "ts": "2026-10-10T17:41:47.165054Z",
+   "elapsed": "00:11.0",
    "actor": "system",
    "kind": "notify",
    "title": "Notices sent to rider and driver (fixed text: case is with a reviewer, nothing promised)",
-   "body": "RIDER: Your dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered; the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete.\n\nDRIVER: The dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered; the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete.",
+   "body": "RIDER: Your dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered. Ryde will contact you once the review is complete.\n\nDRIVER: The dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered. Ryde will contact you once the review is complete.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -515,12 +509,15 @@
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send to a human reviewer before any refund executes: confirm from the driver's path/GPS record whether the driven 10:13–10:24 segment actually ran on Clementi Avenue 2, then apply RD-5 to that segment (if it ran elsewhere the segment counts and $6.94 is refundable on the metered total under RD-2; if it ran on Clementi Avenue 2 the segment is exempt and no refund follows).",
-  "confidence": 0.55,
-  "reasoning": "This is a metered RydeTAXI trip, so the fare is not a fixed quote and deviation kilometres enter the meter [F7]; RD-2 would refund the distance units of any unexempt off-route segment [RD-2]. Exactly one off-route segment exists: 10:13–10:24, 7.21 km driven against 2.29 km of optimal route, +4.92 km, up to 1794 m off the optimal route [F3], matching the RD-1 check [RD-1]. The whole case turns on whether the rider's message covers that segment.",
+  "recommended_action": "Send to a human reviewer: check whether the driven off-route stretch can be tied to Clementi Avenue 2 (or placed elsewhere) before deciding the RD-2 refund; the segment's exemption status determines whether ~$6.94 is refunded.",
+  "confidence": 0.6,
+  "reasoning": "This is a RydeTAXI metered trip, so extra mileage entered the fare [F1][F7][RD-2]. The trace settles that one off-route segment exists (10:13–10:24; 7.21 km driven where the optimal route covers 2.29 km; +4.92 km) [F3][RD-1], and settles that no RD-4 incident exemption applies: the only incident — a vehicle breakdown at 09:47, 0 m from the optimal route — was reported after the Ayer Rajah Expressway speed-band window 09:45–10:13, and a speed band alone does not exempt [F12][F15][RD-4][RD-4(b)].\n\nWhat the record does not settle is the scope of the rider's consent. The driver asked specifically \"mind if I go round via Clementi Avenue 2?\" [F8] and the rider replied \"Sure, your call.\" at 10:10, before the segment start at 10:13 [F9][F10]. So a rider message does precede the segment [RD-5]. But under RD-5 an agreement to a specific named road covers driving on that road only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, no stop was measured in the segment, and the driver's own post-trip statement names no road, saying only 'I took another way' [F3][F10][F11]. Timing alone cannot tie the 4.92 km loop to Clementi Avenue 2, so the finding is undetermined (G13), and because that finding changes the amount, the case goes to a person [RD-5][G13].\n\nAmount if the segment were held to count (for the reviewer): $31.30 ÷ 22.20 km = $1.40988/km; 4.92 km × $1.40988/km = $6.9366 → $6.94 [F4][F7][RD-2]. The metered waiting charge $0.13 is a RydeTAXI waiting unit and is not refundable either way [F5][RD-3]. No account flag: the driver has 0 upheld route disputes in 90 days, so RD-6 is not met [F18][RD-6].",
   "cited_facts": [
    "F1",
    "F3",
+   "F4",
+   "F5",
+   "F7",
    "F8",
    "F9",
    "F10",
@@ -532,9 +529,11 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "NS-7"
   ],
   "rejected_claims": [],
   "flag_account": false,
@@ -542,12 +541,14 @@
    {
     "fact_id": "F3",
     "finding": "undetermined",
+    "ground": "named_road_untied",
     "basis": [
      "F8",
      "F9",
+     "F10",
      "F11"
     ],
-    "reason": "The rider's agreement at 10:10 predates the segment's 10:13 start and is a complete, fully timestamped message [F9][F10][F3], but its scope under RD-5 is unreadable from this record: the agreed route is a specific named road (Clementi Avenue 2) [F8], and no fact ties the driven 7.21 km [F3] to it — the driver's own statement refers to the Ayer Rajah Expressway and only “another way” [F11] — so the segment cannot be placed on the agreed road (G13). Because the finding changes the amount ($4.92 km × $1.4099/km = $6.94), the case goes to a person [RD-5]."
+    "reason": "The rider's message at 10:10 ('Sure, your call.') [F9] precedes the 10:13 segment start [F10], answering the driver's proposal to go 'round via Clementi Avenue 2' [F8], so a pre-segment rider reply exists (RD-5). But agreement to a specific named road covers driving on that road only and the record must tie the segment to it: no stop was measured in the segment, no message places the car on Clementi Avenue 2, and the driver's post-trip statement names no road ('I took another way') [F3][F11]. Nothing ties the driven 7.21 km stretch to Clementi Avenue 2 and nothing places it elsewhere, so the finding is undetermined (G13) and the case goes to a person [RD-5]."
    }
   ],
   "safety_concern": "none",
@@ -556,20 +557,23 @@
    "F9",
    "F11"
   ],
-  "evidence_status": "unknown",
-  "evidence_gap": "No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11].",
+  "evidence_status": "sufficient",
+  "evidence_gap": null,
   "escalate": true,
-  "escalation_reason": "segment finding undetermined for F3; evidence unknown: No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11]."
+  "escalation_reason": "segment finding undetermined for F3"
  },
  "proposed_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send to a human reviewer before any refund executes: confirm from the driver's path/GPS record whether the driven 10:13–10:24 segment actually ran on Clementi Avenue 2, then apply RD-5 to that segment (if it ran elsewhere the segment counts and $6.94 is refundable on the metered total under RD-2; if it ran on Clementi Avenue 2 the segment is exempt and no refund follows).",
-  "confidence": 0.55,
-  "reasoning": "This is a metered RydeTAXI trip, so the fare is not a fixed quote and deviation kilometres enter the meter [F7]; RD-2 would refund the distance units of any unexempt off-route segment [RD-2]. Exactly one off-route segment exists: 10:13–10:24, 7.21 km driven against 2.29 km of optimal route, +4.92 km, up to 1794 m off the optimal route [F3], matching the RD-1 check [RD-1]. The whole case turns on whether the rider's message covers that segment.",
+  "recommended_action": "Send to a human reviewer: check whether the driven off-route stretch can be tied to Clementi Avenue 2 (or placed elsewhere) before deciding the RD-2 refund; the segment's exemption status determines whether ~$6.94 is refunded.",
+  "confidence": 0.6,
+  "reasoning": "This is a RydeTAXI metered trip, so extra mileage entered the fare [F1][F7][RD-2]. The trace settles that one off-route segment exists (10:13–10:24; 7.21 km driven where the optimal route covers 2.29 km; +4.92 km) [F3][RD-1], and settles that no RD-4 incident exemption applies: the only incident — a vehicle breakdown at 09:47, 0 m from the optimal route — was reported after the Ayer Rajah Expressway speed-band window 09:45–10:13, and a speed band alone does not exempt [F12][F15][RD-4][RD-4(b)].\n\nWhat the record does not settle is the scope of the rider's consent. The driver asked specifically \"mind if I go round via Clementi Avenue 2?\" [F8] and the rider replied \"Sure, your call.\" at 10:10, before the segment start at 10:13 [F9][F10]. So a rider message does precede the segment [RD-5]. But under RD-5 an agreement to a specific named road covers driving on that road only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, no stop was measured in the segment, and the driver's own post-trip statement names no road, saying only 'I took another way' [F3][F10][F11]. Timing alone cannot tie the 4.92 km loop to Clementi Avenue 2, so the finding is undetermined (G13), and because that finding changes the amount, the case goes to a person [RD-5][G13].\n\nAmount if the segment were held to count (for the reviewer): $31.30 ÷ 22.20 km = $1.40988/km; 4.92 km × $1.40988/km = $6.9366 → $6.94 [F4][F7][RD-2]. The metered waiting charge $0.13 is a RydeTAXI waiting unit and is not refundable either way [F5][RD-3]. No account flag: the driver has 0 upheld route disputes in 90 days, so RD-6 is not met [F18][RD-6].",
   "cited_facts": [
    "F1",
    "F3",
+   "F4",
+   "F5",
+   "F7",
    "F8",
    "F9",
    "F10",
@@ -581,9 +585,11 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "NS-7"
   ],
   "rejected_claims": [],
   "flag_account": false,
@@ -591,12 +597,14 @@
    {
     "fact_id": "F3",
     "finding": "undetermined",
+    "ground": "named_road_untied",
     "basis": [
      "F8",
      "F9",
+     "F10",
      "F11"
     ],
-    "reason": "The rider's agreement at 10:10 predates the segment's 10:13 start and is a complete, fully timestamped message [F9][F10][F3], but its scope under RD-5 is unreadable from this record: the agreed route is a specific named road (Clementi Avenue 2) [F8], and no fact ties the driven 7.21 km [F3] to it — the driver's own statement refers to the Ayer Rajah Expressway and only “another way” [F11] — so the segment cannot be placed on the agreed road (G13). Because the finding changes the amount ($4.92 km × $1.4099/km = $6.94), the case goes to a person [RD-5]."
+    "reason": "The rider's message at 10:10 ('Sure, your call.') [F9] precedes the 10:13 segment start [F10], answering the driver's proposal to go 'round via Clementi Avenue 2' [F8], so a pre-segment rider reply exists (RD-5). But agreement to a specific named road covers driving on that road only and the record must tie the segment to it: no stop was measured in the segment, no message places the car on Clementi Avenue 2, and the driver's post-trip statement names no road ('I took another way') [F3][F11]. Nothing ties the driven 7.21 km stretch to Clementi Avenue 2 and nothing places it elsewhere, so the finding is undetermined (G13) and the case goes to a person [RD-5]."
    }
   ],
   "safety_concern": "none",
@@ -605,10 +613,10 @@
    "F9",
    "F11"
   ],
-  "evidence_status": "unknown",
-  "evidence_gap": "No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11].",
+  "evidence_status": "sufficient",
+  "evidence_gap": null,
   "escalate": true,
-  "escalation_reason": "RD-5 scope is undetermined for segment F3 and it changes the amount: the rider's “Sure, your call.” at 10:10 [F9] replies to the driver's specific proposal to go “round via Clementi Avenue 2” [F8], sent before the segment began at 10:13 [F10][F3], which ties the agreement to that named road; but nothing in the record places the driven path on Clementi Avenue 2 — the driver's own statement says he took “another way” because of a breakdown “on the route” [F11], and the only breakdown in the record is 0 m from the optimal route on the replaced Ayer Rajah Expressway stretch [F15]. RD-4 does not settle it either: the RD-4(a) screen fails under the trace, and the speed-band record alone cannot exempt [F12][RD-4]. Required: the driver's path/GPS trace for 10:13–10:24."
+  "escalation_reason": "The off-route segment's exemption turns on RD-5 consent scope: the rider agreed at 10:10 to a specific route via Clementi Avenue 2, but no fact ties the driven stretch (F3) to that road and none places it elsewhere, so the segment is undetermined (G13). Because that finding changes the refund amount (~$6.94), a human reviewer must resolve whether the segment is exempt or counts before any refund executes."
  },
  "certificate": [
   "✓ RD-1 off-route segment(s) exist [case] 1 segment(s) (F3)",
@@ -623,13 +631,13 @@
  "eligibility": {
   "auto": false,
   "reasons": [
-   "segment finding undetermined for F3; evidence unknown: No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11]."
+   "segment finding undetermined for F3"
   ],
   "actions": [
    {
     "type": "escalate",
     "mode": "human_review",
-    "detail": "segment finding undetermined for F3; evidence unknown: No record (road name or location message) ties the driven 10:13–10:24 segment [F3] to Clementi Avenue 2, the route the rider agreed to at 10:10 [F8][F9]; the fact table carries no road names for the driven path (G13), and the driver's own statement names another stretch, the Ayer Rajah Expressway [F11]."
+    "detail": "segment finding undetermined for F3"
    }
   ],
   "what_would_change": [
@@ -665,20 +673,20 @@
  "notices": [
   {
    "to": "rider",
-   "text": "Your dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered; the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete."
+   "text": "Your dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered. Ryde will contact you once the review is complete."
   },
   {
    "to": "driver",
-   "text": "The dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered; the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete."
+   "text": "The dispute on trip B-0025 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at what was agreed about the route and which stretch it covered. Ryde will contact you once the review is complete."
   }
  ],
  "precedent_id": null,
  "receipt": {
   "case_sha256": "208deb3bbaa65520",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": "9c89f09cf1d33082",
-  "issued_at": "2026-10-10T13:22:09+00:00"
+  "issued_at": "2026-10-10T17:41:47+00:00"
  }
 }

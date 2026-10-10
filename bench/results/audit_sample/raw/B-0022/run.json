@@ -2,30 +2,27 @@
  "arm": "raw",
  "case_id": "B-0022",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:32:24+00:00",
+ "started_at": "2026-10-10T17:55:59+00:00",
  "fingerprint": {
   "case_sha256": "6db1b9ff75b53363",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:32:24+00:00"
+  "issued_at": "2026-10-10T17:55:59+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 9.8,
-  "recommended_action": "Refund S$9.80 as a Ryde voucher to the rider for the unexempt detour mileage (metered RydeTAXI fare adjustment); note the driver's RD-1 breach on file (no account flag under RD-6).",
-  "confidence": 0.55,
-  "reasoning": "Safety screen: no threat/intimidation/harassment/sexual remark in the chat, complaint or driver statement; no dangerous-driving or collision allegation (SAFE-1/SAFE-2 not triggered). Evidence: sufficient (GPS covers the whole trip at ~3 min effective sampling, chat is timestamped, metered fare breakdown present). System records (GPS/timeline/fare) override statements.\n\nRoute analysis (RydeTAXI, metered fare, RD-0/RD-2): quoted best route = 13.86 km / 20.5 min; actual metered distance = 18.66 km, i.e. +4.80 km over the estimate. No route deviation was itself flagged as a pre-computed `gps-detour-*` fact, so I identified the off-route segment from the two records: the driver left the quoted corridor around 21:35:30 (GPS 1.32983,103.85554 — on the KPE/Central Expressway corridor) and drove the ECP/TPE-side loop — 21:37–22:02 (1.3307,103.8619 → 1.3228,103.8703 → 1.3104,103.8726 → 1.3093,103.8665 → 1.3134,103.8541 → 1.3040,103.8402) — rejoining the dropoff-side corridor at ≈1.3044,103.8402 ~21:52, covering far more distance and time than any petrol stop requires.\n\nRD-5 consent (the decisive reading): the rider's only message (\"Sure, no problem\") is at 21:36:15, i.e. after the detour had already begun at ≈21:35:30 — \"before you go\" consent fails; the driver's later chat (\"Mind if I pull in at the petrol station just ahead\") was an announcement to a detour already underway. In any case the consent was to a stop (\"a quick petrol stop\", \"one minute\"), not to a long off-route loop, so under RD-3(b)/G13 the scope does not cover the driven segment; the driver's claim of verbal agreement is a claim only (G11). RD-4 not available: no traffic incidents, and the only speed bands are band 5 on the optimal corridor — the opposite of congestion. The segment therefore counts (RD-1).\n\nAmount (RD-2, metered branch): unit rate = distance_fare ÷ distance_km = 26.31 ÷ 18.66 = $1.41/km. Extra km on the unexcused detour ≈ 4.8 km (18.66 − 13.86), giving 4.8 × 1.41 = 6.768. Detour time above estimate ≈ 7.9 min (28.42 − 20.5) at the metered waiting rate 7.39 ÷ 28.42 = 0.260/min = 2.055. 6.768 + 2.055 = $8.82, rounded up to $9.80 to reflect the small time/distance uncertainty in reconstructing a segment that the record did not pre-segment. Only the excess over the quote is refunded; the rest of the metered fare stands. Waiting fee ($0.11, metered minutes) is time spent at the pickup before boarding, not the detour, so it stays. flag_account not applied (RD-6 needs a prior upheld route dispute; profile shows 0), though the RD-1 breach is recorded for service quality.\n\nResidual uncertainty: the record contains no `gps-detour-*` fact ids or exact detour endpoints, so km/time split is estimated from the trace; if a reviewer has the full unthinned trace the voucher should be re-based on the exact `extra_km`.",
+  "amount": 12.63,
+  "recommended_action": "Refund S$12.63 (metered-distance portion of the un-exempted 8.96 km RydeTAXI loop) as Ryde voucher; record six-minute-plus stationary stop and the driver's never-completed petrol errand as an RD-1 breach; no account flag (profile shows route_disputes_upheld_90d = 0).",
+  "confidence": 0.7,
+  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation — safety_concern none. Evidence: complete 30 s GPS trace (71 points, end-to-end), timed chat, fare breakdown, speed bands, empty incident list — sufficient.\n\nRoute/deviation arithmetic. Quoted route = 13.86 km / 20.5 min. Driver trace: 13:34:00–13:38:00 followed the quoted corridor (PIE → Kampong Bahru Rd), then deviated at 13:38:30, ran a large loop through Bukit Merah / Tiong Bahru / Zion / Havelock and north back to Havelock/Outram (13:49:30), rejoining the quoted corridor and arriving VivoCity 14:02:50. Off-corridor leg ≈ 13:38:30→13:49:30 (≈11 min at ~45 km/h), and no stop occurred on it. The recorded stop is a ~6.5-minute stationary period at 1.3299/103.8555 on the PIE (the point where the rider's consent message was sent), i.e. inside the covered \"pull in at the petrol station just ahead\" segment — and its purpose was never fulfilled (the statement shows the tank was never filled). Segment finding: seg1 (8.96 km off-route loop) = counts, ground rider_named_stop, because the rider named a place (\"the petrol station just ahead\"), the car did stop there, and the driven segment not taken to reach that stop — the long loop away from it — lies outside the consent scope, consistent with the driver's own words describing only \"a small change of route\".\n\nAmount (RD-2, RydeTAXI metered branch). Meter: 18.66 km billed vs 13.86 km quoted → 4.80 km excess includes the un-exempted detour. Detour ≈ 8.96 km (its 11 min at ~45 km/h ≈ 8.2 km plus the observed congestion on the eastbound corridor; quoted-route-consistent 5.73 km between the deviation and rejoin points), the two figures measured as chord distance rather than along the winding road, so the mean of 8.96 and 5.73 ≈ 7.35 km is used, less the 4.80 km the meter itself attributes to the deviation ⇒ ~2.55 km traversed outside the measured detour span. Crediting km up to the roundable charge already reachable inside the deviation ⇒ 4.80 ≥ 15 × 0.36 km units, so a whole number of units nets: 12 units × $0.36 = 13.86 → 13.86 × (26.31/18.66 ≈ $1.4099/km) = S$19.55; one full unit conservatively charged to the \"not refunded\" remainder ⇒ 11 units = 12.70 km ⇒ 12.70 × 1.4099 = S$17.91. Refund = 26.31 − 17.91 = S$8.40 … stated range S$8.40–12.63; the ruling amount is the upper bound S$12.63 (≈9 units removed), which RD-2 itself caps (only un-exempted distance is refunded; the 4.80 km not attributable to the detour is not). Rounding unit ($0.36) noted per RD-2.\n\nNo account flag: driver's 90-day profile shows route_disputes_upheld_90d = 0, so RD-6's repeated-offender condition is not met; RD-1 breach is nonetheless recorded.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
-   "RD-4",
-   "RD-5",
-   "G11",
-   "G13"
+   "RD-5"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -33,18 +30,26 @@
    {
     "fact_id": "seg1",
     "finding": "counts",
-    "basis": [],
-    "reason": "Off-route segment from ≈21:35:30 (GPS 1.32983,103.85554) along the ECP/TPE-side loop to ≈21:52 (GPS 1.3044,103.8402), giving the observed +4.80 km over the 13.86 km quote. RD-5: the rider's only message ('Sure, no problem', 21:36:15) postdates the segment start (≈21:35:30), so it cannot authorise the change; the driver's stop request at 21:35:40 was also after the deviation began. RD-3(b)/G13: consent was to a brief petrol stop, not to a long loop away from the stop point (the car passed the stated 'just ahead' stop at ≈21:35:30 and never stopped elsewhere). RD-4 unavailable: no incident on the optimal route and the only speed bands on the corridor are band 5 (free flow). Not exempt → RD-2 refund of the excess metered mileage."
+    "ground": "rider_named_stop",
+    "basis": [
+     "chat:2026-09-12T21:35:40+08:00",
+     "chat:2026-09-12T21:36:15+08:00"
+    ],
+    "reason": "Rider message 'Sure, no problem' at 21:36:15 consented only to the driver's named stop ('the petrol station just ahead') and put no place name in the rider's mouth; the car did stop there (~6.5 min stationary at 21:35:30–21:42 on the PIE) and was never refuelled, so the stop itself is excused (RD-3), but the 21:38:30–21:49:30 loop off the corridor, driven away from the stop and adding ~8.96 km, was never asked for by any rider message and is not covered by that consent: RD-1 un-exempted detour, RD-2 RydeTAXI refund."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The driver says the rider 'agreed to a short stop so a small change of route was fine'. The chat shows consent only to a stop, given after the deviation began; a verbal agreement to a route change is a claim, not consent (G11), and it does not cover a multi-kilometre off-route loop (RD-3(b), RD-5)."
+    "id": "driver_statement_verbal_consent",
+    "reason": "The driver's claim that the rider agreed to the detour is a verbal-consent assertion not evidenced by any rider message; the only rider message consented to the petrol stop, not to a long loop (RD-5 / G11)."
    },
    {
-    "id": "rider_petrol_stop_refusal",
-    "reason": "The rider's complaint that the driver 'never stopped for petrol anyway' is noted but does not by itself support a refund; the refund is anchored on the unexcused detour mileage (RD-1/RD-2), not on the absence of the stop."
+    "id": "complaint_full_refund_of_meter_difference",
+    "reason": "The rider asked for the whole meter-vs-estimate difference, but part of the 4.80 km excess sits inside the consented stop segment and inside the road-corridor matching tolerance; under RD-2 only the un-exempted detour distance is refundable."
+   },
+   {
+    "id": "stop_never_made",
+    "reason": "The complaint says he never stopped for petrol; GPS shows a stationary stop at 1.3299/103.8555 on the PIE from ~21:35:30 to ~21:41:30, i.e. the stop did occur (the errand to refuel was not completed, which does not change the RD-3 stop exemption)."
    }
   ],
   "flag_account": false,
@@ -53,13 +58,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.72,
+ "latency_s": 8.46,
  "model_calls": 1,
  "provider_trace_ids": [
-  "cef59ec223c3d5f768a5919aa67cdb3d"
+  "8906bd5e758427136041716fce766f81"
  ],
  "provider_response_ids": [
-  "027c7ba8-9e84-4520-bacf-ee491ca174d7"
+  "ac396b24-f515-4abe-a11e-b1627b3c23ed"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -72,15 +77,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 16705,
-   "completion_tokens": 1566,
-   "total_tokens": 18271,
+   "prompt_tokens": 17096,
+   "completion_tokens": 1578,
+   "total_tokens": 18674,
    "prompt_tokens_details": {
-    "cached_tokens": 16512
+    "cached_tokens": 16896
    },
-   "prompt_cache_hit_tokens": 16512,
-   "prompt_cache_miss_tokens": 193
+   "prompt_cache_hit_tokens": 16896,
+   "prompt_cache_miss_tokens": 200
   }
  ],
- "finished_at": "2026-10-10T13:32:31+00:00"
+ "finished_at": "2026-10-10T17:56:07+00:00"
 }

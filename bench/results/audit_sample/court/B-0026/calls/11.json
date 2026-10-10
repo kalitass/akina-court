@@ -1,0 +1,126 @@
+{
+ "n": 11,
+ "started_at": "2026-10-10T17:58:37.011+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.55.0",
+  "x-stainless-lang": "<redacted>",
+  "x-stainless-package-version": "<redacted>",
+  "x-stainless-os": "<redacted>",
+  "x-stainless-arch": "<redacted>",
+  "x-stainless-runtime": "<redacted>",
+  "x-stainless-runtime-version": "<redacted>",
+  "x-stainless-async": "<redacted>",
+  "x-stainless-retry-count": "<redacted>",
+  "x-stainless-read-timeout": "<redacted>",
+  "content-length": "3925"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0026. Final outcome: refund_full, amount $6.61 as a Ryde voucher. Account flag: yes. Recommended action: Refund the $6.61 cancellation fee to the rider as a Ryde voucher, and refer the driver's account for review of the false \"I'm Here\" tap + flag_account.\nReasoning:\nThe case is a no-show cancellation fee dispute: driver cancelled at 12:09:25 and a $6.61 cancellation fee was charged [F3][F6]. Under NS-0 the cancellation fee is only valid if the driver's no-show branch (NS-1) is met, since cancelled_by = driver [F3][NS-0].\n\nNS-1(i) is met: the driver tapped \"I'm Here\" at 12:06:15 [F5][NS-1]. But NS-1(ii) fails: at that moment GPS placed him 600 m from the pickup, and his closest approach across the whole wait was 599 m [F5][F1][NS-1]. The platform also never recorded an arrival at the pickup point [F4][NS-1]. NS-1(iii) fails as well: after the tap he spent 0 s within 200 m of the pickup [F5][NS-1], and his only stationary spell, 3 min 30 s, was spent 600 m away [F2][NS-1]. Time waited is only credited when it is waited at the pickup point, so the duration does not rescue him.\n\nThe driver's written statement that he waited more than 3 minutes at the pickup [F12] is a claim contradicted by the GPS and timeline records [F1][F2][F4][F5]; system records prevail over statements and NS-1 measures the wait by GPS, not by assertion [NS-1]. The rider's contemporaneous 12:07 message \"I'm at the pickup point, no car here. Where are you?\" [F9] matches the GPS gap and the chat record is complete and fully timestamped [F11][NS-1].\n\nWith NS-1(ii) and (iii) failing, NS-2 requires the $6.61 cancellation fee to be refunded in full [F3][F6][NS-2]. The amount is the cancellation fee stated on the fare record, $6.61 [F6][NS-2] — no per-km computation is needed because this is a fixed cancellation-fee item, not metered distance.\n\nNS-2 further provides that where the driver confirmed arrival while GPS showed him outside the pickup range, the case carries a flag_account referral for abuse of the arrival/cancellation button [F5][F1][NS-2]; that flag is set via the structured field. RD-6 is not needed for this flag: the driver's profile shows 1 upheld no-show dispute in 90 days [F17], but profile facts may not decide the case, and NS-2's own abuse branch is the operative clause here [NS-2].\n\nSafety screen: I read all three chat messages [F8][F9][F10], the complaint and the driver's statement [F12]. They contain a pickup coordination message, the rider's question about the driver's location, and the driver's cancellation notice — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; no safety concern arises [SAFE-1]. Evidence is sufficient: the GPS trace covers the wait to the cancellation without a hole, the timeline is complete, and the chat is fully timestamped [F5][F11][NS-1]."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.898,
+ "finished_at": "2026-10-10T17:58:38.909+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Sat, 10 Oct 2026 17:58:37 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "4e8e6dc5bddaeafc8b78e38942994b4f",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 d5dbf2f1b5f43c4b057e3f3b7f214df0.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN2-P8",
+  "x-amz-cf-id": "75QzG7w2Y6XoXc5l6fHRUoryPVJvdZymaDbmfjTuURdC6PpQuyf-Vg=="
+ },
+ "response_body": {
+  "id": "8b2785ef-3c0d-4eb6-aa53-16b4f7d2c49b",
+  "object": "chat.completion",
+  "created": 1791655117,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_cy1EsRTwl7kP5YJzLLxO5400",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"Good news: your $6.61 cancellation fee is being refunded in full as a Ryde voucher, so the charge won't cost you anything.\\n\\nWhat decided it: the driver tapped \\\"I'm Here,\\\" but the GPS records show he was about 600 m from the pickup point the whole time and never arrived at it — his closest approach was still roughly 600 m away. Waiting time only counts when it's spent at the pickup point. Your message asking where the car was matched those records.\\n\\nNothing further is needed from you. Your voucher will appear in the app.\", \"driver\": \"Your $6.61 cancellation fee has been refunded to the rider as a Ryde voucher. The decision was based on GPS records: when you tapped \\\"I'm Here,\\\" you were about 600 m from the pickup point, and your closest approach during the wait was about 599 m. No arrival at the pickup point was recorded, and no wait time was spent within range of it.\\n\\nYour account has been referred for review of the arrival tap. No action is needed from you right now; the review outcome may affect your account.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1194,
+   "completion_tokens": 271,
+   "total_tokens": 1465,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 938
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "9ee41cc9fefa71a50cc3b52010882e8a7d52dfcd7b2796a6755615efe2649905"
+}

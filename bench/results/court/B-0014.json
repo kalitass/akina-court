@@ -4,27 +4,26 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:24:39.821634+00:00",
+ "ts": "2026-10-10T17:45:33.510530+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 4.41,
-  "recommended_action": "Issue a Ryde voucher of $4.41 to the rider (RD-2, NS-7); record the F4 segment as an unexcused route deviation on the driver's file; no account flag.",
-  "confidence": 0.9,
-  "reasoning": "This is a metered RydeTAXI trip (F7: base $3.90 + distance $31.84 for 22.58 km + time $8.91 + platform $1.47 = $46.12), so extra kilometres feed straight into the fare and relief is measured per RD-2, not by the fixed-quote branch [F7][RD-2]. The trace settles that two off-route segments exist (F3, F4) and that only one of them is excused, so the review is segment by segment [F3][F4][RD-1].\n\nSegment F3 (21:42–21:49, 4.26 km driven vs 1.57 km optimal, +2.69 km, up to 1084 m off the optimal route) is exempt: an LTA accident was reported at 21:26 on the Kallang Paya Lebar Expressway towards TPE after Sheares Avenue Exit, 0 m from the optimal route, i.e. on the very stretch replaced, reported before the segment's 21:42 start and still listed in the trip window [F12][RD-4]. The speed-band records (PIE band 5, KLE band 4, 21:26–22:17) are not band 1 or 2, so they corroborate congestion only and cannot exempt a segment on their own, but they do not disturb the F3 exemption [F10][F11][RD-4]. No refund is due on the 2.69 km in F3.\n\nSegment F4 (22:02–22:09, 4.57 km driven vs 1.43 km optimal, +3.13 km, up to 997 m off the optimal route) has no qualifying incident: F12 ties the single 21:26 accident to the KLE stretch already covered by F3, and nothing in F10–F12 ties an incident or a band ≤ 2 to the optimal road this second deviation replaced [F4][F12][RD-4]. The rider's agreement to that reroute is absent: there are no in-app chat messages at all (F8), and the only account of the driver \"going round\" the incident comes from his own statement written after the trip (F9) — a driver's claim of agreement in his statement is not rider consent (G11), and no rider message sent before 22:02 exists at all, so the reading is \"counts\" rather than undetermined [F8][F9][RD-5]. No rider-requested stop exists in this segment for RD-3 to excuse [F4][F3][RD-3].\n\nAmount: the trace fixes the per-km rate at the fare record's distance fare ÷ distance km, $31.84 ÷ 22.58 km = $1.4101/km, and RD-2 refunds only the extra_km of non-exempt segments [F5][F7][RD-2]. 3.13 km × $1.4101/km = $4.4146, rounded to $4.41. The greater $9.45 / 6.70 km excess in F5 is not awarded because RD-2 does not refund the exempt segment's kilometres nor the unallocated mapping-noise remainder, and no waiting or cancellation item arises (waiting $0.00, no cancellation fee) [F5][F6][F7][RD-2].\n\nNo account action: RD-6 requires a route violation established here plus route_disputes_upheld_90d ≥ 1, and the driver's profile shows 0 upheld route disputes in the window (his single upheld dispute is not a route case), so the \"repeated\" predicate is absent [F15][RD-6]. The rider's own profile (2 disputes, 0 upheld) decides nothing either way [F14][RD-6].",
+  "recommended_action": "Issue a $4.41 Ryde voucher to the rider (NS-7) for the unexempted F4 off-route segment; no account action.",
+  "confidence": 0.82,
+  "reasoning": "RydeTAXI metered trip: extra kilometres enter the fare, so RD-2's metered branch governs [F7][RD-2]. The distance fare of $31.84 over 22.58 km gives the trip's own rate of $1.4101/km, which the fare record itself applies to 6.70 km to reach $9.45 [F5][F7][RD-2].\n\nTwo off-route segments are in the record: 21:42–21:49 adding 2.69 km [F3] and 22:02–22:09 adding 3.13 km [F4]; RD-1 screens each segment separately under RD-3/RD-4/RD-5 [F3][F4][RD-1].\n\nSegment F3: the trace settles the RD-4(a) element — the LTA accident reported 21:26 on the Kallang Paya Lebar Expressway, 0 m from the optimal route, within 300 m of optimal km 3.0–4.5 and before the segment start, so the corroboration targets the replaced stretch itself [F12][F3][RD-4]. RD-4(a) therefore exempts this segment's extra_km, and RD-5 and RD-3 need not be reached for it [F12][F3][RD-4].\n\nSegment F4: no qualifying incident exists (the KPE band 4 and PIE band 5 records are not band 1–2 and never exempt alone) [F11][F10][RD-4]. The driver's post-trip statement about an accident and \"unavoidable\" extra distance is a claim, not rider consent, and the chat record contains no rider message at all [F9][F8][RD-5]. With a complete chat record and no rider agreement before 22:02, the consent ground is \"consent_after_or_none\" and the 3.13 km counts under RD-2 [F4][F8][RD-5]. No rider-requested stop was measured in this segment, so RD-3 gives no exemption [F4][RD-3].\n\nNothing further is refundable: the waiting component is $0.00, base $3.90 and platform $1.47 are published charges, and there is no ERP/toll field [F7][RD-2][FARE-1][FARE-2].\n\nAmount: only F4 is unexempted, 3.13 km × $1.4101/km = $4.4146 → $4.41, rounded to cents, computed from the fare record's own distance fare ÷ distance km, matching the binding formula [F4][F5][F7][RD-2].\n\nRejected the rider's $8.21: the 2.69 km of F3 is exempt under RD-4(a) by F12, and RD-2 refunds only unexempted extra_km [F3][F12][RD-2]. Rejected the driver's reliance on the $9.45 whole-trip line as controlling: RD-2 refunds segment extra_km, and the 6.70 km billed excess includes corridor-level mileage not attributed to any segment, which RD-2 expressly leaves unrefunded [F1][F5][RD-2].\n\nAccount flag: this case records an RD-1 breach with a refund of $4.41 (RD-2 > 0), but the driver's route_disputes_upheld_90d is 0 — the single upheld item is not a route dispute — so RD-6's repeated-breach precondition fails and no flag is warranted [F15][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -34,7 +33,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "FARE-1",
+   "FARE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -42,51 +42,55 @@
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "incident",
     "basis": [
-     "F12",
-     "F11"
+     "F12"
     ],
-    "reason": "LTA accident reported 21:26 on the Kallang Paya Lebar Expressway (towards TPE) after Sheares Avenue Exit, 0 m from the optimal route, i.e. on the replaced stretch, before this segment's 21:42 start and inside the trip window — the reasonable-cause exception in RD-4(a) applies; the band-4 record is corroboration only under RD-4(b). [F3][F12][F11][RD-4]"
+    "reason": "The DataMall accident reported 21:26 on the Kallang Paya Lebar Expressway sits 0 m from the optimal route and within 300 m of optimal km 3.0–4.5, before the 21:42 segment start, so the corroboration targets the replaced stretch of the optimal route: RD-4(a) exempts this segment's extra_km [F12][RD-4]."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
-     "F9",
-     "F12"
+     "F9"
     ],
-    "reason": "No qualifying incident ties to the optimal road this segment replaced (the single 21:26 report was used for F3) and the bands are not ≤ 2, so RD-4(c) sends it to RD-2; no rider message before 22:02 exists (F8 is empty) and the driver's post-trip statement (F9) is not rider consent, so RD-5 does not exempt it. [F4][F8][F9][F12][RD-4][RD-5][RD-3]"
+    "reason": "The chat record is complete and contains no rider message at all, so no rider agreement was sent before 22:02; the driver's post-trip statement of an unavoidable accident-based detour is a claim, not consent (G11), and no traffic record ties an incident to this segment (bands 4 and 5 do not exempt): the 3.13 km counts under RD-2 [F4][F8][F9][F11][RD-4][RD-5]. No rider-named stop is measured on this segment, so RD-3 gives no exemption [F4][RD-3]."
    }
   ],
   "rejected_claims": [
    {
+    "id": "C2",
+    "reason": "Gives no effect to the settled RD-4(a) element: F12 is an accident within 300 m of optimal km 3.0–4.5 reported 21:26, before the F3 segment start, so the first segment is exempt and is not an unexplained deviation [F3][F12][RD-4][RD-1]."
+   },
+   {
     "id": "C3",
-    "reason": "Withdrawn by the rider in rebuttal; F12 places the reported accident on the very stretch segment F3 replaced, before the 21:42 start, so the segment is exempt under RD-4(a) and no refund is due on its 2.69 km. [F3][F12][RD-4]"
+    "reason": "Misreads RD-4(a): the incident must be located on the replaced stretch of the optimal route, and F12 is recorded at 0 m from the optimal route before the segment began — that satisfies the clause rather than contradicting it [F12][F3][RD-4]."
    },
    {
-    "id": "C10",
-    "reason": "Withdrawn in rebuttal; RD-2 refunds only non-exempt segments' extra_km, so the $8.21 sum (2.69 + 3.13 km) is unavailable — the 2.69 km in F3 is exempt. [F3][F4][F5][RD-2]"
+    "id": "C7",
+    "reason": "The $8.21 claim includes the F3 segment's 2.69 km, which is exempt under RD-4(a) by F12; RD-2 refunds only unexempted extra_km, leaving 3.13 km × $1.4101/km = $4.41 [F3][F4][F12][F5][RD-2][RD-4]."
    },
    {
-    "id": "C11",
-    "reason": "Withdrawn in rebuttal; F15 shows route_disputes_upheld_90d = 0 (the single upheld dispute is not a route case), so RD-6's repeated-breach predicate is not made out and no account flag attaches. [F15][RD-6]"
-   },
-   {
-    "id": "C12",
-    "reason": "Not relied on by the driver in rebuttal; F14 (2 disputes, 0 upheld) is a profile fact that cannot decide the deviation either way. [F14][RD-6]"
+    "id": "C8",
+    "reason": "RD-6 requires route_disputes_upheld_90d ≥ 1 in addition to a refund/RD-1 breach; the driver's route-dispute count is 0 (the single upheld item is not a route dispute), so the flag precondition is unmet [F15][RD-6]."
    },
    {
     "id": "D2",
-    "reason": "As originally pleaded it claimed segment F4's or both segments' exemption; RD-4(a) is a per-segment test and the F12 report is exhausted by F3, so it cannot exempt the 22:02–22:09 segment. [F3][F4][F12][RD-4]"
+    "reason": "F12 places the incident within the 300 m match radius of the optimal route and on the stretch that was to be driven, which is the corroboration RD-4(a) requires for the corridor actually replaced at 21:42–21:49; the segment is exempt on that basis [F12][F3][RD-4]."
    },
    {
-    "id": "D5",
-    "reason": "Its assertion that no rider consent is needed because consent was never claimed does not exempt F4: with no RD-4 cause and no rider agreement before 22:02, the segment remains unexcused. [F4][F8][F9][RD-4][RD-5]"
+    "id": "D3",
+    "reason": "RD-4(b) corroboration requires band 1 or 2 on the optimal route; F10 is band 5 (40–49 km/h) and F11 is band 4 (30–39 km/h), so neither corroborates anything and they cannot exempt the second segment [F10][F11][RD-4]."
    },
    {
-    "id": "D9",
-    "reason": "Its denial of flag_account is accepted, but not for the reason that no violation is established here — F4's deviation is established; the flag fails only because RD-6's prior-upheld-route-dispute element is absent. [F4][F15][RD-6]"
+    "id": "D4",
+    "reason": "The absence of chat messages does not neutralise the consent test: a complete record with no rider message before the F4 segment means there is no consent, so the 3.13 km counts under RD-2 [F8][F4][RD-5]."
+   },
+   {
+    "id": "D8",
+    "reason": "Correct on the route-dispute precondition: RD-6's flag requires route_disputes_upheld_90d ≥ 1, and F15 shows 0 route disputes upheld, so no account action follows even though an RD-1 breach with a $4.41 refund is recorded [F15][RD-6]"
    }
   ],
   "flag_account": false,
@@ -101,21 +105,20 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 4.41,
-  "recommended_action": "Issue a Ryde voucher of $4.41 to the rider (RD-2, NS-7); record the F4 segment as an unexcused route deviation on the driver's file; no account flag.",
-  "confidence": 0.9,
-  "reasoning": "This is a metered RydeTAXI trip (F7: base $3.90 + distance $31.84 for 22.58 km + time $8.91 + platform $1.47 = $46.12), so extra kilometres feed straight into the fare and relief is measured per RD-2, not by the fixed-quote branch [F7][RD-2]. The trace settles that two off-route segments exist (F3, F4) and that only one of them is excused, so the review is segment by segment [F3][F4][RD-1].\n\nSegment F3 (21:42–21:49, 4.26 km driven vs 1.57 km optimal, +2.69 km, up to 1084 m off the optimal route) is exempt: an LTA accident was reported at 21:26 on the Kallang Paya Lebar Expressway towards TPE after Sheares Avenue Exit, 0 m from the optimal route, i.e. on the very stretch replaced, reported before the segment's 21:42 start and still listed in the trip window [F12][RD-4]. The speed-band records (PIE band 5, KLE band 4, 21:26–22:17) are not band 1 or 2, so they corroborate congestion only and cannot exempt a segment on their own, but they do not disturb the F3 exemption [F10][F11][RD-4]. No refund is due on the 2.69 km in F3.\n\nSegment F4 (22:02–22:09, 4.57 km driven vs 1.43 km optimal, +3.13 km, up to 997 m off the optimal route) has no qualifying incident: F12 ties the single 21:26 accident to the KLE stretch already covered by F3, and nothing in F10–F12 ties an incident or a band ≤ 2 to the optimal road this second deviation replaced [F4][F12][RD-4]. The rider's agreement to that reroute is absent: there are no in-app chat messages at all (F8), and the only account of the driver \"going round\" the incident comes from his own statement written after the trip (F9) — a driver's claim of agreement in his statement is not rider consent (G11), and no rider message sent before 22:02 exists at all, so the reading is \"counts\" rather than undetermined [F8][F9][RD-5]. No rider-requested stop exists in this segment for RD-3 to excuse [F4][F3][RD-3].\n\nAmount: the trace fixes the per-km rate at the fare record's distance fare ÷ distance km, $31.84 ÷ 22.58 km = $1.4101/km, and RD-2 refunds only the extra_km of non-exempt segments [F5][F7][RD-2]. 3.13 km × $1.4101/km = $4.4146, rounded to $4.41. The greater $9.45 / 6.70 km excess in F5 is not awarded because RD-2 does not refund the exempt segment's kilometres nor the unallocated mapping-noise remainder, and no waiting or cancellation item arises (waiting $0.00, no cancellation fee) [F5][F6][F7][RD-2].\n\nNo account action: RD-6 requires a route violation established here plus route_disputes_upheld_90d ≥ 1, and the driver's profile shows 0 upheld route disputes in the window (his single upheld dispute is not a route case), so the \"repeated\" predicate is absent [F15][RD-6]. The rider's own profile (2 disputes, 0 upheld) decides nothing either way [F14][RD-6].",
+  "recommended_action": "Issue a $4.41 Ryde voucher to the rider (NS-7) for the unexempted F4 off-route segment; no account action.",
+  "confidence": 0.82,
+  "reasoning": "RydeTAXI metered trip: extra kilometres enter the fare, so RD-2's metered branch governs [F7][RD-2]. The distance fare of $31.84 over 22.58 km gives the trip's own rate of $1.4101/km, which the fare record itself applies to 6.70 km to reach $9.45 [F5][F7][RD-2].\n\nTwo off-route segments are in the record: 21:42–21:49 adding 2.69 km [F3] and 22:02–22:09 adding 3.13 km [F4]; RD-1 screens each segment separately under RD-3/RD-4/RD-5 [F3][F4][RD-1].\n\nSegment F3: the trace settles the RD-4(a) element — the LTA accident reported 21:26 on the Kallang Paya Lebar Expressway, 0 m from the optimal route, within 300 m of optimal km 3.0–4.5 and before the segment start, so the corroboration targets the replaced stretch itself [F12][F3][RD-4]. RD-4(a) therefore exempts this segment's extra_km, and RD-5 and RD-3 need not be reached for it [F12][F3][RD-4].\n\nSegment F4: no qualifying incident exists (the KPE band 4 and PIE band 5 records are not band 1–2 and never exempt alone) [F11][F10][RD-4]. The driver's post-trip statement about an accident and \"unavoidable\" extra distance is a claim, not rider consent, and the chat record contains no rider message at all [F9][F8][RD-5]. With a complete chat record and no rider agreement before 22:02, the consent ground is \"consent_after_or_none\" and the 3.13 km counts under RD-2 [F4][F8][RD-5]. No rider-requested stop was measured in this segment, so RD-3 gives no exemption [F4][RD-3].\n\nNothing further is refundable: the waiting component is $0.00, base $3.90 and platform $1.47 are published charges, and there is no ERP/toll field [F7][RD-2][FARE-1][FARE-2].\n\nAmount: only F4 is unexempted, 3.13 km × $1.4101/km = $4.4146 → $4.41, rounded to cents, computed from the fare record's own distance fare ÷ distance km, matching the binding formula [F4][F5][F7][RD-2].\n\nRejected the rider's $8.21: the 2.69 km of F3 is exempt under RD-4(a) by F12, and RD-2 refunds only unexempted extra_km [F3][F12][RD-2]. Rejected the driver's reliance on the $9.45 whole-trip line as controlling: RD-2 refunds segment extra_km, and the 6.70 km billed excess includes corridor-level mileage not attributed to any segment, which RD-2 expressly leaves unrefunded [F1][F5][RD-2].\n\nAccount flag: this case records an RD-1 breach with a refund of $4.41 (RD-2 > 0), but the driver's route_disputes_upheld_90d is 0 — the single upheld item is not a route dispute — so RD-6's repeated-breach precondition fails and no flag is warranted [F15][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -125,7 +128,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "FARE-1",
+   "FARE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -133,51 +137,55 @@
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "incident",
     "basis": [
-     "F12",
-     "F11"
+     "F12"
     ],
-    "reason": "LTA accident reported 21:26 on the Kallang Paya Lebar Expressway (towards TPE) after Sheares Avenue Exit, 0 m from the optimal route, i.e. on the replaced stretch, before this segment's 21:42 start and inside the trip window — the reasonable-cause exception in RD-4(a) applies; the band-4 record is corroboration only under RD-4(b). [F3][F12][F11][RD-4]"
+    "reason": "The DataMall accident reported 21:26 on the Kallang Paya Lebar Expressway sits 0 m from the optimal route and within 300 m of optimal km 3.0–4.5, before the 21:42 segment start, so the corroboration targets the replaced stretch of the optimal route: RD-4(a) exempts this segment's extra_km [F12][RD-4]."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
-     "F9",
-     "F12"
+     "F9"
     ],
-    "reason": "No qualifying incident ties to the optimal road this segment replaced (the single 21:26 report was used for F3) and the bands are not ≤ 2, so RD-4(c) sends it to RD-2; no rider message before 22:02 exists (F8 is empty) and the driver's post-trip statement (F9) is not rider consent, so RD-5 does not exempt it. [F4][F8][F9][F12][RD-4][RD-5][RD-3]"
+    "reason": "The chat record is complete and contains no rider message at all, so no rider agreement was sent before 22:02; the driver's post-trip statement of an unavoidable accident-based detour is a claim, not consent (G11), and no traffic record ties an incident to this segment (bands 4 and 5 do not exempt): the 3.13 km counts under RD-2 [F4][F8][F9][F11][RD-4][RD-5]. No rider-named stop is measured on this segment, so RD-3 gives no exemption [F4][RD-3]."
    }
   ],
   "rejected_claims": [
    {
+    "id": "C2",
+    "reason": "Gives no effect to the settled RD-4(a) element: F12 is an accident within 300 m of optimal km 3.0–4.5 reported 21:26, before the F3 segment start, so the first segment is exempt and is not an unexplained deviation [F3][F12][RD-4][RD-1]."
+   },
+   {
     "id": "C3",
-    "reason": "Withdrawn by the rider in rebuttal; F12 places the reported accident on the very stretch segment F3 replaced, before the 21:42 start, so the segment is exempt under RD-4(a) and no refund is due on its 2.69 km. [F3][F12][RD-4]"
+    "reason": "Misreads RD-4(a): the incident must be located on the replaced stretch of the optimal route, and F12 is recorded at 0 m from the optimal route before the segment began — that satisfies the clause rather than contradicting it [F12][F3][RD-4]."
    },
    {
-    "id": "C10",
-    "reason": "Withdrawn in rebuttal; RD-2 refunds only non-exempt segments' extra_km, so the $8.21 sum (2.69 + 3.13 km) is unavailable — the 2.69 km in F3 is exempt. [F3][F4][F5][RD-2]"
+    "id": "C7",
+    "reason": "The $8.21 claim includes the F3 segment's 2.69 km, which is exempt under RD-4(a) by F12; RD-2 refunds only unexempted extra_km, leaving 3.13 km × $1.4101/km = $4.41 [F3][F4][F12][F5][RD-2][RD-4]."
    },
    {
-    "id": "C11",
-    "reason": "Withdrawn in rebuttal; F15 shows route_disputes_upheld_90d = 0 (the single upheld dispute is not a route case), so RD-6's repeated-breach predicate is not made out and no account flag attaches. [F15][RD-6]"
-   },
-   {
-    "id": "C12",
-    "reason": "Not relied on by the driver in rebuttal; F14 (2 disputes, 0 upheld) is a profile fact that cannot decide the deviation either way. [F14][RD-6]"
+    "id": "C8",
+    "reason": "RD-6 requires route_disputes_upheld_90d ≥ 1 in addition to a refund/RD-1 breach; the driver's route-dispute count is 0 (the single upheld item is not a route dispute), so the flag precondition is unmet [F15][RD-6]."
    },
    {
     "id": "D2",
-    "reason": "As originally pleaded it claimed segment F4's or both segments' exemption; RD-4(a) is a per-segment test and the F12 report is exhausted by F3, so it cannot exempt the 22:02–22:09 segment. [F3][F4][F12][RD-4]"
+    "reason": "F12 places the incident within the 300 m match radius of the optimal route and on the stretch that was to be driven, which is the corroboration RD-4(a) requires for the corridor actually replaced at 21:42–21:49; the segment is exempt on that basis [F12][F3][RD-4]."
    },
    {
-    "id": "D5",
-    "reason": "Its assertion that no rider consent is needed because consent was never claimed does not exempt F4: with no RD-4 cause and no rider agreement before 22:02, the segment remains unexcused. [F4][F8][F9][RD-4][RD-5]"
+    "id": "D3",
+    "reason": "RD-4(b) corroboration requires band 1 or 2 on the optimal route; F10 is band 5 (40–49 km/h) and F11 is band 4 (30–39 km/h), so neither corroborates anything and they cannot exempt the second segment [F10][F11][RD-4]."
    },
    {
-    "id": "D9",
-    "reason": "Its denial of flag_account is accepted, but not for the reason that no violation is established here — F4's deviation is established; the flag fails only because RD-6's prior-upheld-route-dispute element is absent. [F4][F15][RD-6]"
+    "id": "D4",
+    "reason": "The absence of chat messages does not neutralise the consent test: a complete record with no rider message before the F4 segment means there is no consent, so the 3.13 km counts under RD-2 [F8][F4][RD-5]."
+   },
+   {
+    "id": "D8",
+    "reason": "Correct on the route-dispute precondition: RD-6's flag requires route_disputes_upheld_90d ≥ 1, and F15 shows 0 route disputes upheld, so no account action follows even though an RD-1 breach with a $4.41 refund is recorded [F15][RD-6]"
    }
   ],
   "flag_account": false,
@@ -190,15 +198,15 @@
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 27,
+ "events": 28,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0014.record.json",
- "latency_s": 27.26,
- "input_tokens": 98135,
- "output_tokens": 8988,
+ "latency_s": 29.66,
+ "input_tokens": 103445,
+ "output_tokens": 9587,
  "requests": 9,
- "llm_calls": 6
+ "llm_calls": 7
 }

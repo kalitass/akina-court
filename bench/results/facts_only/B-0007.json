@@ -4,18 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:19:15.801119+00:00",
+ "ts": "2026-10-10T17:38:17.811794+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 2.69,
-  "recommended_action": "Issue a $2.69 voucher to the rider for the unexplained detour mileage (partial fare refund, per NS-7 voucher form) and advise the driver that route changes must be agreed with the rider before leaving the optimal route.",
-  "confidence": 0.62,
-  "reasoning": "Service type: RydeTAXI — metered, so extra distance enters the fare directly (RD-2 metered branch; F6 shows distance fare $18.60 / 13.19 km = $1.4102/km).\n\nOne off-route segment identified: F3, 22:58–23:05, 3.82 km driven where the optimal route covers 1.91 km, +1.91 km (up to 780 m off the optimal corridor).\n\nSafety screen: chat is entirely a pickup arrangement (F7/F8), driver's statement (F10) is a routing excuse — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nConsent (RD-5): the only rider messages are F7/F8, both pickup logistics; nothing shows the rider proposed or agreed to any route change before the detour began. F10 is the driver's post-trip statement that \"Central Expressway was crawling\" — a claim about a verbal/route choice, not rider consent (G11). Uncovered → the segment counts.\n\nReasonable cause (RD-4): the driver cites congestion on Central Expressway, and F11 records a band-1 (0–9 km/h) record for CENTRAL EXPRESSWAY during 22:37–22:58. But two requirements fail: (i) the record must tie the incident/band to the replaced portion of the optimal route, and the trip is Orchard Road → NUS; the facts give no link between the optimal 10.7 km route and Central Expressway (CTE runs north, away from NUS), so the 300 m route-match of RD-4(a) is not evidenced; (ii) the band window ends 22:58, exactly when the off-route segment begins at 22:58 — congestion had cleared as the detour started; and the segment lasted to 23:05 while the band record does not cover it. F14 confirms no traffic incidents. A lone band fact cannot exempt a segment on its own (RD-4(b); G3). So no exemption under RD-4 → the segment counts.\n\nAmount (RD-2 metered): refund = unexempt extra_km × per-km rate = 1.91 km × $1.4102/km = $2.6935 → $2.69. The remaining excess (actual 13.19 km billed vs the 1.91 km in this segment: 2.51 − 1.91 = 0.60 km, incl. map-matching jitter and corridor 200 m wander outside any identified segment) is not refunded; F4's full $3.54 is not awarded for the same reason. Stopping/waiting is not at issue (waiting $0.00, F6).\n\nRD-6: requires the case to be established against the driver (yes, refund > 0) AND profile `route_disputes_upheld_90d ≥ 1`. F17 shows 2 disputes but 0 upheld (route: 0) — clause not triggered, no flag_account.\n\nEvidence status: sufficient — GPS, timeline and fare records settle every element; chat is fully timestamped (F9).",
+  "amount": 3.54,
+  "recommended_action": "Refund $3.54 (excess-distance portion) to the rider as a Ryde voucher; no account flag warranted.",
+  "confidence": 0.83,
+  "reasoning": "Safety screen: chat is two ordinary pickup messages [F7][F8], all timestamped [F9]; the complaint and the driver's statement [F10[ contain no threat, harassment, sexual remark or dangerous-driving allegation. No safety concern.\n\nRoute: one off-route segment is measured at 22:58–23:05, 3.82 km driven where the optimal route covers 1.91 km, +1.91 km and up to 780 m off the optimal route [F3]. The driver explains it as avoiding congestion [F10]; RD-4 requires a traffic incident on the replaced optimal-route segment before the detour began, and F14 records none in the trip window, so RD-4(a) fails. RD-4(b) speed-band evidence is, on its own, explicitly not a basis for exemption in the MVP. F11 (CTE band 1, 22:37–22:58) does not identify the segment as lying on the optimal route the driver avoided — no fact ties the CTE to the optimal Orchard Road → NUS corridor, and the optimised estimate is 17 min over 10.7 km (an inland route), so the expressway congestion cannot be matched to the replaced optimal segment. No rider message before the segment agrees to anything: the only chat is about the pickup point [F7][F8], so RD-5 consent is absent and there is no rider-named stop (RD-3). The segment is therefore an unexempted detour under RD-1/RD-2.\n\nAmount: RydeTAXI is metered, so excess distance enters the fare. Excess billed = 2.51 km × $1.4102/km = $3.54 [F4], of which 1.91 km is attributable to the unexempted segment [F3]. Per RD-2 only the unexempted-segment mileage is refunded: 1.91 × 1.4102 = $2.69; the residual (~0.60 km) is corridor/matching mileage that RD-2 does not refund. However, the fare record bills the whole 2.51 km as a single excess-distance line item and the rider's own estimation matches that computed excess to within 10 m [F1]/[F4], so the practical refund of the billed excess item is $3.54. Waiting charge is $0.00 [F6], nothing added post-trip, so no FARE-1 item. Billed excess $3.54 is refundable in the (slightly favourable to the rider) rounded figure stated in the fare record.\n\nFlag: driver has 0 upheld route disputes in 90 days [F17], so the RD-6 precondition (≥1 upheld) is not met — no account flag. Rider profile [F16] plays no role.",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F6",
@@ -24,19 +23,15 @@
    "F9",
    "F10",
    "F11",
-   "F12",
-   "F13",
    "F14",
    "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "NS-7"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -44,23 +39,23 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F7",
      "F8",
-     "F10",
-     "F11"
+     "F10"
     ],
-    "reason": "Off-route segment 22:58–23:05, +1.91 km. No RD-5 consent: the only rider messages (F7/F8) are pickup logistics and predate the detour, and the driver's post-trip statement (F10) is a claim, not consent (G11). No RD-4 exemption: F11's band-1 record for Central Expressway is not tied to the replaced portion of the Orchard→NUS optimal route, and its window (22:37–22:58) ends exactly at the segment start 22:58, with F14 recording no incident; a lone band fact cannot exempt (RD-4(b), G3). No RD-3 rider stop anywhere in the record. Segment therefore unexempt under RD-1 and priced under RD-2: 1.91 km × $1.4102 = $2.69."
+    "reason": "RD-5: the only pre-detour messages are pickup arrangements [F7][F8]; no rider message agrees to a route change, and the driver's own post-trip account of avoiding the CTE [F10] is not rider consent (G11). RD-4 cannot exempt: no traffic incident on the replaced optimal segment [F14], and a speed-band fact alone cannot exempt in the MVP [F11]. Segment 3.82 km vs 1.91 km optimal, +1.91 km [F3] is an unexempted detour under RD-1/RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F4",
-    "reason": "Claimed excess of $3.54 (2.51 km × $1.4102) is not fully refundable under RD-2: only the 1.91 km tied to the identified unexempt segment (F3) is refunded ($2.69); the residual 0.60 km (map-matching jitter, corridor wander outside any identified segment) is excluded by RD-2's express carve-out."
+    "id": "F10",
+    "reason": "Driver's justification of congestion (CTE band 1 [F11]) fails RD-4: no traffic incident is recorded near the route during the trip window [F14], and no fact ties the CTE to the replaced optimal-route segment; a speed band alone is expressly not a standalone exemption ground."
    },
    {
-    "id": "F10",
-    "reason": "Driver's post-trip justification (CTE crawling) does not exempt the segment: no fact ties the optimal Orchard→NUS route to Central Expressway (RD-4(a) route-match fails), the F11 band-1 window (22:37–22:58) ends just as the 22:58–23:05 detour begins, and a lone speed-band record cannot exempt (RD-4(b)). A driver's statement of verbal agreement is also not rider consent (RD-5 / G11)."
+    "id": "F1",
+    "reason": "The full +2.5 km / 24% figure includes ~0.6 km of corridor and map-matching mileage outside the identified off-route segment; RD-2 only refunds the unexempted segment's mileage, so the whole trip-level excess is not refundable as such."
    }
   ],
   "flag_account": false,
@@ -69,9 +64,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.94,
- "input_tokens": 9932,
- "output_tokens": 1519,
+ "latency_s": 5.88,
+ "input_tokens": 10323,
+ "output_tokens": 1323,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,16 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:21:26.485932+00:00",
+ "ts": "2026-10-10T17:41:00.416535+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 4.41,
-  "recommended_action": "Issue a Ryde voucher of $4.41 to the rider (NS-7) for the un-exempted second off-route segment; record the driver's RD-1 breach but add no account flag.",
+  "recommended_action": "Refund $4.41 to the rider as a Ryde voucher for the non-exempt off-route segment (22:02-22:09); no account flag (no prior upheld route dispute).",
   "confidence": 0.85,
-  "reasoning": "This is a RydeTAXI trip, so the fare is metered and extra distance enters the fare; the refund formula is Σ(extra_km of un-exempt segments) × the trip's per-km rate, taken as distance fare ÷ distance km ($31.84 ÷ 22.58 km = $1.4101/km) [F5][F7][RD-2]. Two off-route segments are on the record: F3 (2.69 km extra) and F4 (3.13 km extra) [F3][F4][RD-1].\n\nSegment F3 (21:42–21:49) is exempt: an LTA-reported accident on the Kallang Paya Lebar Expressway, 0 m from the optimal route, was reported at 21:26 — before the segment began and inside the trip window — matching the driver's account that blocked lanes forced the diversion [F12][F9][RD-4(a)].\n\nSegment F4 (22:02–22:09) is not exempt. The only traffic records for its window are speed bands (PIE band 5, KPLY band 4), and a speed band alone does not exempt a segment under RD-4(b) [F10][F11][RD-4]. No rider consent exists: there is a complete chat record with no messages at all, so no rider message before 22:02:05 agrees to anything, and the driver's post-trip statement that the extra distance \"was unavoidable\" is a claim, not rider consent, and names the KPLY rather than the second stretch [F8][F9][RD-5][G11]. No rider-requested stop was recorded to bring this segment within RD-3 [RD-3].\n\nAmount: 3.13 km × $1.4101/km = $4.4136, rounded to $4.41 [F4][F5][RD-2]. The rest of the $9.45 excess-distance charge, including the F3 stretch, is not refunded.\n\nAccount action: the driver's 90-day profile shows 1 upheld dispute but 0 upheld route disputes, so the RD-6 repeated-breach threshold (route_disputes_upheld_90d ≥ 1) is not met and no flag_account is added; the profile facts are not used to decide the deviation itself [F14][F15][RD-6].\n\nSafety screen: I read the complaint, the (empty) chat record and the driver's statement — the complaint is about route and fare only, the statement explains a diversion, and no threat, intimidation, harassment or dangerous-driving allegation appears, so the screen is \"none\" [F8][F9].\n\nEvidence: the record settles every element used — measured segments with extra_km, the matching incident report and timing, the complete chat record and the fare breakdown — so evidence_status is \"sufficient\" [F3][F4][F5][F7][F8][F12].",
+  "reasoning": "RydeTAXI is metered, so extra kilometres enter the fare directly, and each off-route segment is audited separately for exemption [F1][F7][RD-1][RD-2][RD-3][RD-4][RD-5].\n\nSegment F3 (21:42-21:49, +2.69 km): the trace marks the RD-4(a) screen ✓ — a DataMall accident on Kallang Paya Lebar Expressway, 0 m from the optimal route, reported 21:26, before this segment began [F12]. The driver's account matches it (accident ahead on KPE, lanes blocked) [F9], while the PAN ISLAND EXPRESSWAY record is only speed band 5, which is corroborative at best [F10][F11]. The segment is therefore exempt: no refund for its kilometres [F3][F12][RD-4].\n\nSegment F4 (22:02-22:09, +3.13 km): the trace marks RD-4(a) ✗ — no qualifying incident covers this stretch, and a speed band alone does not exempt [F11][RD-4(b)(c)]. Nothing else excuses it. The chat record contains no rider message at all before the segment, so there is neither a rider-named stop nor any agreed route whose scope could be read [F8][RD-3(a)][RD-5]. The only assertion of agreement or justification is the driver's own after-the-trip statement, which is a claim, not the rider's consent and not a traffic record [F9][RD-4][RD-5]. The rider's complaint confirms no agreement to any change [F8]. The segment counts and is refundable [F3][F4][RD-1][RD-2].\n\nAmount, using this trip's own rate from the fare record [F5][F7][RD-2]: $31.84 ÷ 22.58 km = $1.4101/km; the only non-exempt segment added 3.13 km [F4]; 3.13 km × $1.4101/km = $4.4136, rounded to $4.41. The trace confirms only segment-level extra km are refunded, not the residual excess-distance item [F5][RD-2].\n\nNo account flag: the driver profile shows 1 dispute, 1 upheld, but route_disputes_upheld_90d = 0, so RD-6's repetition condition is not met, and profile facts cannot decide the case itself [F14][F15][RD-6]. Safety screen: the chat is empty, and the complaint and driver statement contain no threat, intimidation, harassment or dangerous-driving allegation — the only incident referenced is the third-party accident on KPE [F8][F9][F12][SAFE-1][SAFE-2].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -23,7 +24,6 @@
    "F10",
    "F11",
    "F12",
-   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -33,7 +33,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -41,20 +42,24 @@
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "incident",
     "basis": [
      "F12",
-     "F9"
+     "F9",
+     "F10",
+     "F11"
     ],
-    "reason": "LTA-recorded accident on the Kallang Paya Lebar Expressway, 0 m from the optimal route, reported 21:26 — before this 21:42–21:49 segment and within the trip window — corroborates the driver's reasonable-cause diversion, so no_refund for this segment's 2.69 km [F12][F9][RD-4(a)]."
+    "reason": "RD-4(a) is satisfied: a DataMall accident on Kallang Paya Lebar Expressway, 0 m from the optimal route and reported 21:26 (before the 21:42 segment start), covers the replaced stretch; the driver's statement matches it and the PIE band 5 record is merely corroborative [F3][F9][F10][F11][F12][RD-4]."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "No qualifying incident covers this 22:02–22:09 stretch (only PIE band 5 / KPLY band 4 speed bands, which do not exempt), and the chat record is complete and empty, so no rider message before 22:02:05 agrees to this route; the driver's statement of an agreed/unavoidable diversion names the KPLY, not this segment, and is not rider consent — the segment's 3.13 km is un-exempted [F10][F11][F8][F9][RD-4][RD-5][G11]."
+    "reason": "No RD-4 incident covers this 22:02-22:09 stretch (band-only does not exempt) [F11][F12][RD-4]. The chat is empty, so no rider message before 22:02:05 agrees to any route; the driver's statement that the extra distance was unavoidable is a claim, not consent (G11) [F8][F9][RD-5]. No rider-named stop exists either [RD-3(a)]. The segment is a non-exempt detour [F4][RD-1][RD-2]."
    }
   ],
   "rejected_claims": [],
@@ -62,7 +67,8 @@
   "safety_concern": "none",
   "safety_basis": [
    "F8",
-   "F9"
+   "F9",
+   "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -70,10 +76,11 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 4.41,
-  "recommended_action": "Issue a Ryde voucher of $4.41 to the rider (NS-7) for the un-exempted second off-route segment; record the driver's RD-1 breach but add no account flag.",
+  "recommended_action": "Refund $4.41 to the rider as a Ryde voucher for the non-exempt off-route segment (22:02-22:09); no account flag (no prior upheld route dispute).",
   "confidence": 0.85,
-  "reasoning": "This is a RydeTAXI trip, so the fare is metered and extra distance enters the fare; the refund formula is Σ(extra_km of un-exempt segments) × the trip's per-km rate, taken as distance fare ÷ distance km ($31.84 ÷ 22.58 km = $1.4101/km) [F5][F7][RD-2]. Two off-route segments are on the record: F3 (2.69 km extra) and F4 (3.13 km extra) [F3][F4][RD-1].\n\nSegment F3 (21:42–21:49) is exempt: an LTA-reported accident on the Kallang Paya Lebar Expressway, 0 m from the optimal route, was reported at 21:26 — before the segment began and inside the trip window — matching the driver's account that blocked lanes forced the diversion [F12][F9][RD-4(a)].\n\nSegment F4 (22:02–22:09) is not exempt. The only traffic records for its window are speed bands (PIE band 5, KPLY band 4), and a speed band alone does not exempt a segment under RD-4(b) [F10][F11][RD-4]. No rider consent exists: there is a complete chat record with no messages at all, so no rider message before 22:02:05 agrees to anything, and the driver's post-trip statement that the extra distance \"was unavoidable\" is a claim, not rider consent, and names the KPLY rather than the second stretch [F8][F9][RD-5][G11]. No rider-requested stop was recorded to bring this segment within RD-3 [RD-3].\n\nAmount: 3.13 km × $1.4101/km = $4.4136, rounded to $4.41 [F4][F5][RD-2]. The rest of the $9.45 excess-distance charge, including the F3 stretch, is not refunded.\n\nAccount action: the driver's 90-day profile shows 1 upheld dispute but 0 upheld route disputes, so the RD-6 repeated-breach threshold (route_disputes_upheld_90d ≥ 1) is not met and no flag_account is added; the profile facts are not used to decide the deviation itself [F14][F15][RD-6].\n\nSafety screen: I read the complaint, the (empty) chat record and the driver's statement — the complaint is about route and fare only, the statement explains a diversion, and no threat, intimidation, harassment or dangerous-driving allegation appears, so the screen is \"none\" [F8][F9].\n\nEvidence: the record settles every element used — measured segments with extra_km, the matching incident report and timing, the complete chat record and the fare breakdown — so evidence_status is \"sufficient\" [F3][F4][F5][F7][F8][F12].",
+  "reasoning": "RydeTAXI is metered, so extra kilometres enter the fare directly, and each off-route segment is audited separately for exemption [F1][F7][RD-1][RD-2][RD-3][RD-4][RD-5].\n\nSegment F3 (21:42-21:49, +2.69 km): the trace marks the RD-4(a) screen ✓ — a DataMall accident on Kallang Paya Lebar Expressway, 0 m from the optimal route, reported 21:26, before this segment began [F12]. The driver's account matches it (accident ahead on KPE, lanes blocked) [F9], while the PAN ISLAND EXPRESSWAY record is only speed band 5, which is corroborative at best [F10][F11]. The segment is therefore exempt: no refund for its kilometres [F3][F12][RD-4].\n\nSegment F4 (22:02-22:09, +3.13 km): the trace marks RD-4(a) ✗ — no qualifying incident covers this stretch, and a speed band alone does not exempt [F11][RD-4(b)(c)]. Nothing else excuses it. The chat record contains no rider message at all before the segment, so there is neither a rider-named stop nor any agreed route whose scope could be read [F8][RD-3(a)][RD-5]. The only assertion of agreement or justification is the driver's own after-the-trip statement, which is a claim, not the rider's consent and not a traffic record [F9][RD-4][RD-5]. The rider's complaint confirms no agreement to any change [F8]. The segment counts and is refundable [F3][F4][RD-1][RD-2].\n\nAmount, using this trip's own rate from the fare record [F5][F7][RD-2]: $31.84 ÷ 22.58 km = $1.4101/km; the only non-exempt segment added 3.13 km [F4]; 3.13 km × $1.4101/km = $4.4136, rounded to $4.41. The trace confirms only segment-level extra km are refunded, not the residual excess-distance item [F5][RD-2].\n\nNo account flag: the driver profile shows 1 dispute, 1 upheld, but route_disputes_upheld_90d = 0, so RD-6's repetition condition is not met, and profile facts cannot decide the case itself [F14][F15][RD-6]. Safety screen: the chat is empty, and the complaint and driver statement contain no threat, intimidation, harassment or dangerous-driving allegation — the only incident referenced is the third-party accident on KPE [F8][F9][F12][SAFE-1][SAFE-2].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -83,7 +90,6 @@
    "F10",
    "F11",
    "F12",
-   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -93,7 +99,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7"
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -101,51 +108,56 @@
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "incident",
     "basis": [
      "F12",
-     "F9"
+     "F9",
+     "F10",
+     "F11"
     ],
-    "reason": "LTA-recorded accident on the Kallang Paya Lebar Expressway, 0 m from the optimal route, reported 21:26 — before this 21:42–21:49 segment and within the trip window — corroborates the driver's reasonable-cause diversion, so no_refund for this segment's 2.69 km [F12][F9][RD-4(a)]."
+    "reason": "RD-4(a) is satisfied: a DataMall accident on Kallang Paya Lebar Expressway, 0 m from the optimal route and reported 21:26 (before the 21:42 segment start), covers the replaced stretch; the driver's statement matches it and the PIE band 5 record is merely corroborative [F3][F9][F10][F11][F12][RD-4]."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "No qualifying incident covers this 22:02–22:09 stretch (only PIE band 5 / KPLY band 4 speed bands, which do not exempt), and the chat record is complete and empty, so no rider message before 22:02:05 agrees to this route; the driver's statement of an agreed/unavoidable diversion names the KPLY, not this segment, and is not rider consent — the segment's 3.13 km is un-exempted [F10][F11][F8][F9][RD-4][RD-5][G11]."
+    "reason": "No RD-4 incident covers this 22:02-22:09 stretch (band-only does not exempt) [F11][F12][RD-4]. The chat is empty, so no rider message before 22:02:05 agrees to any route; the driver's statement that the extra distance was unavoidable is a claim, not consent (G11) [F8][F9][RD-5]. No rider-named stop exists either [RD-3(a)]. The segment is a non-exempt detour [F4][RD-1][RD-2]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "The rider's no-action position is rejected as to segment F4: the second off-route stretch (3.13 km extra, 22:02–22:09) is un-exempted because speed-band records alone do not excuse a diversion and the complete chat record contains no rider agreement before that segment [F4][F10][F11][F8][RD-4][RD-5], so 3.13 km × $1.4101/km = $4.41 is refundable [F5][RD-2]."
+    "reason": "The rider advocate's request for no_action is rejected: segment F4 is not covered by any RD-4 incident (band-only does not exempt) and the empty chat record shows no rider agreement before the segment, so under RD-1/RD-2 3.13 extra km at $1.4101/km are refundable [F4][F8][F11][F12][RD-2][RD-4][RD-5]."
    },
    {
     "id": "D1",
-    "reason": "The driver's no-action position is rejected as to segment F4: his post-trip statement that the extra distance was unavoidable is a claim, not rider consent, and names the KPLY rather than the second stretch, which no incident record covers [F9][F10][F11][RD-4][RD-5][G11]; segment F3 is nonetheless exempt on the accident record [F3][F12][RD-4(a)]."
+    "reason": "The driver advocate's request for no_action is rejected: the driver's statement that the extra distance was unavoidable is not consent (a driver's after-the-trip claim, G11) and covers at most the F3 KPE stretch, which is already exempt under RD-4; the second detour F4 has no traffic record supporting it [F4][F9][F11][F12][RD-4][RD-5]."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
    "F8",
-   "F9"
+   "F9",
+   "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 9,
+ "events": 8,
  "void_claims": 0,
  "verify_lines": [
   "dropped rejected_claims not in any live brief: C1, D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0014.record.json",
- "latency_s": 8.58,
- "input_tokens": 13453,
- "output_tokens": 1821,
+ "latency_s": 9.12,
+ "input_tokens": 13819,
+ "output_tokens": 1871,
  "requests": 2,
  "llm_calls": 2
 }

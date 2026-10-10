@@ -2,21 +2,21 @@
  "arm": "raw",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:32:18+00:00",
+ "started_at": "2026-10-10T17:55:51+00:00",
  "fingerprint": {
   "case_sha256": "ccb902d41402fdce",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:32:18+00:00"
+  "issued_at": "2026-10-10T17:55:51+00:00"
  },
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 4.51,
-  "recommended_action": "Refund S$4.51 (voucher) for the unexempt deviation distance; no account flag (driver's 90-day upheld route disputes = 0).",
-  "confidence": 0.68,
-  "reasoning": "Safety screen: chat is only pickup logistics; complaint and driver statement contain no threat, harassment or dangerous-driving allegation → safety_concern none.\n\nService type is RydeTAXI, so the fare is metered and extra distance directly inflates the fare (policy §0). The quoted route is 21.21 km; the GPS trace shows the driver left the optimal route around 09:24–09:25 (from ~1.3091,103.9338 the trace turns south instead of continuing north-east on the ECP corridor) and remained off it until roughly 09:30–09:31 (returning to the corridor near 1.3113,103.9421), including a reversal at ~09:25:30–09:29:00 where the trace heads back west/south (1.3142,103.9342 → 1.3169,103.9469 → 1.3113,103.9421). Metered distance was 24.41 km vs 21.21 km quoted → 3.20 km of extra distance, closely matching the rider's \"meter read 24 km\". The two long westward/southward legs of that excursion are ≈ 3.2 km, consistent with the whole excess residing in the single off-route segment (the return via Airport Boulevard is the optimal-road mileage, so it is not double-counted).\n\nNo exemption applies. The driver only says \"the GPS sent me; it rerouted\", which is not a rider request under RD-3; there is no rider-named stop; no chat message before 09:24 grants consent (RD-5), and the record shows no general route authority or verbal agreement (driver's unrecorded claim of agreement would not count). The traffic record has only band-5 speed entries on ECP/Airport Boulevard (free-flowing) and no incidents at all, so RD-4 gives no reasonable cause for the ECP-corridor stretch — and even the one band-5 section tracked is on the shortest route itself, which the driver partially left.\n\nAmount (RD-2, metered branch): unexempt extra_km 3.20 × per-km rate (distance_fare ÷ distance_km = 34.42 ÷ 24.41 = 1.4101) = S$4.51, rounded to the cent. Waiting time (0) is unaffected.\n\nRD-6 flag is not triggered: the driver's route_disputes_upheld_90d = 0, so this case does not make it \"repeated\".",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Refer to human reviewer: driver's GPS track (departing Raffles Place southward, crossing to the east bank, then a southbound-then-northbound U-turn on the ECP corridor around 09:28-09:30) does not overlap the quoted 21.21 km route; reconcile the trace against the route/road network before any detour refund can be computed.",
+  "confidence": 0.5,
+  "reasoning": "SAFETY SCREEN: chat is limited to a pickup arrangement (black backpack, taxi stand) and a vehicle description; the complaint and driver statement contain no threat, abuse, intimidation, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nThe dispute is a route-deviation claim on a RydeTAXI (metered) trip: app estimate 21.21 km, meter distance 24.41 km (fare.distance_km), meter total $49.37 ($3.90 base + $34.42 distance + $9.58 time + $1.47 platform fee). The rider was \"turned off the route without a word\", so no rider message consents to any change — the chat contains no route discussion at all (only pickup coordination). No traffic incidents were recorded; the only speed bands are band 5 (free flow) on ECP and Airport Boulevard, so RD-4 gives the driver no \"reasonable cause\" exemption.\n\nOn the numbers alone the excess is 24.41 − 21.21 = 3.20 km. However, the thinned GPS trace (81 of 479 samples, 30 s grid) does not match the quoted route anywhere: after leaving Raffles Place the driver goes south/east (09:08 near 1.2827,103.8507; 09:09 near 1.2797,103.8558), whereas the quoted route goes north via 1.2807,103.8597 by that point; the trace then has a southbound stretch on the ECP corridor (09:25-09:28 to ~1.3174,103.9485) followed by a northbound/southbound reversal (09:29-09:31, back near 1.3113,103.9421), which the quoted polyline never contains. I therefore cannot identify from this record which portions of the driven path are off the optimal route, or a driver-visible \"optimal route\" deviation, in a way that lets me attribute an off-route segment and its extra_km to the driver in order to compute a refund.\n\nEVIDENCE STATUS: insufficient — the GPS trace does not overlay the quoted route and its sampling (60 s / thinned) plus this discrepancy prevent matching driven segments to the quoted route corridor (or identifying the true optimal route), so the per-segment `extra_km` that RD-2 needs cannot be settled; the record likewise gives no rider route message (RD-5) and no rider-named stop (RD-3). Per G12/G13 and the evidence rules, missing/ambiguous evidence does not favour either side; the case goes to a human rather than executing a refund.\n\nFor completeness, no clause ground survives on this record: there is no rider-named place and no stop (RD-3 not engaged); no rider agreement before the deviation (RD-5 not engaged — driver's statement that the GPS rerouted him is a claim, not consent); no incident (RD-4 not engaged). Because a human review is needed, no amount is fixed; if the 1.68 km gap between fare distance 24.41 km and the ~22.73 km sum of the fare-excess fact is included, any RD-2 award could not exceed roughly 3.20 km × ($34.42 ÷ 24.41 km = $1.4101/km) ≈ $4.51, but the segment split is undetermined and the flag decision depends on it, so RD-6 is not applied here.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -26,43 +26,32 @@
    "RD-5",
    "RD-6"
   ],
-  "escalate": false,
-  "escalation_reason": null,
-  "segment_findings": [
-   {
-    "fact_id": "seg1",
-    "finding": "counts",
-    "basis": [],
-    "reason": "Off-route excursion ~09:24–09:31 (trace leaves the ECP/optimal corridor near 1.3091,103.9338, heads south, then doubles back west at ~09:26–09:29 before rejoining the corridor near 1.3113,103.9421); ≈3.2 km of extra travel accounts for the whole 24.41 vs 21.21 km excess. No rider consent message before 09:24 (RD-5), no rider-named stop (RD-3), traffic is band 5 / no incidents (RD-4) → not exempt; RD-1 unexempt deviation, RD-2 refund."
-   }
-  ],
+  "escalate": true,
+  "escalation_reason": "Evidence insufficient to attribute and quantify an unexempt off-route segment: the GPS trace does not align with the quoted route, so RD-2's per-segment extra_km cannot be computed; need the full-resolution trace/route match (and clarification of the true quoted route corridor) before any refund.",
+  "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement_gps_reroute",
-    "reason": "A driver's own claim that the GPS rerouted him does not create a rider-agreed route change; Ryde requires a mutual agreement before departing from the route (RD-5, A7), and no such rider message exists. Traffic facts show free-flowing conditions and no incidents on the substituted stretch (RD-4)."
+    "id": "driver_gps_reroute",
+    "reason": "The record shows no traffic incident (incidents: []) and only band 5 (free-flow) speed bands, so no RD-4 reasonable cause and no corroboration for a GPS-forced reroute; and the recorded trace does not even follow the quoted route, so the claim cannot be verified."
    },
    {
-    "id": "driver_statement_verbal_consent",
-    "reason": "Any implicit claim of verbal agreement is not consent; only a rider's own message sent before the detour counts (RD-5 / G11)."
-   },
-   {
-    "id": "rider_estimated_km_21_vs_meter_24",
-    "reason": "Accepted in substance but capped by policy: refund is limited to unexempt extra_km × per-km rate (RD-2), i.e. S$4.51, not the full difference in displayed distance/fare."
+    "id": "rider_refund_full_excess",
+    "reason": "The 3.20 km (24.41 − 21.21) is not itself refundable under RD-2: only unexempt off-route segments' extra_km are refundable, and the segment split cannot be determined from a trace that does not overlay the quoted route."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS trace (thinned, every 6th of 479 samples ~30 s) does not overlay the quoted 21.21 km route: after departure it departs southbound/east rather than following the quoted route, and includes a southbound-then-reverse loop on the ECP corridor (09:25-09:31) absent from the quoted polyline. Without matching driven segments to the route corridor (or a driver-side optimal route), the off-route segment(s) and their extra_km cannot be determined for the RD-2 refund computation; no rider route-consent message exists (RD-5) and no rider-named stop (RD-3)."
  },
- "latency_s": 6.16,
+ "latency_s": 7.68,
  "model_calls": 1,
  "provider_trace_ids": [
-  "000ba55bc9291cda360a26bb59d5659d"
+  "bdca39435c91ccee58f4d696a860d53a"
  ],
  "provider_response_ids": [
-  "7d1966e0-c5a3-4973-b965-91041be3f50c"
+  "dbc123f6-db30-4c1a-8fb0-621702341f8f"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -75,15 +64,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 16250,
-   "completion_tokens": 1243,
-   "total_tokens": 17493,
+   "prompt_tokens": 16641,
+   "completion_tokens": 1509,
+   "total_tokens": 18150,
    "prompt_tokens_details": {
-    "cached_tokens": 16000
+    "cached_tokens": 16507
    },
-   "prompt_cache_hit_tokens": 16000,
-   "prompt_cache_miss_tokens": 250
+   "prompt_cache_hit_tokens": 16507,
+   "prompt_cache_miss_tokens": 134
   }
  ],
- "finished_at": "2026-10-10T13:32:24+00:00"
+ "finished_at": "2026-10-10T17:55:59+00:00"
 }

@@ -1,0 +1,180 @@
+{
+ "arm": "judge_only",
+ "case_id": "B-0059",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:43:06.904062+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send to a human reviewer: confirm the F3 segment's ground under RD-5 with a path-name record; await Ryde's G13 confirmation. Amount to execute if F3 is confirmed as a rider-named Bukit Batok West Avenue 3 route: refund_partial of $3.99 (1.82 km × $2.1923/km). F4 refund of $2.63 may stand independently once the F3 question is closed.",
+  "confidence": 0.55,
+  "reasoning": "This is a RydeTAXI metered trip (F5, F8), so a metered-fare route deviation falls under RD-2 and any unexcused extra kilometres are refundable at this trip's per-km rate, which the fare record states as distance fare ÷ distance km = $33.56 ÷ 23.80 km = $1.4101/km [F5][F8][RD-2]. RD-1 is satisfied by construction: two off-route segments exist (F3, F4), and RD-1 sets no percentage or kilometre threshold, so both segments go segment-by-segment through RD-3/RD-4/RD-5 [F1][F3][F4][RD-1].\n\nRD-4 cannot excuse either segment: the trace finds no qualifying incident, and the only traffic records are speed bands (PIE band 4, Boon Lay Way band 5) while F15 records no incidents near the route during the trip window [F13][F14][F15][RD-4]. Band 4 is not band 1 or 2 in any case, and a band alone does not exempt under the MVP reading of RD-4(b).\n\nFor F3 (14:59–15:05, +1.82 km): the driver's Chat #1 at 14:56 asked \"can I go round via Bukit Batok West Avenue 3?\" and the rider's Chat #2 at 14:56 answered \"Sure, no problem\" — a rider message sent before the segment that agrees to a change, so the timing requirement of RD-5 is met [F9][F10][F11][RD-5]. But RD-5's scope rule fixes the consequence by the kind of agreement. This is a specific named road/area (\"go round via Bukit Batok West Avenue 3\"), which covers driving on that road only, and the record must tie the segment to it — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, and nothing places F3 on Bukit Batok West Avenue 3 or anywhere else; the driver's statement, which does not tie it either, is a post-trip claim and cannot establish consent timing or scope [F12][RD-5]. On that record the F3 finding is undetermined under the G13 branch, not exempt and not counts [F3][F9][F10][RD-5]. Under RD-3(a) there is also no stop at all measured in this segment and no rider message naming a place as a stop, so RD-3 gives no exemption either [F3][RD-3].\n\nFor F4 (15:16–15:23, +2.63 km): no rider message sits between 14:56 and the segment start, and the only rider message agrees to the Pan Island Expressway detour around the jam, which says nothing about a second turn-off seventeen minutes later [F9][F10][F11][RD-5]. A complete, fully timestamped chat record with no rider agreement before this segment means the segment counts [F11][RD-5]. The driver's own statement that \"the second turn-off was my GPS rerouting\" is a post-trip claim in his own interest and cannot supply consent under RD-5 or G11 [F12][RD-5]. RD-4 does not exempt it (no qualifying incident) and RD-3 does not apply (no rider-requested stop, no named place) [F15][RD-3][RD-4]. The rider's complaint — agreeing to the first detour but not the later one — is consistent with this reading [F16 context: light rain, not a qualifying excuse].\n\nThe consequence of the F3 reading decides the amount, and that makes the case unexecutable. If F3 were exempt, the refund would be F4 only: 2.63 km × $1.4101/km = $3.71. If F3 counts (no exemption), the refund would be (1.82 + 2.63) km × $1.4101/km = $4.45 × $1.4101/km = $6.27. Because \"undetermined\" changes the amount (and, under the rider-named-stop branch the trace raises, potentially the outcome too), RD-5 requires the case to go to a person rather than be auto-executed [F3][F5][RD-5]. Escalate is therefore the correct disposition; I do not fix an amount.\n\nRD-6 is not triggered: the driver profile shows route_disputes_upheld_90d = 0, so even if this case were a route breach it is not a \"repeated\" one for a flag_account action [F18][RD-6]. The rider's one 90-day dispute was not upheld [F17].\n\nSupporting figures for the reviewer: total billing shows distance $33.56 for 23.80 km against an 18.7 km optimal route, plus $0.11 waiting and $1.47 platform [F1][F8]. Rider-side no-show/route profile entries are nil [F17][F18].\n\nSafety screen: I read Chat #1 and Chat #2, the driver's post-trip statement, and the rider's complaint. They concern routing and a jam only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the note about a jam ahead is a traffic reason for a route request, not a threat [F9][F10][F12]. Safety concern: none.\n\nEvidence: the record is complete as to the measured segments and the chat (every message timestamped), but the one element my ruling turns on — a record tying F3 (or F4) to an agreed named path, or placing it elsewhere — is absent, and the trace states nothing ties the driven path to a named road. That gap is the G13 situation and forces escalate.",
+  "cited_facts": [
+   "F1",
+   "F3",
+   "F4",
+   "F5",
+   "F8",
+   "F9",
+   "F10",
+   "F11",
+   "F12",
+   "F13",
+   "F14",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-3",
+   "RD-4",
+   "RD-5",
+   "RD-6"
+  ],
+  "escalate": true,
+  "escalation_reason": "segment finding undetermined for F3; evidence insufficient: No record ties off-route segment F3 (or the driven path generally) to the route the rider agreed to — no road name, stop on that road, or message placing the car on Bukit Batok West Avenue 3, and no record placing F3 elsewhere. RD-5's scope test therefore cannot be executed (G13), and because the F3 finding changes the refund amount, the case must go to a person.",
+  "segment_findings": [
+   {
+    "fact_id": "F3",
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "F9",
+     "F10"
+    ],
+    "reason": "Rider agreed before the segment (14:56 'Sure, no problem' to the driver's 14:56 'can I go round via Bukit Batok West Avenue 3'), but the agreement names a specific road/area and RD-5 requires the record to tie this segment to that road; the fact table carries no road names for the driven path and nothing places F3 on Bukit Batok West Avenue 3 or elsewhere, so the scope is unreadable on this record (G13). The driver's post-trip statement is not consent and does not supply the tie [F12]. Not exempt, not counts."
+   },
+   {
+    "fact_id": "F4",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
+    "basis": [
+     "F9",
+     "F10",
+     "F11"
+    ],
+    "reason": "The rider's only agreement is at 14:56 and covers the jam detour (Bukit Batok West Avenue 3); no rider message agrees to this 15:16–15:23 segment, and the chat record is complete and fully timestamped with no such message before the segment started, so no RD-5 consent exists [F11][RD-5]. The driver's statement that the second turn-off was GPS rerouting is a post-trip claim and cannot establish consent [F12][RD-5]. RD-4 gives no exemption (no qualifying incident, F15) and RD-3 gives none (no rider-named stop) [RD-3][RD-4]."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "No rider claim is on the record (judge-only ablation, rider advocate requested no_action / left no itemised claims); any suggestion that the whole trip is refundable fails because the 14:59–15:05 segment's ground is undetermined (not counts) and F4 alone yields only $3.71 [F3][F5][RD-5]."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's position that both off-route turns were agreed/GPS rerouting fails as to F4: no rider message before 15:16 agrees to the second turn-off, and his own statement about GPS rerouting is a post-trip claim, not consent [F10][F11][F12][RD-5]. It also fails to settle F3, where nothing ties the segment to the named road [F3][F9][RD-5]."
+   },
+   {
+    "id": "D2",
+    "reason": "Any claim of a reasonable-cause exemption (jam/congestion) fails: no traffic incident is recorded near the route in the trip window (F15) and the speed bands do not exempt under RD-4, and the rider's agreement is not a traffic-cause exemption for the later segment [F13][F14][F15][F4][RD-4]."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No record ties off-route segment F3 (or the driven path generally) to the route the rider agreed to — no road name, stop on that road, or message placing the car on Bukit Batok West Avenue 3, and no record placing F3 elsewhere. RD-5's scope test therefore cannot be executed (G13), and because the F3 finding changes the refund amount, the case must go to a person."
+ },
+ "pre_verify_ruling": {
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send to a human reviewer: confirm the F3 segment's ground under RD-5 with a path-name record; await Ryde's G13 confirmation. Amount to execute if F3 is confirmed as a rider-named Bukit Batok West Avenue 3 route: refund_partial of $3.99 (1.82 km × $2.1923/km). F4 refund of $2.63 may stand independently once the F3 question is closed.",
+  "confidence": 0.55,
+  "reasoning": "This is a RydeTAXI metered trip (F5, F8), so a metered-fare route deviation falls under RD-2 and any unexcused extra kilometres are refundable at this trip's per-km rate, which the fare record states as distance fare ÷ distance km = $33.56 ÷ 23.80 km = $1.4101/km [F5][F8][RD-2]. RD-1 is satisfied by construction: two off-route segments exist (F3, F4), and RD-1 sets no percentage or kilometre threshold, so both segments go segment-by-segment through RD-3/RD-4/RD-5 [F1][F3][F4][RD-1].\n\nRD-4 cannot excuse either segment: the trace finds no qualifying incident, and the only traffic records are speed bands (PIE band 4, Boon Lay Way band 5) while F15 records no incidents near the route during the trip window [F13][F14][F15][RD-4]. Band 4 is not band 1 or 2 in any case, and a band alone does not exempt under the MVP reading of RD-4(b).\n\nFor F3 (14:59–15:05, +1.82 km): the driver's Chat #1 at 14:56 asked \"can I go round via Bukit Batok West Avenue 3?\" and the rider's Chat #2 at 14:56 answered \"Sure, no problem\" — a rider message sent before the segment that agrees to a change, so the timing requirement of RD-5 is met [F9][F10][F11][RD-5]. But RD-5's scope rule fixes the consequence by the kind of agreement. This is a specific named road/area (\"go round via Bukit Batok West Avenue 3\"), which covers driving on that road only, and the record must tie the segment to it — a stop on it, a message placing the car on it, or a road name in a fact. The fact table carries no road names for the driven path, and nothing places F3 on Bukit Batok West Avenue 3 or anywhere else; the driver's statement, which does not tie it either, is a post-trip claim and cannot establish consent timing or scope [F12][RD-5]. On that record the F3 finding is undetermined under the G13 branch, not exempt and not counts [F3][F9][F10][RD-5]. Under RD-3(a) there is also no stop at all measured in this segment and no rider message naming a place as a stop, so RD-3 gives no exemption either [F3][RD-3].\n\nFor F4 (15:16–15:23, +2.63 km): no rider message sits between 14:56 and the segment start, and the only rider message agrees to the Pan Island Expressway detour around the jam, which says nothing about a second turn-off seventeen minutes later [F9][F10][F11][RD-5]. A complete, fully timestamped chat record with no rider agreement before this segment means the segment counts [F11][RD-5]. The driver's own statement that \"the second turn-off was my GPS rerouting\" is a post-trip claim in his own interest and cannot supply consent under RD-5 or G11 [F12][RD-5]. RD-4 does not exempt it (no qualifying incident) and RD-3 does not apply (no rider-requested stop, no named place) [F15][RD-3][RD-4]. The rider's complaint — agreeing to the first detour but not the later one — is consistent with this reading [F16 context: light rain, not a qualifying excuse].\n\nThe consequence of the F3 reading decides the amount, and that makes the case unexecutable. If F3 were exempt, the refund would be F4 only: 2.63 km × $1.4101/km = $3.71. If F3 counts (no exemption), the refund would be (1.82 + 2.63) km × $1.4101/km = $4.45 × $1.4101/km = $6.27. Because \"undetermined\" changes the amount (and, under the rider-named-stop branch the trace raises, potentially the outcome too), RD-5 requires the case to go to a person rather than be auto-executed [F3][F5][RD-5]. Escalate is therefore the correct disposition; I do not fix an amount.\n\nRD-6 is not triggered: the driver profile shows route_disputes_upheld_90d = 0, so even if this case were a route breach it is not a \"repeated\" one for a flag_account action [F18][RD-6]. The rider's one 90-day dispute was not upheld [F17].\n\nSupporting figures for the reviewer: total billing shows distance $33.56 for 23.80 km against an 18.7 km optimal route, plus $0.11 waiting and $1.47 platform [F1][F8]. Rider-side no-show/route profile entries are nil [F17][F18].\n\nSafety screen: I read Chat #1 and Chat #2, the driver's post-trip statement, and the rider's complaint. They concern routing and a jam only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the note about a jam ahead is a traffic reason for a route request, not a threat [F9][F10][F12]. Safety concern: none.\n\nEvidence: the record is complete as to the measured segments and the chat (every message timestamped), but the one element my ruling turns on — a record tying F3 (or F4) to an agreed named path, or placing it elsewhere — is absent, and the trace states nothing ties the driven path to a named road. That gap is the G13 situation and forces escalate.",
+  "cited_facts": [
+   "F1",
+   "F3",
+   "F4",
+   "F5",
+   "F8",
+   "F9",
+   "F10",
+   "F11",
+   "F12",
+   "F13",
+   "F14",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-3",
+   "RD-4",
+   "RD-5",
+   "RD-6"
+  ],
+  "escalate": true,
+  "escalation_reason": "RD-5 scope for segment F3 is undetermined: the rider's 14:56 \"Sure, no problem\" agrees to the driver's named route (\"go round via Bukit Batok West Avenue 3\"), and the timing requirement is met, but the record contains no path name for the driven segment and nothing ties F3 to that road nor places it elsewhere; the driver's post-trip statement cannot supply consent [F9][F10][F11][F12][F3][RD-5]. The finding changes the amount, so a human must decide. If F3 is exempt, refund = 2.63 km × $1.4101/km = $3.71; if F3 counts, refund = (1.82 + 2.63) km × $1.4101/km = $6.27 [F4][F5][RD-2].",
+  "segment_findings": [
+   {
+    "fact_id": "F3",
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "F9",
+     "F10"
+    ],
+    "reason": "Rider agreed before the segment (14:56 'Sure, no problem' to the driver's 14:56 'can I go round via Bukit Batok West Avenue 3'), but the agreement names a specific road/area and RD-5 requires the record to tie this segment to that road; the fact table carries no road names for the driven path and nothing places F3 on Bukit Batok West Avenue 3 or elsewhere, so the scope is unreadable on this record (G13). The driver's post-trip statement is not consent and does not supply the tie [F12]. Not exempt, not counts."
+   },
+   {
+    "fact_id": "F4",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
+    "basis": [
+     "F9",
+     "F10",
+     "F11"
+    ],
+    "reason": "The rider's only agreement is at 14:56 and covers the jam detour (Bukit Batok West Avenue 3); no rider message agrees to this 15:16–15:23 segment, and the chat record is complete and fully timestamped with no such message before the segment started, so no RD-5 consent exists [F11][RD-5]. The driver's statement that the second turn-off was GPS rerouting is a post-trip claim and cannot establish consent [F12][RD-5]. RD-4 gives no exemption (no qualifying incident, F15) and RD-3 gives none (no rider-named stop) [RD-3][RD-4]."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "No rider claim is on the record (judge-only ablation, rider advocate requested no_action / left no itemised claims); any suggestion that the whole trip is refundable fails because the 14:59–15:05 segment's ground is undetermined (not counts) and F4 alone yields only $3.71 [F3][F5][RD-5]."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's position that both off-route turns were agreed/GPS rerouting fails as to F4: no rider message before 15:16 agrees to the second turn-off, and his own statement about GPS rerouting is a post-trip claim, not consent [F10][F11][F12][RD-5]. It also fails to settle F3, where nothing ties the segment to the named road [F3][F9][RD-5]."
+   },
+   {
+    "id": "D2",
+    "reason": "Any claim of a reasonable-cause exemption (jam/congestion) fails: no traffic incident is recorded near the route in the trip window (F15) and the speed bands do not exempt under RD-4, and the rider's agreement is not a traffic-cause exemption for the later segment [F13][F14][F15][F4][RD-4]."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No record ties off-route segment F3 (or the driven path generally) to the route the rider agreed to — no road name, stop on that road, or message placing the car on Bukit Batok West Avenue 3, and no record placing F3 elsewhere. RD-5's scope test therefore cannot be executed (G13), and because the F3 finding changes the refund amount, the case must go to a person."
+ },
+ "status": "escalated",
+ "events": 8,
+ "void_claims": 0,
+ "verify_lines": [
+  "judge escalates → human review: segment finding undetermined for F3; evidence insufficient: No record ties off-route segment F3 (or the driven path generally) to the route the rider agreed to — no road name, stop on that road, or message placing the car on Bukit Batok West Avenue 3, and no record placing F3 elsewhere. RD-5's scope test therefore cannot be executed (G13), and because the F3 finding changes the refund amount, the case must go to a person."
+ ],
+ "record_path": "bench/results/judge_only/B-0059.record.json",
+ "latency_s": 12.39,
+ "input_tokens": 13790,
+ "output_tokens": 2664,
+ "requests": 1,
+ "llm_calls": 1
+}

@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:40.212786+00:00",
+ "ts": "2026-10-10T17:36:02.732526+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 6.48,
-  "recommended_action": "Issue a voucher refund of SGD 6.48 to the rider for the second, unagreed detour (RD-2 metered mileage refund); no account flag (no upheld route dispute in the driver's 90-day profile).",
-  "confidence": 0.63,
-  "reasoning": "Service type is RydeTAXI, so the fare is metered and detour mileage recomputes the fare (RD-2 metered branch). Early in the trip the driver asked at 18:42:35 whether he could go round the jam via Rifle Range Road and the rider replied at 18:43:15 \"Sure, your call.\" — the rider's own message, sent before the choice, and a genuine route authorisation. The trace's first departure from the quoted route (the Bukit Timah Expressway corridor, reached via Rifle Range Road) is covered by that consent and per RD-3(a) the segment driven to reach the rider-agreed route is not split off as a detour, so it is exempt (RD-5 / RD-3(a)); the driver's account of a verbal agreement is not relied on (G11).\n\nThe second departure is not covered. Between 18:42:25 (1.38294, 103.77547, on BKE) and 18:59:25 the GPS runs cross-country to the west and then loops back east, rejoining the route at ~18:59:25 (1.3482, 103.797708, on PIE) — well beyond ordinary map-matching wobble. The rider never agreed to it, it was not stated before the departure, and the driver's only explanation (\"my GPS rerouting\") is not one of the RD-4 reasonable causes: there are no traffic incidents at all (incidents: []) and the only speed-band records on the route are band 4 (free-flow), so nothing corroborates congestion on the replaced stretch (RD-4(c)).\n\nMetered refund (RD-2): distance rate = fare.distance_fare ÷ fare.distance_km = 43.64 ÷ 30.95 = $1.4100/km. Westward leg 18:42:25 → 18:52:55, straight-line polyline sum ≈ 23.24 km; eastward return 18:52:55 → 18:59:25 ≈ 12.85 km; total ≈ 36.08 km against the ≈ 31.4 km the car would have covered along the route at its observed ~40 km/h between those timestamps, i.e. ≈ 4.68 extra km. Even on the most conservative reading (measuring only the loop back east, the part demonstrably not heading toward the destination) the extra is ≈ 4.6 km. 4.60 × $1.41 ≈ $6.49, rounded to $6.48. The metered waiting charge ($0.11) is left untouched (RD-3(c) — RydeTAXI waiting units are chargeable and no stop was claimed). Profiles: driver route_disputes_upheld_90d = 0, so RD-6's precondition (\"repeated\") is not met and no account flag is raised — but the record of the RD-1 breach stands.",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Hold the fare-dispute decision; send to a human reviewer to match the driver's GPS trace against the road network (name the roads on both the agreed Rifle Range Road stretch and the later off-route loop) before any RydeTAXI metered refund is computed under RD-2. + flag_account",
+  "confidence": 0.55,
+  "reasoning": "RydeTAXI metered trip T-2013 (Woodlands Civic Centre → Orchard Road). Fare $61.32 is metered: 30.95 km billed vs 20.566 km quoted (≈10.4 km more), so any unexempt deviation feeds the fare (RD-2 taxi branch; distance rate $43.64/30.95 km = $1.41/km).\n\nChat: at 18:42:35 the driver said the BKE jam was building and proposed the named road \"Rifle Range Road\"; at 18:43:15 the rider replied \"Sure, your call.\" That is consent to a specific named road, given before the segment (RD-5). But the trace between 18:42:25 and 18:52:25 runs north-west/south-west (lon ~103.775 → ~103.777 with lat near 1.34–1.36, an area tagged ~6–8 km from Rifle Range Road in the route corridor data) rather than south-west into the corridor; and the driver's own statement says the later turn-off was a GPS reroute, not the agreed road. The record therefore places part of that stretch away from Rifle Range Road — a named_road_elsewhere / driver_errand reading (counts) — while the rest cannot be tied to the agreed road at all (named_road_untied → undetermined, G12/G13). A second, separate off-route excursion appears at 19:03:55–19:12:25 (heading north-east away from the drop-off before returning), with no chat message before it: consent_after_or_none → counts (RD-5). No LTA incident is recorded, and the only speed bands are band 4, which cannot exempt under RD-4 (band ≤ 2 support only; G3).\n\nThe rider alleges she agreed only to the first detour; system records do not settle whether the driver's \"go round via Rifle Range Road\" consent covers the first detour segments or whether the second loop was a driver errand vs GPS reroute. Because segments whose finding is undetermined change the refund amount and the RD-6 account flag, the case cannot be executed automatically and goes to a human reviewer.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -22,41 +22,53 @@
    "RD-5",
    "RD-6"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "RD-5 consent scope for the later off-route stretch is undetermined (G13) and this finding changes the refund amount and the RD-6 flag decision; a human reviewer must resolve the road correspondence before ruling.",
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "exempt",
-    "basis": [],
-    "reason": "First departure from the quoted route (18:31–18:42, via Rifle Range Road toward the Bukit Timah Expressway). The driver proposed this before the vehicle left the corridor (chat 18:42:35) and the rider herself agreed (chat 18:43:15, \"Sure, your call.\"). Consent precedes the change (RD-5), so the segment counts as the route taken to get round the jam the rider agreed to and is exempt; under RD-3(a) the run-up to the rider-agreed route is not severed from the stop."
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "2026-09-07T18:42:35+08:00",
+     "2026-09-07T18:43:15+08:00"
+    ],
+    "reason": "First post-consent stretch (GPS 18:42:25–18:52:25) leaves the BKE corridor right after the rider's \"Sure, your call.\" at 18:43:15, which is consent to the driver's named road 'Rifle Range Road' (RD-5). Nothing in the thinned GPS trace (no road names) ties this driven stretch to Rifle Range Road, and the driver's statement only says 'the second turn-off was my GPS rerouting', so the scope is undetermined (G12/G13). An undetermined finding that changes the amount → escalate."
    },
    {
     "fact_id": "seg2",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "Second departure (18:42:25 → 18:59:25, looping west then back east to rejoin the route on the Pan Island Expressway). No rider message covers it, it began with no advance notice, and the driver's 'GPS rerouting' is not a reasonable cause: no traffic incidents exist and the only speed-band records on the optimal route (BKE, PIE) are band 4 (free flow), so RD-4(a)/(b)/(c) does not exempt it. Un-exempted detour under RD-1 → RD-2 metered mileage refund."
+    "reason": "Second excursion (GPS 19:03:55–19:12:25) leaves the corridor heading north-east away from Orchard Road (lat 1.3317→1.3408, lon 103.8145→103.8340) then loops back, adding unauthorised mileage. No chat message precedes this segment and the rider only agreed to one diversion; the chat is complete, so no rider message was available and this is an unexcused deviation under RD-1/RD-5 (counts)."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "counts",
+    "ground": "driver_errand",
+    "basis": [],
+    "reason": "Opening stretch of the off-route run (GPS 18:45:25–18:52:25, lon ~103.775 pushing west/south-west while lat climbs 1.3637→1.3425) heads away from the rider's named road and away from the destination; the record places it away from the agreed named road and the driver's own account calls it a GPS reroute, not the agreed road, so the RD-5 named-road consent does not cover it (RD-5; counts)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_verbal_consent",
-    "reason": "\"The rider agreed\" for the second turn-off is only in the driver's statement; verbal consent not evidenced by the rider's own timed message does not constitute consent (G11), and the driver's own account attributes the turn-off to GPS rerouting rather than to any agreement."
+    "id": "driver_statement_verbal_agreement",
+    "reason": "The driver's claim of agreement is not itself consent (G11); the only rider consent on record is the 18:43:15 message 'Sure, your call.', which is tied to the named road Rifle Range Road and does not cover the later unannounced loop."
    },
    {
-    "id": "driver_gps_reroute",
-    "reason": "Not a reasonable cause under RD-4: no LTA incident on the optimal route (incidents list empty) and the route's speed bands are band 4 (free flowing), so the replaced stretch was not shown to be blocked or jammed."
+    "id": "driver_gps_reroute_defence",
+    "reason": "A driver's own GPS reroute is not a 'reasonable cause' under RD-4: no LTA traffic incident is recorded on the replaced optimal-route stretch, and the only speed bands are band 4, which cannot exempt (RD-4(b), G3)."
    }
   ],
-  "flag_account": false,
+  "flag_account": true,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS trace is thinned (every 6th sample, 30 s grid) and carries no road names, and the record contains no road-name facts linking the driven off-route stretches to the agreed \"Rifle Range Road\"; the first off-route stretch (18:42:25–18:52:25) cannot be tied to the named road or definitively placed elsewhere, which prevents an executable RD-2 refund computation."
  },
- "latency_s": 6.85,
- "input_tokens": 18071,
- "output_tokens": 1425,
+ "latency_s": 7.59,
+ "input_tokens": 18462,
+ "output_tokens": 1637,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:41.274283+00:00",
+ "ts": "2026-10-10T17:36:55.667485+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and review the driver's 'I'm Here' arrival button use (GPS shows ~1 km from the pickup point) under the abuse-of-cancellation-button procedure. Do not flag the rider; this is the driver's button/GPS mismatch.",
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's arrival-button record to Ryde account review for abuse of the \"I'm Here\" button; no flag_account chain required beyond that review path.",
   "confidence": 0.9,
-  "reasoning": "Dispute type is no_show, rider-filed; the driver cancelled as a no-show and $6.61 was charged, so NS-0 routes to NS-1 for a driver-cancelled no-show. Service type RydeX, arrival confirmed by the driver's tap (\"I'm Here\" at 22:37:20, not platform_auto).\n\nCheck NS-1 (ii): position at the moment of the tap. The GPS trace (thinned to a 30 s grid) shows the driver essentially stationary at lat 1.44496, lon 103.78572 from 22:37:30 to 22:42:00 — i.e. the same spot at the 22:37:20 tap. The pickup is Woodlands Civic Centre, lat 1.436, lon 103.7865. Great-circle Δlat = 0.00896° ≈ 996 m; Δlon = 0.00078° ≈ 87 m (cos 1.44° ≈ 0.9997). Distance ≈ sqrt(996² + 87²) ≈ 1,000 m from the pickup point — roughly an order of magnitude beyond the 200 m arrival radius, and corroborated by the rider's chat message at 22:38:20 (\"no car here\"). The driver's own chat at 22:37:25 (\"Reached already\") further places the car at a spot the rider could not find.\n\nCheck NS-1 (iii): with the driver ~1 km away, the 22:37:20–22:42:00 period is not a wait at the pickup point (and almost certainly < 3 min within 200 m; No lat/lon for the tap instant is unsafe to interpolate on this jumpy trace, but the tap happens at the same stationary fix seen from 22:37:30, ~1 km out). In any event, (ii) alone defeats NS-1, and the 5 s-grid record has no ≥2 min gap, so this is not an evidence hole: the record settles the element against the driver.\n\nThe rider's account (never picked up, charged $6.61) is corroborated by GPS; the driver's statement (\"waited more than 3 minutes at the pickup\") is contradicted by GPS, which controls. The rider's profile (0 upheld disputes) plays no role; the driver's profile (2 upheld no-show disputes in 90 d) is profiling that cannot decide the case and, under a claimant-side refund, would only support an account flag if RD-6/NS-2 applied — neither does here.\n\nResult: NS-2 → the $6.61 no-show cancellation fee is refunded in full (Ryde voucher, NS-7). No flag_account: the policy's flag for a false \"I'm Here\" attaches to the driver, not to the rider who filed the dispute, and the schema's flag field is not used to flag a non-party here. Confidence 0.9 (uncertainty only in exact tap-instant coordinates; the ~1 km discrepancy is far beyond any noise).",
+  "reasoning": "Safety screen: chat consists only of arrival/where-are-you messages and a cancellation notice; no threat, harassment, sexual remark or dangerous-driving allegation in the complaint, chat or driver statement. safety_concern = none.\n\nFacts computed from the record: pickup = Woodlands Civic Centre (1.436, 103.7865). The driver pressed \"I'm Here\" at 22:37:20 (tl-here). The thinned GPS trace (5 s grid, every 6th sample) puts the driver at 1.444959, 103.785731 at 22:37:00 and stationary at 1.444957, 103.785725 from 22:37:30 through cancellation at 22:42:00. The distance from that stationary position to the pickup point is ~0.997–1.0 km (≈9.0e-3° latitude ≈ 1.0 km north, with negligible longitude offset). So at the moment of the tap and throughout the wait the driver was roughly 1.0 km from the pickup point — far outside any 200 m arrival radius (G2 data-layer parameter). This matches the rider's chat at 22:38:20 (\"I'm at the pickup point, no car here\").\n\nNS-1 requires all of (i) arrival tap, (ii) GPS within the pickup radius at the tap, and (iii) a continuous >3-minute wait inside that radius. Iterating the samples 22:37:30 → 22:42:00 the driver is stationary near 1.44496, 103.78572 the whole time, i.e. still ~1.0 km away, so (ii) fails (1,000 m > 200 m) and (iii) also fails (0 s within 200 m after the tap). NS-1 is therefore not satisfied, so by NS-0/NS-1/NS-2 the $6.61 no-show cancellation fee does not stand and must be refunded in full to the rider. The samples are dense (30 s apart, no gap), so no G12 gap issue arises. The driver's statement that he waited \"at the pickup\" is contradicted by the GPS record, and under the procedure rule system records (gps/timeline) override statements.\n\nAmount: the charged cancellation fee is fare.cancellation_fee = $6.61 → refund_full $6.61, issued as a Ryde voucher per NS-7 (the dispute was filed 2026-09-20, the same day as the trip, well within the 30-day window). Because the driver tapped \"I'm Here\" while GPS shows him ~1 km from the pickup point, the RD-6/NS-2 account-review limb is triggered; I record that as an account-review recommendation rather than a structured flag, since this is a rider-side refund under NS-1/NS-2 rather than an RD-2 detour refund or an RD-1 violation finding.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -23,16 +23,25 @@
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "driver_statement",
+    "reason": "Driver states he pressed 'I'm Here' and waited more than 3 minutes at the pickup point. The GPS trace shows him stationary at ~1.444957, 103.785725 from 22:37:30 to 22:42:00, about 1.0 km from the pickup point (1.436, 103.7865), and ~1.0 km away at the tap at 22:37:20. System records override the statement; both the 'at the pickup point' and 'waited at the pickup' elements fail."
+   },
+   {
+    "id": "rider_no_show",
+    "reason": "No-show under NS-1 fails on elements (ii) and (iii): the driver was never within the pickup radius at the tap or during the wait, so no $6.61 cancellation fee can be charged to the rider."
+   }
+  ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": ""
+  "evidence_gap": null
  },
- "latency_s": 5.19,
- "input_tokens": 13248,
- "output_tokens": 1006,
+ "latency_s": 5.21,
+ "input_tokens": 13639,
+ "output_tokens": 1133,
  "requests": 1,
  "llm_calls": 1
 }

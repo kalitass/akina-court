@@ -4,35 +4,36 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:46.453410+00:00",
+ "ts": "2026-10-10T17:37:00.033607+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to a human reviewer as a safety case: preserve the chat log and the timeline, review the driver's conduct under the Code of Conduct (threat/intimidation aimed at a rider), and separately adjudicate the $6.61 no-show cancellation on the merits (on the record here the driver's waiting-time and pickup-proximity conditions appear unmet, so the rider's cancellation fee would fall to be refunded as a voucher under NS-7). No auto-refund until the human review closes.",
+  "recommended_action": "Refer to Ryde Trust & Safety for human review: preserve chat log and GPS; assess driver's message (\"Hurry up or I will find you and you will regret it.\") as a threat/intimidation under the Code of Conduct; hold the $6.61 cancellation fee pending the outcome rather than auto-refunding; do not execute any automated refund until the safety review closes.",
   "confidence": 0.9,
-  "reasoning": "Safety screen (mandatory in every case): the driver's own chat message at 09:54:05 — \"Hurry up or I will find you and you will regret it.\" — is a threat aimed at the rider, sent moments before the driver cancelled at 09:54:25, and the rider's complaint reports being threatened. This is not a pickup arrangement and needs no keyword inference; read in context it is intimidation of the rider by the driver. Under SAFE-1 (Ryde Code of Conduct bars \"Threats and Intimidation … abuse of any kind\"), I do not issue an automated ruling: ruling = escalate, safety_concern = confirmed.\n\nI deliberately did not rule on the money. The record's arithmetic, for the human reviewer's use, is as follows (system records override statements): the driver pressed \"I'm Here\" at 09:50:45 while GPS (09:50:30, 1.299265/103.85583) places him ~15–20 m from the Bugis Junction pickup point (1.2994/103.8555), so the location element of NS-1(ii) is satisfied; his statement \"I waited more than 4 minutes\" is consistent with 09:50:45 → 09:54:25 ≈ 3 min 40 s of waiting, and the 30 s GPS grid shows him stationary within ~20 m of the pickup throughout, with no data gap (so G12 does not bite). The rider's 09:52:25 \"2 min, coming\" is the last rider message; whether the waiting threshold is the NS-1 default (strictly more than 3 minutes) or a record-supplied no-show threshold (none is present — policy_params is null) is the one element that decides whether the $6.61 stands or is refunded in full, and it is a human call here because the case is already with a human for the threat.\n\nAddressing the rider's own framing: the threat does not itself void the cancellation fee, and the cancellation fee does not excuse the threat — they are separate questions, which is exactly why the whole file goes to a person rather than to an automated refund (a refund that executes would let a confirmed threat pass with no human look).",
+  "reasoning": "Safety screen (performed on all chat messages, complaint and driver statement): the driver's message at 09:54:05 to the rider — \"Hurry up or I will find you and you will regret it.\" — is a threat of harm (\"find you\", \"you will regret it\") aimed directly at the rider, in the context of an escalating wait dispute. This is intimidation/abuse of a kind, not a pickup arrangement and not ordinary催促 wording. Ryde's Code of Conduct bars assault, harassment, threats and intimidation of any kind, so this falls under SAFE-1 → escalate; no automatic ruling is issued. The rider's own complaint (\"the driver threatened me in the chat\") is consistent.\n\nFactual summary for the reviewer (analysis is included for context, but no refund/fee order is executed):\n- Trip T-2041, RydeX (non-metered, fixed quote), Bugis Junction → Jurong East MRT, est. 16.532 km / 21.7 min. Accepted 09:47:00; driver arrived 09:49:50; pressed \"I'm Here\" 09:50:45 (driver_tap); cancelled_by = driver at 09:54:25; fare record shows cancellation_fee 6.61 and no trip completion.\n- NS-0 routes this to NS-1/NS-2 (driver cancelled claiming rider no-show). NS-1 requires (i) an \"I'm Here\" tap — present at 09:50:45; (ii) GPS within 200 m of pickup at that moment — the thinned trace (30 s samples) shows the driver at the pickup cluster from 09:50:30 onward (≈1.29927, 103.85583 vs pickup 1.2994/103.8555, well under 200 m); (iii) more than 3 continuous minutes of waiting inside the radius before cancelling — the trace shows continuous stationery presence from ~09:50:30 to the 09:54:25 cancellation, i.e. ~3 min 55 s (> 3:01), with no GPS gap (30 s sampling is the record's normal interval, and even the full 5 s grid would not change this). On that basis NS-1's elements appear satisfied and the $6.61 rider cancellation fee would ordinarily stand (no_action under NS-1). However, the driver's message of 09:54:05 was sent ~20 s before he cancelled, so the cancellation is not clean and the safety escalation pre-empts the fee decision.\n- Cited clause list reflects the safety branch only; the NS-1 analysis is recorded as context and must be re-confirmed by the human reviewer together with the safety outcome. No RD segment findings (no route-deviation facts in this record). No flag_account: RD-6 / NS-2's account-flag triggers are not established on this record (RD-6 requires a route-deviation upheld this case; NS-2's flag requires the \"I'm Here\" tap to be outside the radius, which the GPS does not show). The safety concern itself is handled through the escalation, not through flag_account.",
   "cited_facts": [],
   "cited_policy": [
    "SAFE-1"
   ],
   "escalate": true,
-  "escalation_reason": null,
+  "escalation_reason": "SAFE-1: driver used a threat of harm/intimidation toward the rider in the in-app chat, immediately before cancelling the trip and triggering the $6.61 cancellation fee. Per policy, no automatic ruling is issued on a safety case; the record (chat log, GPS trace, fare entry) is summarised for a human reviewer, along with the NS-1 elements that appear satisfied and the pending $6.61 fee.",
   "segment_findings": [],
   "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "confirmed",
   "safety_basis": [
-   "Driver chat message 2026-09-21T09:54:05+08:00: \"Hurry up or I will find you and you will regret it.\" — a threat/intimidation directed at the rider (SAFE-1)",
-   "Rider complaint: \"The driver threatened me in the chat and then cancelled and charged me $6.61.\" — corroborates the threat as experienced by the rider"
+   "Driver chat message 2026-09-21T09:54:05+08:00: \"Hurry up or I will find you and you will regret it.\" — threat/intimidation aimed at the rider",
+   "Rider complaint: \"The driver threatened me in the chat and then cancelled and charged me $6.61.\"",
+   "Threat sent ~20 seconds before the driver cancelled the trip (09:54:25), i.e. in direct connection with the disputed cancellation fee"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.42,
- "input_tokens": 12501,
- "output_tokens": 956,
+ "latency_s": 5.93,
+ "input_tokens": 12892,
+ "output_tokens": 1230,
  "requests": 1,
  "llm_calls": 1
 }

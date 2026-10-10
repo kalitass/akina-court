@@ -1,6 +1,6 @@
 # Akina Court · Ryde Dispute Court
 
-**AI can argue; only verified policy can authorize an action.** Code computes the facts of a ride-hailing dispute, runs the policy clauses as code, and lets two AI advocates and an AI judge argue only the questions code cannot settle. A refund voucher is cleared automatically only when the ruling agrees with the policy as code; everything else goes to a person with the case prepared. About <!--n:court.latency_mean_s:.0f-->24<!--/n--> seconds per case.
+**AI can argue; only verified policy can authorize an action.** Code computes the facts of a ride-hailing dispute, runs the policy clauses as code, and lets two AI advocates and an AI judge argue only the questions code cannot settle. A refund voucher is cleared automatically only when the ruling agrees with the policy as code; everything else goes to a person with the case prepared. About <!--n:court.latency_mean_s:.0f-->26<!--/n--> seconds per case.
 
 Team **Akina Court** · Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 · Ryde track · built with CodeBuddy, DeepSeek-chat via the DeepSeek API.
 
@@ -8,17 +8,17 @@ Team **Akina Court** · Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 · R
 
 ## Results at a glance
 
-<!--n:cases-->49<!--/n--> synthetic cases (<!--n:types.route_deviation-->26<!--/n--> route deviation, <!--n:types.no_show-->18<!--/n--> no-show, <!--n:types.safety-->5<!--/n--> safety), one model, four systems. "Match" = same outcome, same hand-off decision, amount within a cent of the reference derived from the written policy.
+<!--n:cases-->65<!--/n--> synthetic cases (<!--n:types.route_deviation-->42<!--/n--> route deviation, <!--n:types.no_show-->18<!--/n--> no-show, <!--n:types.safety-->5<!--/n--> safety), one model, four systems. "Match" = same outcome, same hand-off decision, amount within a cent of the reference derived from the written policy.
 
 | | Raw LLM, one call | Facts by code, one call | Judge + policy check | Full court |
 |---|---|---|---|---|
-| Matched the reference | <!--n:arms.raw.exact-->26<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.facts_only.exact-->29<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.judge_only.exact-->46<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.exact-->48<!--/n-->/<!--n:cases-->49<!--/n-->** |
-| Wrong decision **and executed** | <!--n:arms.raw.wrong_executed_single_call-->21<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.facts_only.wrong_executed_single_call-->20<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.judge_only.wrong_and_executed_with_gate-->2<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.wrong_and_executed_with_gate-->1<!--/n-->/<!--n:cases-->49<!--/n-->** |
-| Cleared automatically | – | – | <!--n:arms.judge_only.auto-->38<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.auto-->38<!--/n-->/<!--n:cases-->49<!--/n-->** |
-| Invalid citations (fact + clause ids) | <!--n:per_arm.raw.cites_invalid-->12<!--/n--> / <!--n:per_arm.raw.cites_total-->215<!--/n--> | <!--n:per_arm.facts_only.cites_invalid-->0<!--/n--> / <!--n:per_arm.facts_only.cites_total-->788<!--/n--> | <!--n:per_arm.judge_only.cites_invalid-->0<!--/n--> / <!--n:per_arm.judge_only.cites_total-->876<!--/n--> | **<!--n:per_arm.court.cites_invalid-->0<!--/n--> / <!--n:per_arm.court.cites_total-->950<!--/n-->** |
-| Mean time | <!--n:per_arm.raw.latency_mean_s:.1f-->6.9<!--/n--> s | <!--n:per_arm.facts_only.latency_mean_s:.1f-->6.4<!--/n--> s | <!--n:per_arm.judge_only.latency_mean_s:.1f-->8.0<!--/n--> s | <!--n:per_arm.court.latency_mean_s:.1f-->24.2<!--/n--> s per case |
+| Matched the reference | <!--n:arms.raw.exact-->27<!--/n-->/<!--n:cases-->65<!--/n--> | <!--n:arms.facts_only.exact-->33<!--/n-->/<!--n:cases-->65<!--/n--> | <!--n:arms.judge_only.exact-->56<!--/n-->/<!--n:cases-->65<!--/n--> | **<!--n:arms.court.exact-->57<!--/n-->/<!--n:cases-->65<!--/n-->** |
+| Wrong decision **and executed** | <!--n:arms.raw.wrong_executed_single_call-->31<!--/n-->/<!--n:cases-->65<!--/n--> | <!--n:arms.facts_only.wrong_executed_single_call-->31<!--/n-->/<!--n:cases-->65<!--/n--> | <!--n:arms.judge_only.wrong_and_executed_with_gate-->6<!--/n-->/<!--n:cases-->65<!--/n--> | **<!--n:arms.court.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->65<!--/n-->** |
+| Cleared automatically | – | – | <!--n:arms.judge_only.auto-->46<!--/n-->/<!--n:cases-->65<!--/n--> | **<!--n:arms.court.auto-->46<!--/n-->/<!--n:cases-->65<!--/n-->** |
+| Invalid citations (fact + clause ids) | <!--n:per_arm.raw.cites_invalid-->29<!--/n--> / <!--n:per_arm.raw.cites_total-->309<!--/n--> | <!--n:per_arm.facts_only.cites_invalid-->2<!--/n--> / <!--n:per_arm.facts_only.cites_total-->1098<!--/n--> | <!--n:per_arm.judge_only.cites_invalid-->0<!--/n--> / <!--n:per_arm.judge_only.cites_total-->1125<!--/n--> | **<!--n:per_arm.court.cites_invalid-->0<!--/n--> / <!--n:per_arm.court.cites_total-->1224<!--/n-->** |
+| Mean time | <!--n:per_arm.raw.latency_mean_s:.1f-->7.2<!--/n--> s | <!--n:per_arm.facts_only.latency_mean_s:.1f-->6.4<!--/n--> s | <!--n:per_arm.judge_only.latency_mean_s:.1f-->8.9<!--/n--> s | <!--n:per_arm.court.latency_mean_s:.1f-->26.5<!--/n--> s per case |
 
-Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. Repeat runs: <!--n:repeat_note-->not yet re-run on this version<!--/n-->. These numbers measure conformance to our written policy on synthetic cases, not production accuracy. Per-case tables, ablations and caveats: `/report.html`. A held-out set written after the prompts were frozen is scored separately (`bench/blind_report.py`): <!--n:blind_note-->12 cases; full court 11/12 matched, 1/12 wrong and executed; judge + check 8/12<!--/n-->.
+Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. Repeat runs: <!--n:repeat_note-->not yet re-run on this version<!--/n-->. These numbers measure conformance to our written policy on synthetic cases, not production accuracy. Per-case tables, ablations and caveats: `/report.html`. A held-out set written after the prompts were frozen is scored separately (`bench/blind_report.py`): <!--n:blind_note-->12 cases; full court 10/12 matched, 2/12 wrong and executed; judge + check 10/12<!--/n-->.
 
 ## How it works
 
@@ -29,9 +29,9 @@ Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. R
 ## Where the numbers come from
 
 - Model: deepseek-chat via the DeepSeek API (pydantic-ai), the same for all four systems. The API labels the served model `<!--n:provenance.served_model-->deepseek-flash<!--/n-->` in every stored response while the requested id is `deepseek-chat`; both ids and the API's own trace ids are kept in the audit sample.
-- Runs: <!--n:provenance.window-->2026-10-10 13:17 to 13:29 UTC<!--/n-->; <!--n:provenance.runs-->196<!--/n--> stored case-system runs, <!--n:provenance.calls_c-->473<!--/n--> recorded model calls, <!--n:provenance.input_tokens_m:.1f-->7.2<!--/n--> M input tokens. Every run file carries model id, timestamp, latency and API-reported usage; every court case has a `.record.json` with the full event log of its hearing, e.g. `bench/results/court/B-0024.record.json`.
-- Audit sample: <!--n:provenance.audit_runs-->20<!--/n--> fresh runs (<!--n:provenance.http_calls-->73<!--/n--> HTTP calls) with the exact requests and raw responses: `bench/results/audit_sample/`.
-- Citations: <!--n:per_arm.court.cites_invalid-->0<!--/n--> invalid citations in <!--n:per_arm.court.cites_total-->950<!--/n--> for the full court; <!--n:arms.court.wrong_and_executed_with_gate-->1<!--/n-->/<!--n:cases-->49<!--/n--> wrong decisions executed.
+- Runs: <!--n:provenance.window-->2026-10-10 17:35 to 17:52 UTC<!--/n-->; <!--n:provenance.runs-->260<!--/n--> stored case-system runs, <!--n:provenance.calls_c-->639<!--/n--> recorded model calls, <!--n:provenance.input_tokens_m:.1f-->9.9<!--/n--> M input tokens. Every run file carries model id, timestamp, latency and API-reported usage; every court case has a `.record.json` with the full event log of its hearing, e.g. `bench/results/court/B-0024.record.json`.
+- Audit sample: <!--n:provenance.audit_runs-->20<!--/n--> fresh runs (<!--n:provenance.http_calls-->67<!--/n--> HTTP calls) with the exact requests and raw responses: `bench/results/audit_sample/`.
+- Citations: <!--n:per_arm.court.cites_invalid-->0<!--/n--> invalid citations in <!--n:per_arm.court.cites_total-->1224<!--/n--> for the full court; <!--n:arms.court.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->65<!--/n--> wrong decisions executed.
 - Reference answers are derived by `data/synth/scenarios.py` from the written policy and the scenario labels, never from a model; every change is logged in `data/bench/REFERENCE_CHANGES.md`. A rule shared by the engine and the reference would be invisible to this benchmark.
 - Verify: `.venv/bin/python bench/provenance.py --hashes` recomputes the table from the run files. With a `DEEPSEEK_API_KEY`, `scripts/run_case.py C-0001` or the replay page's **Run live** produces a fresh ruling with a fresh receipt (case, policy, code and model fingerprints).
 
@@ -45,7 +45,7 @@ Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. R
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
 cp .env.example .env            # DEEPSEEK_API_KEY, only for live runs
 scripts/dev.sh                  # http://localhost:8000
-.venv/bin/python -m pytest -q   # <!--n:tests-->494<!--/n--> tests, no key needed
+.venv/bin/python -m pytest -q   # <!--n:tests-->592<!--/n--> tests, no key needed
 ```
 
 Without a key the pages play back the stored runs in `runs/` (six demo rulings plus the organisers' sample, and eight pre-recorded fault injections and counterfactuals). Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Deploy: `deploy/` (Docker + Caddy; `deploy/lighthouse.sh` for Tencent Cloud Lighthouse).

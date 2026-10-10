@@ -2,21 +2,21 @@
  "arm": "facts_only",
  "case_id": "B-0026",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:33:03+00:00",
+ "started_at": "2026-10-10T17:56:39+00:00",
  "fingerprint": {
   "case_sha256": "7e8ed3e599eb10cd",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "cbfaafe6b8f86a8e",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:33:03+00:00"
+  "issued_at": "2026-10-10T17:56:39+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and flag the driver account for abuse of the \"I'm Here\" / waiting-fee button (NS-2); no legitimate no-show fee was ever earned (RD-6 not triggered — driver's prior upheld dispute was a no-show, not a route dispute).",
-  "confidence": 0.96,
-  "reasoning": "Safety screen: I read every chat message [F8, F9, F10], the complaint and the driver's statement [F12]. Nothing is a threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the dispute type is a fee dispute (no-show), not safety. safety_concern = none.\n\nNS-0 routing: cancelled_by = driver [F3], and the driver asserts rider no-show [F10, F12] → NS-1 / NS-2 apply.\n\nNS-1 as driver-cancels-for-no-show requires all three: (i) \"I'm Here\" tapped (or platform auto-arrival); (ii) GPS at the pickup point at the tap; (iii) >3 min of continuous waiting within range afterwards.\n- (i) is satisfied: driver tapped \"I'm Here\" at 12:06:15 [F5]. Note the record shows a driver tap, not a platform auto-arrival; driver_arrived_at is null [F4], so no platform arrival confirmation exists either.\n- (ii) fails: at the tap the driver was 600 m from the pickup point [F5], and his closest approach in the whole trip was 599 m at 12:06:55 [F1] — never within the 200 m arrival radius.\n- (iii) fails: he stayed within 200 m for 0 s after the tap [F5]; he was stationary 600 m away from 12:05:55 to 12:09:25 [F2].\nTwo of the three conditions are not met, and the GPS record (system data) overrides the driver's statement \"I pressed I'm Here and waited more than 3 minutes at the pickup\" [F12]. Even the cancellation itself, only 3 min 30 s after he became stationary and 3 min 10 s after the tap, does not match the stated 3+ min wait at the correct location.\n\nNS-2 consequence: since NS-1 (i)(ii)(iii) are not all satisfied, the $6.61 cancellation fee must be refunded in full → refund_full of $6.61 [F6]. In addition, because the driver tapped \"I'm Here\" while GPS placed him outside the pickup radius (600 m > 200 m) [F5], the case carries flag_account (misuse of the arrival/waiting button per NS-2). The rider's complaint [F9: \"I'm at the pickup point, no car here\"] is corroborated by the GPS record [F1, F2].\n\nSupporting/irrelevant facts: traffic shows only a mid-band speed reading on Jalan Besar (band 3, 20–29 km/h) [F13] and no incidents [F14]; neither supplies a reasonable cause for the no-show, and RD-4 is not in issue here. Weather fair [F15]. Profile facts [F16, F17] do not decide the case; RD-6 is not triggered because the driver's one prior upheld dispute is a no-show, not a route deviation.\n\nEvidence status: sufficient — GPS approach/stationary traces, the full timestamped \"I'm Here\" record, the cancellation timeline and the fare line settle every element; evidence_gap = null. Rider claim that the driver was never at the pickup point is upheld (rejected_claims: driver's F12 account of waiting at the pickup and the no-show assertion in F10).",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's \"I'm Here\" tap 600 m from the pickup to Ryde account review for cancellation/waiting-button abuse + flag_account",
+  "confidence": 0.97,
+  "reasoning": "Safety screen: the chat [F8][F9][F10], the complaint and the driver statement [F12] contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and the dispute type is no-show, not safety. Nothing to escalate on SAFE-1/SAFE-2.\n\nBranch: the $6.61 cancellation fee is only chargeable through NS-0. Here cancelled_by = driver and the driver asserts a rider no-show [F3][F12], so NS-1 governs.\n\nNS-1 requires all of (i) an \"I'm Here\" tap or platform-arrival confirmation, (ii) the driver within the pickup radius at the tap, and (iii) more than 3 continuous minutes waiting inside the radius thereafter. (i) holds: he tapped \"I'm Here\" at 12:06:15 [F5]. (ii) fails: at the tap he was 600 m from the pickup [F5], his closest approach in the whole trip was 599 m [F1], and the platform's driver_arrived_at is null [F4]. (iii) also fails: he stayed within 200 m for 0 s after the tap [F5]; he was stationary 12:05:55–12:09:25 600 m away [F2]. His post-trip statement of waiting at the pickup [F12] is a claim, and GPS/timeline records override it.\n\nPer NS-2, the $6.61 no-show fee does not stand and is refunded in full ($6.61). Because the driver pressed \"I'm Here\" while GPS placed him well outside the pickup radius (>200 m) [F5], NS-2's second limb applies: the case is additionally flagged to Ryde account review for abuse of the cancellation/waiting button. Flag is supported by the profile counter (1 upheld no-show dispute) [F17], which is corroborating only, not the basis of the finding. Traffic facts are irrelevant: no incidents [F14] and a moderate band [F13] do not bear on a fee that fails NS-1 outright. Refund to be issued as a Ryde voucher per NS-7.",
   "cited_facts": [
    "F1",
    "F2",
@@ -24,9 +24,13 @@
    "F4",
    "F5",
    "F6",
+   "F8",
    "F9",
    "F10",
-   "F12"
+   "F11",
+   "F12",
+   "F14",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
@@ -40,11 +44,11 @@
   "rejected_claims": [
    {
     "id": "F12",
-    "reason": "Driver's statement that he pressed 'I'm Here' and waited >3 minutes at the pickup point is contradicted by the GPS record: at the tap (12:06:15) he was 600 m away [F5], his closest approach all trip was 599 m [F1], and the platform never recorded him at the pickup (driver_arrived_at null) [F4]. System records override statements."
+    "reason": "Driver's post-trip statement that he waited >3 min at the pickup is a claim contradicted by system records: GPS shows his closest approach was 599 m and that he was stationary 600 m away the whole time [F1][F2], and the platform never recorded him at the pickup point [F4]. Under NS-1 (ii) and the system-records-over-statements rule, the claim fails."
    },
    {
-    "id": "F10",
-    "reason": "Driver's chat assertion that the rider's 3 minutes had elapsed as a no-show has no basis: the waiting must occur within the pickup radius, and he stayed within 200 m for 0 s [F5]."
+    "id": "F8",
+    "reason": "Driver's chat 'I'm here already' at 12:06 is falsified by GPS: at the tap moment and throughout he was 600 m from the pickup [F1][F2][F5]; the rider's reply confirms no car was at the pickup [F9]."
    }
   ],
   "flag_account": true,
@@ -53,13 +57,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.86,
+ "latency_s": 4.49,
  "model_calls": 1,
  "provider_trace_ids": [
-  "8102671b1434fa7dd3faff810a0cfd72"
+  "a00ddcf033519cb3b1f7f0aba9b4fc40"
  ],
  "provider_response_ids": [
-  "a211277f-26c1-4804-b923-dbe9302f937f"
+  "0a21a99f-e389-4b19-b4d2-ca3052adc64a"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -72,15 +76,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 9891,
-   "completion_tokens": 1246,
-   "total_tokens": 11137,
+   "prompt_tokens": 10282,
+   "completion_tokens": 1010,
+   "total_tokens": 11292,
    "prompt_tokens_details": {
-    "cached_tokens": 9728
+    "cached_tokens": 10112
    },
-   "prompt_cache_hit_tokens": 9728,
-   "prompt_cache_miss_tokens": 163
+   "prompt_cache_hit_tokens": 10112,
+   "prompt_cache_miss_tokens": 170
   }
  ],
- "finished_at": "2026-10-10T13:33:09+00:00"
+ "finished_at": "2026-10-10T17:56:44+00:00"
 }
