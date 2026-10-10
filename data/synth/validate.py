@@ -55,7 +55,7 @@ def policy_clauses(path=POLICY_PATH):
     return out
 
 
-def check_case(c: dict, rates: dict, clauses: dict) -> list[str]:
+def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None) -> list[str]:
     errs: list[str] = []
     ok = lambda cond, msg: None if cond else errs.append(msg)  # noqa: E731
     t, gps, fare = c["trip"], c["gps"], c["fare"]
@@ -175,14 +175,10 @@ def check_case(c: dict, rates: dict, clauses: dict) -> list[str]:
         ok(d_trace <= NEAR_M or d_route <= NEAR_M,
            f"{b['road_name']} is {d_trace:.0f} m from the trace and {d_route:.0f} m from the optimal route (> {NEAR_M} m)")
         ok(b["window_start"] <= end and b["window_end"] >= t["accepted_at"], f"{b['road_name']} window overlaps the trip")
-        sample = trip_gps or gps
-        near = [p["speed_kmh"] for p in sample if b["window_start"] <= p["ts"] <= b["window_end"]
-                and p["speed_kmh"] >= MOVING_KMH and min(haversine_m((p["lat"], p["lon"]), g) for g in geom) <= NEAR_M]
-        if near:  # the trace drives this road during the window: its median speed must fall in the band
-            lo, hi = SPEED_BANDS[b["speed_band"]]
-            med = statistics.median(near)
-            ok(lo <= med <= (hi if hi is not None else 999) + 0.999,
-               f"{b['road_name']} band {b['speed_band']} ({lo}-{hi} km/h) but GPS median there is {med:.1f} km/h")
+        from lint import band_level           # the one measurement: generator, validator and linter agree by construction
+        lvl = band_level(gps, geom, b["window_start"], b["window_end"])
+        if lvl is not None:  # the trace drives this road during the window: the band is what the trace says
+            ok(lvl == b["speed_band"], f"{b['road_name']} says band {b['speed_band']} but the trace measures band {lvl}")
     for i in c["traffic"]["incidents"]:
         d_trace = min(haversine_m((i["lat"], i["lon"]), q) for q in trace_pts)
         d_route = project(i["lat"], i["lon"], poly)[0]
@@ -194,10 +190,10 @@ def check_case(c: dict, rates: dict, clauses: dict) -> list[str]:
 
     # expected ruling (Judge regression answer) exists and cites only citable clauses
     exp_path = os.path.join(EXPECTED_DIR, f"{c['case_id']}.json")
-    ok(os.path.exists(exp_path), f"missing {os.path.relpath(exp_path)}")
-    if os.path.exists(exp_path):
-        with open(exp_path) as f:
-            e = json.load(f)
+    if expected is None:
+        ok(os.path.exists(exp_path), f"missing {os.path.relpath(exp_path)}")
+    if expected is not None or os.path.exists(exp_path):
+        e = expected if expected is not None else json.load(open(exp_path))
         ok(set(e) >= EXPECTED, f"expected keys {sorted(EXPECTED - set(e))} missing")
         ok(e.get("ruling") in RULINGS, f"expected.ruling {e.get('ruling')!r} not in vocabulary")
         ok(e.get("escalate") == (e.get("ruling") == "escalate"), "expected.escalate must match ruling == escalate")

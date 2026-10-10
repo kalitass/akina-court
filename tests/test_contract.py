@@ -160,82 +160,14 @@ def test_every_hard_label_names_an_outcome():
 
 # ---------------------------------------------------------------------------- the reference, re-derived without the engine
 
-GRACE_S = 180
-
-
-def independent_truth(raw: dict, cond: dict, kind: str) -> dict:
-    """Ruling / amount / flag from the raw record and the scenario's labels, using only this test's own measurements
-    (contract.py geometry) and the written rules. Mirrors the semantics the reference claims to follow, not its code."""
-    t = raw["trip"]
-    if kind == "safety":
-        return {"ruling": "escalate", "amount": None, "flag_account": False}
-    if cond.get("threat") == "driver" or cond.get("chat") == "threat":
-        return {"ruling": "escalate", "amount": None, "flag_account": False}
-    if kind == "no_show":
-        gps, P = raw["gps"], (t["pickup"]["lat"], t["pickup"]["lon"])
-        fee = raw["fare"]["cancellation_fee"]
-        if t["cancelled_by"] is None:
-            return {"ruling": "escalate", "amount": None, "flag_account": False}
-        s_cancel = (contract.ts({"ts": t["cancelled_at"]}) - contract.ts({"ts": t["accepted_at"]})).total_seconds()
-        if t["cancelled_by"] == "rider":
-            return {"ruling": "no_action" if s_cancel > GRACE_S else "refund_full", "amount": None if s_cancel > GRACE_S else fee, "flag_account": False}
-        holes = [1 for a, b in zip(gps, gps[1:]) if (contract.ts(b) - contract.ts(a)).total_seconds() > 120]
-        if holes:
-            return {"ruling": "escalate", "amount": None, "flag_account": False}
-        if not t["driver_pressed_here_at"]:
-            return {"ruling": "refund_full", "amount": fee, "flag_account": False}
-        tap = contract.ts({"ts": t["driver_pressed_here_at"]})
-        at = min(gps, key=lambda p: abs((contract.ts(p) - tap).total_seconds()))
-        if contract.hav_m((at["lat"], at["lon"]), P) > contract.PICKUP_RADIUS_M:
-            return {"ruling": "refund_full", "amount": fee, "flag_account": True}
-        cont = contract.continuous_after_tap_s(gps, P, tap)
-        pp = raw.get("policy_params") or {}
-        if pp.get("no_show_threshold_min"):
-            ok = cont >= pp["no_show_threshold_min"] * 60
-        else:
-            ok = cont > GRACE_S
-        return {"ruling": "no_action" if ok else "refund_full", "amount": None if ok else fee, "flag_account": False}
-    # route deviation
-    if cond.get("gps_tail_cut_s"):
-        return {"ruling": "escalate", "amount": None, "flag_account": False}
-    poly = [tuple(p) for p in raw["route"]["polyline"]]
-    trip_gps = contract.slice_gps(raw["gps"], t["pickup_at"], t["dropoff_at"])
-    segs = contract.segments(trip_gps, poly)
-    if not segs:
-        return {"ruling": "no_action", "amount": None, "flag_account": False}
-    metered = raw["fare"]["pricing"] == "metered"
-    rate = raw["fare"]["distance_fare"] / raw["fare"]["distance_km"] if metered else None
-    prior = raw["profiles"]["driver"]["route_disputes_upheld_90d"] >= 1
-    consent, stop, inc_kind = cond["consent"], cond["stop"], cond["incident"]
-    findings = []
-    for k, s in enumerate(segs):
-        incident_exempt = False
-        for inc in raw["traffic"]["incidents"]:
-            d, along = contract.project(inc["lat"], inc["lon"], poly)
-            on = (d <= contract.INCIDENT_NEAR_M and s["exit_km"] - s["entry_km"] >= 0.3
-                  and s["entry_km"] - contract.STRETCH_TOL_KM <= along <= s["exit_km"] + contract.STRETCH_TOL_KM)
-            if on and inc["reported_at"] < s["start"]:
-                incident_exempt = True
-        if incident_exempt:
-            findings.append("exempt")
-        elif consent in ("before", "named_singlish", "named_cn") or (consent == "before_seg1" and k == 0):
-            findings.append("undetermined")
-        elif stop == "named" or consent in ("general", "general_cn"):
-            findings.append("exempt")
-        else:
-            findings.append("counts")
-    if "undetermined" in findings and (metered or prior):
-        return {"ruling": "escalate", "amount": None, "flag_account": False}
-    counts = [s for s, f in zip(segs, findings) if f == "counts"]
-    amount = round(sum(s["extra_km"] for s in counts) * rate + 1e-9, 2) if (metered and counts) else None
-    return {"ruling": "refund_partial" if amount else "no_action", "amount": amount, "flag_account": bool(prior and counts)}
+import reference  # noqa: E402
 
 
 @pytest.mark.parametrize("case_dir,entry", BENCH, ids=lambda x: x["case_id"] if isinstance(x, dict) else "")
 def test_reference_answer_re_derives_without_the_engine(case_dir, entry):
     raw = json.loads((case_dir / f"{entry['case_id']}.json").read_text())
     want = json.loads((case_dir.parent / "expected" / f"{entry['case_id']}.json").read_text())
-    got = independent_truth(raw, entry["conditions"], entry["type"])
+    got = reference.derive_reference(raw, entry["conditions"], entry["type"])
     assert got["ruling"] == want["ruling"], (entry["case_id"], got, want["ruling"])
     assert bool(got["flag_account"]) == bool(want["flag_account"]), entry["case_id"]
     if got["amount"] is None:
@@ -243,3 +175,17 @@ def test_reference_answer_re_derives_without_the_engine(case_dir, entry):
     else:
         assert abs(got["amount"] - want["amount"]) <= 0.015, (entry["case_id"], got["amount"], want["amount"])
     assert want == entry["truth"], f"{entry['case_id']}: expected file and manifest truth differ"
+
+
+# ---------------------------------------------------------------------------- the typed promise of every scenario
+
+def test_every_scenario_states_its_expected_answer_and_the_reference_keeps_it():
+    """`expect` is the scenario's typed promise (ruling, flag); the manifest truth must keep it. The free-text `hard`
+    label stays for the reader and is no longer parsed for the check."""
+    import scenarios as S
+    for blind, specs in ((False, S.SCENARIOS), (True, S.BLIND_SCENARIOS)):
+        by_name = {c["name"]: c for _, c in BENCH if c["case_id"].startswith("X-" if blind else "B-")}
+        for sp in specs:
+            assert sp.get("expect"), f"{sp['name']}: no expect= in the scenario line"
+            if sp["name"] in by_name:
+                assert contract.check_expect(sp["expect"], by_name[sp["name"]]["truth"]) == [], (sp["name"], sp["expect"], by_name[sp["name"]]["truth"]["ruling"])

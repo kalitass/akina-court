@@ -273,12 +273,10 @@ def band_from_gps(road, gps, start: datetime, end: datetime, routes_=()):
     """Speed band derived from the trace: median speed of the moving samples within ROAD_NEAR_M of the road's
     geometry during the window, mapped to the LTA band. Keeps traffic evidence consistent with the GPS (review 4)."""
     geom = geometry_of(road, routes_)
-    near = [p["speed_kmh"] for p in gps if start.isoformat() <= p["ts"] <= end.isoformat()
-            and p["speed_kmh"] >= MOVING_KMH and near_road(p, road, geom)]
-    if not near:
-        raise ValueError(f"{road}: trace never passes within {ROAD_NEAR_M} m, hand-set the band instead")
-    med = statistics.median(near)
-    level = next(k for k, (lo, hi) in SPEED_BANDS.items() if hi is None or med <= hi + 0.999)
+    from lint import band_level           # the one measurement the linter re-applies to every published case
+    level = band_level(gps, geom or [ROADS[road][:2]], start.isoformat(), end.isoformat(), min_samples=2)   # a short road near the pickup has few moving samples
+    if level is None:
+        raise ValueError(f"{road}: trace never passes along it in the window, hand-set the band instead")
     return band(road, level, start, end, routes_)
 
 
@@ -347,7 +345,7 @@ def c0001(rates):
         zones=[Congestion(0.0, 0.5, 8.0)], seed=1)                             # Scotts/Orchard jam: first 500 m at 8 km/h
     # the driver's two messages (14:01:00, 14:03:00) are typed at red lights on the way to the pickup, not while driving
     gps = approach_trace(rp, offset(P, 250, 1300), P, accepted, pickup_at, wait_s=10, seed=1,
-                         pauses=[(15, PAUSE_S), (135, PAUSE_S)]) + trip_gps[1:]
+                         pauses=[(5, PAUSE_S), (125, PAUSE_S)]) + trip_gps[1:]
     trip = trip_block("T-1042", "RydeTAXI", place("Orchard Road"), place("Marina Bay Sands"), route,
                       T("2026-09-20 14:00:00"), accepted, gps, T("2026-09-20 14:05:00"), pickup_at, dropoff_at)
     w0, w1 = T("2026-09-20 14:00:00"), T("2026-09-20 14:35:00")
@@ -425,7 +423,7 @@ def c0003(rates):
     accepted, pickup_at, dropoff_at = T("2026-09-21 18:06:00"), T("2026-09-21 18:10:00"), T("2026-09-21 18:42:30")
     opt = [tuple(p) for p in route["polyline"]]
     loops = [{"leave": (1.2729, 103.8536), "via": [(1.2985, 103.8880), (1.3160, 103.9290)], "rejoin": D}]   # MCE -> ECP -> Bedok South
-    # the driver's message at 18:10:20 is typed at the first junction after moving off (halt 18:10:15-18:10:40), not at speed
+    # the driver's message at 18:10:30 is typed at the first junction after moving off (halt 18:10:15-18:10:40), not at speed
     _, trip_gps, detours, legs = detour_trace(rp, opt, loops, pickup_at, secs(pickup_at, dropoff_at),
                                               stops=pause_stops(opt, 24 * 60, [(15, PAUSE_S)]),
                                               loop_zones={0: (1.0, EXPRESSWAY_KMH)}, seed=3)
@@ -447,7 +445,7 @@ def c0003(rates):
         },
         "weather": {"rain_mm": 1.2, "description": "Light rain"},
         "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates),
-        "chat": chat(("2026-09-21 18:10:20", "driver", "KPE is closed at the tunnel entrance because of an accident. I'll go by ECP instead, ok?"),
+        "chat": chat(("2026-09-21 18:10:30", "driver", "KPE is closed at the tunnel entrance because of an accident. I'll go by ECP instead, ok?"),
                      ("2026-09-21 18:10:50", "rider", "Ok, thanks for telling me.")),
         "driver_statement": "KPE was fully closed after an accident at the tunnel entrance. I told the rider and went by ECP, "
                             "which was the fastest open route.",
@@ -561,7 +559,7 @@ def c0006(rates):
         "weather": {"rain_mm": 0, "description": "Cloudy"},
         "fare": fixed_fare(route, rates),
         "chat": chat(("2026-09-24 21:36:00", "rider", "Please stop the car, I want to get out here."),
-                     ("2026-09-24 21:36:15", "driver", "Sit down or I lock the doors.")),
+                     ("2026-09-24 21:36:25", "driver", "Sit down or I lock the doors.")),
         "driver_statement": "The rider was drunk and tried to open the door at the lights on Clemenceau Avenue. I told her to "
                             "sit down for her own safety and did not stop until the destination.",
         "profiles": profiles((520, 4.8, 0, 0, 0, 0), (2100, 4.9, 1204, 0, 0, 0, 0)),

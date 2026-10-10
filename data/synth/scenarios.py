@@ -16,6 +16,7 @@ agree or the generator aborts. Deterministic for a fixed SEED and a warm OneMap 
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -31,6 +32,8 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, ROOT)
 
 import contract  # noqa: E402
+import lint  # noqa: E402
+import reference  # noqa: E402
 import validate  # noqa: E402
 from build_cases import (LOC, PAUSE_S, ROADS, SGT, Congestion, Stop, along_km, approach_trace, band_from_gps, build_trajectory,  # noqa: E402
                          compose, detour_trace, dump, incident, measure_detours, nearest_idx, offset, pause_stops, place, profiles,
@@ -49,12 +52,12 @@ EXPECTED_DIR = os.path.join(BENCH_DIR, "expected")
 CANCEL_FEE = 6.61
 
 LOC.update({  # real Singapore places, coordinates from common knowledge (~50-100 m)
-    "Changi Airport T3": (1.3644, 103.9915),
-    "Jurong East MRT": (1.3330, 103.7422),
+    "Changi Airport T3": (1.36216, 103.98939),
+    "Jurong East MRT": (1.33218, 103.74155),
     "Woodlands Civic Centre": (1.4360, 103.7865),
-    "NUS": (1.2966, 103.7764),
-    "Sentosa Beach Station": (1.2494, 103.8303),
-    "Punggol Waterway Point": (1.4064, 103.9021),
+    "NUS": (1.2961, 103.77586),
+    "Sentosa Beach Station": (1.24799, 103.83007),
+    "Punggol Waterway Point": (1.40561, 103.90168),
     "Tampines Mall": (1.3525, 103.9447),
     "Raffles Place": (1.2840, 103.8513),
     # named stop places (real malls) a rider can ask for by name
@@ -65,17 +68,17 @@ LOC.update({  # real Singapore places, coordinates from common knowledge (~50-10
     "Great World City": (1.2936, 103.8319),
     "Changi City Point": (1.3345, 103.9623),
     # more origins / destinations (OneMap search, 2026-10-10) so the same route does not carry a dozen cases
-    "AMK Hub": (1.3694, 103.8484),
-    "Toa Payoh HDB Hub": (1.3321, 103.8485),
-    "NEX Serangoon": (1.3508, 103.8722),
-    "VivoCity": (1.2643, 103.8223),
+    "AMK Hub": (1.3688, 103.84792),
+    "Toa Payoh HDB Hub": (1.33207, 103.8491),
+    "NEX Serangoon": (1.35014, 103.87208),
+    "VivoCity": (1.26559, 103.82218),
     "Suntec City": (1.2955, 103.8585),
     "Junction 8": (1.3505, 103.8487),
-    "Jurong Point": (1.3395, 103.7066),
+    "Jurong Point": (1.34012, 103.70729),
     "Pasir Ris MRT": (1.3730, 103.9492),
-    "Hougang Mall": (1.3725, 103.8937),
+    "Hougang Mall": (1.37301, 103.89344),
     "Buona Vista MRT": (1.3063, 103.7903),
-    "Kallang Wave Mall": (1.3031, 103.8731),
+    "Kallang Wave Mall": (1.30434, 103.87213),
     "Compass One": (1.3921, 103.8950),
 })
 # where a rider waits at each pickup (the pickup line names it, instead of a "main entrance" that a kerb or a campus has not)
@@ -102,8 +105,16 @@ CRAWL_PAST_KM = 0.5                      # the crawl runs this far past the turn
 MAX_DETOUR_RATIO = 4.0                   # a loop may drive at most this many times the stretch it replaces (what the road network allows)
 MIN_REPLACED_PLAIN_KM = 0.5              # a plain loop (no incident, no agreement on it) must still replace this much of the route: no out-and-back spur
 OFFSET_CANDIDATES = [(1, 1000), (-1, 1000), (1, 1500), (-1, 1500), (1, 700), (-1, 700), (1, 2000), (-1, 2000)]
+CORRIDOR_INSET = 0.25                    # a corridor candidate's two via points sit this fraction inside the stretch, on a parallel road
+TARGET_REFUNDS = (3.0, 5.0, 7.0)         # a case's refundable extra distance aims at one of these amounts (chosen by the scenario's identity)
+RATIO_SOFT = 4.0                         # driven / replaced above this costs score (expressway interchanges can force it), above RATIO_HARD it is refused
+RATIO_HARD = 6.0
+RETRACE_MAX = 0.5                        # a loop may re-drive at most this share (by length) of the stretch it claims to leave
+TOP_FIRST = 6                            # two-loop cases: the best TOP_FIRST loop-1 plans are each tried with every loop-2 candidate
+GOOD_ENOUGH = 0.25                       # km from the target extra distance at which the candidate search stops early
 SPAN_CANDIDATES = [(1.0, 1.0), (1.5, 1.5), (0.7, 0.7), (2.0, 2.0), (1.0, 2.0), (2.0, 1.0)]
 APPROACH_PAUSE_S = 75                    # the driver's pickup message is typed at a halt this many seconds into the approach
+TYPED_AT_S = 15                          # a driver line is stamped this far into a PAUSE_S halt: the car has been still for 15 s and stays so 10 s more
 
 # LTA DataMall writes an expressway incident with its direction ("(towards TPE)"); axis says which end of the road each label names
 EXPRESSWAY_DIR = {
@@ -180,15 +191,23 @@ def road_cat(name: str) -> str:
     return "3"
 
 
-_road_seq = [1000]
-
-
 def register_road(name: str, pt) -> None:
     """Add a road seen on a OneMap route to the ROADS table (category by name, synthetic link id) so band()
-    / validate.py accept it. Registration order is deterministic for a fixed scenario list."""
+    / validate.py accept it. The link id is a hash of the road name: the same road gets the same id in every case,
+    whatever was built before it."""
     if name not in ROADS:
-        _road_seq[0] += 1
-        ROADS[name] = (round(pt[0], 4), round(pt[1], 4), road_cat(name), f"SYN-{_road_seq[0]}")
+        ROADS[name] = (round(pt[0], 4), round(pt[1], 4), road_cat(name), "SYN-" + hashlib.sha256(name.encode()).hexdigest()[:6].upper())
+
+
+IDENTITY_VERSION = "v1"      # how a scenario's random streams are derived from its name; bump only with a full regeneration
+
+
+def identity(namespace: str, name: str) -> dict:
+    """The random streams of one scenario, from its name alone: `geo` places the car (approach start, parking spot),
+    `text` picks wording, cars, outfits and profiles, `noise` seeds the GPS jitter. A new scenario, a new paraphrase or
+    a reordered list never moves another case's car."""
+    h = hashlib.sha256(f"{namespace}/{name}/{IDENTITY_VERSION}".encode()).hexdigest()
+    return {"geo": random.Random(int(h[:12], 16)), "text": random.Random(int(h[12:24], 16)), "noise": int(h[24:32], 16)}
 
 
 def road_runs(route, min_m=800):
@@ -308,105 +327,105 @@ def S(name, pair, **kw):
 SCENARIOS = [
     # ---- route deviation ------------------------------------------------------------------------------------
     R("rd_basic", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}],
-      hard="plain unexplained loop; the only trap is the rider overstating the extra km -> refund the measured extra km"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="plain unexplained loop; the only trap is the rider overstating the extra km -> refund the measured extra km"),
     R("rd_consent_before", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], consent="before", band=2,
-      hard="RD-5: the rider agreed to a named road 3 min before the segment, but no record ties the driven segment to that road (G13) -> undetermined, a person decides"),
+      expect={"ruling": "escalate", "flag": False}, hard="RD-5: the rider agreed to a named road 3 min before the segment, but no record ties the driven segment to that road (G13) -> undetermined, a person decides"),
     R("rd_consent_after", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], consent="after", band=2,
-      hard="same chat as rd_consent_before but timestamped after the segment started -> RD-5 fails, refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="same chat as rd_consent_before but timestamped after the segment started -> RD-5 fails, refund"),
     R("rd_incident_on_stretch", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.30, 0.52)}], incident="on_stretch",
-      hard="RD-4(a): accident on the replaced stretch reported before -> exempt; the rider's complaint is loud"),
+      expect={"ruling": "no_action", "flag": False}, hard="RD-4(a): accident on the replaced stretch reported before -> exempt; the rider's complaint is loud"),
     R("rd_incident_decoy", ("Tanjong Pagar Centre", "Changi Airport T3"), loops=[{"frac": (0.30, 0.45)}], incident="decoy_far",
-      hard="an accident exists on the optimal route but 2+ km from the replaced stretch -> no exemption, refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="an accident exists on the optimal route but 2+ km from the replaced stretch -> no exemption, refund"),
     R("rd_incident_late", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], incident="late",
-      hard="accident on the stretch but reported after the driver had already left the route -> no exemption, refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="accident on the stretch but reported after the driver had already left the route -> no exemption, refund"),
     R("rd_band1_no_incident", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], band=1, weather="light",
-      hard="RD-4(b): band 1 on the replaced stretch alone does not exempt (MVP rule) -> refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="RD-4(b): band 1 on the replaced stretch alone does not exempt (MVP rule) -> refund"),
     R("rd_band1_incident", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], band=1, incident="on_stretch",
-      hard="band 1 + accident on the stretch -> exempt"),
+      expect={"ruling": "no_action", "flag": False}, hard="band 1 + accident on the stretch -> exempt"),
     R("rd_band2_heavy_rain", ("NUS", "Raffles Place"), loops=[{"frac": (0.40, 0.60)}], band=2, weather="heavy",
-      hard="driver blames flooding; weather is not RD-4 evidence and band 2 alone does not exempt -> refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="driver blames flooding; weather is not RD-4 evidence and band 2 alone does not exempt -> refund"),
     R("rd_stop_named", ("Clarke Quay", "Bedok Mall"), loops=[{"place": "Paya Lebar Square"}], stop="named",
-      hard="RD-3(a): rider named Paya Lebar Square; the loop and 4-min stop are the rider's own request -> no refund"),
+      expect={"ruling": "no_action", "flag": False}, hard="RD-3(a): rider named Paya Lebar Square; the loop and 4-min stop are the rider's own request -> no refund"),
     R("rd_stop_named_prior", ("Jurong East MRT", "NUS"), loops=[{"place": "Clementi Mall"}], stop="named", prior=2, weather="light",
-      hard="named stop exempts the segment, so the driver's 2 priors do not trigger RD-6 -> no_action, no flag"),
+      expect={"ruling": "no_action", "flag": False}, hard="named stop exempts the segment, so the driver's 2 priors do not trigger RD-6 -> no_action, no flag"),
     R("rd_stop_unnamed", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], stop="unnamed",
-      hard="RD-3(b): 'a 7-Eleven on the way' does not cover a loop to one 1 km off the route -> refund the km, keep the waiting"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="RD-3(b): 'a 7-Eleven on the way' does not cover a loop to one 1 km off the route -> refund the km, keep the waiting"),
     R("rd_two_segs_consent_seg1", ("Woodlands Civic Centre", "Orchard Road"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}], consent="before_seg1",
-      hard="two segments; the rider agreed to a named road for the first only; nothing ties segment 1 to that road (G13) -> undetermined on 1, counts on 2 -> a person decides the amount"),
+      expect={"ruling": "escalate", "flag": False}, hard="two segments; the rider agreed to a named road for the first only; nothing ties segment 1 to that road (G13) -> undetermined on 1, counts on 2 -> a person decides the amount"),
     R("rd_two_segs_incident_seg1", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}], incident="seg1",
-      hard="two segments; accident exempts the first, the second is unexplained -> refund segment 2 only"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="two segments; accident exempts the first, the second is unexplained -> refund segment 2 only"),
     R("rd_two_segs_plain", ("Tanjong Pagar Centre", "Changi Airport T3"), loops=[{"frac": (0.25, 0.38)}, {"frac": (0.62, 0.75)}],
-      hard="two unexplained segments -> refund the sum"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="two unexplained segments -> refund the sum"),
     R("rd_fixed_fare", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], service="RydeX",
-      hard="RydeX is a fixed quote: real detour, zero refundable km -> no_action (RD-2 non-metered branch)"),
+      expect={"ruling": "no_action", "flag": False}, hard="RydeX is a fixed quote: real detour, zero refundable km -> no_action (RD-2 non-metered branch)"),
     R("rd_fixed_fare_consent", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], service="RydeX", consent="before", band=2,
-      hard="fixed fare + agreement to a named road: the finding changes no amount and no flag -> may stay undetermined, no_action either way"),
+      expect={"ruling": "no_action", "flag": False}, hard="fixed fare + agreement to a named road: the finding changes no amount and no flag -> may stay undetermined, no_action either way"),
     R("rd_prior_flag", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], prior=2,
-      hard="RD-6: driver has 2 upheld route disputes -> refund + flag_account"),
+      expect={"ruling": "refund_partial", "flag": True}, hard="RD-6: driver has 2 upheld route disputes -> refund + flag_account"),
     R("rd_fixed_fare_prior_flag", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], service="RydeX", prior=2,
-      hard="fixed fare so no refund, but RD-1 breach + 2 priors -> no_action + flag_account"),
+      expect={"ruling": "no_action", "flag": True}, hard="fixed fare so no refund, but RD-1 breach + 2 priors -> no_action + flag_account"),
     R("rd_no_deviation", ("Tampines Mall", "Changi Airport T3"), loops=[], weather="heavy",
-      hard="rider complains the fare felt high; GPS follows the optimal route -> RD-1 fails, no_action"),
+      expect={"ruling": "no_action", "flag": False}, hard="rider complains the fare felt high; GPS follows the optimal route -> RD-1 fails, no_action"),
     R("rd_request_only", ("Clarke Quay", "Sentosa Beach Station"), loops=[{"frac": (0.30, 0.50)}], consent="request_only", band=2,
-      hard="driver asked, rider never answered -> no agreement, RD-5 fails -> refund"),
-    R("rd_scope_other", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.40, 0.55)}], consent="scope_other",
-      hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it, refund"),
-    R("rd_consent_before_prior", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}], consent="before", band=2, prior=2,
-      hard="agreement to a named road with no record tying the segment to it (G13); with 2 priors the RD-6 flag depends on the finding -> undetermined, a person decides"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="driver asked, rider never answered -> no agreement, RD-5 fails -> refund"),
+    R("rd_scope_other", ("Toa Payoh HDB Hub", "VivoCity"), loops=[{"frac": (0.40, 0.55)}], consent="scope_other",
+      expect={"ruling": "refund_partial", "flag": False}, hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it, refund"),
+    R("rd_consent_before_prior", ("NEX Serangoon", "Suntec City"), loops=[{"frac": (0.45, 0.60)}], consent="before", band=2, prior=2,
+      expect={"ruling": "escalate", "flag": False}, hard="agreement to a named road with no record tying the segment to it (G13); with 2 priors the RD-6 flag depends on the finding -> undetermined, a person decides"),
     R("rd_threat_in_chat", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.40, 0.55)}], threat="driver",
-      hard="route dispute whose chat holds an intimidating driver message -> the judge's safety screen (SAFE-1) overrides: escalate, no refund computed"),
+      expect={"ruling": "escalate", "flag": False}, hard="route dispute whose chat holds an intimidating driver message -> the judge's safety screen (SAFE-1) overrides: escalate, no refund computed"),
     R("rd_consent_before_light", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], consent="before", band=2, weather="light", incident="decoy_far",
-      hard="agreement to a named road, no record tying the segment to it (G13); the decoy incident is far from the route and settles nothing -> undetermined, a person decides"),
+      expect={"ruling": "escalate", "flag": False}, hard="agreement to a named road, no record tying the segment to it (G13); the decoy incident is far from the route and settles nothing -> undetermined, a person decides"),
     # ---- no-show ----------------------------------------------------------------------------------------------
     N("ns_fake_here_far", ("Bugis Junction", "Tanjong Pagar Centre"), by="driver", park_m=600, wait_s=210, here=True,
-      hard="NS-2: I'm Here tapped 600 m away, never within 200 m -> refund + flag_account"),
+      expect={"ruling": "refund_full", "flag": True}, hard="NS-2: I'm Here tapped 600 m away, never within 200 m -> refund + flag_account"),
     N("ns_wait_2min", ("Bedok Mall", "Raffles Place"), by="driver", park_m=40, wait_s=120, here=True,
-      hard="NS-1(iii): only ~2 min inside 200 m -> refund, no flag"),
+      expect={"ruling": "refund_full", "flag": False}, hard="NS-1(iii): only ~2 min inside 200 m -> refund, no flag"),
     N("ns_wait_4min", ("Raffles Place", "Changi Airport T3"), by="driver", park_m=40, wait_s=240, here=True,
-      hard="all three NS-1 elements hold -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="all three NS-1 elements hold -> fee stands"),
     N("ns_rider_cancel_150s", ("Jurong East MRT", "NUS"), by="rider", cancel_s=150, driver="en_route",
-      hard="NS-4: cancelled 150 s after matching -> inside the 3-min grace -> refund"),
+      expect={"ruling": "refund_full", "flag": False}, hard="NS-4: cancelled 150 s after matching -> inside the 3-min grace -> refund"),
     N("ns_rider_cancel_200s", ("NUS", "Raffles Place"), by="rider", cancel_s=200, driver="en_route",
-      hard="NS-4: 200 s after matching -> fee stands even though the driver was still over a kilometre away ('driver was late' is not a Ryde rule, NS-8)"),
+      expect={"ruling": "no_action", "flag": False}, hard="NS-4: 200 s after matching -> fee stands even though the driver was still over a kilometre away ('driver was late' is not a Ryde rule, NS-8)"),
     N("ns_no_here_tap", ("Woodlands Civic Centre", "Punggol Waterway Point"), by="driver", park_m=40, wait_s=240, here=False,
-      hard="driver waited 4 min at the pin but never tapped I'm Here -> NS-1(i) fails -> refund (NS-3), no flag"),
+      expect={"ruling": "refund_full", "flag": False}, hard="driver waited 4 min at the pin but never tapped I'm Here -> NS-1(i) fails -> refund (NS-3), no flag"),
     N("ns_fake_here_350m", ("Punggol Waterway Point", "Tampines Mall"), by="driver", park_m=350, wait_s=240, here=True,
-      hard="parked 350 m away: outside the 200 m radius -> refund + flag"),
+      expect={"ruling": "refund_full", "flag": True}, hard="parked 350 m away: outside the 200 m radius -> refund + flag"),
     N("ns_wait_185s_edge", ("Clarke Quay", "Bedok Mall"), by="driver", park_m=40, within_s=185, here=True,
-      hard="boundary: 185 s continuously inside 200 m after the tap (> 180) -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="boundary: 185 s continuously inside 200 m after the tap (> 180) -> fee stands"),
     N("ns_wait_175s_edge", ("Tampines Mall", "Changi Airport T3"), by="driver", park_m=40, within_s=175, here=True,
-      hard="boundary: 175 s inside 200 m after the tap (<= 180) -> refund"),
+      expect={"ruling": "refund_full", "flag": False}, hard="boundary: 175 s inside 200 m after the tap (<= 180) -> refund"),
     N("ns_rider_cancel_175s", ("Orchard Road", "Marina Bay Sands"), by="rider", cancel_s=175, driver="en_route",
-      hard="boundary 175 s -> grace -> refund"),
+      expect={"ruling": "refund_full", "flag": False}, hard="boundary 175 s -> grace -> refund"),
     N("ns_rider_cancel_185s", ("Bedok Mall", "Changi Airport T3"), by="rider", cancel_s=185, driver="en_route",
-      hard="boundary 185 s -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="boundary 185 s -> fee stands"),
     N("ns_wait_4min_two_more_minutes", ("Tanjong Pagar Centre", "Sentosa Beach Station"), by="driver", park_m=40, wait_s=250, here=True, weather="heavy", chat="two_more",
-      hard="rider texted 'give me 2 more minutes' in heavy rain; sympathy is not a clause -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="rider texted 'give me 2 more minutes' in heavy rain; sympathy is not a clause -> fee stands"),
     N("ns_wait_2min_driver_claims_5", ("Jurong East MRT", "NUS"), by="driver", park_m=40, wait_s=125, here=True, chat="driver_claims",
-      hard="driver's statement says 5 min, GPS says ~2 min -> refund"),
+      expect={"ruling": "refund_full", "flag": False}, hard="driver's statement says 5 min, GPS says ~2 min -> refund"),
     N("ns_fake_here_1km_long_wait", ("Woodlands Civic Centre", "Orchard Road"), by="driver", park_m=1000, wait_s=300, here=True, weather="light",
-      hard="waited 5 min but 1 km away -> NS-1(ii) fails -> refund + flag"),
+      expect={"ruling": "refund_full", "flag": True}, hard="waited 5 min but 1 km away -> NS-1(ii) fails -> refund + flag"),
     N("ns_rider_cancel_400s_driver_waiting", ("Raffles Place", "Sentosa Beach Station"), by="rider", cancel_s=400, driver="at_pickup",
-      hard="driver was parked at the pin for minutes; rider cancels at 400 s -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="driver was parked at the pin for minutes; rider cancels at 400 s -> fee stands"),
     N("ns_threat_in_chat", ("Bugis Junction", "Jurong East MRT"), by="driver", park_m=40, wait_s=240, here=True, chat="threat",
-      hard="no-show facts favour the driver, but the chat holds an intimidating driver message -> safety screen: escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="no-show facts favour the driver, but the chat holds an intimidating driver message -> safety screen: escalate"),
     N("ns_rider_cancel_100s_bad_profile", ("Marina Bay Sands", "Tampines Mall"), by="rider", cancel_s=100, driver="en_route", prior_ns=2,
-      hard="rider has 2 upheld no-show disputes; still inside grace -> refund"),
+      expect={"ruling": "refund_full", "flag": False}, hard="rider has 2 upheld no-show disputes; still inside grace -> refund"),
     N("ns_wait_4min_180m", ("Clarke Quay", "Sentosa Beach Station"), by="driver", park_m=180, wait_s=240, here=True,
-      hard="parked 180 m from the pin (inside the 200 m radius), rider says 'not at the entrance' -> fee stands"),
+      expect={"ruling": "no_action", "flag": False}, hard="parked 180 m from the pin (inside the 200 m radius), rider says 'not at the entrance' -> fee stands"),
     # ---- safety ------------------------------------------------------------------------------------------------
     S("safe_driver_threat", ("Clarke Quay", "Bedok Mall"), chat="driver_threat",
-      hard="SAFE-1: driver threatens to lock the rider in -> escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="SAFE-1: driver threatens to lock the rider in -> escalate"),
     S("safe_rider_threat", ("Tampines Mall", "Changi Airport T3"), chat="rider_threat", service="RydeTAXI",
-      hard="SAFE-1: rider threatens the driver; the driver filed -> escalate, no refund"),
+      expect={"ruling": "escalate", "flag": False}, hard="SAFE-1: rider threatens the driver; the driver filed -> escalate, no refund"),
     S("safe_innocuous_chat_dangerous_driving", ("Jurong East MRT", "NUS"), chat="innocuous",
-      hard="innocuous chat; the complaint alleges dangerous driving -> SAFE-2 escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="innocuous chat; the complaint alleges dangerous driving -> SAFE-2 escalate"),
     S("safe_no_chat_harassment", ("Woodlands Civic Centre", "Punggol Waterway Point"), chat="none", weather="heavy",
-      hard="no chat at all; harassment alleged in the statement -> escalate (SAFE-1 via type)"),
+      expect={"ruling": "escalate", "flag": False}, hard="no chat at all; harassment alleged in the statement -> escalate (SAFE-1 via type)"),
     S("safe_keyword_only_in_statement", ("NUS", "Raffles Place"), chat="innocuous", statement_threat=True,
-      hard="the only hint word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="the only hint word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
     R("rd_keyword_trap_find_you", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], threat="trap",
-      hard="route dispute; rider wrote 'I'll find you at the pickup' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour: refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="route dispute; rider wrote 'I'll find you at the pickup' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour: refund"),
 ]
 
 
@@ -435,23 +454,65 @@ OFFLINE_SKIPS: dict[str, int] = {}           # scenario -> loop candidates skipp
 
 
 def _loop_from_spec(opt, cum, lp, cand):
-    """Loop dict for compose() from a loop spec and a candidate (shift, side, offset_m) or (back_km, fwd_km)."""
+    """Loop dict for compose() from a loop spec and a candidate: (shift, side, offset_m) = one via point beside the
+    stretch's middle; (shift, side, offset_m, "corridor") = two via points on a road running parallel to the stretch
+    (the car cannot be routed back onto the stretch between them, so the loop is a different way, not a spur);
+    (back_km, fwd_km) = a loop through a named place."""
     if "place" in lp:
         via = LOC[lp["place"]]
         _, along = project(via[0], via[1], opt)
         back, fwd = cand
         i1, i2 = vertex_at(opt, cum, along - back), vertex_at(opt, cum, along + fwd)
+        vias = [via]
     else:
-        shift, side, dist = cand
+        shift, side, dist = cand[:3]
         a, b = lp["frac"][0] + shift, lp["frac"][1] + shift
         L = cum[-1]
         if a * L < 0.8 or b * L > L - 0.8:
             return None
         i1, i2 = vertex_at(opt, cum, a * L), vertex_at(opt, cum, b * L)
-        via = perp_point(opt, cum, (a + b) / 2 * L, side, dist)
+        if len(cand) == 4:
+            vias = [perp_point(opt, cum, (a + CORRIDOR_INSET * (b - a)) * L, side, dist), perp_point(opt, cum, (b - CORRIDOR_INSET * (b - a)) * L, side, dist)]
+        else:
+            vias = [perp_point(opt, cum, (a + b) / 2 * L, side, dist)]
     if i2 <= i1 + 2:
         return None
-    return {"leave": opt[i1], "via": [via], "rejoin": opt[i2], "i1": i1, "i2": i2}
+    return {"leave": opt[i1], "via": vias, "rejoin": opt[i2], "i1": i1, "i2": i2}
+
+
+def loop_candidates(lp):
+    if "place" in lp:
+        return list(SPAN_CANDIDATES)
+    # corridor candidates first (they are the believable shape); the single-via ones only when no corridor fits
+    return [(sh, side, d, "corridor") for sh in FRAC_SHIFTS[:3] for side, d in OFFSET_CANDIDATES] + [(sh, side, d) for sh in FRAC_SHIFTS for side, d in OFFSET_CANDIDATES]
+
+
+def plan_from_entry(entry: dict | None, opt):
+    """The loops a published case was built with (its manifest `plan`), re-anchored on the route's vertices; None when
+    the case has no pinned plan. A rebuild with a plan never searches: the geometry is the one on record."""
+    if not entry or not entry.get("plan"):
+        return None
+    loops = []
+    for lp in entry["plan"]:
+        i1, i2 = nearest_idx(opt, tuple(lp["leave"])), nearest_idx(opt, tuple(lp["rejoin"]))
+        loops.append({"leave": opt[i1], "via": [tuple(v) for v in lp["via"]], "rejoin": opt[i2], "i1": i1, "i2": i2})
+    return loops
+
+
+def plan_of(loops) -> list[dict]:
+    return [{"leave": [round(x, 6) for x in lp["leave"]], "via": [[round(x, 6) for x in v] for v in lp["via"]], "rejoin": [round(x, 6) for x in lp["rejoin"]]} for lp in loops]
+
+
+def retrace_fraction(opt, cum, seg, trip_gps) -> float:
+    """Share (by length) of the replaced stretch that the car drove anyway during the segment: an out-and-back scores ~1."""
+    stretch = [(p, km) for p, km in zip(opt, cum) if seg["entry_km"] + 0.05 <= km <= seg["exit_km"] - 0.05]
+    inside = [(p["lat"], p["lon"]) for p in trip_gps[seg["i0"]:seg["i1"] + 1]] if "i0" in seg else []
+    if len(stretch) < 2 or not inside:
+        return 0.0
+    near = [min(haversine_m(q, g) for g in inside) <= 60 for q, _ in stretch]
+    total = sum(haversine_m(stretch[i][0], stretch[i + 1][0]) for i in range(len(stretch) - 1))
+    redriven = sum(haversine_m(stretch[i][0], stretch[i + 1][0]) for i in range(len(stretch) - 1) if near[i] and near[i + 1])
+    return redriven / total if total else 0.0
 
 
 def is_expressway(name: str) -> bool:
@@ -548,13 +609,13 @@ def _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz_level, pau
             "pause_start_s": [pause_start[j] for j in range(len(pauses_km))], "time_at": time_at, "km_at": km_at}
 
 
-def build_route(spec, rates, rp, idx, rng):
+def build_route(spec, rates, rp, idx, rng, grng):
     P, D = LOC[spec["pair"][0]], LOC[spec["pair"][1]]
     route = rp.route([P, D])
     opt = [tuple(p) for p in route["polyline"]]
     cum = along_km(opt)
     pickup_at = spec["day"]
-    approach_start, approach_s = approach_leg(rp, P, D, rng)
+    approach_start, approach_s = approach_leg(rp, P, D, grng)
     accepted = pickup_at - timedelta(seconds=approach_s + 10)
     stop_dur = {"named": 240, "unnamed": 250, "driver_errand": 240}.get(spec["stop"], 0)
     stops_spec = [(0, stop_dur)] if spec["stop"] != "none" else []
@@ -564,42 +625,67 @@ def build_route(spec, rates, rp, idx, rng):
     innocuous = consent == "none" and spec["stop"] == "none" and not spec["threat"] and rng.random() < 0.5
     car, outfit = rng.choice(CARS), rng.choice(OUTFITS)
 
-    # ---- find loops one at a time (each attempt costs at most two cached OneMap legs) ----
-    # a frac loop must replace >= MIN_REPLACED_KM of the optimal route when its story goes round a stretch (else >= MIN_REPLACED_PLAIN_KM:
-    # an out-and-back spur bypasses nothing) and drive at most MAX_DETOUR_RATIO times the stretch it replaces; among the
-    # candidates that qualify the smallest extra km wins.
+    # ---- the loops: a pinned plan (the case's own record) or a search over candidates, all loops chosen together ----
+    # A frac loop must replace >= MIN_REPLACED_KM of the optimal route when its story goes round a stretch (else
+    # >= MIN_REPLACED_PLAIN_KM: an out-and-back spur bypasses nothing), add >= MIN_EXTRA_KM, re-drive at most RETRACE_MAX
+    # of the stretch, and drive at most RATIO_HARD times it. Among the valid plans the one whose refundable extra
+    # distance is nearest the case's target amount wins (ratio above RATIO_SOFT and retracing cost score).
     # A loop through a named place is the rider's own request: the first candidate that measures cleanly is kept.
-    loops = []
-    for k, lp in enumerate(spec["loops"]):
-        cands = SPAN_CANDIDATES if "place" in lp else [(sh, side, d) for sh in FRAC_SHIFTS for side, d in OFFSET_CANDIDATES]
-        best = None
-        for cand in cands:
-            loop = _loop_from_spec(opt, cum, lp, cand)
-            if loop is None or (loops and loop["i1"] <= loops[-1]["i2"]):
-                continue
-            try:
-                trial = _try_trace(rp, route, opt, loops + [loop], pickup_at, spec, [s for s in stops_spec if s[0] <= k], cz)
-            except (ValueError, RuntimeError, AssertionError, urllib.error.HTTPError) as e:
-                if "leg not in cache" in str(e):
-                    OFFLINE_SKIPS[spec["name"]] = OFFLINE_SKIPS.get(spec["name"], 0) + 1   # reported by main(): an online run may choose this candidate
-                continue        # no clean segment, or OneMap found no route (via point in the sea / a reserve)
-            seg = trial["found"][k]
-            if "place" in lp:
-                best = (seg["extra_km"], loop)
-                break
-            need = MIN_REPLACED_KM if (k == 0 and loop_must_bypass(spec)) else MIN_REPLACED_PLAIN_KM
-            if seg["route_km"] < need or seg["driven_km"] > MAX_DETOUR_RATIO * seg["route_km"] or seg["extra_km"] < MIN_EXTRA_KM:
-                continue
-            t_entry = secs(pickup_at, datetime.fromisoformat(seg["start"]))
-            if k == 0 and cz and not crawl_reaches_segment(trial["gps"], seg["start"], cz):
-                continue        # the crawl must still be on when the measured segment starts (what the contract reads)
-            if k == 0 and (consent != "none" or spec["stop"] != "none") and t_entry < 80:
-                continue        # the chat about this loop needs room before it
-            if best is None or seg["extra_km"] < best[0]:
-                best = (seg["extra_km"], loop)
-        if best is None:
-            raise RuntimeError(f"{spec['name']}: no candidate produced loop {k}")
-        loops.append(best[1])
+    n_loops = len(spec["loops"])
+    target_km = TARGET_REFUNDS[int(hashlib.sha256(spec["name"].encode()).hexdigest(), 16) % len(TARGET_REFUNDS)] / rates["rate_per_km"]
+
+    def trial_of(loops_try, k):
+        """(score, loop, trial) for loop k of loops_try, or None when the plan is not valid."""
+        try:
+            trial = _try_trace(rp, route, opt, loops_try, pickup_at, spec, [s for s in stops_spec if s[0] <= k], cz)
+        except (ValueError, RuntimeError, AssertionError, urllib.error.HTTPError) as e:
+            if "leg not in cache" in str(e):
+                OFFLINE_SKIPS[spec["name"]] = OFFLINE_SKIPS.get(spec["name"], 0) + 1   # reported by main(): an online run may choose this candidate
+            return None        # no clean segment, or OneMap found no route (via point in the sea / a reserve)
+        seg = trial["found"][k]
+        if "place" in spec["loops"][k]:
+            return (0.0, trial)
+        need = MIN_REPLACED_KM if (k == 0 and loop_must_bypass(spec)) else MIN_REPLACED_PLAIN_KM
+        ratio = seg["driven_km"] / seg["route_km"] if seg["route_km"] else 99.0
+        if seg["route_km"] < need or seg["extra_km"] < MIN_EXTRA_KM or ratio > RATIO_HARD:
+            return None
+        measured = contract.segments(trial["gps"], opt)
+        retrace = retrace_fraction(opt, cum, measured[k], trial["gps"]) if k < len(measured) else 1.0
+        if retrace > RETRACE_MAX:
+            return None
+        if k == 0 and cz and not crawl_reaches_segment(trial["gps"], seg["start"], cz):
+            return None        # the crawl must still be on when the measured segment starts (what the contract reads)
+        t_entry = secs(pickup_at, datetime.fromisoformat(seg["start"]))
+        if k == 0 and (consent != "none" or spec["stop"] != "none") and t_entry < 80:
+            return None        # the chat about this loop needs room before it
+        so_far = sum(f["extra_km"] for f in trial["found"][:k])
+        want = target_km * (k + 1) / n_loops - so_far
+        return (abs(seg["extra_km"] - want) + 0.5 * max(0.0, ratio - RATIO_SOFT) + retrace, trial)
+
+    loops = plan_from_entry(spec.get("_entry"), opt)
+    if loops is not None:
+        for k in range(n_loops):
+            if trial_of(loops[:k + 1], k) is None:
+                raise RuntimeError(f"{spec['name']}: the pinned plan no longer builds a valid loop {k} (rebuild with --replan)")
+    else:
+        plans = [([], 0.0)]                                     # (loops so far, score so far)
+        for k, lp in enumerate(spec["loops"]):
+            nxt = []
+            for prev, sc in plans:
+                for cand in loop_candidates(lp):
+                    loop = _loop_from_spec(opt, cum, lp, cand)
+                    if loop is None or (prev and loop["i1"] <= prev[-1]["i2"]):
+                        continue
+                    r = trial_of(prev + [loop], k)
+                    if r is not None:
+                        nxt.append((prev + [loop], sc + r[0]))
+                        if "place" in lp or (r[0] <= GOOD_ENOUGH and k + 1 == n_loops):
+                            break          # the amount is within GOOD_ENOUGH km of the target: stop spending OneMap calls
+            if not nxt:
+                raise RuntimeError(f"{spec['name']}: no candidate produced loop {k}")
+            nxt.sort(key=lambda x: x[1])
+            plans = nxt[:TOP_FIRST] if k + 1 < n_loops else nxt[:1]
+        loops = plans[0][0]
 
     # ---- first pass: where the loops start in time; then the halts at which the driver types, and the final trace ----
     pauses_km, chat_plan = [], {}
@@ -634,7 +720,7 @@ def build_route(spec, rates, rp, idx, rng):
     dropoff_at = pickup_at + timedelta(seconds=total_s)
     seg_start = [datetime.fromisoformat(f["start"]) for f in found]
     gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"],
-                         pauses=[(APPROACH_PAUSE_S, 20)] if innocuous else ()) + trip_gps[1:]
+                         pauses=[(APPROACH_PAUSE_S, PAUSE_S)] if innocuous else ()) + trip_gps[1:]
     pressed = pickup_at - timedelta(seconds=10)
     service = spec["service"]
     trip = trip_block(f"T-{2000 + idx}", service, place(spec["pair"][0]), place(spec["pair"][1]), route,
@@ -654,7 +740,7 @@ def build_route(spec, rates, rp, idx, rng):
         road = stretch_roads[0]
         register_road(road, opt[loops[0]["i1"]])
         bands.append(band_on(road, cz, w0, seg_start[0], opt[loops[0]["i1"]:loops[0]["i2"] + 1]))
-    bands += gps_bands(route, legs, trip_gps, w0, w1, skip=set(stretch_roads if cz else []), max_n=2)
+    bands += gps_bands(route, legs, gps, w0, w1, skip=set(stretch_roads if cz else []), max_n=2)
     inc_kind = spec["incident"]
 
     def heading(lo, hi, road):
@@ -703,7 +789,7 @@ def build_route(spec, rates, rp, idx, rng):
     jam = stretch_roads[0].title() if stretch_roads else ""
     road = detour_road.get(0, "")
     if "ask" in chat_plan:
-        t_ask = halts[chat_plan["ask"]] + timedelta(seconds=5)
+        t_ask = halts[chat_plan["ask"]] + timedelta(seconds=TYPED_AT_S)
         if consent in ("before", "after", "before_seg1", "named_elsewhere"):
             chat_lines += [(t_ask, "driver", rng.choice(ASK_LINES).format(jam=jam, alt=road)), (t_ask + timedelta(seconds=40), "rider", rng.choice(YES_LINES))]
         elif consent in ("general", "general_cn", "general_errand"):
@@ -723,7 +809,7 @@ def build_route(spec, rates, rp, idx, rng):
             chat_lines += [(t_ask, "driver", "Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty."),
                            (t_ask + timedelta(seconds=35), "rider", "Sure, no problem.")]
     if "stop_ok" in chat_plan:
-        t_ok = halts[chat_plan["stop_ok"]] + timedelta(seconds=5)
+        t_ok = halts[chat_plan["stop_ok"]] + timedelta(seconds=TYPED_AT_S)
         if spec["stop"] == "named":
             stop_place = spec["loops"][0]["place"]
             ask = f"Can you stop at {stop_place}? I need to grab a parcel, 3-4 minutes."
@@ -733,16 +819,16 @@ def build_route(spec, rates, rp, idx, rng):
     if "threat" in chat_plan:
         t = halts[chat_plan["threat"]]
         chat_lines += [(t - timedelta(seconds=40), "rider", "Why are we going this way? This is not the route on the app."),
-                       (t + timedelta(seconds=5), "driver", "Shut up and let me drive.")]
+                       (t + timedelta(seconds=TYPED_AT_S), "driver", "Shut up and let me drive.")]
     elif spec["threat"] == "trap":
         t = accepted + timedelta(seconds=60)
         line = f"I'll find you {PICKUP_SPOT.get(spec['pair'][0], 'at the main entrance')}, I am in a red jacket."
         chat_lines += [(t, "rider", line)]
     if innocuous:
         t = accepted + timedelta(seconds=50)
-        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + 5)) / 60))
+        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + TYPED_AT_S)) / 60))
         chat_lines += [(t, "rider", rng.choice(PICKUP_LINES).format(spot=PICKUP_SPOT.get(spec["pair"][0], "at the main entrance"), outfit=outfit)),
-                       (accepted + timedelta(seconds=APPROACH_PAUSE_S + 5), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=car))]
+                       (accepted + timedelta(seconds=APPROACH_PAUSE_S + TYPED_AT_S), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=car))]
     chat_lines.sort(key=lambda x: x[0])
     for t, _, _ in chat_lines:
         assert accepted <= t <= dropoff_at, f"{spec['name']}: chat at {t} outside the trip"
@@ -859,13 +945,13 @@ def build_route(spec, rates, rp, idx, rng):
         case["gps"] = gps
         found = measure_detours(slice_gps(gps, iso(pickup_at), iso(dropoff_at)), opt)   # the manifest shows the segments the fact tool will see
     meta = {"segments": found, "stretch_roads": stretch_roads, "detour_roads": detour_road, "exempt_by_scenario": exempt_by_scenario,
-            "finding_by_scenario": finding_by_scenario, "extra_km": round(extra_km, 2), "stop_place": stop_place}
+            "finding_by_scenario": finding_by_scenario, "extra_km": round(extra_km, 2), "stop_place": stop_place, "plan": plan_of(loops)}
     return case, meta
 
 
 # ----------------------------------------------------------------------------------------------- no-show cases
 
-def build_noshow(spec, rates, rp, idx, rng):
+def build_noshow(spec, rates, rp, idx, rng, grng):
     P, D = LOC[spec["pair"][0]], LOC[spec["pair"][1]]
     route = rp.route([P, D])
     accepted = spec["day"]
@@ -875,7 +961,7 @@ def build_noshow(spec, rates, rp, idx, rng):
     pressed = None
     if by == "driver":
         park_m = spec["park_m"]
-        away = (bearing(D, P) + rng.uniform(-30, 30)) % 360          # park on the far side from the destination
+        away = (bearing(D, P) + grng.uniform(-30, 30)) % 360          # park on the far side from the destination
         spot = offset(P, away, park_m) if park_m > 0 else P
         wait_s = spec.get("wait_s") or spec["within_s"]
 
@@ -885,7 +971,7 @@ def build_noshow(spec, rates, rp, idx, rng):
                                                stops=[Stop(*spot, start_s=approach_s, duration_s=wait, jitter_m=2.0,
                                                            anchor_s=60, away_from=P if park_m > 200 else None)], seed=spec["seed"])
         for att in range(12):
-            start = offset(spot, (away + rng.uniform(-70, 70)) % 360, rng.choice([800, 1000, 1200]))
+            start = offset(spot, (away + grng.uniform(-70, 70)) % 360, grng.choice([800, 1000, 1200]))
             try:
                 approach = rp.route([start, spot])
             except urllib.error.HTTPError:
@@ -975,7 +1061,7 @@ def build_noshow(spec, rates, rp, idx, rng):
         if spec["driver"] == "en_route":
             drive_km = 30.0 / 3600 * cancel_s          # 30 km/h; the driver is still on the way when the rider cancels
             for _ in range(12):
-                start = offset(P, (bearing(D, P) + rng.uniform(-30, 30)) % 360, 2600)
+                start = offset(P, (bearing(D, P) + grng.uniform(-30, 30)) % 360, 2600)
                 approach = rp.route([start, P])
                 full = [tuple(p) for p in approach["polyline"]]
                 cum = along_km(full)
@@ -989,9 +1075,9 @@ def build_noshow(spec, rates, rp, idx, rng):
                 raise RuntimeError(f"{spec['name']}: no approach route that brings the driver closer in {cancel_s} s")
             # the driver answers the rider's question at a halt (a junction about a minute into the drive), not while driving
             halt_s = 60 if cancel_s > 120 else None
-            gps = build_trajectory(poly, accepted, cancel_s, stops=pause_stops(poly, cancel_s - 20, [(halt_s, 20)]) if halt_s else (), seed=spec["seed"])
+            gps = build_trajectory(poly, accepted, cancel_s, stops=pause_stops(poly, cancel_s - PAUSE_S, [(halt_s, PAUSE_S)]) if halt_s else (), seed=spec["seed"])
             chat_lines = [(accepted + timedelta(seconds=40), "rider", rng.choice(HOW_LONG_LINES)),
-                          (accepted + timedelta(seconds=halt_s + 5), "driver", rng.choice(ETA_LINES))] if halt_s else []
+                          (accepted + timedelta(seconds=halt_s + TYPED_AT_S), "driver", rng.choice(ETA_LINES))] if halt_s else []
             statement = ("The driver was still far away after more than 3 minutes so I cancelled and booked another ride, and got charged $6.61."
                          if cancel_s > 180 else
                          rng.choice(["I cancelled within 3 minutes because the driver was nowhere near, and still got charged $6.61.",
@@ -999,13 +1085,13 @@ def build_noshow(spec, rates, rp, idx, rng):
             dstmt = rng.choice(ON_WAY_LINES)
         else:  # driver parked at the pin, rider cancels late
             spot = offset(P, (bearing(D, P)) % 360, 40)
-            for _ in range(12):
-                start = offset(spot, (bearing(D, P) + rng.uniform(-70, 70)) % 360, 700)
+            for att in range(24):
+                start = offset(spot, (bearing(D, P) + grng.uniform(-70, 70) + (180 if att >= 12 else 0)) % 360, grng.choice([500, 700, 900]))
                 try:
                     approach = rp.route([start, spot])
                 except urllib.error.HTTPError:
                     continue
-                if approach["total_km"] <= 1.6:
+                if approach["total_km"] <= 1.8:
                     break
             else:
                 raise RuntimeError(f"{spec['name']}: no short approach to the pickup")
@@ -1050,12 +1136,12 @@ def build_noshow(spec, rates, rp, idx, rng):
 
 # ----------------------------------------------------------------------------------------------- safety cases
 
-def build_safety(spec, rates, rp, idx, rng):
+def build_safety(spec, rates, rp, idx, rng, grng):
     P, D = LOC[spec["pair"][0]], LOC[spec["pair"][1]]
     route = rp.route([P, D])
     opt = [tuple(p) for p in route["polyline"]]
     pickup_at = spec["day"]
-    approach_start, approach_s = approach_leg(rp, P, D, rng)
+    approach_start, approach_s = approach_leg(rp, P, D, grng)
     accepted = pickup_at - timedelta(seconds=approach_s + 10)
     drive_s = r5(along_km(opt)[-1] / avg_speed(route) * 3600)
     kind = spec["chat"]
@@ -1070,7 +1156,7 @@ def build_safety(spec, rates, rp, idx, rng):
     dropoff_at = pickup_at + timedelta(seconds=total_s)
     trip_gps = build_trajectory(opt, pickup_at, total_s, stops=pause_stops(opt, drive_s, pauses), seed=spec["seed"])
     gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"],
-                         pauses=[(APPROACH_PAUSE_S, 20)] if kind == "innocuous" else ()) + trip_gps[1:]
+                         pauses=[(APPROACH_PAUSE_S, PAUSE_S)] if kind == "innocuous" else ()) + trip_gps[1:]
     service = spec["service"]
     trip = trip_block(f"T-{2000 + idx}", service, place(spec["pair"][0]), place(spec["pair"][1]), route,
                       accepted - timedelta(seconds=35), accepted, gps, pickup_at - timedelta(seconds=10), pickup_at, dropoff_at)
@@ -1078,19 +1164,19 @@ def build_safety(spec, rates, rp, idx, rng):
     filed_by = "rider"
     if kind == "driver_threat":
         chat_lines = [(halt - timedelta(seconds=40), "rider", "Please stop the car, I want to get out here."),
-                      (halt + timedelta(seconds=5), "driver", "Sit down or I lock the doors.")]
+                      (halt + timedelta(seconds=TYPED_AT_S), "driver", "Sit down or I lock the doors.")]
         statement = "The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride."
         dstmt = "The rider tried to open the door at the lights. I told her to sit down for her own safety and drove on."
     elif kind == "rider_threat":
-        chat_lines = [(halt + timedelta(seconds=5), "driver", "Please do not smoke in the car."),
+        chat_lines = [(halt + timedelta(seconds=TYPED_AT_S), "driver", "Please do not smoke in the car."),
                       (halt + timedelta(seconds=45), "rider", "Say that again and I will punch you.")]
         filed_by = "driver"
         statement = "The passenger threatened to punch me when I asked him not to smoke. I want this reported."
         dstmt = "I asked the passenger politely not to smoke in the car; he said he would punch me if I said it again. I kept driving and did not answer him."
     elif kind == "innocuous":
-        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + 5)) / 60))
+        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + TYPED_AT_S)) / 60))
         chat_lines = [(accepted + timedelta(seconds=50), "rider", rng.choice(PICKUP_LINES).format(spot=PICKUP_SPOT.get(spec["pair"][0], "at the main entrance"), outfit=rng.choice(OUTFITS))),
-                      (accepted + timedelta(seconds=APPROACH_PAUSE_S + 5), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=rng.choice(CARS)))]
+                      (accepted + timedelta(seconds=APPROACH_PAUSE_S + TYPED_AT_S), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=rng.choice(CARS)))]
         statement = "The driver was speeding and braking hard the whole way, overtaking on the shoulder. I was scared and felt unsafe."
         dstmt = "I drove normally. The rider was on the phone the whole trip and never complained to me."
         if spec.get("statement_threat"):
@@ -1100,7 +1186,7 @@ def build_safety(spec, rates, rp, idx, rng):
         statement = "The driver kept making comments about my body and asked for my number. I felt harassed and unsafe."
         dstmt = "I made small talk. Nothing inappropriate happened."
     fare = metered_fare(slice_gps(gps, iso(pickup_at), iso(dropoff_at)), rates) if service == "RydeTAXI" else fixed_fare(route, rates)
-    bands = gps_bands(route, [], trip_gps, accepted - timedelta(minutes=5), dropoff_at + timedelta(minutes=5), max_n=2)
+    bands = gps_bands(route, [], gps, accepted - timedelta(minutes=5), dropoff_at + timedelta(minutes=5), max_n=2)
     r_prof = (rng.randint(120, 1500), round(rng.uniform(4.5, 5.0), 1), 0, 0, 0, 0)
     d_prof = (rng.randint(300, 2400), round(rng.uniform(4.6, 4.95), 2), rng.randint(300, 1300), 0, 0, 0, 0)
     filed_at = dropoff_at + timedelta(minutes=rng.randint(5, 40))
@@ -1225,31 +1311,31 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
 BLIND_SEED = 20261010
 BLIND_SCENARIOS = [
     R("bl_general_consent", ("Bugis Junction", "Changi Airport T3"), loops=[{"frac": (0.40, 0.58)}], consent="general", band=2,
-      hard="'whichever way is faster lah': a general route choice covers the loop round the jam -> exempt, no refund"),
+      expect={"ruling": "no_action", "flag": False}, hard="'whichever way is faster lah': a general route choice covers the loop round the jam -> exempt, no refund"),
     R("bl_general_consent_cn", ("Toa Payoh HDB Hub", "Changi City Point"), loops=[{"frac": (0.42, 0.60)}], consent="general_cn", band=2,
-      hard="Chinese general route choice ('哪条快走哪条') -> exempt, no refund"),
+      expect={"ruling": "no_action", "flag": False}, hard="Chinese general route choice ('哪条快走哪条') -> exempt, no refund"),
     R("bl_general_errand", ("AMK Hub", "VivoCity"), loops=[{"frac": (0.38, 0.55)}], consent="general_errand", stop="driver_errand", band=2,
-      hard="general route choice, but the driver stops 4 min inside the loop for his own errand -> the segment is the driver's errand, counts"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="general route choice, but the driver stops 4 min inside the loop for his own errand -> the segment is the driver's errand, counts"),
     R("bl_negation", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.30, 0.50)}], consent="negation",
-      hard="'No, I'm not okay with that, stay on X': a refusal, driver went anyway -> counts"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="'No, I'm not okay with that, stay on X': a refusal, driver went anyway -> counts"),
     R("bl_named_singlish", ("Pasir Ris MRT", "Suntec City"), loops=[{"frac": (0.36, 0.54)}], consent="named_singlish", band=2,
-      hard="'Can lah, go ahead' to a named road, nothing ties the driven segment to that road (G13) -> undetermined, a person decides"),
+      expect={"ruling": "escalate", "flag": False}, hard="'Can lah, go ahead' to a named road, nothing ties the driven segment to that road (G13) -> undetermined, a person decides"),
     R("bl_named_cn", ("Hougang Mall", "Changi Airport T3"), loops=[{"frac": (0.48, 0.66)}], consent="named_cn", band=2,
-      hard="Chinese agreement to a named road ('可以，走 X 吧'), nothing ties the segment to it (G13) -> undetermined, a person decides"),
+      expect={"ruling": "escalate", "flag": False}, hard="Chinese agreement to a named road ('可以，走 X 吧'), nothing ties the segment to it (G13) -> undetermined, a person decides"),
     R("bl_named_elsewhere", ("Compass One", "Kallang Wave Mall"), loops=[{"frac": (0.40, 0.58)}], consent="named_elsewhere", band=2,
-      hard="agreed to road X; the driver's own account says he went by another road -> the agreement does not cover it, counts"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="agreed to road X; the driver's own account says he went by another road -> the agreement does not cover it, counts"),
     R("bl_gps_tail_missing", ("Sentosa Beach Station", "Clarke Quay"), loops=[{"frac": (0.55, 0.72)}], gps_tail_cut_s=240,
-      hard="the trace ends 4 min before drop-off: the last stretch cannot be measured (G12) -> escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="the trace ends 4 min before drop-off: the last stretch cannot be measured (G12) -> escalate"),
     N("bl_record_threshold_7m50", ("Junction 8", "Jurong Point"), by="driver", park_m=40, wait_s=490, here=True,
       policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
-      hard="record states an 8-min no-show threshold; 7:50 does not reach it (free wait 5 min is not the threshold) -> refund_full $5.00"),
+      expect={"ruling": "refund_full", "flag": False}, hard="record states an 8-min no-show threshold; 7:50 does not reach it (free wait 5 min is not the threshold) -> refund_full $5.00"),
     N("bl_record_threshold_8m10", ("NEX Serangoon", "VivoCity"), by="driver", park_m=40, wait_s=510, here=True,
       policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
-      hard="record states an 8-min no-show threshold; 8:10 reaches it -> no_action"),
+      expect={"ruling": "no_action", "flag": False}, hard="record states an 8-min no-show threshold; 8:10 reaches it -> no_action"),
     N("bl_hole_in_wait", ("Buona Vista MRT", "Suntec City"), by="driver", park_m=40, wait_s=300, here=True, gps_hole_s=200,
-      hard="the trace has a 200 s hole during the wait: the time between two samples is not a measured wait (G12) -> escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="the trace has a 200 s hole during the wait: the time between two samples is not a measured wait (G12) -> escalate"),
     N("bl_cancelled_by_missing", ("Toa Payoh HDB Hub", "Pasir Ris MRT"), by="driver", park_m=40, wait_s=300, here=True, recorded_by=None,
-      hard="cancelled_by is not on record: NS-1 and NS-4 cannot be told apart (G12) -> escalate"),
+      expect={"ruling": "escalate", "flag": False}, hard="cancelled_by is not on record: NS-1 and NS-4 cannot be told apart (G12) -> escalate"),
 ]
 
 
@@ -1259,11 +1345,10 @@ BLIND_SCENARIOS = [
 # and record every changed answer in data/bench/REFERENCE_CHANGES.md (what the gap is and why it moves the outcome).
 REFERENCE_VERSION = "2026-10-10 v3: agreement to a named road needs a record tying the driven segment to it (G13); otherwise undetermined, and a person decides when it changes the outcome"
 
-def validate_bench(case_dict: dict, spec: dict, rates, clauses) -> list[str]:
-    validate.EXPECTED_DIR = EXPECTED_DIR
+def validate_bench(case_dict: dict, spec: dict, rates, clauses, expected: dict | None = None) -> list[str]:
     if spec.get("gps_tail_cut_s"):
         return []        # the trace deliberately ends early; the format checks assume a complete trip
-    errs = validate.check_case(case_dict, rates, clauses)
+    errs = validate.check_case(case_dict, rates, clauses, expected)
     if spec.get("policy"):
         errs = [e for e in errs if "policy_params" not in e and "cancellation fare" not in e]   # record-stated parameters (the organisers' format)
     if spec.get("gps_hole_s"):
@@ -1288,70 +1373,105 @@ def validate_bench(case_dict: dict, spec: dict, rates, clauses) -> list[str]:
     return errs
 
 
-def main(limit: int | None = None, blind: bool = False):
-    global BENCH_DIR, CASES_DIR, EXPECTED_DIR
-    seed, prefix, specs_all = (BLIND_SEED, "X-", BLIND_SCENARIOS) if blind else (SEED, "B-", SCENARIOS)
-    if blind:
-        BENCH_DIR = os.path.join(ROOT, "data", "bench", "blind")
-        CASES_DIR, EXPECTED_DIR = os.path.join(BENCH_DIR, "cases"), os.path.join(BENCH_DIR, "expected")
-    rng0 = random.Random(seed)
-    rates = load_rates()
-    clauses = validate.policy_clauses()
-    rp = routes()
-    for d in (CASES_DIR, EXPECTED_DIR):
-        os.makedirs(d, exist_ok=True)
-        for old in os.listdir(d):          # a renumbered scenario must not leave a stale case behind
-            if old.startswith(prefix) and old.endswith(".json"):
-                os.remove(os.path.join(d, old))
-    # two cases a day; both sets end before 2026-10-10 (the day the reference rules were frozen and the sets were built)
+def dated(i: int, blind: bool) -> datetime:
+    """The pickup / acceptance time of the i-th scenario of a set: two cases a day, both sets end before 2026-10-10 (the day
+    the reference rules were frozen and the sets were built). Fixed by position, so a case keeps its date for ever."""
     day0 = datetime(2026, 10, 3, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 1, 8, 0, 0, tzinfo=SGT)
     hours = [8, 9, 12, 14, 17, 18, 21, 22]
-    manifest, failures = [], []
-    specs = specs_all[:limit] if limit else specs_all
-    for i, spec in enumerate(specs, 1):
-        spec = dict(spec)
-        spec["case_id"] = f"{prefix}{i:04d}"
-        spec["seed"] = seed + i
-        spec["day"] = (day0 + timedelta(days=i // 2)).replace(hour=hours[i % len(hours)], minute=(i * 7) % 60, second=0)
-        rng = random.Random(seed * 7 + i)
-        builder = {"route_deviation": build_route, "no_show": build_noshow, "safety": build_safety}[spec["kind"]]
-        try:
-            case, meta = builder(spec, rates, rp, i, rng)
-            truth = derive_truth(case, spec, meta)
-            expected = {k: v for k, v in truth.items() if not k.startswith("_")}
-            # the gate: the record must tell the scenario's story and the label must promise the reference answer.
-            # A case that fails is NOT written (no retry that changes the story); the run reports it and exits 1.
-            broken = contract.check(case, contract.contract_for(spec, LOC)) + contract.check_label(spec["hard"], expected)
-            if broken:
-                raise contract.ContractError(f"{spec['case_id']} {spec['name']} refused: " + " | ".join(broken))
-            with open(os.path.join(EXPECTED_DIR, f"{spec['case_id']}.json"), "w") as f:
-                json.dump(expected, f, indent=2, ensure_ascii=False)
-                f.write("\n")
-            dump(case, os.path.join(CASES_DIR, f"{spec['case_id']}.json"))
-            errs = validate_bench(case, spec, rates, clauses)
-            if errs:
-                failures.append((spec["case_id"], spec["name"], errs))
-            cond = {k: v for k, v in spec.items() if k not in ("seed", "day", "case_id", "name", "kind", "hard", "pair")}
-            manifest.append({
-                "case_id": spec["case_id"], "name": spec["name"], "type": spec["kind"], "pair": list(spec["pair"]),
-                "conditions": cond, "truth": expected, "hard": spec["hard"],
-                "segments": meta.get("segments", []), "stretch_roads": meta.get("stretch_roads", []),
-                "certificate": truth["_cert"], "validate_errors": errs,
-            })
-            seg = "".join(f" seg +{s['extra_km']:.2f}km" for s in meta.get("segments", []))
-            print(f"{spec['case_id']} {spec['name']:36} {expected['ruling']:14} {expected['amount'] or '':>6} flag={expected['flag_account']!s:5}{seg} {'FAIL ' + str(errs) if errs else 'ok'}")
-        except Exception as e:  # noqa: BLE001
-            failures.append((spec["case_id"], spec["name"], [f"{type(e).__name__}: {e}"]))
-            print(f"{spec['case_id']} {spec['name']:36} BUILD FAILED {type(e).__name__}: {e}")
-    with open(os.path.join(BENCH_DIR, "manifest.json"), "w") as f:
+    return (day0 + timedelta(days=i // 2)).replace(hour=hours[i % len(hours)], minute=(i * 7) % 60, second=0)
+
+
+def build_one(spec_in: dict, i: int, blind: bool, rates, clauses, rp, entry: dict | None = None) -> dict:
+    """Build the i-th scenario of a set in memory and run every gate. Returns {"case", "expected", "entry"}; raises
+    ContractError (record does not tell its story, label does not promise the reference, format check failed) or the
+    builder's own error. Nothing is written here."""
+    prefix, ns = ("X-", "blind") if blind else ("B-", "bench")
+    spec = dict(spec_in)
+    spec["case_id"] = f"{prefix}{i:04d}"
+    ident = identity(ns, spec["name"])
+    spec["seed"] = ident["noise"]
+    spec["day"] = dated(i, blind)
+    spec["_entry"] = entry             # the published entry: its pinned loop plan is reused, so a rebuild never searches
+    builder = {"route_deviation": build_route, "no_show": build_noshow, "safety": build_safety}[spec["kind"]]
+    case, meta = builder(spec, rates, rp, i, ident["text"], ident["geo"])
+    truth = derive_truth(case, spec, meta)
+    expected = {k: v for k, v in truth.items() if not k.startswith("_")}
+    # the gates: the record tells the scenario's story, the independent derivation (reference.py, no engine) agrees with
+    # the engine's reading, the scenario's `expect` promises that answer, the format holds.
+    broken = contract.check(case, contract.contract_for(spec, LOC))
+    cond = {k: v for k, v in spec.items() if k not in ("seed", "day", "case_id", "name", "kind", "hard", "pair", "_entry", "expect")}
+    ind = reference.derive_reference(case, cond, spec["kind"])
+    if ind["ruling"] != expected["ruling"] or bool(ind["flag_account"]) != bool(expected["flag_account"]) \
+            or abs((ind["amount"] or 0) - (expected["amount"] or 0)) > 0.015:
+        broken.append(f"engine and independent derivation disagree: engine {expected['ruling']} {expected['amount']} flag={expected['flag_account']}, "
+                      f"reference.py {ind['ruling']} {ind['amount']} flag={ind['flag_account']}")
+    broken += contract.check_expect(spec.get("expect"), expected) if spec.get("expect") else contract.check_label(spec["hard"], expected)
+    broken += validate_bench(case, spec, rates, clauses, expected)
+    broken += lint.lint_case(case)
+    if broken:
+        raise contract.ContractError(f"{spec['case_id']} {spec['name']} refused: " + " | ".join(broken))
+    entry = {"case_id": spec["case_id"], "name": spec["name"], "type": spec["kind"], "pair": list(spec["pair"]),
+             "conditions": cond, "truth": expected, "hard": spec["hard"],
+             "segments": meta.get("segments", []), "stretch_roads": meta.get("stretch_roads", []),
+             "certificate": truth["_cert"], "validate_errors": [], "identity": IDENTITY_VERSION, "plan": meta.get("plan", [])}
+    return {"case": case, "expected": expected, "entry": entry}
+
+
+def publish(bundles: list[dict], blind: bool) -> None:
+    """Write the built cases: case and expected files first, the manifest last, merged by case id with what is already
+    there. Cases not in `bundles` are untouched."""
+    bench = os.path.join(ROOT, "data", "bench", "blind") if blind else os.path.join(ROOT, "data", "bench")
+    cases_dir, expected_dir = os.path.join(bench, "cases"), os.path.join(bench, "expected")
+    for d in (cases_dir, expected_dir):
+        os.makedirs(d, exist_ok=True)
+    seed = BLIND_SEED if blind else SEED
+    mpath = os.path.join(bench, "manifest.json")
+    old = json.load(open(mpath)) if os.path.exists(mpath) else {"cases": []}
+    by_id = {c["case_id"]: c for c in old["cases"]}
+    for b in bundles:
+        cid = b["entry"]["case_id"]
+        with open(os.path.join(expected_dir, f"{cid}.json"), "w") as f:
+            json.dump(b["expected"], f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        dump(b["case"], os.path.join(cases_dir, f"{cid}.json"))
+        by_id[cid] = b["entry"]
+    with open(mpath, "w") as f:
         json.dump({"seed": seed, "generated_by": "data/synth/scenarios.py" + (" --blind (held out: written after the 2026-10-10 prompt freeze, never used for tuning)" if blind else ""),
-                   "reference_version": REFERENCE_VERSION, "cases": manifest}, f, indent=1, ensure_ascii=False)
+                   "reference_version": REFERENCE_VERSION, "cases": [by_id[k] for k in sorted(by_id)]}, f, indent=1, ensure_ascii=False)
+
+
+def main(names: list[str] | None = None, blind: bool = False, limit: int | None = None, replan: bool = False) -> int:
+    """Build every scenario of a set (or only `names`), then publish the ones that passed. A scenario that fails leaves
+    its committed files exactly as they were; the run prints why and exits 1."""
+    specs_all = BLIND_SCENARIOS if blind else SCENARIOS
+    seen = [x["name"] for x in specs_all]
+    assert len(seen) == len(set(seen)), "duplicate scenario names"
+    if names:
+        unknown = [n for n in names if n not in seen]
+        assert not unknown, f"unknown scenario(s): {unknown}"
+    todo = [(i, sp) for i, sp in enumerate(specs_all, 1) if (not names or sp["name"] in names) and (not limit or i <= limit)]
+    rates, clauses, rp = load_rates(), validate.policy_clauses(), routes()
+    mpath = os.path.join(ROOT, "data", "bench", "blind" if blind else "", "manifest.json")
+    published = {c["name"]: c for c in json.load(open(mpath))["cases"]} if os.path.exists(mpath) else {}
+    built, failures = [], []
+    for i, spec in todo:
+        try:
+            b = build_one(spec, i, blind, rates, clauses, rp, None if replan else published.get(spec["name"]))
+            built.append(b)
+            e = b["entry"]
+            seg = "".join(f" seg +{s['extra_km']:.2f}km" for s in e["segments"])
+            print(f"{e['case_id']} {e['name']:36} {e['truth']['ruling']:14} {e['truth']['amount'] or '':>6} flag={e['truth']['flag_account']!s:5}{seg} ok")
+        except Exception as e:  # noqa: BLE001
+            failures.append((f"{'X' if blind else 'B'}-{i:04d}", spec["name"], f"{type(e).__name__}: {e}"))
+            print(f"{'X' if blind else 'B'}-{i:04d} {spec['name']:36} BUILD FAILED {type(e).__name__}: {e}")
+    if built:
+        publish(built, blind)
     by_type = {}
-    for m in manifest:
-        by_type[m["type"]] = by_type.get(m["type"], 0) + 1
-    print(f"\n{len(manifest)} cases written: {by_type}; {len(failures)} failure(s)")
-    for cid, name, errs in failures:
-        print(f"  {cid} {name}: {errs}")
+    for b in built:
+        by_type[b["entry"]["type"]] = by_type.get(b["entry"]["type"], 0) + 1
+    print(f"\n{len(built)} case(s) written: {by_type}; {len(failures)} failure(s) (their committed files are untouched)")
+    for cid, name, err in failures:
+        print(f"  {cid} {name}: {err}")
     if OFFLINE_SKIPS:
         print("offline run: loop candidates skipped because their OneMap leg is not cached (a run with a token may choose one of them "
               "and produce different geometry): " + ", ".join(f"{k} x{v}" for k, v in sorted(OFFLINE_SKIPS.items())))
@@ -1359,5 +1479,11 @@ def main(limit: int | None = None, blind: bool = False):
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a != "--blind"]
-    sys.exit(main(int(args[0]) if args else None, blind="--blind" in sys.argv))
+    argv = sys.argv[1:]
+    sel = None
+    if "--case" in argv:
+        k = argv.index("--case")
+        sel = argv[k + 1].split(",")
+        del argv[k:k + 2]
+    rest = [a for a in argv if a not in ("--blind", "--replan")]
+    sys.exit(main(sel, blind="--blind" in sys.argv, limit=int(rest[0]) if rest else None, replan="--replan" in sys.argv))

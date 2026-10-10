@@ -57,11 +57,12 @@ class Run:
 RUNS: dict[str, Run] = {}
 
 
-BENCH_DIR = ROOT / "data" / "bench" / "cases"   # the 49 benchmark cases replay on the map too (no stored court run; use Run live)
+BENCH_DIR = ROOT / "data" / "bench" / "cases"   # the benchmark cases replay on the map too (no stored court run; use Run live)
+BLIND_DIR = ROOT / "data" / "bench" / "blind" / "cases"
 
 
 def load_case(cid: str) -> Case:
-    for d in (CASES_DIR, BENCH_DIR):
+    for d in (CASES_DIR, BENCH_DIR, BLIND_DIR):
         p = d / f"{cid}.json"
         if p.exists():
             return Case.model_validate(json.loads(p.read_text()))
@@ -72,8 +73,11 @@ def bench_titles() -> dict:
     """Plain-language scenario title per benchmark case id (same map the ops page uses)."""
     try:
         from bench.ops_page import SCENARIO, humanize
-        man = json.loads((ROOT / "data" / "bench" / "manifest.json").read_text())
-        return {c["case_id"]: SCENARIO.get(c["name"], humanize(c["name"])) for c in man["cases"]}
+        out = {}
+        for m in (ROOT / "data" / "bench" / "manifest.json", ROOT / "data" / "bench" / "blind" / "manifest.json"):
+            if m.exists():
+                out.update({c["case_id"]: SCENARIO.get(c["name"], humanize(c["name"])) for c in json.loads(m.read_text())["cases"]})
+        return out
     except Exception:  # noqa: BLE001
         return {}
 
@@ -82,7 +86,7 @@ def bench_titles() -> dict:
 def list_cases():
     """Demo cases (group 'demo') followed by the benchmark cases (group 'benchmark'); every one is replayable."""
     out, titles = [], bench_titles()
-    for group, d, pat in (("demo", CASES_DIR, "C-*.json"), ("sample", CASES_DIR, "DISP-*.json"), ("benchmark", BENCH_DIR, "B-*.json")):
+    for group, d, pat in (("demo", CASES_DIR, "C-*.json"), ("sample", CASES_DIR, "DISP-*.json"), ("benchmark", BENCH_DIR, "B-*.json"), ("held-out", BLIND_DIR, "X-*.json")):
         for p in sorted(d.glob(pat)):
             c = json.loads(p.read_text())
             title = titles.get(c["case_id"]) or (f"Organisers' sample · {c['dispute']['type'].replace('_', ' ')}" if group == "sample" else None)

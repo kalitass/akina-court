@@ -166,8 +166,8 @@ feedEvents.sort((a,b) => a.t - b.t);
 // ---------------- HUD ----------------
 (function hud(){
   const sel = $('caseSel');
-  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')]];
-  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = c.group === 'benchmark' && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
+  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')], [`Held-out set · ${cases.filter(c => c.group === 'held-out').length} cases`, cases.filter(c => c.group === 'held-out')]];
+  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = (c.group === 'benchmark' || c.group === 'held-out') && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
   if (!cases.some(c => c.case_id === CID)) { const o = el('option', '', CID); o.value = CID; o.selected = true; sel.appendChild(o); }
   sel.onchange = () => { const q = new URLSearchParams(); q.set('case', sel.value); if (THEME === 'light') q.set('theme', 'light'); location.search = q.toString(); };
   const TYPE = { route_deviation:['Route deviation','amber'], no_show:['No-show','purple'], safety:['Safety','red'] }[C.type] || [C.type, ''];

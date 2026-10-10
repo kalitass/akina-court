@@ -593,6 +593,21 @@ def label_implications(hard: str) -> dict:
     return out
 
 
+def check_expect(expect: dict, truth: dict) -> list[str]:
+    """The scenario's typed promise against the reference: {"ruling": "refund_partial" | "no_action" | "refund_full" |
+    "escalate", "flag": bool}. It checks the derived answer; it never feeds it."""
+    errs = []
+    if expect.get("ruling") not in ("refund_partial", "no_action", "refund_full", "escalate"):
+        errs.append(f"expect.ruling {expect.get('ruling')!r} is not an outcome")
+    elif truth["ruling"] != expect["ruling"]:
+        errs.append(f"expect promises {expect['ruling']} but the reference ruling is {truth['ruling']}")
+    if expect.get("ruling") in ("no_action", "escalate") and truth.get("amount"):
+        errs.append(f"expect promises no amount but the reference carries {truth['amount']}")
+    if "flag" in expect and bool(truth.get("flag_account")) != bool(expect["flag"]):
+        errs.append(f"expect says flag={expect['flag']} but the reference flag_account is {truth.get('flag_account')}")
+    return errs
+
+
 def check_label(hard: str, truth: dict) -> list[str]:
     """The `hard` label's promised outcome against the reference (ruling, amount, flag)."""
     imp = label_implications(hard)
