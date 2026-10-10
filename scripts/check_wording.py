@@ -18,7 +18,7 @@ FILES = ["web/index.html", "web/i18n.zh.js", "web/ops.html", "web/policy.html", 
 STALE = [
     (r"法庭 \*\*95\.9|court 95\.9|95\.9 / 95\.9|\*\*95\.9%\*\*", "pre-rerun court accuracy"),
     (r"0\s*/\s*412", "pre-rerun citation count"),
-    (r"\b343\b", "run count before the judge_only arm (392 case-system runs now)"),
+    (r"343 (?:LLM|case-system|stored) runs", "run count before the judge_only arm"),
     (r"100% accurate|100% correct", "say 'matched the policy-derived reference 49/49', not accurate/correct"),
     (r"三臂", "there are four arms now (raw, facts_only, judge_only, court)"),
     (r"人工标准答案|human-labell?ed (reference|answers|truth)|hand-labelled (reference|answers|truth)", "reference answers are policy-derived, not human-labelled"),

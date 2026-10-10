@@ -4,18 +4,19 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:49:45.279325+00:00",
+ "ts": "2026-10-10T13:26:11.844830+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send the file to a human reviewer: confirm the driver's route breach on segment F3 (3.75 extra km) and the meter-distance refund of $5.29, and separately review Chat #2 [F8] \"Shut up and let me drive\" for abuse of a passenger under the Code of Conduct before any refund executes. No account flag (RD-6 threshold not met, F16).",
-  "confidence": 0.78,
+  "recommended_action": "Hold the automatic distance refund; route the case to a Ryde human reviewer for the SAFE-1 abuse finding on F9 (driver telling the rider to shut up), and include the route-deviation fare computation (5.14 km × $1.4102/km = $7.25 voucher) in the file so the human can execute the refund of $7.25 once the account/conduct review is concluded.",
+  "confidence": 0.8,
+  "reasoning": "Route: the trip is RydeTAXI, metered, so detour kilometres flow into the fare, and the trace settles that exactly one off-route segment exists, F3 (09:00–09:11, 6.89 km driven against 1.75 km optimal, +5.14 km, up to 1481 m off the optimal route) [F3][RD-1]. No exemption is available: the trace fails RD-4(a) (no incident recorded near the route, F14; the only traffic records are PIE band 5 and KPE band 4, F12, F13, neither band 1 nor 2, which under RD-4(b) cannot exempt on its own, and the driver expressly does not press congestion) [F12][F13][F14][RD-4]. The driver's post-trip \"the GPS rerouted\" is a statement, not traffic evidence or consent (G11) [F11][RD-4][RD-5].\n\nConsent: RD-3 is inapplicable — no rider-requested stop is measured in the segment, so RD-3(a)/(b) give the driver nothing [F3][RD-3]. On RD-5, the chat is complete and fully timestamped (F10) and the only rider message is at 09:04, after the segment began at 09:00, asking why the route differed (F8); the driver's 09:05 reply is not consent (F9); and no driver-proposed route agreement exists in the record [F8][F9][F10][F11][RD-5]. Scope therefore reads as \"no agreement before the segment\" — counts, and the segment is un-exempt [F3][RD-5].\n\nAmount, per the trace's formula: non-exempt extra_km × this trip's rate (fare.distance_fare ÷ fare.distance_km) = 5.14 km × $1.4102/km = $7.2484 → $7.25; the rate is the fare record's own figure (F4 prices 5.55 km at $1.4102/km) and only F3's attributed 5.14 km is claimed [F3][F4][RD-2]. The dissimilarity with the fare-side 5.55 km is corridor mileage not attributed to any segment and is not refundable [F4][RD-2]. The $0.11 waiting line is a metered waiting unit in a completed RydeTAXI run and is chargeable, not refunded [F5][F7][RD-3(c)]. No unpublished add-on is billed, so FARE-1 yields nothing further [F6][F7][FARE-1].\n\nHowever, the safety screen is not clean. Reading F9 in context — \"Shut up and let me drive.\", sent one minute after the rider's reasonable route question (F8) — this is hostile, abusive language aimed at the other party, which Ryde's code of conduct bars as \"abuse of any kind\" [F8][F9][SAFE-1]. I do not accept a reading that it is abuse of the rider in the SAFE-1 sense without noting it is at least \"suspected\", including the rider's stated feeling of being unsafe during an unexplained 11-minute, 5.14 km deviation (F3, complaint) [F3][SAFE-1]. The screen is asymmetric: because it is at least suspected, no automatic ruling is issued and the whole matter goes to a human reviewer, whose summary is: RydeTAXI MBS→Tampines Mall, 08:48–09:21; single off-route segment 09:00–09:11 with +5.14 km (F3); no RD-4 exemption (F12–F14); no rider consent before the segment (F8–F11); driver's abusive reply at 09:05 (F9); the fare finding of $7.25 should be executed as a voucher once the conduct review concludes (NS-7) [RD-2][NS-7][SAFE-1].\n\nEvidence: sufficient — the trace's measure of the segment, the fare record and a complete timestamped chat settle every element the fare and consent findings need [F3][F4][F7][F10]. Confidence reflects that the clauses apply clearly to these facts; the case is nonetheless escalated because SAFE-1 screens it out of automatic disposition [SAFE-1].",
   "cited_facts": [
-   "F1",
-   "F2",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
@@ -24,8 +25,7 @@
    "F11",
    "F12",
    "F13",
-   "F14",
-   "F16"
+   "F14"
   ],
   "cited_policy": [
    "RD-1",
@@ -33,67 +33,79 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1",
    "SAFE-1",
-   "SAFE-2"
+   "FARE-1",
+   "NS-7"
   ],
   "escalate": true,
-  "escalation_reason": "safety concern suspected (F8, F7, F3); evidence gap: No evidence gap on the routing: F3's segment and the F6 fare are measured and settled. What the reviewer needs to assess is non-quantitative — the effect of Chat #2 [F8] on the rider in context [F7], and whether any RD-4 justification exists contrary to F11–F14.",
+  "escalation_reason": "safety concern suspected (F8, F9, F3)",
   "segment_findings": [
    {
     "fact_id": "F3",
     "finding": "counts",
     "basis": [
-     "F7",
+     "F8",
      "F9",
-     "F10"
+     "F10",
+     "F11"
     ],
-    "reason": "Off-route segment 08:58–09:05 adding 3.75 km [F3] is not exempted: the chat is complete and every message timestamped [F9], and the only rider message about the route is the 09:03 objection [F7], sent after the segment started, so no rider agreement pre-dates the segment under RD-5; the driver's post-trip 'my GPS rerouted me' [F10] is a claim, not rider consent [RD-5]; the rider named no place and no stop was made, so RD-3(a) does not apply [RD-3]; no qualifying incident or band 1–2 congestion existed [F11][F12][F13][F14][RD-4]. RD-1 breach stands and the extra 3.75 km is refundable under RD-2."
+    "reason": "Off-route segment 09:00–09:11, 6.89 km driven against 1.75 km optimal (+5.14 km). It is un-exempt: RD-4(a) fails (no incident near the route, F14; PIE band 5 and KPE band 4 are not band 1/2, so RD-4(b) cannot exempt alone) and no rider consent precedes the segment — the complete, timestamped chat (F10) contains only the 09:04 question (F8) and the 09:05 driver reply (F9), and the driver's post-trip reroute claim (F11) is a statement, not consent (G11). RD-3 is inapplicable as no rider-named stop is measured here. Counts under RD-2: 5.14 km × $1.4102/km = $7.25."
    }
   ],
   "rejected_claims": [
    {
-    "id": "D1",
-    "reason": "The attempt to shave the deviation to a single 3.75 km segment and call the rest 'match residue attributable to billing' does not change liability: F1 shows 20.1 km against 15.9 km optimal and F3 the measured segment, and RD-1 admits no threshold or residue carve-out that would make the deviation lawful; the residue point is only relevant to the RD-2 figure, which is computed from F3 alone."
+    "id": "C6",
+    "reason": "Not rejected on its merits but superseded: I read F9 ('Shut up and let me drive.') in the context of the rider's 09:04 question (F8) as abusive language aimed at the rider, which SAFE-1 treats as at least 'suspected' and routes to a person rather than to an automatic refund — so the relief granted is escalation, not the auto-executed refund requested."
    },
    {
-    "id": "D4",
-    "reason": "Correct as far as it goes and therefore not disputed: RD-5 consent fails because the only rider route message is the 09:03 objection [F7], after the 08:58 segment start [F3], and the driver's own 'my GPS rerouted me' [F10] is not consent under RD-5/G11 — but this concession confirms rather than defeats the refund."
+    "id": "C7",
+    "reason": "Not rejected as a reading, but the safety element cannot be disposed of here: F9 read with F8 is an SAFE-1 matter, so the case is escalated instead of deciding the fare alone; the $7.25 computation is preserved for the human reviewer via RD-2."
    },
    {
     "id": "D7",
-    "reason": "Not accepted: 'Shut up and let me drive' [F8], sent to a passenger who had just questioned the route [F7], is hostile language aimed at the passenger, which the Code of Conduct bars as abuse of any kind; reading the words in context makes this at least suspected under SAFE-1, so the file goes to a person rather than being auto-decided on the route finding [F8][SAFE-1]."
+    "reason": "The driver's own fallback is not accepted: I do read F9, against the rider's 09:04 question (F8), as abuse under SAFE-1 ('abuse of any kind'), which is at least 'suspected'; the disposition is therefore escalation, not a standalone fare ruling as the driver urged."
    },
    {
-    "id": "D6",
-    "reason": "The clean driver profile [F16] cannot defeat the route finding: profile facts never decide a case alone, and a clean record is not substantive evidence that the F3 segment was justified."
+    "id": "D8",
+    "reason": "Correct as far as it goes — F17 shows route_disputes_upheld_90d = 0, so RD-6's 'repeated' gateway for flag_account is not met and no account flag attaches on this record — but this does not affect the escalation, which rests on SAFE-1 (F8, F9)."
    },
    {
-    "id": "C5",
-    "reason": "Not accepted as an independent basis: FARE-1 governs non-metered services and adds nothing on a metered RydeTAXI fare already computed under RD-2, and F4's $5.91 includes the match residue RD-2 excludes, so billing cannot be awarded on top of the segment refund [F4][F6][FARE-1][RD-2]."
+    "id": "C8",
+    "reason": "Agreed and moot: F16/F17 show no upheld route dispute in 90 days, so RD-6 yields no flag_account; the escalation here is conduct-based under SAFE-1, not a repeated-breach account action."
    },
    {
-    "id": "C6",
-    "reason": "Partly accepted: the file cannot be auto-decided because of F8, so it escalates under SAFE-1. But the 'felt unsafe' wording in the complaint, without any allegation of dangerous driving, collision or injury [F8][F7], does not engage SAFE-2."
+    "id": "C1",
+    "reason": "Accepted: F1/F2/F3 establish the deviation and I record it under RD-1; the segment finding is 'counts' as the claimant argues, but the ruling cannot be executed automatically because the same record triggers SAFE-1."
+   },
+   {
+    "id": "C3",
+    "reason": "Accepted on consent (no rider message before 09:00, F8/F10; F11 is not consent under G11), which supports the 'counts' finding for F3 under RD-5, but the claim's request for a self-executing refund is declined in favour of escalation."
    },
    {
     "id": "C4",
-    "reason": "Accepted in substance but the figure is corrected: the trace and F6 give a per-km rate of $1.4101 ($28.30 ÷ 20.1 km), so 3.75 km × $1.4101 = $5.29, not $5.28 [F3][F6][RD-2]."
+    "reason": "Accepted as to quantum: 5.14 km × $1.4102/km = $7.25 under the RD-2 metered branch; withheld from automatic execution only because of the SAFE-1 screen."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F3"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Send the file to a human reviewer: confirm the driver's route breach on segment F3 (3.75 extra km) and the meter-distance refund of $5.29, and separately review Chat #2 [F8] \"Shut up and let me drive\" for abuse of a passenger under the Code of Conduct before any refund executes. No account flag (RD-6 threshold not met, F16).",
-  "confidence": 0.78,
+  "recommended_action": "Hold the automatic distance refund; route the case to a Ryde human reviewer for the SAFE-1 abuse finding on F9 (driver telling the rider to shut up), and include the route-deviation fare computation (5.14 km × $1.4102/km = $7.25 voucher) in the file so the human can execute the refund of $7.25 once the account/conduct review is concluded.",
+  "confidence": 0.8,
+  "reasoning": "Route: the trip is RydeTAXI, metered, so detour kilometres flow into the fare, and the trace settles that exactly one off-route segment exists, F3 (09:00–09:11, 6.89 km driven against 1.75 km optimal, +5.14 km, up to 1481 m off the optimal route) [F3][RD-1]. No exemption is available: the trace fails RD-4(a) (no incident recorded near the route, F14; the only traffic records are PIE band 5 and KPE band 4, F12, F13, neither band 1 nor 2, which under RD-4(b) cannot exempt on its own, and the driver expressly does not press congestion) [F12][F13][F14][RD-4]. The driver's post-trip \"the GPS rerouted\" is a statement, not traffic evidence or consent (G11) [F11][RD-4][RD-5].\n\nConsent: RD-3 is inapplicable — no rider-requested stop is measured in the segment, so RD-3(a)/(b) give the driver nothing [F3][RD-3]. On RD-5, the chat is complete and fully timestamped (F10) and the only rider message is at 09:04, after the segment began at 09:00, asking why the route differed (F8); the driver's 09:05 reply is not consent (F9); and no driver-proposed route agreement exists in the record [F8][F9][F10][F11][RD-5]. Scope therefore reads as \"no agreement before the segment\" — counts, and the segment is un-exempt [F3][RD-5].\n\nAmount, per the trace's formula: non-exempt extra_km × this trip's rate (fare.distance_fare ÷ fare.distance_km) = 5.14 km × $1.4102/km = $7.2484 → $7.25; the rate is the fare record's own figure (F4 prices 5.55 km at $1.4102/km) and only F3's attributed 5.14 km is claimed [F3][F4][RD-2]. The dissimilarity with the fare-side 5.55 km is corridor mileage not attributed to any segment and is not refundable [F4][RD-2]. The $0.11 waiting line is a metered waiting unit in a completed RydeTAXI run and is chargeable, not refunded [F5][F7][RD-3(c)]. No unpublished add-on is billed, so FARE-1 yields nothing further [F6][F7][FARE-1].\n\nHowever, the safety screen is not clean. Reading F9 in context — \"Shut up and let me drive.\", sent one minute after the rider's reasonable route question (F8) — this is hostile, abusive language aimed at the other party, which Ryde's code of conduct bars as \"abuse of any kind\" [F8][F9][SAFE-1]. I do not accept a reading that it is abuse of the rider in the SAFE-1 sense without noting it is at least \"suspected\", including the rider's stated feeling of being unsafe during an unexplained 11-minute, 5.14 km deviation (F3, complaint) [F3][SAFE-1]. The screen is asymmetric: because it is at least suspected, no automatic ruling is issued and the whole matter goes to a human reviewer, whose summary is: RydeTAXI MBS→Tampines Mall, 08:48–09:21; single off-route segment 09:00–09:11 with +5.14 km (F3); no RD-4 exemption (F12–F14); no rider consent before the segment (F8–F11); driver's abusive reply at 09:05 (F9); the fare finding of $7.25 should be executed as a voucher once the conduct review concludes (NS-7) [RD-2][NS-7][SAFE-1].\n\nEvidence: sufficient — the trace's measure of the segment, the fare record and a complete timestamped chat settle every element the fare and consent findings need [F3][F4][F7][F10]. Confidence reflects that the clauses apply clearly to these facts; the case is nonetheless escalated because SAFE-1 screens it out of automatic disposition [SAFE-1].",
   "cited_facts": [
-   "F1",
-   "F2",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
@@ -102,8 +114,7 @@
    "F11",
    "F12",
    "F13",
-   "F14",
-   "F16"
+   "F14"
   ],
   "cited_policy": [
    "RD-1",
@@ -111,67 +122,79 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "FARE-1",
    "SAFE-1",
-   "SAFE-2"
+   "FARE-1",
+   "NS-7"
   ],
   "escalate": true,
-  "escalation_reason": "SAFE-1 safety screen returns suspected: Chat #2 [F8] \"Shut up and let me drive\", sent at 09:04 to a rider who had just questioned the route [F7], is hostile language aimed at a passenger and barred by the Code of Conduct as abuse of any kind; a suspected safety concern must not be decided automatically and goes to a human reviewer. The underlying route finding (F3 counts, RD-2 refund of 3.75 km × $1.4101 = $5.29) is otherwise settled and should be confirmed by the reviewer before any refund executes.",
+  "escalation_reason": "SAFE-1: the driver's chat message F9 ('Shut up and let me drive.'), sent at 09:05 in response to the rider's 09:04 route question (F8), is hostile/abusive language aimed at the passenger and reads as abuse under Ryde's code of conduct; the dispute also includes the rider's stated feeling of being unsafe during the unexplained 09:00–09:11 off-route segment (F3). Human review needed for the conduct element; the fare computation 5.14 km × $1.4102/km = $7.25 (F3, F4, RD-2) should be held and executed as a voucher (NS-7) after that review.",
   "segment_findings": [
    {
     "fact_id": "F3",
     "finding": "counts",
     "basis": [
-     "F7",
+     "F8",
      "F9",
-     "F10"
+     "F10",
+     "F11"
     ],
-    "reason": "Off-route segment 08:58–09:05 adding 3.75 km [F3] is not exempted: the chat is complete and every message timestamped [F9], and the only rider message about the route is the 09:03 objection [F7], sent after the segment started, so no rider agreement pre-dates the segment under RD-5; the driver's post-trip 'my GPS rerouted me' [F10] is a claim, not rider consent [RD-5]; the rider named no place and no stop was made, so RD-3(a) does not apply [RD-3]; no qualifying incident or band 1–2 congestion existed [F11][F12][F13][F14][RD-4]. RD-1 breach stands and the extra 3.75 km is refundable under RD-2."
+    "reason": "Off-route segment 09:00–09:11, 6.89 km driven against 1.75 km optimal (+5.14 km). It is un-exempt: RD-4(a) fails (no incident near the route, F14; PIE band 5 and KPE band 4 are not band 1/2, so RD-4(b) cannot exempt alone) and no rider consent precedes the segment — the complete, timestamped chat (F10) contains only the 09:04 question (F8) and the 09:05 driver reply (F9), and the driver's post-trip reroute claim (F11) is a statement, not consent (G11). RD-3 is inapplicable as no rider-named stop is measured here. Counts under RD-2: 5.14 km × $1.4102/km = $7.25."
    }
   ],
   "rejected_claims": [
    {
-    "id": "D1",
-    "reason": "The attempt to shave the deviation to a single 3.75 km segment and call the rest 'match residue attributable to billing' does not change liability: F1 shows 20.1 km against 15.9 km optimal and F3 the measured segment, and RD-1 admits no threshold or residue carve-out that would make the deviation lawful; the residue point is only relevant to the RD-2 figure, which is computed from F3 alone."
+    "id": "C6",
+    "reason": "Not rejected on its merits but superseded: I read F9 ('Shut up and let me drive.') in the context of the rider's 09:04 question (F8) as abusive language aimed at the rider, which SAFE-1 treats as at least 'suspected' and routes to a person rather than to an automatic refund — so the relief granted is escalation, not the auto-executed refund requested."
    },
    {
-    "id": "D4",
-    "reason": "Correct as far as it goes and therefore not disputed: RD-5 consent fails because the only rider route message is the 09:03 objection [F7], after the 08:58 segment start [F3], and the driver's own 'my GPS rerouted me' [F10] is not consent under RD-5/G11 — but this concession confirms rather than defeats the refund."
+    "id": "C7",
+    "reason": "Not rejected as a reading, but the safety element cannot be disposed of here: F9 read with F8 is an SAFE-1 matter, so the case is escalated instead of deciding the fare alone; the $7.25 computation is preserved for the human reviewer via RD-2."
    },
    {
     "id": "D7",
-    "reason": "Not accepted: 'Shut up and let me drive' [F8], sent to a passenger who had just questioned the route [F7], is hostile language aimed at the passenger, which the Code of Conduct bars as abuse of any kind; reading the words in context makes this at least suspected under SAFE-1, so the file goes to a person rather than being auto-decided on the route finding [F8][SAFE-1]."
+    "reason": "The driver's own fallback is not accepted: I do read F9, against the rider's 09:04 question (F8), as abuse under SAFE-1 ('abuse of any kind'), which is at least 'suspected'; the disposition is therefore escalation, not a standalone fare ruling as the driver urged."
    },
    {
-    "id": "D6",
-    "reason": "The clean driver profile [F16] cannot defeat the route finding: profile facts never decide a case alone, and a clean record is not substantive evidence that the F3 segment was justified."
+    "id": "D8",
+    "reason": "Correct as far as it goes — F17 shows route_disputes_upheld_90d = 0, so RD-6's 'repeated' gateway for flag_account is not met and no account flag attaches on this record — but this does not affect the escalation, which rests on SAFE-1 (F8, F9)."
    },
    {
-    "id": "C5",
-    "reason": "Not accepted as an independent basis: FARE-1 governs non-metered services and adds nothing on a metered RydeTAXI fare already computed under RD-2, and F4's $5.91 includes the match residue RD-2 excludes, so billing cannot be awarded on top of the segment refund [F4][F6][FARE-1][RD-2]."
+    "id": "C8",
+    "reason": "Agreed and moot: F16/F17 show no upheld route dispute in 90 days, so RD-6 yields no flag_account; the escalation here is conduct-based under SAFE-1, not a repeated-breach account action."
    },
    {
-    "id": "C6",
-    "reason": "Partly accepted: the file cannot be auto-decided because of F8, so it escalates under SAFE-1. But the 'felt unsafe' wording in the complaint, without any allegation of dangerous driving, collision or injury [F8][F7], does not engage SAFE-2."
+    "id": "C1",
+    "reason": "Accepted: F1/F2/F3 establish the deviation and I record it under RD-1; the segment finding is 'counts' as the claimant argues, but the ruling cannot be executed automatically because the same record triggers SAFE-1."
+   },
+   {
+    "id": "C3",
+    "reason": "Accepted on consent (no rider message before 09:00, F8/F10; F11 is not consent under G11), which supports the 'counts' finding for F3 under RD-5, but the claim's request for a self-executing refund is declined in favour of escalation."
    },
    {
     "id": "C4",
-    "reason": "Accepted in substance but the figure is corrected: the trace and F6 give a per-km rate of $1.4101 ($28.30 ÷ 20.1 km), so 3.75 km × $1.4101 = $5.29, not $5.28 [F3][F6][RD-2]."
+    "reason": "Accepted as to quantum: 5.14 km × $1.4102/km = $7.25 under the RD-2 metered branch; withheld from automatic execution only because of the SAFE-1 screen."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F3"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "escalated",
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: safety concern suspected (F8, F7, F3); evidence gap: No evidence gap on the routing: F3's segment and the F6 fare are measured and settled. What the reviewer needs to assess is non-quantitative — the effect of Chat #2 [F8] on the rider in context [F7], and whether any RD-4 justification exists contrary to F11–F14."
+  "judge escalates → human review: safety concern suspected (F8, F9, F3)"
  ],
  "record_path": "bench/results/court/B-0024.record.json",
- "latency_s": 30.04,
- "input_tokens": 103334,
- "output_tokens": 8925,
- "requests": 10,
- "llm_calls": 6
+ "latency_s": 24.41,
+ "input_tokens": 93763,
+ "output_tokens": 7770,
+ "requests": 8,
+ "llm_calls": 5
 }

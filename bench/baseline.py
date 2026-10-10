@@ -42,13 +42,26 @@ COMMON_RULES = """RULES
   threat, intimidation, harassment, a sexual remark or a dangerous-driving allegation (SAFE-1, SAFE-2), or the dispute
   type is safety, do NOT rule: ruling = "escalate", escalate = true, safety_concern = "suspected" or "confirmed" with
   safety_basis, reasoning = factual summary for a human reviewer. Read words in context: a pickup arrangement is not a
-  threat, and a threat needs no particular keyword.
+  threat, and a threat needs no particular keyword. Ryde's code of conduct bars "abuse of any kind": hostile or abusive
+  language aimed at the other party (telling them to shut up, insults, intimidation) is abuse under SAFE-1 and is at
+  least "suspected"; a false "suspected" costs a human look, a missed threat that lets a refund execute is not acceptable.
 - Consent (RD-5) is the rider's own message sent before the detour began; a driver's statement that the rider agreed
-  verbally is a claim, not consent (G11). Missing evidence (no GPS, untimed messages) never favours either side:
-  rule escalate and say what is missing in evidence_gap.
+  verbally is a claim, not consent (G11). Its scope is a reading of the words: a general route choice ("whichever way
+  is faster") covers a route chosen to get there, not a driver's own errand; agreement to a specific named road covers
+  driving on that road only, and the record must tie the driven segment to it — timing alone does not; if nothing
+  ties them, the finding is undetermined (G13); if the record places the segment somewhere else (a stop away from
+  that road, the driver's own account naming another road or place), the agreement does not cover it: counts.
+- evidence_status, every case: "sufficient" (the record settles every element you need; evidence_gap null),
+  "insufficient" (a needed record is missing — no GPS, a hole, an untimed message: name it in evidence_gap and rule
+  escalate) or "unknown" (rule escalate). Missing evidence never favours either side.
+- Rider-named stops (RD-3): when the rider names the place and the car stops there, the whole segment driven to reach
+  it is exempt; do not split it into "the stop" and "the way there". A stop the rider asked for without naming a place
+  does not excuse the driver's choice of a far one.
 - segment_findings: for route_deviation cases, one entry per off-route segment you identify (fact_id = the fact id
   if you were given one, else "seg1", "seg2" ...), finding = "exempt" / "counts" / "undetermined", basis = the chat
-  fact ids relied on (if you were given ids), reason with clause ids. Empty otherwise. Undetermined → escalate.
+  fact ids relied on (if you were given ids), reason with clause ids. Empty otherwise. An undetermined finding that
+  changes the amount or the flag → escalate.
+- safety_concern is required: "none" means you read everything and found nothing (never write "unscreened": code uses it when no judge ran).
 
 OUTPUT: a Ruling. English.
 

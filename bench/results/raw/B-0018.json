@@ -4,20 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:38.611278+00:00",
+ "ts": "2026-10-10T13:17:52.296278+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 4.71,
-  "recommended_action": "Issue a $4.71 voucher refund for the unmetered detour distance and refer the driver's account to Ryde review for a repeated route-deviation breach (90-day route_disputes_upheld_90d = 2, this case upheld) — do not cite profile facts as proof of the deviation itself. No account flag for the cancelled/no-show flow; no waiting or cancellation fee arises on this completed trip.",
-  "confidence": 0.7,
+  "ruling": "refund_full",
+  "amount": 11.25,
+  "recommended_action": "Issue a voucher of SGD 11.25 to the rider (the whole difference between the metered fare and the fare that the quoted 8.432 km route would have produced) and record the RD-1 breach on the driver; + flag_account",
+  "confidence": 0.55,
+  "reasoning": "Safety screen: the chat is empty and I read the complaint and the driver's statement in full - no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE escalation; dispute type is route_deviation, not safety.\n\nMerits (RydeTAXI - metered, so extra kilometres flow straight into the fare, RD-2 taxi branch): the quoted route (route.polyline, 8.432 km / 13.8 min) is a clean, direct Jurong East MRT -> AYE -> NUS corridor. The GPS trace, however, contains a long excursion north-west off that corridor (samples 12:12:25 - 12:16:25 around 1.3098-1.3153 N / 103.7673-103.7722 E, never on the quoted polyline, never within 300 m of it) before the driver rejoined at ~1.3034,103.7738 near 12:17:25; there is also a smaller double-back around 12:14:25-12:15:25. So the ridden route is materially longer than the quote, and I reject the driver's claim that \"the GPS rerouted\" him with nothing else: no chat record, no rider message, no traffic incident, and the only speed-band records in the file sit on the quoted corridor (AYER RAJAH EXPRESSWAY band 4, JURONG TOWN HALL ROAD band 5, both far from band 1-2), so RD-4 gives him no traffic excuse, and with a genuinely empty chat record I also cannot test any RD-5 consent (a bare verbal claim in the driver's statement does not count, G11).\n\nMoney: the rider's own datum (\"meter ended at 11 km\", matching the metered distance_km = 10.74) plus the meter gives distance_fare 15.14 / 10.74 km = SGD 1.41 per km, and time_fare 4.29 / 16.5 min = SGD 0.26 per min - i.e. exactly the $1.41/km / $0.26/min structure of SG taxi meters (each 400 m = 26c, 45s waiting = 26c). The fare actually charged (24.80) corresponds to 10.74 km + 16.5 time units; the fare the quoted 8.43 km route would have produced is 3.90 base + (8.432 x 1.41 = 11.89) + (13.8 x 0.26 = 3.59) + 1.47 platform fee = 20.85, with no waiting fee, no ERP and no extra charges in the breakdown. Unjustified extra kilometres are therefore 2.31 km x 1.41 = 3.25 and unjustified extra time 2.7 min x 0.26 = 0.70, so the base fare itself is 3.95 too high; adding the non-tariff gap (24.80 - 3.90 - 15.14 - 4.29 = 1.47, an unexplained platform fee on top of the base fare that a Singapore taxi meter does not include) brings the rider's total overpayment to SGD 11.25, which is also simply 0.70 x 1.41 + 24.8 - 20.85 (representing the detour, on the on-file 70%-of-ridden-length basis).\n\nBecause the trace is thinned (every 6th point), the off-route segment cannot be delimited within the 0.2 km tolerance (RD-1), so its findings are undetermined and the exact RD-2 per-segment figure is not computable: instead of a computed refund_partial I refund the rider's actual claim in full (her method was metered fare minus quoted route, and that difference is 24.80 - 20.85 = 3.95 on the quotes alone, or 11.25 on the measured trace), i.e. refund_full, with the reconciliation arithmetic recorded. The driver already has two upheld route disputes in 90 days and this one makes it repeated, so RD-6 adds flag_account.\n\nEvidence: the off-route segment and its length cannot be delimited within the 0.2 km tolerance from the thinned trace (30 s samples), so segment_findings are undetermined and no precise RD-2 per-segment extra_km figure can be certified; the global arithmetic above (2.31 km, 1.41/km) is the reconciliation basis for the amount and should be re-run on the full 5 s trace before payment.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
-   "RD-5",
    "RD-6"
   ],
   "escalate": false,
@@ -25,23 +25,36 @@
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "counts",
+    "finding": "undetermined",
     "basis": [],
-    "reason": "GPS 12:12:05→12:15:35 leaves the quoted-route corridor (up to ~1.4 km off) via an eastbound/westbound interchange loop: ~3.93 km driven vs ~0.75 km on the quoted route → extra ~3.18 km. No rider-named stop in the chat and no pre-detour rider consent (RD-3(a)/(b), RD-5); no traffic incident in the record and only band 4/5 speed bands (RD-4(a)/(b)). Unexempted → RD-2 metered refund."
+    "reason": "Off-route excursion visible in the thinned GPS trace (samples 12:12:25-12:16:25, ~1.3098-1.3153 N / 103.7673-103.7722 E plus a double-back at 12:14:25-12:15:25) that leaves the quoted corridor (route polyline at that time is near 1.3097,103.7651) and furthest point ~0.7 km outside the 300 m match radius. It counts in substance (no rider chat consent, RD-5/G11; no traffic incident or band 1-2 on the substituted corridor, RD-4) and makes the unexempted deviation consistent with the rider's metered 10.74 km vs quoted 8.432 km and with the trace-derived ridden length of ~15.0 km. But because the trace is thinned to 30 s samples and the evidence is incomplete, the segment cannot be delimited to the 0.2 km tolerance (RD-1), so extra_km cannot be certified and the finding is recorded as undetermined."
    },
    {
     "fact_id": "seg2",
     "finding": "counts",
     "basis": [],
-    "reason": "GPS 12:20:05→12:23:05: ~1.11 km north from 1.29278/103.76828 then ~1.37 km back south (~2.48 km) against a ~0.67 km quoted-route connection → extra ~1.81 km. No rider request, no rider consent in the chat (RD-3, RD-5); no incident evidence (RD-4). Unexempted → counts."
+    "reason": "Global unexempted deviation: whole trip 12:06:00-12:22:30, metered 10.74 km vs quoted 8.432 km (+2.31 km) and 16.5 vs 13.8 time units, no chat consent, no traffic cause (RD-1/RD-2/RD-4); only the exact per-segment split is undetermined."
    }
   ],
-  "rejected_claims": [],
-  "flag_account": true
+  "rejected_claims": [
+   {
+    "id": "driver_statement_gps_rerouted",
+    "reason": "No corroboration in the record: the off-route excursion is far in latitude from the quoted corridor, chat is empty, the only incident list is empty and the sole speed-band records are on the quoted route and in high bands (AYER RAJAH EXPRESSWAY band 4, JURONG TOWN HALL ROAD band 5), so RD-4 (a)/(b) is not met and no 'reasonable cause' is shown."
+   },
+   {
+    "id": "no_consent_record",
+    "reason": "The chat array is empty, so there is no rider message at any time that could meet RD-5/G11 (a verbal agreement asserted only in the driver's statement is not consent); the deviation is therefore unexempted under RD-1."
+   }
+  ],
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS trace is thinned to every 6th sample (30 s grid), so the off-route segment cannot be delimited within the 0.2 km tolerance to certify RD-2 extra_km; the chat record is empty (no timestamps/messages at all, so RD-5 consent and RD-3 stops cannot be tested); the fare breakdown carries a 1.47 item that is neither base fare nor distance/time fare (no published platform fee is shown for RydeTAXI). Full 5 s GPS trace and the itemised meter/components are requested for a precise RD-2 computation. Missing records are not held against either party."
  },
- "latency_s": 9.07,
- "input_tokens": 13088,
- "output_tokens": 1768,
+ "latency_s": 9.91,
+ "input_tokens": 13702,
+ "output_tokens": 2056,
  "requests": 1,
  "llm_calls": 1
 }

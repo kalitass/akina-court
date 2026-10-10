@@ -4,176 +4,181 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:46:56.228393+00:00",
+ "ts": "2026-10-10T13:23:00.198982+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
+  "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Close the dispute: the only off-route segment is excused by the rider's own pre-segment consent under RD-5, so no refund is due; no account action on either party.",
-  "confidence": 0.8,
+  "recommended_action": "Send to a human reviewer: the trip is a metered RydeTAXI service (F7) with one off-route segment F3 (12:29–12:39, +3.27 km), and the rider's prior message F9 (\"Sure, go ahead.\") answering the driver's F8 (\"go round via Sims Avenue\") is a specific-road agreement whose reach over the driven segment the record cannot tie to Sims Avenue — confirm the driven road for 12:29–12:39, then apply the trace formula 3.27 km × $1.4098/km = $4.61 (distance fare $27.35 ÷ 19.40 km = $1.4098/km) [F4][F3][F7]; no account flag (F17 route:0).",
+  "confidence": 0.6,
+  "reasoning": "The service is a metered RydeTAXI trip: F7 shows a metered breakdown (base $3.90, distance $27.35, time $8.26, waiting $0.11, platform $1.47), so detour mileage flows into the fare and RD-2's mileage-based refund formula applies rather than the fixed-quote branch [F7][RD-2]. The code trace settles that exactly one off-route segment exists, F3 (12:29–12:39), and that no RD-4(a) incident on the replaced optimal stretch exists (F14), with the Pan Island Expressway band 2 record (F12) being corroboration only and never a standalone exemption [F3][F12][F14][RD-1][RD-4].\n\nThe only live question is RD-5 consent scope for F3. The driver asked at 12:26 whether he could \"go round via Sims Avenue\" (F8) and the rider answered \"Sure, go ahead.\" at 12:27 (F9); that reply is a specific named-road authorisation, not a general \"whichever way is faster\" authorisation, because it answers a message naming one road [F8][F9][RD-5]. Under RD-5's specified-route limb the agreement covers driving on Sims Avenue only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. F3 gives only kilometres, timing and up-to-755 m distance from the optimal route, with no road name, and no other fact ties the 12:29–12:39 path to Sims Avenue [F3][F10][RD-5]. Timing alone (12:27 before the 12:29:55 segment start) does not do that work, and the driver's post-trip assertion that the rider agreed (F11) is a claim, not rider consent [F11][RD-5]. I therefore read F3's scope as undetermined (the record cannot settle whether the agreed road is the one driven), which is the outcome the trace contemplates where nothing ties the segment to the named road [F3][F9][RD-5].\n\nRD-3 does not change this: no stop was measured in the segment and the rider named no place of his own, so there is no rider-named stop exemption to apply [F3][F8][F9][RD-3]. RD-6 is not triggered on its own terms — the only profile facts shown are the driver's 2 upheld disputes with route: 0 (F17), and profile facts cannot decide the case in any event — so no account flag attaches [F17][RD-6].\n\nBecause the undetermined RD-5 scope controls whether 3.27 km is exempt or counts, and it changes the amount, the case must go to a person rather than being auto-decided [F3][F4][RD-5][RD-2]. If the reviewer confirms the segment was not on Sims Avenue, the refund is 3.27 km × $1.4098/km = $4.61 (rate = distance fare $27.35 ÷ distance km 19.40 = $1.4098/km) [F3][F4][F7][RD-2]; if it confirms Sims Avenue, F3 is exempt and the outcome is no_action [RD-5]. The rider's demand for the full billed excess of $5.54 (3.93 km, F4) is not supported, since the trace counts only F3's 3.27 km and the rider's advocate conceded the 0.63 km difference is not claimed [F1][F3][F4][RD-1][RD-2].",
   "cited_facts": [
    "F3",
    "F4",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F13",
-   "F16"
+   "F12",
+   "F14",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
    "RD-6"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "segment finding undetermined for F3",
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
+    "finding": "undetermined",
     "basis": [
-     "F7",
      "F8",
-     "F9"
+     "F9",
+     "F10",
+     "F11"
     ],
-    "reason": "The driver named the alternative before leaving the optimal route — \"ok if I go round via Sims Avenue?\" at 12:24 [F7] — and the rider's own timestamped message at 12:24, \"Sure, go ahead.\" [F8], precedes the segment start of 12:27 [F3]; the chat record is complete with all messages timestamped [F9]. The rider's agreement covers the route the driver named, and the timing ties the exchange to this segment, so under RD-5 the segment is not a deviation [RD-5]. The driver's post-trip statement [F10] is not relied on (G11). No different destination or second detour is recorded, and the extra kilometres / distance from the optimal route [F3] are not evidence that the agreed route differs — a named alternative road is off the optimal route by definition [RD-5]."
-   },
-   {
-    "fact_id": "F3-RD3",
-    "finding": "counts",
-    "basis": [
-     "F7",
-     "F8"
-    ],
-    "reason": "RD-3 is not engaged: there was no rider-requested stop. The rider named no place and the record measures no stop in this segment; the reroute was proposed by the driver [F7][F8], so RD-3(a) exempts nothing here [RD-3]."
+    "reason": "The rider's message F9 (12:27, 'Sure, go ahead.') answering F8 (12:26, 'go round via Sims Avenue?') is a rider consent sent before the segment start 12:29, but it is a SPECIFIC-road authorisation: it covers driving on Sims Avenue only and the record must tie this segment to Sims Avenue. F3 gives only km, timing and distance-from-route (up to 755 m) with no road name, no stop on Sims Avenue and no location message; the post-trip driver statement F11 is not rider consent. Nothing therefore ties the driven 12:29–12:39 path to the agreed road, so the scope of consent is undetermined rather than exempt [F3][F8][F9][F10][F11][RD-5]. This finding changes the amount, so the case goes to a person [RD-2]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "The off-route segment exists [F3], but RD-1's duty to take the shortest and most direct route is qualified by the absence of reasonable cause, and RD-5 removes this segment from being a deviation at all: the rider's message sent before the segment [F8] agreed to the road the driver named [F7], with timestamps confirmed complete [F9][F3][RD-5]."
+    "id": "C9",
+    "reason": "The $5.54 figure on 3.93 km (F4) is not the refundable amount: the trace settles only one off-route segment, F3, whose extra_km is 3.27; the 0.63 km difference against F1's +3.9 km aggregate is not part of any segment and the rider's own rebuttal concedes it is not claimed [F1][F3][F4][RD-1][RD-2]. The segment's amount is undetermined pending the RD-5 scope reading, so no full $5.54 refund can be granted [RD-5]."
    },
    {
-    "id": "C3",
-    "reason": "The rider's narrow-scope reading rests only on the size of the diversion — 3.17 km added and up to 1174 m off the optimal route [F3] — which RD-5 expressly does not treat as evidence that the agreed route differs from the one driven; the rider points to no message limiting the agreement, and the named alternative road is off the optimal route by definition [F7][F8][F3][RD-5]."
+    "id": "C8",
+    "reason": "Correct that RD-4(a) fails (F14 records no incident) and that F12's speed band standing alone does not exempt under RD-4(b); but this does not by itself dispose of the segment — the live issue is RD-5 consent scope, which I read as undetermined, not automatically 'counts' [F12][F14][F3][RD-4][RD-5]."
    },
    {
-    "id": "C6",
-    "reason": "The $4.47 figure takes the whole 3.17 km of the segment as unexempt [F3][F4][F6], but the segment is exempt under RD-5, so the sum of unexempt extra_km is 0 km and the RD-2 amount is 0 km × $1.41/km = $0.00 [F3][F4][RD-2][RD-5]."
+    "id": "D3",
+    "reason": "F9 is not a general route-change authorisation: it answers a message naming one road (F8, 'via Sims Avenue'), so per the specified-route limb the record must tie the driven segment to Sims Avenue, and F3 supplies no road name; a complete timestamped chat (F10) establishes timing, not the road driven [F8][F9][F3][F10][RD-5]."
    },
    {
-    "id": "C7",
-    "reason": "No case is made out against the driver (RD-2 refund is 0 and no RD-1 breach is recorded), and the driver's profile shows zero route disputes upheld in 90 days [F16]; RD-6 requires an established case plus a prior upheld route dispute, and profile facts cannot decide a case in any event [F16][RD-6]."
+    "id": "D2",
+    "reason": "The 'before you go' ordering is met (F9 at 12:27 precedes the 12:29 segment start), but RD-5 also requires that the consent cover this segment; timing alone cannot tie the 12:29–12:39 path to Sims Avenue, so the segment is not thereby exempt [F8][F9][F3][RD-5]."
    },
    {
     "id": "D4",
-    "reason": "The traffic justification fails: no incident was recorded on or near the optimal route [F13] and band 4 on PIE (30–39 km/h) [F11] is corroborative only under RD-4(b), not an incident exemption under RD-4(a) [RD-4]. The segment is nonetheless exempt, but on RD-5 consent grounds rather than traffic [F7][F8][F3][RD-5]."
+    "reason": "RD-4(a) cannot be satisfied — F14 states no traffic incidents were recorded on the route in the trip window — and RD-4(b) says a band record standing alone does not yet exempt a segment (G3), so F12 is corroboration only; fair weather (F15) is neutral, not a justification [F12][F14][F15][F3][RD-4]."
    },
    {
-    "id": "D9",
-    "reason": "Duration of 29.2 min against a 22 min estimate [F2] with band 4 traffic [F11] does not establish a traffic exemption under RD-4; RD-4(a) requires an incident fact on the replaced stretch [F13][RD-4]. The exemption here rests on the rider's prior consent, not on congestion [F7][F8][RD-5]."
+    "id": "D6",
+    "reason": "The premise that F3 is exempt is not established: the RD-5 scope is undetermined, so the segment is neither confirmed exempt nor confirmed counting; F4's $5.54 does reflect the distance driven at $1.4098/km, so mileage reaches the fare and RD-2 remains live pending the scope reading [F3][F4][F5][F7][RD-2][RD-5]."
    },
    {
-    "id": "D11",
-    "reason": "The rider's profile (1 dispute in 90 days, 0 upheld) [F15] plays no part in the finding either way, as profile facts cannot decide a case; the outcome follows from the exempt segment under RD-5 and the 0 km unexempt extra_km under RD-2 [F3][F16][RD-6][RD-5][RD-2]."
+    "id": "D7",
+    "reason": "Agreed that no RD-6 flag is warranted (F17 shows route: 0 upheld route disputes, and profile facts cannot decide the case), but that absence does not dispose of the RD-2 question, which turns on the undetermined RD-5 scope [F17][F3][RD-6][RD-2][RD-5]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F11"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "no_action",
+  "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Close the dispute: the only off-route segment is excused by the rider's own pre-segment consent under RD-5, so no refund is due; no account action on either party.",
-  "confidence": 0.8,
+  "recommended_action": "Send to a human reviewer: the trip is a metered RydeTAXI service (F7) with one off-route segment F3 (12:29–12:39, +3.27 km), and the rider's prior message F9 (\"Sure, go ahead.\") answering the driver's F8 (\"go round via Sims Avenue\") is a specific-road agreement whose reach over the driven segment the record cannot tie to Sims Avenue — confirm the driven road for 12:29–12:39, then apply the trace formula 3.27 km × $1.4098/km = $4.61 (distance fare $27.35 ÷ 19.40 km = $1.4098/km) [F4][F3][F7]; no account flag (F17 route:0).",
+  "confidence": 0.6,
+  "reasoning": "The service is a metered RydeTAXI trip: F7 shows a metered breakdown (base $3.90, distance $27.35, time $8.26, waiting $0.11, platform $1.47), so detour mileage flows into the fare and RD-2's mileage-based refund formula applies rather than the fixed-quote branch [F7][RD-2]. The code trace settles that exactly one off-route segment exists, F3 (12:29–12:39), and that no RD-4(a) incident on the replaced optimal stretch exists (F14), with the Pan Island Expressway band 2 record (F12) being corroboration only and never a standalone exemption [F3][F12][F14][RD-1][RD-4].\n\nThe only live question is RD-5 consent scope for F3. The driver asked at 12:26 whether he could \"go round via Sims Avenue\" (F8) and the rider answered \"Sure, go ahead.\" at 12:27 (F9); that reply is a specific named-road authorisation, not a general \"whichever way is faster\" authorisation, because it answers a message naming one road [F8][F9][RD-5]. Under RD-5's specified-route limb the agreement covers driving on Sims Avenue only, and the record must tie the segment to that road — a stop on it, a message placing the car on it, or a road name in a fact. F3 gives only kilometres, timing and up-to-755 m distance from the optimal route, with no road name, and no other fact ties the 12:29–12:39 path to Sims Avenue [F3][F10][RD-5]. Timing alone (12:27 before the 12:29:55 segment start) does not do that work, and the driver's post-trip assertion that the rider agreed (F11) is a claim, not rider consent [F11][RD-5]. I therefore read F3's scope as undetermined (the record cannot settle whether the agreed road is the one driven), which is the outcome the trace contemplates where nothing ties the segment to the named road [F3][F9][RD-5].\n\nRD-3 does not change this: no stop was measured in the segment and the rider named no place of his own, so there is no rider-named stop exemption to apply [F3][F8][F9][RD-3]. RD-6 is not triggered on its own terms — the only profile facts shown are the driver's 2 upheld disputes with route: 0 (F17), and profile facts cannot decide the case in any event — so no account flag attaches [F17][RD-6].\n\nBecause the undetermined RD-5 scope controls whether 3.27 km is exempt or counts, and it changes the amount, the case must go to a person rather than being auto-decided [F3][F4][RD-5][RD-2]. If the reviewer confirms the segment was not on Sims Avenue, the refund is 3.27 km × $1.4098/km = $4.61 (rate = distance fare $27.35 ÷ distance km 19.40 = $1.4098/km) [F3][F4][F7][RD-2]; if it confirms Sims Avenue, F3 is exempt and the outcome is no_action [RD-5]. The rider's demand for the full billed excess of $5.54 (3.93 km, F4) is not supported, since the trace counts only F3's 3.27 km and the rider's advocate conceded the 0.63 km difference is not claimed [F1][F3][F4][RD-1][RD-2].",
   "cited_facts": [
    "F3",
    "F4",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F13",
-   "F16"
+   "F12",
+   "F14",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
    "RD-6"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "RD-5 consent scope for the single off-route segment F3 (12:29–12:39, +3.27 km) is undetermined: the rider's pre-segment message F9 answers a proposal naming a specific road (F8, Sims Avenue), and no record (no road name in F3, no stop, no location message) ties the driven path to that road, while F11 is not consent. The finding changes the amount, so a human must confirm the road driven; if not Sims Avenue, refund 3.27 km × $1.4098/km = $4.61 [F3][F4][F7][RD-2]; if Sims Avenue, no_action [RD-5].",
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
+    "finding": "undetermined",
     "basis": [
-     "F7",
      "F8",
-     "F9"
+     "F9",
+     "F10",
+     "F11"
     ],
-    "reason": "The driver named the alternative before leaving the optimal route — \"ok if I go round via Sims Avenue?\" at 12:24 [F7] — and the rider's own timestamped message at 12:24, \"Sure, go ahead.\" [F8], precedes the segment start of 12:27 [F3]; the chat record is complete with all messages timestamped [F9]. The rider's agreement covers the route the driver named, and the timing ties the exchange to this segment, so under RD-5 the segment is not a deviation [RD-5]. The driver's post-trip statement [F10] is not relied on (G11). No different destination or second detour is recorded, and the extra kilometres / distance from the optimal route [F3] are not evidence that the agreed route differs — a named alternative road is off the optimal route by definition [RD-5]."
-   },
-   {
-    "fact_id": "F3-RD3",
-    "finding": "counts",
-    "basis": [
-     "F7",
-     "F8"
-    ],
-    "reason": "RD-3 is not engaged: there was no rider-requested stop. The rider named no place and the record measures no stop in this segment; the reroute was proposed by the driver [F7][F8], so RD-3(a) exempts nothing here [RD-3]."
+    "reason": "The rider's message F9 (12:27, 'Sure, go ahead.') answering F8 (12:26, 'go round via Sims Avenue?') is a rider consent sent before the segment start 12:29, but it is a SPECIFIC-road authorisation: it covers driving on Sims Avenue only and the record must tie this segment to Sims Avenue. F3 gives only km, timing and distance-from-route (up to 755 m) with no road name, no stop on Sims Avenue and no location message; the post-trip driver statement F11 is not rider consent. Nothing therefore ties the driven 12:29–12:39 path to the agreed road, so the scope of consent is undetermined rather than exempt [F3][F8][F9][F10][F11][RD-5]. This finding changes the amount, so the case goes to a person [RD-2]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "The off-route segment exists [F3], but RD-1's duty to take the shortest and most direct route is qualified by the absence of reasonable cause, and RD-5 removes this segment from being a deviation at all: the rider's message sent before the segment [F8] agreed to the road the driver named [F7], with timestamps confirmed complete [F9][F3][RD-5]."
+    "id": "C9",
+    "reason": "The $5.54 figure on 3.93 km (F4) is not the refundable amount: the trace settles only one off-route segment, F3, whose extra_km is 3.27; the 0.63 km difference against F1's +3.9 km aggregate is not part of any segment and the rider's own rebuttal concedes it is not claimed [F1][F3][F4][RD-1][RD-2]. The segment's amount is undetermined pending the RD-5 scope reading, so no full $5.54 refund can be granted [RD-5]."
    },
    {
-    "id": "C3",
-    "reason": "The rider's narrow-scope reading rests only on the size of the diversion — 3.17 km added and up to 1174 m off the optimal route [F3] — which RD-5 expressly does not treat as evidence that the agreed route differs from the one driven; the rider points to no message limiting the agreement, and the named alternative road is off the optimal route by definition [F7][F8][F3][RD-5]."
+    "id": "C8",
+    "reason": "Correct that RD-4(a) fails (F14 records no incident) and that F12's speed band standing alone does not exempt under RD-4(b); but this does not by itself dispose of the segment — the live issue is RD-5 consent scope, which I read as undetermined, not automatically 'counts' [F12][F14][F3][RD-4][RD-5]."
    },
    {
-    "id": "C6",
-    "reason": "The $4.47 figure takes the whole 3.17 km of the segment as unexempt [F3][F4][F6], but the segment is exempt under RD-5, so the sum of unexempt extra_km is 0 km and the RD-2 amount is 0 km × $1.41/km = $0.00 [F3][F4][RD-2][RD-5]."
+    "id": "D3",
+    "reason": "F9 is not a general route-change authorisation: it answers a message naming one road (F8, 'via Sims Avenue'), so per the specified-route limb the record must tie the driven segment to Sims Avenue, and F3 supplies no road name; a complete timestamped chat (F10) establishes timing, not the road driven [F8][F9][F3][F10][RD-5]."
    },
    {
-    "id": "C7",
-    "reason": "No case is made out against the driver (RD-2 refund is 0 and no RD-1 breach is recorded), and the driver's profile shows zero route disputes upheld in 90 days [F16]; RD-6 requires an established case plus a prior upheld route dispute, and profile facts cannot decide a case in any event [F16][RD-6]."
+    "id": "D2",
+    "reason": "The 'before you go' ordering is met (F9 at 12:27 precedes the 12:29 segment start), but RD-5 also requires that the consent cover this segment; timing alone cannot tie the 12:29–12:39 path to Sims Avenue, so the segment is not thereby exempt [F8][F9][F3][RD-5]."
    },
    {
     "id": "D4",
-    "reason": "The traffic justification fails: no incident was recorded on or near the optimal route [F13] and band 4 on PIE (30–39 km/h) [F11] is corroborative only under RD-4(b), not an incident exemption under RD-4(a) [RD-4]. The segment is nonetheless exempt, but on RD-5 consent grounds rather than traffic [F7][F8][F3][RD-5]."
+    "reason": "RD-4(a) cannot be satisfied — F14 states no traffic incidents were recorded on the route in the trip window — and RD-4(b) says a band record standing alone does not yet exempt a segment (G3), so F12 is corroboration only; fair weather (F15) is neutral, not a justification [F12][F14][F15][F3][RD-4]."
    },
    {
-    "id": "D9",
-    "reason": "Duration of 29.2 min against a 22 min estimate [F2] with band 4 traffic [F11] does not establish a traffic exemption under RD-4; RD-4(a) requires an incident fact on the replaced stretch [F13][RD-4]. The exemption here rests on the rider's prior consent, not on congestion [F7][F8][RD-5]."
+    "id": "D6",
+    "reason": "The premise that F3 is exempt is not established: the RD-5 scope is undetermined, so the segment is neither confirmed exempt nor confirmed counting; F4's $5.54 does reflect the distance driven at $1.4098/km, so mileage reaches the fare and RD-2 remains live pending the scope reading [F3][F4][F5][F7][RD-2][RD-5]."
    },
    {
-    "id": "D11",
-    "reason": "The rider's profile (1 dispute in 90 days, 0 upheld) [F15] plays no part in the finding either way, as profile facts cannot decide a case; the outcome follows from the exempt segment under RD-5 and the 0 km unexempt extra_km under RD-2 [F3][F16][RD-6][RD-5][RD-2]."
+    "id": "D7",
+    "reason": "Agreed that no RD-6 flag is warranted (F17 shows route: 0 upheld route disputes, and profile facts cannot decide the case), but that absence does not dispose of the RD-2 question, which turns on the undetermined RD-5 scope [F17][F3][RD-6][RD-2][RD-5]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F11"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "status": "resolved",
- "events": 28,
+ "status": "escalated",
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.80 (diagnostic only; automation is decided by the certificate)"
+  "judge escalates → human review: segment finding undetermined for F3"
  ],
  "record_path": "bench/results/court/B-0002.record.json",
- "latency_s": 27.04,
- "input_tokens": 101747,
- "output_tokens": 7955,
- "requests": 10,
- "llm_calls": 6
+ "latency_s": 24.81,
+ "input_tokens": 93580,
+ "output_tokens": 7763,
+ "requests": 8,
+ "llm_calls": 5
 }

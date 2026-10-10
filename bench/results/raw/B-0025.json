@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:56.750114+00:00",
+ "ts": "2026-10-10T13:18:11.785408+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 6.4,
-  "recommended_action": "Refund S$6.40 (Ryde voucher per NS-7) for the unexempted detour mileage on this metered RydeTAXI trip; note the exemption of the second off-route segment due to the LTA-verified breakdown and the rider's prior chat consent to the PGP routing.",
-  "confidence": 0.6,
+  "amount": 8.18,
+  "recommended_action": "Refund S$8.18 (Ryde voucher) for the unexempted detour mileage on this RydeTAXI trip",
+  "confidence": 0.62,
+  "reasoning": "Service type RydeTAXI (metered), so RD-2 measures the overcharge in extra km, not a flat fare. Per-km rate = distance_fare ÷ distance_km = 31.30 ÷ 22.2 = $1.4099/km.\n\nRoute analysis: the quoted route runs the Ayer Rajah Expressway corridor (1.29526,103.78504)→(1.30725,103.76667). The driven trace follows it only to ≈1.29366,103.78642, then turns north and loops through Clementi (1.29520,103.78453 → 1.29339,103.78514 → 1.29588,103.78572 → 1.29906,103.78542), rejoining near (1.30679,103.76711). The detour also spans the 10:09:50–10:12:50 stop (0–15 km/h). Off-route extra distance ≈ 2.4 km (route total 22.2 km vs quoted 16.5 km; the remainder is matching jitter inside the 200 m corridor and is not refundable per RD-2).\n\nRD-4: an LTA \"Vehicle breakdown\" incident (Ayer Rajah Expressway towards Tuas, lane 1, reported 09:47) does sit on the substituted optimal stretch, but that incident lies *before* the detour point (1.32198,103.75139 is downstream, past the rejoin), so it does not evidence the substituted segment. The AYE speed band 2 record (band 1–2 = 0<19 km/h) covers the AYE link geometry, but RD-4(b) says a band alone is corroboration only and does not exempt in the MVP. So no RD-4 exemption.\n\nRD-5 consent: the driver asked at 10:10:00, after the off-route manoeuvre had already begun (≈10:09:20), and the rider's \"Sure, your call\" at 10:10:40 is a general route election, not agreement to a driver errand. Timing alone cannot tie the segment to Clementi Avenue 2, so the alternative reading is \"undetermined\" (G13). Because that reading is worth S$3.38 and turns the flag determination, I take it as undetermined and issue the partial refund myself.\n\nAmount: 2.4 km × $1.4099 = $3.3838 → $3.38 (accepting the driver's own account that he drove via Clementi Ave 2, so the segment is exempt). If instead the manoeuvre is read as the driver's own unannounced detour, the unexempted detour is 2.4 + 3.4 = 5.8 km × $1.4099 = $8.18, with the 3.4 km (10:11:20–10:12:50, incl. the 3-minute stop) counting under RD-3(b)/RD-5. Refund $8.18, 5.8 km × $1.4099 = $8.18. Profile: route_disputes_upheld_90d = 0, so RD-6 flag_account is not triggered either way; the case is left to Ryde's normal review rather than an account flag.\n\nSafety screen: chat, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation — nothing to escalate under SAFE-1 / SAFE-2.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -18,7 +20,9 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "SAFE-1"
+   "RD-6",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -27,30 +31,30 @@
     "fact_id": "seg1",
     "finding": "exempt",
     "basis": [],
-    "reason": "Detour 1 (~10:09–10:17, GPS deviates south of the quoted AYE line to ~1.2879,103.7786 and returns at ~1.2949,103.7852). The driver's chat at 10:06:00 named the alternative ('go round via Prince George's Park') and the rider's own message at 10:06:40 ('Sure, go ahead.') precedes the segment start, so the rider consented before the detour began → no deviation (RD-5)."
+    "reason": "Clementi Ave 2 loop (≈10:09:20–10:13:20, ≈2.4 km extra) — driver stated the alternative and the rider's 10:10:40 message endorses the route choice; read as consent covering this segment under RD-5. The alternative reading (RD-5/G13) is that the message came after the detour began and only grants general discretion, leaving the segment unexempted; because that reading changes the amount by S$3.38 it is treated as undetermined and bounds the refund to the clearly unexempted portion."
    },
    {
     "fact_id": "seg2",
-    "finding": "exempt",
+    "finding": "counts",
     "basis": [],
-    "reason": "Detour 2 (~10:17–10:26, GPS runs north via PIE to ~1.3270,103.7454 before rejoining). Not covered by the PGP consent, but the driver's congestion claim is corroborated by the LTA incident 'Vehicle breakdown on Ayer Rajah Expressway' reported 09:47, inside the trip window, ~20 m from the optimal route (≤300 m match) → reason-based exemption (RD-4(a)); AYE speed band 5 on the optimal route is supporting (RD-4(b))."
+    "reason": "Northbound loop beyond AYE with the 3-minute stop (≈10:11:20–10:12:50, ≈3.4 km extra, incl. the 10:09:50–10:12:50 stop): no pre-departure consent message, no rider-named place, and the driver's own account names Clementi Ave 2, not this road; unexempted under RD-1 / RD-3 / RD-5, so its extra_km enters the RD-2 refund."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_verbal_no_consent",
-    "reason": "Not relied on: driver's statement says the rider agreed verbally / only cites the breakdown. RD-5 requires the rider's own message for consent, and here consent for seg1 is in fact evidenced by the rider's 10:06:40 chat; for seg2 the exemption rests on RD-4, not on any verbal agreement (G11)."
-   },
-   {
-    "id": "rider_overcharge_whole_difference",
-    "reason": "Rejected in part: the rider's claim to the whole estimate difference is not granted because both off-route segments are exempt (RD-5 consent for seg1, RD-4 LTA incident for seg2) and only the residual unexplained mileage is refundable on a metered fare (RD-2)."
+    "id": "driver-traffic-defence",
+    "reason": "RD-4 requires an incident on the substituted optimal stretch listed at or before the segment start: the AYE vehicle breakdown (1.32198,103.75139, reported 09:47) is past the rejoin point (1.30679,103.76711) and does not evidence the segment actually replaced; the AYE speed band 2 is corroboration only under RD-4(b) and cannot exempt alone."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.29,
- "input_tokens": 15313,
- "output_tokens": 1830,
+ "latency_s": 6.97,
+ "input_tokens": 16362,
+ "output_tokens": 1442,
  "requests": 1,
  "llm_calls": 1
 }

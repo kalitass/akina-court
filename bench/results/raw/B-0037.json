@@ -4,42 +4,54 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:21.811618+00:00",
+ "ts": "2026-10-10T13:18:36.747440+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and remind the driver that waiting-fee/cancellation-fee eligibility requires continuous GPS presence within the pickup radius; the driver's 'I'm Here' press predates his arrival and the arrival-wait did not reach 3 minutes.",
-  "confidence": 0.82,
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Uphold the $6.61 no-show cancellation fee (driver's $4.50 share unaffected); advise the rider the driver only owes the policy wait window, and point her to RydeHELP for a discretionary voucher within 30 days.",
+  "confidence": 0.87,
+  "reasoning": "Dispute is a $6.61 cancellation fee, driver-cancelled, service type RydeX (non-taxi). NS-0 routes a driver-cancelled trip where the driver asserts rider no-show to NS-1/NS-2; the published cancellation policy applies because RydeX is not RydeTAXI.\n\nNS-1 test on the system records (which override statements):\n(i) Arrival indication: trip.driver_pressed_here_at = 18:24:35, corroborated by the driver's 18:24:45 chat \"At the pickup now\". arrival_confirmed_by is null, so I do not attribute the tap as driver vs platform beyond what the record shows; the moment of the here-indication is 18:24:35 either way.\n(ii) Location at that moment: GPS 18:24:30 = (1.276962, 103.845973); pickup Tanjong Pagar Centre = (1.2766, 103.8459). Offset approx 41 m north + 8 m east = approx 42 m, well inside the 200 m radius. Even the 18:24:00 sample is approx 80 m away. Satisfied.\n(iii) Continuous wait >3 min within range until cancellation: samples 18:24:30 through 18:28:25 (cancellation) are all within about 45 m of the pickup and near-stationary (0.8-2.0 km/h). Span 18:24:30 to 18:28:25 = 235 s; within-200 m time after the 18:24:35 indication = approx 3:50, above the 3:01 threshold. No GPS gap: the record's thinning implies a 30 s grid and the pre-cancellation intervals are 30 s / 25 s, far below the G12 gap definition. Satisfied.\n\nAll three NS-1 elements hold, so the $6.61 fee stands: no_action. Rider's message at 18:25:55 (\"Coming down, give me 2 more minutes\") is a request to keep waiting and concedes she had not arrived; it is not a fee waiver. Heavy rain (18.5 mm) is sympathetic but is not a listed basis for waiver, and driver-late free-cancellation rules do not apply to a driver-cancelled no-show. Driver's \"more than 4 minutes\" claim is slightly generous (measured 3:50) but immaterial. Driver's profile (2 upheld no-show disputes/90 d) is only an ancillary consideration; since NS-1 is satisfied no NS-2 flag arises, and RD-6 is not engaged (no route dispute, route_disputes_upheld_90d = 0).\n\nSafety screen: read all three chat messages, the complaint and the driver statement — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. Evidence is sufficient: the trace covers the entire wait up to the cancellation instant with no hole.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-4",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_stmt_wait_4min",
-    "reason": "GPS trace contradicts the driver's claim of more than 4 minutes of waiting at the pickup: he enters the 200 m radius only ~18:23:00 and the cancelled_at is 18:26:40, i.e. at most ~3:16–3:40 in the radius, and only ~2:47 if measured strictly from the first fixed sample."
+    "id": "rider-1",
+    "reason": "The 18:25:55 message 'give me 2 more minutes' is a request to keep waiting, not a waiver of the fee; the driver had already indicated arrival at 18:24:35 and had waited past the NS-1(iii) window."
    },
    {
-    "id": "driver_stmt_called_twice",
-    "reason": "Call logs are not in the record; the only support is the driver's own untimed chat message at 18:26:25. System records (GPS) govern and do not evidence the rider refusing contact."
+    "id": "rider-2",
+    "reason": "Heavy rain (18.5 mm) is not a listed ground for waiving the cancellation fee; the wait threshold runs from the arrival indication regardless of weather."
    },
    {
-    "id": "driver_stmt_rider_never_came",
-    "reason": "The rider messaged at 18:24:10 that she was coming down and needed two more minutes, consistent with a moving-in-progress waiting situation rather than a no-show absconding; in any event the fee fails for want of NS-1(ii)."
+    "id": "rider-3",
+    "reason": "The GPS trace shows the rider never entered the 200 m pickup zone before cancellation at 18:28:25, so the driver's cancellation is justified under NS-1."
+   },
+   {
+    "id": "driver-1",
+    "reason": "The driver's 'more than 4 minutes' is slightly generous: measured within-200 m wait after the 18:24:35 indication is 3:50; immaterial, as it still exceeds the 3:01 requirement."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 5.99,
- "input_tokens": 11471,
- "output_tokens": 1247,
- "requests": 1,
+ "latency_s": 12.11,
+ "input_tokens": 27906,
+ "output_tokens": 2705,
+ "requests": 2,
  "llm_calls": 1
 }

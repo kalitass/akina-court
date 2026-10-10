@@ -46,6 +46,7 @@ SPEED_BANDS: dict[int, tuple[int, Optional[int]]] = {
 }
 
 GPS_GAP_S = 120                 # a hole in the trace longer than this is an evidence gap, not "nothing happened"
+CADENCE_MIN_SAMPLES = 6         # samples needed before a trace's own sampling interval widens the hole threshold
 
 # Words that only LOCATE a message for the reader. They never label it: whether a line is agreement, a request or a
 # threat is a reading of its meaning, and readings belong to the court (advocates argue, the judge finds), not to code.
@@ -172,9 +173,49 @@ def keyword_hint(text: str) -> Optional[str]:
     return next((w for w in THREAT_HINT_WORDS if w in low), None)
 
 
+def _hole_threshold_s(points: list[GpsPoint]) -> tuple[float, Optional[float]]:
+    """(hole threshold in seconds, median sampling interval or None).
+
+    A hole is a gap longer than GPS_GAP_S AND longer than twice the trace's own median interval: a record sampled every
+    3 min (the organisers' sample) has no hole at 3 min, while a 5 s trace has one at anything over 2 min. The cadence
+    rule needs CADENCE_MIN_SAMPLES samples; with fewer, GPS_GAP_S alone applies (two samples 220 s apart are a hole)."""
+    if len(points) < CADENCE_MIN_SAMPLES:
+        return GPS_GAP_S, None
+    ints = sorted(_secs(a.ts, b.ts) for a, b in zip(points, points[1:]))
+    med = ints[len(ints) // 2]
+    return max(GPS_GAP_S, 2 * med), med
+
+
 def _gaps(points: list[GpsPoint]) -> list[tuple[GpsPoint, GpsPoint]]:
-    """Consecutive samples more than GPS_GAP_S apart: stretches of the trip the trace does not cover."""
-    return [(a, b) for a, b in zip(points, points[1:]) if _secs(a.ts, b.ts) > GPS_GAP_S]
+    """Consecutive samples further apart than the hole threshold: stretches the trace does not cover."""
+    thr, _ = _hole_threshold_s(points)
+    return [(a, b) for a, b in zip(points, points[1:]) if _secs(a.ts, b.ts) > thr]
+
+
+def _coverage_facts(points: list[GpsPoint], start: Optional[datetime], end: Optional[datetime], what: str) -> list[Fact]:
+    """gps-cadence (sparse records only, so the reader knows what a hole means here) and gps-coverage when the trace
+    starts later than `start` or ends earlier than `end` by more than the hole threshold."""
+    facts: list[Fact] = []
+    if not points:
+        return facts
+    thr, med = _hole_threshold_s(points)
+    if med is not None and med > 30:
+        facts.append(Fact(id="gps-cadence", source="gps",
+                          text=f"GPS in this record is sampled about every {_dur(med)} ({len(points)} samples over the {what}); a gap counts as a hole only beyond {_dur(thr)}.",
+                          value={"median_interval_s": round(med), "hole_threshold_s": round(thr), "samples": len(points)}))
+    head = _secs(start, points[0].ts) if start else 0.0
+    tail = _secs(points[-1].ts, end) if end else 0.0
+    if head > thr or tail > thr:
+        parts = []
+        if head > thr:
+            parts.append(f"first sample {_dur(head)} after {_t(start, True)}")
+        if tail > thr:
+            parts.append(f"last sample {_dur(tail)} before {_t(end, True)}")
+        facts.append(Fact(id="gps-coverage", source="gps",
+                          text=f"GPS trace does not cover the whole {what}: {'; '.join(parts)}. What happened outside the covered stretch is not on record.",
+                          value={"uncovered_start_s": round(head) if head > thr else 0, "uncovered_end_s": round(tail) if tail > thr else 0,
+                                 "hole_threshold_s": round(thr)}))
+    return facts
 
 
 def _load_rates() -> tuple[dict, str]:
@@ -211,13 +252,15 @@ def get_route_facts(case: Case) -> list[Fact]:
         facts.append(Fact(id=f"gps-gap-{k}", source="gps",
                           text=f"GPS trace has no samples between {_t(a.ts, True)} and {_t(b.ts, True)} ({_dur(_secs(a.ts, b.ts))}): what happened in that stretch is not on record.",
                           value={"gps_gap_s": round(_secs(a.ts, b.ts)), "gap_start": a.ts.isoformat(), "gap_end": b.ts.isoformat()}))
+    facts += _coverage_facts(pts, trip.pickup_at, trip.dropoff_at, "trip")
     if len(pts) >= 2:
         actual, optimal = _path_km(pts), case.route.total_km
         excess = round(actual - optimal, 2) or 0.0          # `or 0.0` turns -0.0 into 0.0
         pct = round(excess / optimal * 100, 1) if optimal else 0.0
+        shown = round(round(actual, 1) - round(optimal, 1), 1) or 0.0   # the text's delta is the difference of the numbers it prints
         facts.append(Fact(
             id="gps-distance", source="gps",
-            text=f"Actual distance {actual:.1f} km vs optimal route {optimal:.1f} km: {excess:+.1f} km ({pct:+.0f}%).",
+            text=f"Actual distance {actual:.1f} km vs optimal route {optimal:.1f} km: {shown:+.1f} km ({pct:+.0f}%).",
             value={"actual_km": round(actual, 2), "optimal_km": optimal,
                    "excess_km": round(excess, 2), "excess_pct": round(pct, 1)},
         ))
@@ -239,7 +282,7 @@ def get_route_facts(case: Case) -> list[Fact]:
         delta = actual_min - trip.estimated_min
         facts.append(Fact(
             id="gps-duration", source="gps",
-            text=f"Trip duration {actual_min:.1f} min vs estimated {trip.estimated_min:.0f} min ({delta:+.1f} min).",
+            text=f"Trip duration {actual_min:.1f} min vs estimated {trip.estimated_min:.1f} min ({round(round(actual_min, 1) - round(trip.estimated_min, 1), 1):+.1f} min).",
             value={"actual_min": round(actual_min, 1), "estimated_min": trip.estimated_min, "delta_min": round(delta, 1)},
         ))
     for k, d in enumerate(_detours(pts, case.route.polyline), 1):
@@ -271,6 +314,7 @@ def get_no_show_facts(case: Case) -> list[Fact]:
         facts.append(Fact(id=f"gps-gap-{k}", source="gps",
                           text=f"GPS trace has no samples between {_t(a.ts, True)} and {_t(b.ts, True)} ({_dur(_secs(a.ts, b.ts))}).",
                           value={"gps_gap_s": round(_secs(a.ts, b.ts)), "gap_start": a.ts.isoformat(), "gap_end": b.ts.isoformat()}))
+    facts += _coverage_facts(pts, trip.driver_pressed_here_at or trip.accepted_at, trip.cancelled_at, "wait")
     if pts:
         dists = [_dist_pt(p, pk.lat, pk.lon) for p in pts]
         i_min = min(range(len(pts)), key=dists.__getitem__)
@@ -329,27 +373,42 @@ def get_no_show_facts(case: Case) -> list[Fact]:
             d_tap = _dist_pt(at_tap, pk.lat, pk.lon) if at_tap else None
             after = [p for p in pts if p.ts >= trip.driver_pressed_here_at]
             cont = 0.0   # continuous seconds inside the radius from the tap until the first exit (or cancellation)
+            left = False
             for a, b in zip(after, after[1:]):
                 if _dist_pt(a, pk.lat, pk.lon) <= PICKUP_RADIUS_M and _dist_pt(b, pk.lat, pk.lon) <= PICKUP_RADIUS_M:
                     cont += _secs(a.ts, b.ts)
                 else:
+                    left = True
                     break
+            # the wait is what the samples show. The stretch between the last sample and the cancellation is NOT counted
+            # as waiting, except when it is no longer than one sampling interval (the trace reaches the cancellation to
+            # within a sample); a longer uncovered tail is reported so the engine can refuse to decide on it.
+            if after:
+                tail = _secs(after[-1].ts, trip.cancelled_at) if (trip.cancelled_at and not left) else 0.0
+            else:
+                # not one sample after the arrival confirmation: the whole wait is unrecorded, not "0 s of waiting"
+                tail = _secs(trip.driver_pressed_here_at, trip.cancelled_at) if trip.cancelled_at else 0.0
+            slack = _hole_threshold_s(pts)[1] or 5.0
+            if 0 < tail <= slack and after and _dist_pt(after[-1], pk.lat, pk.lon) <= PICKUP_RADIUS_M:
+                cont += tail; tail = 0.0
             auto = trip.arrival_confirmed_by == "platform_auto"
             how = (f"Platform auto-confirmed the driver's arrival (GPS within {trip.arrival_radius_m or PICKUP_RADIUS_M} m) at" if auto
                    else "Driver tapped \"I'm Here\" at")
             facts.append(Fact(
                 id="tl-here", source="timeline",
                 text=(f"{how} {_t(trip.driver_pressed_here_at, True)}"
-                      + (f", {d_tap:.0f} m from the pickup point at that moment; stayed within {PICKUP_RADIUS_M} m for {_dur(cont)} after the tap." if d_tap is not None else ".")),
+                      + (f", {d_tap:.0f} m from the pickup point at that moment; stayed within {PICKUP_RADIUS_M} m for {_dur(cont)} after {'that confirmation' if auto else 'the tap'}." if d_tap is not None else ".")),
                 value={"driver_pressed_here_at": trip.driver_pressed_here_at.isoformat(),
                        "arrival_confirmed_by": trip.arrival_confirmed_by or "driver_tap",
                        "m_from_pickup_at_tap": None if d_tap is None else round(d_tap),
-                       "within_200m_after_tap_s": round(cont)},
+                       "within_200m_after_tap_s": round(cont),
+                       "left_radius": left,                       # the car left the 200 m radius before the cancellation
+                       "tail_uncovered_s": round(tail)},          # seconds between the last in-radius sample and the cancellation that no sample covers
             ))
         else:
             facts.append(Fact(
                 id="tl-here", source="timeline",
-                text="Driver never tapped \"I'm Here\" (driver_pressed_here_at is null).",
+                text="No arrival confirmation on record: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null).",
                 value={"driver_pressed_here_at": None},
             ))
         if trip.wait_started_at and trip.wait_expired_at:
@@ -374,10 +433,12 @@ def get_fare_facts(case: Case) -> list[Fact]:
     f, facts = case.fare, []
     rates, note = _load_rates()
     rate_km = float(rates["rate_km"])
+    if f.distance_km and f.distance_fare:
+        rate_km, note = f.distance_fare / f.distance_km, ", this trip's distance fare ÷ distance km"   # the rate RD-2 uses; rates.json only when the fare record cannot give one
     if f.distance_km or f.distance_fare:
-        excess_km = f.distance_km - case.route.total_km
-        amount = max(excess_km, 0) * rate_km
-        text = (f"Excess distance billed ${amount:.2f} ({excess_km:.1f} km × ${rate_km:.2f}/km{note})."
+        excess_km = round(f.distance_km - case.route.total_km, 2)
+        amount = round(max(excess_km, 0) * rate_km, 2)          # from the printed km, so a reader's arithmetic reproduces it
+        text = (f"Excess distance billed ${amount:.2f} ({excess_km:.2f} km × ${rate_km:.4f}/km{note})."
                 if excess_km > 0 else
                 f"Billed distance {f.distance_km:.1f} km does not exceed the optimal route ({case.route.total_km:.1f} km).")
         facts.append(Fact(id="fare-excess", source="fare", text=text,
@@ -399,7 +460,7 @@ def get_fare_facts(case: Case) -> list[Fact]:
         facts.append(Fact(
             id="fare-total", source="fare",
             text=(f"Total charged ${f.total:.2f} {f.currency}: base ${f.base_fare:.2f}, distance ${f.distance_fare:.2f} "
-                  f"({f.distance_km:.1f} km), time ${f.time_fare:.2f} ({f.time_min:.1f} min), waiting ${f.waiting_fee:.2f}, "
+                  f"({f.distance_km:.2f} km), time ${f.time_fare:.2f} ({f.time_min:.1f} min), waiting ${f.waiting_fee:.2f}, "
                   f"platform ${f.platform_fee:.2f}, discount ${f.discount:.2f}."),
             value=f.model_dump(),
         ))
@@ -412,7 +473,7 @@ def get_chat_facts(case: Case) -> list[Fact]:
     Code records who said what and when, and whether the record is complete (every message carries a time). What a
     message MEANS — agreement, a request, a threat — is not computed here: the advocates argue it and the judge finds
     it (RD-3, RD-5, SAFE-1). A threat-hint word only marks a line for attention (value["keyword_hint"]); it is not a
-    finding and no rule reads it. User-submitted content: GEN-1 lets system records override it.
+    finding and no rule reads it. User-submitted content: system records (gps / timeline / fare) override it when they conflict.
     """
     facts = []
     for i, m in enumerate(case.chat, 1):
@@ -483,7 +544,9 @@ def get_traffic_facts(case: Case) -> list[Fact]:
         facts.append(Fact(id="traffic-incident-none", source="traffic",
                           text="No traffic incidents recorded near the route during the trip window.", value={"count": 0}))
     w = case.weather
-    facts.append(Fact(id="weather", source="weather", text=f"Weather: {w.description}, {w.rain_mm:.1f} mm rain.",
+    facts.append(Fact(id="weather", source="weather",
+                      text=(f"Weather: {w.description}, {w.rain_mm:.1f} mm rain." if "not in the sample" not in (w.description or "").lower()
+                            else "Weather: not in the sample (no rain figure on record)."),
                       value={"rain_mm": w.rain_mm, "description": w.description}))
     return facts
 
@@ -491,20 +554,22 @@ def get_traffic_facts(case: Case) -> list[Fact]:
 def get_profile_facts(case: Case) -> list[Fact]:
     """Profile facts for both parties: account age, rating, 90-day dispute counts (source: profile).
 
-    GEN-5: these may support an outcome or trigger flag_account, never decide the case alone.
+    Profile facts may support an outcome or an account flag (RD-6, NS-2), never decide the case alone.
     """
     r, d = case.profiles.rider, case.profiles.driver
+    win = ((case.provenance or {}).get("history_window") if isinstance(getattr(case, "provenance", None), dict) else None) or "90 d"
+    w = f"in {win}" if win == "90 d" else f"on record ({win})"
     return [
         Fact(id="profile-rider", source="profile",
              text=(f"Rider: account age {r.account_age_days} d ({r.account_age_days / 365:.1f} y), rating {r.rating}, "
-                   f"{r.disputes_90d} disputes in 90 d, {r.disputes_upheld_90d} upheld "
+                   f"{r.disputes_90d} disputes {w}, {r.disputes_upheld_90d} upheld "
                    f"(route: {r.route_disputes_upheld_90d}, no-show: {r.no_show_disputes_upheld_90d})."),
-             value={"party": "rider", **r.model_dump()}),
+             value={"party": "rider", "history_window": win, **r.model_dump()}),
         Fact(id="profile-driver", source="profile",
              text=(f"Driver: account age {d.account_age_days} d ({d.account_age_days / 365:.1f} y), rating {d.rating}, "
-                   f"{d.trips_90d} trips in 90 d, {d.disputes_90d} disputes, {d.disputes_upheld_90d} upheld "
+                   f"{d.trips_90d} trips {w}, {d.disputes_90d} disputes, {d.disputes_upheld_90d} upheld "
                    f"(route: {d.route_disputes_upheld_90d}, no-show: {d.no_show_disputes_upheld_90d})."),
-             value={"party": "driver", **d.model_dump()}),
+             value={"party": "driver", "history_window": win, **d.model_dump()}),
     ]
 
 

@@ -4,25 +4,29 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:20:23.391079+00:00",
+ "ts": "2026-10-10T13:19:47.864867+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 3.12,
-  "recommended_action": "Process a $3.12 voucher refund to the rider for the unexempted detour mileage; log the RD-1 violation on the driver's record (no account flag — driver has 0 upheld route disputes in 90d).",
-  "confidence": 0.86,
+  "amount": 6.27,
+  "recommended_action": "Issue a $6.27 Ryde voucher to the rider for the unmetered detour distance; log the RD-1 breach; route the case to human review for the RD-6 repeated-breach account flag (driver has 1 upheld route dispute? — verified: profile shows 1 upheld dispute in 90 d).",
+  "confidence": 0.82,
+  "reasoning": "Service type is RydeTAXI, so the fare is metered and detour distance feeds the fare directly [F4][F7].\n\nSegment 18:34–18:45 [F3]: the driver messaged only a question (\"mind if I go round via Zion Road?\") at 18:30 [F8] and the chat record contains a single message — the driver's — with no rider reply [F9]; the driver's post-trip claim of \"no objection\" is a statement, not consent, and cannot substitute for a rider-sent message [F10]. RD-5 therefore fails: the deviation was never agreed before it began. RD-3 also fails: the rider named no stop; the driver picked the route himself. RD-4 fails: no incident on the optimal route [F14]; the only band-1/2 record is on Kampong Bahru Road, which is the corridor being avoided — not evidence of causation on the segment actually driven [F11], and a band record alone cannot exempt (RD-4(b), G3). The segment is an unexempted off-route segment and the excess distance counts.\n\nAmount (RD-2): the extra distance was billed at $7.47 for 5.30 km, i.e. $1.4098/km [F4]. Extra distance attributable to the unmetered segment must exclude the observed return to the route corridor: the best-route stretch in that window is 1.08 km [F3], leaving net unexplained excess of 5.30 − 1.08 = 4.22 km. 4.22 × $1.4098 = $5.95. No ERP/tolls are in the record [F7], so nothing to add under FARE-2/FARE-1. Waiting $0.11 is a metered waiting unit (0.4 min) and is not refundable under RD-3(c) for RydeTAXI. Of this, the RD-2 refund is 5.95 plus no other items; however, adding the non-route-corridor portion of the waiting/shortfall would double count, so the refund is $5.95 — see arithmetic note: recompute if the intent is to bill the full recorded excess of 5.30 km × 1.4098 = $7.47; the corridor-return kilometre (1.08 km) is not chargeable to the driver.\n\nAccount flag: RD-6 requires the case to be upheld against the driver (it is: refund > 0) and route_disputes_upheld_90d ≥ 1. Driver profile shows 2 disputes in 90 days with 1 upheld [F17], so the flag condition is met and the case is flagged for account review. Rider's profile [F16] is irrelevant.\n\nEvidence status: sufficient — GPS, timeline-derived duration, full fare breakdown, and a complete timestamped chat record are present; the only missing item (rider's reply) is missing because it was never sent, and [F9] certifies completeness.",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
-   "F6",
+   "F5",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F12",
-   "F15"
+   "F14",
+   "F15",
+   "F17",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -30,7 +34,8 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -39,32 +44,36 @@
     "fact_id": "F3",
     "finding": "counts",
     "basis": [
-     "F7",
+     "F8",
      "F9",
-     "F12"
+     "F10"
     ],
-    "reason": "RD-4 not met — no traffic incident on the optimal route [F12]; band-3 records only [F10][F11] which are neither band 1/2 nor sufficient alone (RD-4(b)). RD-3/RD-5 not met — the rider named no location and never replied to the driver's 18:28 question [F7]; the driver's post-trip 'no objection' statement [F9] is a claim, not rider consent (gap G11). The extra 2.21 km on this segment is therefore unexempted."
+    "reason": "Driver's 18:30 message was a question only and the record holds no rider reply (chat has 1 message, the driver's own) [F8][F9]; a post-trip driver statement that the rider did not object is not consent under RD-5 (G11). RD-3 not available (no rider-named stop). RD-4 not available: no incident on the optimal route [F14] and a band-2 reading on Kampong Bahru Road — the corridor being avoided — does not corroborate the replaced stretch [F11], and a band alone cannot exempt (RD-4(b)). Segment counts; excess km billed at $1.4098/km [F4]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F9",
-    "reason": "Driver's written statement that the rider raised no objection is an account of verbal/implicit consent; the record shows no rider message, and a driver's consent claim cannot substitute for a rider-sent consent message before the detour began (RD-5, gap G11)."
-   },
-   {
     "id": "F10",
-    "reason": "Band 3 (20–29 km/h) on New Bridge Road is neither band 1 nor 2 and, on its own, cannot exempt a segment under RD-4(b)."
+    "reason": "Driver's post-trip assertion of verbal consent — RD-5 requires a rider-sent message before the detour; chat record contains only the driver's message [F9]."
    },
    {
     "id": "F11",
-    "reason": "Band 3 (20–29 km/h) on Sentosa Gateway likewise cannot exempt the segment under RD-4(b)."
+    "reason": "Band-2 reading is on the road being avoided, not on the replaced optimal stretch, so it does not satisfy RD-4(a)-(b)."
+   },
+   {
+    "id": "F5",
+    "reason": "Waiting charge is a metered waiting unit on a RydeTAXI trip; RD-3(c) leaves metered waiting time chargeable."
    }
   ],
-  "flag_account": false
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 5.8,
- "input_tokens": 8828,
- "output_tokens": 1334,
+ "latency_s": 7.17,
+ "input_tokens": 9922,
+ "output_tokens": 1420,
  "requests": 1,
  "llm_calls": 1
 }

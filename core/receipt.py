@@ -16,7 +16,7 @@ from typing import Optional
 from core.schemas import Case
 
 ROOT = Path(__file__).resolve().parents[1]
-CODE_FILES = ("core",)                                   # the code that computes facts, runs the court and checks the ruling; the web/API layer is not part of the ruling
+CODE_FILES = ("core", "data/rates.json")                 # the code that computes facts, runs the court and checks the ruling, plus the rate table a fact reads; the web/API layer is not part of the ruling
 KEYS = ("case_sha256", "policy_sha256", "code_sha256", "model")
 
 

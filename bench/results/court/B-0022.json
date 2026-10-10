@@ -4,14 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:49:35.754036+00:00",
+ "ts": "2026-10-10T13:25:58.566679+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 2.44,
-  "recommended_action": "Refund $2.44 to the rider as a Ryde voucher (NS-7) for the un-exempted 1.73 km off-route segment, and record an RD-1 breach against the driver; no account flag (RD-6 not met).",
-  "confidence": 0.8,
+  "amount": 6.43,
+  "recommended_action": "Refund SGD 6.43 to the rider as a Ryde voucher for the unexempted detour mileage; no account action.",
+  "confidence": 0.72,
+  "reasoning": "Segment F3 (21:39–21:49, 6.27 km driven vs 1.71 km optimal, +4.56 km, up to 1958 m off the optimal route) is an off-route segment on a GPS record, and no traffic fact excuses it: F14 records no incident near the replaced stretch and F12/F13 are only band 5 (40–49 km/h), not the band 1–2 range, so RD-4(a) fails and RD-4(b) cannot exempt alone [F3][F12][F13][F14][RD-4].\n\nThe rider's pre-segment message F9 (\"Sure, no problem\", 21:36) answers F8, which names only \"the petrol station just ahead\" for \"one minute\" [F8][F9]. That is neither a general route choice (\"whichever way is faster\") nor a named road or area; it is permission for a stop, and by its words it reaches a station just ahead, not a 6.27 km out-and-back loop that strays 1958 m from the route [F3][F9][RD-5]. The driver's post-trip statement F11 that he \"thought a small change of route was fine\" is his own assertion, not rider consent, and cannot widen F9 (G11) [F11][RD-5].\n\nThe stop branch also fails: RD-3(a) exempts the way to a place the rider named — here the rider named nothing, and no stop is measured in the segment; the record shows no petrol stop occurred, so the deviation served nothing the rider agreed to [F3][F8][F9][RD-3]. The segment therefore counts, and its extra km is refundable.\n\nBecause this is a metered RydeTAXI trip, the extra mileage flowed into the fare [F4][F7][RD-2]. The rate is the fare record's distance fare ÷ distance km: $26.31 ÷ 18.66 km = $1.40995/km, stated in the trace as $1.4100/km [F4][F7][RD-2]. Applying that to the segment: 4.56 km × $1.4100/km = $6.4296 → $6.43 [F3][F4][RD-2]. The larger billed excess of $6.77 (4.80 km) in F4 includes $0.34 of corridor/map-matching mileage not attributable to any segment and is not refundable [F4][F3][RD-2]. The $0.11 metered waiting unit (F5) is chargeable waiting time on a RydeTAXI trip and is not refunded [F5][RD-3]. No surge and no unpublished add-on appears (F6, F15), so FARE-1 adds nothing [F6][F15][FARE-1].\n\nNo flag_account: F17 shows route_disputes_upheld_90d = 0, so RD-6's repeated-breach condition is not met — this case cannot itself be the repeat it cites [F17][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -23,8 +26,9 @@
    "F11",
    "F12",
    "F13",
-   "F16",
-   "F1"
+   "F14",
+   "F15",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -33,8 +37,7 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1",
-   "NS-7"
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -43,44 +46,61 @@
     "fact_id": "F3",
     "finding": "counts",
     "basis": [
-     "F7",
      "F8",
      "F9",
-     "F10"
+     "F11"
     ],
-    "reason": "The driver's 21:43 message named only 'the petrol station just ahead' for 'one minute' [F7] and the rider's 21:44 reply 'Sure, no problem.' [F8] agreed to that stop, not to the 1.76 km corridor the car then drove; the reply names no place and the driver chose the location, so RD-3(a) does not apply and RD-3(b) leaves the extra_km unexempted [RD-3]. The consent content does not cover this route change under RD-5, and the driver's statement [F10] is a claim, not rider consent [RD-5]. No RD-4 traffic excuse exists [F11][F12][F13], so the segment is an un-exempted deviation refundable under RD-1/RD-2 [RD-1][RD-2]."
+    "reason": "F9 (rider, 21:36) precedes the segment start (21:39) but answers only F8's request to pull in at a petrol station 'just ahead' for one minute — a stop permission, not a general route choice and not a named road or area; it cannot cover a 6.27 km segment that strays 1958 m from the optimal route, and no stop is measured, so nothing ties the driven segment to any agreed route [F3][F8][F9][RD-5][RD-3]. F11 is the driver's own after-the-trip assertion and is not consent [F11][RD-5]. No traffic exemption: F14 no qualifying incident, F12/F13 only band 5 [F14][F12][F13][RD-4]. Finding does not change: segment counts and its 4.56 extra km are refundable under RD-2."
    }
   ],
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "The rider's message [F8] agrees only to a one-minute stop, not to a route change; RD-5 requires the consent to match the segment, and RD-3(b) denies exemption where the driver chose the place and the consent message carries no routing [F7][F8][F3][RD-5][RD-3]."
+    "reason": "Timing is conceded but the consent it invokes is limited by its own words: F9 agrees only to the stop asked for in F8 ('petrol station just ahead', 'one minute'), which does not reach the 4.56 km / 1958 m segment F3 measures, so RD-5 covers no part of this segment and it counts."
    },
    {
     "id": "D2",
-    "reason": "RD-3(a) requires the rider to have named the place; here the driver named 'the petrol station just ahead' [F7] and the rider merely assented [F8], so the stop is driver-chosen and the extra kilometres are not exempt [F7][F8][F3][RD-3]."
+    "reason": "Not undetermined: F9's scope is readable — it is a stop permission, not a general route choice and not a named road; the record places the segment 1958 m off-route and outside any station stop, so the consent does not cover it [F3][F9][RD-5]."
    },
    {
-    "id": "D4",
-    "reason": "Correct arithmetic but wrong conclusion: the $2.44 is payable precisely because the segment is not exempt [F3][F4][F6][RD-2]."
+    "id": "D3",
+    "reason": "Accepted only in part; the driver's own concession that F9 names no route and F11 is unilateral confirms the segment is unexempted, which supports the rider's refund rather than denying it [F9][F11][F3][RD-3][RD-5]."
    },
    {
-    "id": "D7",
-    "reason": "The driver's profile shows route: 0 upheld in 90 days [F16]; RD-6 requires route_disputes_upheld_90d ≥ 1 and profile facts cannot stand alone, so no flag_account arises even though this case is established [F16][RD-6]."
+    "id": "D8",
+    "reason": "Correct and applied: F17 shows 0 route disputes upheld in 90 days, so RD-6's repeated condition fails and no flag_account attaches [F17][RD-6]."
+   },
+   {
+    "id": "C4",
+    "reason": "Substantially correct but over-broad: F9 is a rider message sent before the segment, so it is consent under RD-5 for a stop, not 'no consent at all'; its narrow scope is what leaves the segment counting [F8][F9][F3][RD-5]."
+   },
+   {
+    "id": "C5",
+    "reason": "Accepted as to F11 not being consent, but F9 (the rider's own timestamped message) already supplies the consent the driver relies on within its narrow scope, so C5's framing that there was no consent at all is rejected [F9][F11][RD-5]."
    },
    {
     "id": "C8",
-    "reason": "The rider's claim of a repeated breach fails on the facts: the driver's 90-day record shows route: 0 upheld [F16], so RD-6's threshold is not met and no account flag is issued [F16][RD-6]."
+    "reason": "Fails on its own terms: F17 records 0 route disputes upheld in 90 days, so the RD-6 repeated-breach condition is not met and no flag_account follows [F17][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F11"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 2.44,
-  "recommended_action": "Refund $2.44 to the rider as a Ryde voucher (NS-7) for the un-exempted 1.73 km off-route segment, and record an RD-1 breach against the driver; no account flag (RD-6 not met).",
-  "confidence": 0.8,
+  "amount": 6.43,
+  "recommended_action": "Refund SGD 6.43 to the rider as a Ryde voucher for the unexempted detour mileage; no account action.",
+  "confidence": 0.72,
+  "reasoning": "Segment F3 (21:39–21:49, 6.27 km driven vs 1.71 km optimal, +4.56 km, up to 1958 m off the optimal route) is an off-route segment on a GPS record, and no traffic fact excuses it: F14 records no incident near the replaced stretch and F12/F13 are only band 5 (40–49 km/h), not the band 1–2 range, so RD-4(a) fails and RD-4(b) cannot exempt alone [F3][F12][F13][F14][RD-4].\n\nThe rider's pre-segment message F9 (\"Sure, no problem\", 21:36) answers F8, which names only \"the petrol station just ahead\" for \"one minute\" [F8][F9]. That is neither a general route choice (\"whichever way is faster\") nor a named road or area; it is permission for a stop, and by its words it reaches a station just ahead, not a 6.27 km out-and-back loop that strays 1958 m from the route [F3][F9][RD-5]. The driver's post-trip statement F11 that he \"thought a small change of route was fine\" is his own assertion, not rider consent, and cannot widen F9 (G11) [F11][RD-5].\n\nThe stop branch also fails: RD-3(a) exempts the way to a place the rider named — here the rider named nothing, and no stop is measured in the segment; the record shows no petrol stop occurred, so the deviation served nothing the rider agreed to [F3][F8][F9][RD-3]. The segment therefore counts, and its extra km is refundable.\n\nBecause this is a metered RydeTAXI trip, the extra mileage flowed into the fare [F4][F7][RD-2]. The rate is the fare record's distance fare ÷ distance km: $26.31 ÷ 18.66 km = $1.40995/km, stated in the trace as $1.4100/km [F4][F7][RD-2]. Applying that to the segment: 4.56 km × $1.4100/km = $6.4296 → $6.43 [F3][F4][RD-2]. The larger billed excess of $6.77 (4.80 km) in F4 includes $0.34 of corridor/map-matching mileage not attributable to any segment and is not refundable [F4][F3][RD-2]. The $0.11 metered waiting unit (F5) is chargeable waiting time on a RydeTAXI trip and is not refunded [F5][RD-3]. No surge and no unpublished add-on appears (F6, F15), so FARE-1 adds nothing [F6][F15][FARE-1].\n\nNo flag_account: F17 shows route_disputes_upheld_90d = 0, so RD-6's repeated-breach condition is not met — this case cannot itself be the repeat it cites [F17][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -92,8 +112,9 @@
    "F11",
    "F12",
    "F13",
-   "F16",
-   "F1"
+   "F14",
+   "F15",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -102,8 +123,7 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1",
-   "NS-7"
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -112,48 +132,63 @@
     "fact_id": "F3",
     "finding": "counts",
     "basis": [
-     "F7",
      "F8",
      "F9",
-     "F10"
+     "F11"
     ],
-    "reason": "The driver's 21:43 message named only 'the petrol station just ahead' for 'one minute' [F7] and the rider's 21:44 reply 'Sure, no problem.' [F8] agreed to that stop, not to the 1.76 km corridor the car then drove; the reply names no place and the driver chose the location, so RD-3(a) does not apply and RD-3(b) leaves the extra_km unexempted [RD-3]. The consent content does not cover this route change under RD-5, and the driver's statement [F10] is a claim, not rider consent [RD-5]. No RD-4 traffic excuse exists [F11][F12][F13], so the segment is an un-exempted deviation refundable under RD-1/RD-2 [RD-1][RD-2]."
+    "reason": "F9 (rider, 21:36) precedes the segment start (21:39) but answers only F8's request to pull in at a petrol station 'just ahead' for one minute — a stop permission, not a general route choice and not a named road or area; it cannot cover a 6.27 km segment that strays 1958 m from the optimal route, and no stop is measured, so nothing ties the driven segment to any agreed route [F3][F8][F9][RD-5][RD-3]. F11 is the driver's own after-the-trip assertion and is not consent [F11][RD-5]. No traffic exemption: F14 no qualifying incident, F12/F13 only band 5 [F14][F12][F13][RD-4]. Finding does not change: segment counts and its 4.56 extra km are refundable under RD-2."
    }
   ],
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "The rider's message [F8] agrees only to a one-minute stop, not to a route change; RD-5 requires the consent to match the segment, and RD-3(b) denies exemption where the driver chose the place and the consent message carries no routing [F7][F8][F3][RD-5][RD-3]."
+    "reason": "Timing is conceded but the consent it invokes is limited by its own words: F9 agrees only to the stop asked for in F8 ('petrol station just ahead', 'one minute'), which does not reach the 4.56 km / 1958 m segment F3 measures, so RD-5 covers no part of this segment and it counts."
    },
    {
     "id": "D2",
-    "reason": "RD-3(a) requires the rider to have named the place; here the driver named 'the petrol station just ahead' [F7] and the rider merely assented [F8], so the stop is driver-chosen and the extra kilometres are not exempt [F7][F8][F3][RD-3]."
+    "reason": "Not undetermined: F9's scope is readable — it is a stop permission, not a general route choice and not a named road; the record places the segment 1958 m off-route and outside any station stop, so the consent does not cover it [F3][F9][RD-5]."
    },
    {
-    "id": "D4",
-    "reason": "Correct arithmetic but wrong conclusion: the $2.44 is payable precisely because the segment is not exempt [F3][F4][F6][RD-2]."
+    "id": "D3",
+    "reason": "Accepted only in part; the driver's own concession that F9 names no route and F11 is unilateral confirms the segment is unexempted, which supports the rider's refund rather than denying it [F9][F11][F3][RD-3][RD-5]."
    },
    {
-    "id": "D7",
-    "reason": "The driver's profile shows route: 0 upheld in 90 days [F16]; RD-6 requires route_disputes_upheld_90d ≥ 1 and profile facts cannot stand alone, so no flag_account arises even though this case is established [F16][RD-6]."
+    "id": "D8",
+    "reason": "Correct and applied: F17 shows 0 route disputes upheld in 90 days, so RD-6's repeated condition fails and no flag_account attaches [F17][RD-6]."
+   },
+   {
+    "id": "C4",
+    "reason": "Substantially correct but over-broad: F9 is a rider message sent before the segment, so it is consent under RD-5 for a stop, not 'no consent at all'; its narrow scope is what leaves the segment counting [F8][F9][F3][RD-5]."
+   },
+   {
+    "id": "C5",
+    "reason": "Accepted as to F11 not being consent, but F9 (the rider's own timestamped message) already supplies the consent the driver relies on within its narrow scope, so C5's framing that there was no consent at all is rejected [F9][F11][RD-5]."
    },
    {
     "id": "C8",
-    "reason": "The rider's claim of a repeated breach fails on the facts: the driver's 90-day record shows route: 0 upheld [F16], so RD-6's threshold is not met and no account flag is issued [F16][RD-6]."
+    "reason": "Fails on its own terms: F17 records 0 route disputes upheld in 90 days, so the RD-6 repeated-breach condition is not met and no flag_account follows [F17][RD-6]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F8",
+   "F9",
+   "F11"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.80 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0022.record.json",
- "latency_s": 26.73,
- "input_tokens": 112192,
- "output_tokens": 8095,
- "requests": 11,
+ "latency_s": 22.09,
+ "input_tokens": 93639,
+ "output_tokens": 6759,
+ "requests": 9,
  "llm_calls": 6
 }

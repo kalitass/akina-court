@@ -4,19 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:58.125913+00:00",
+ "ts": "2026-10-10T13:18:17.161688+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7) and flag the driver's account for review of misuse of the \"I'm Here\" arrival button.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; note that the driver's \"I'm Here\" tap at 12:06:15 was ~780 m from Bugis Junction, so NS-1 is not satisfied; issue a driver-side reminder on the \"I'm Here\" button.",
   "confidence": 0.9,
+  "reasoning": "Dispute is a no-show cancellation fee (NS-0, cancelled_by = driver, driver asserts rider no-show → NS-1/NS-2). Safety screen: chat, complaint and driver statement contain no threat, harassment, abuse or dangerous-driving allegation — nothing to escalate.\n\nNS-1 requires all three: (i) driver pressed \"I'm Here\"; (ii) at that moment GPS placed him at the pickup point (≤200 m); (iii) he then waited continuously >3 min within 200 m until cancelling.\n\n(i) satisfied: driver_pressed_here_at = 12:06:15, and the driver's own chat message at 12:06:20 confirms it.\n\n(ii) fails. Pickup (Bugis Junction) is at 1.2994, 103.8555. At 12:06:15 the GPS trace (5 s grid, thinned) puts the driver at ~1.30476, 103.85487 — roughly 0.0070° north, i.e. ≈ 780 m from the pickup point, far outside the 200 m data-layer radius. The trace from 12:06:00 through 12:09:25 shows the vehicle stationary at that same spot (speed 0–2 km/h), never approaching Bugis Junction; the last moving sample at 12:05:30 was still ~1.13 km north. The rider's message at 12:07:15 (\"no car here\") and the driver's stationary position agree with the rider's account; the system trace therefore overrides the driver's statement that he was at the pickup.\n\n(iii) also fails in substance: even if the ~3 min 10 s stationary period counted, it occurred at a location ~780 m from the pickup point, not within 200 m of it.\n\nBecause NS-1 (ii) (and effectively (iii)) is not met, NS-2 applies: the $6.61 cancellation fee is refunded in full (refund_full). No flag_account: NS-2's account flag attaches only when the driver was outside the radius at the tap AND NS-1 is otherwise argued as a no-show abuse; here the fee was refunded rather than the driver's tap being used to trigger a waiting/no-show charge, and profile facts (a prior upheld no-show dispute) cannot alone justify a flag.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
-   "NS-2",
-   "NS-7"
+   "NS-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -24,14 +25,22 @@
   "rejected_claims": [
    {
     "id": "driver_statement",
-    "reason": "Driver claims he pressed 'I'm Here' and waited more than 3 minutes at the pickup and that the rider never showed up. GPS shows he remained ~0.7 km from Bugis Junction throughout the wait and never entered the 200 m pickup radius, so the NS-1 (ii) location requirement fails; system records override the statement."
+    "reason": "Claim that he \"waited more than 3 minutes at the pickup\" is contradicted by the GPS trace: from 12:06:00 to 12:09:25 he was stationary at ~1.30476, 103.85487, about 780 m from Bugis Junction, never entering the 200 m arrival radius. System records override statements."
+   },
+   {
+    "id": "driver_chat_here",
+    "reason": "Driver's chat \"I'm here already\" at 12:06:20 is not supported by GPS: the vehicle was ~780 m north of the pickup point at that time."
    }
   ],
-  "flag_account": true
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.38,
- "input_tokens": 10530,
- "output_tokens": 925,
+ "latency_s": 4.41,
+ "input_tokens": 11786,
+ "output_tokens": 1002,
  "requests": 1,
  "llm_calls": 1
 }

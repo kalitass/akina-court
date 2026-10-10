@@ -15,7 +15,7 @@ const AUTORUN = Q.get('autorun') === '1';
 const CF = Q.get('cf') || null;
 const SHOW = Q.get('mode') !== 'expert';   // judge view (plain language) unless ?mode=expert
 const TITLES = {   // judge-facing names; the C-000n id stays in Expert view and the URL
-  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Two dollars over the estimate',
+  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Five dollars over the estimate',
   'C-0004': '"Arrived" 613 m away', 'C-0005': 'Two minutes away, $6.61 fee', 'C-0006': '"Sit down or I lock the doors"', 'DISP-002': "Organisers' sample: the Tiong Bahru no-show" };
 const caseTitle = id => TITLES[id] || (id.startsWith('B-') ? `Benchmark case ${id.slice(2).replace(/^0+/, '')}` : id);
 const $ = id => document.getElementById(id);
@@ -63,8 +63,9 @@ function compact(c, ft, run){
     weather: c.weather || { rain_mm:0, description:'' }, fare: c.fare || {},
     chat: (c.chat||[]).map(m => ({ t:sec(m.ts), from:m.sender || m.from, text:m.text })),
     driver_statement: c.driver_statement || '', profiles: c.profiles || {},
-    facts: ft.facts, events: run ? run.events : [], ruling: run ? run.ruling : null, notices: run ? (run.notices||[]) : [],
-    exempt: run && run.ruling && run.ruling.segment_findings ? run.ruling.segment_findings.filter(f => fState(f) === true).map(f => f.fact_id) : null,
+    // a stored run is shown with the fact table it was ruled on; the live table only when no run exists
+    facts: (run && run.facts && run.facts.facts && run.facts.facts.length) ? run.facts.facts : ft.facts, events: run ? run.events : [], ruling: run ? run.ruling : null, notices: run ? (run.notices||[]) : [],
+    findings: run && run.ruling && run.ruling.segment_findings ? Object.fromEntries(run.ruling.segment_findings.map(f => [f.fact_id, f])) : null,
   };
 }
 // a finding is three-valued: exempt (true) / counts (false) / undetermined (null); records written before that stored exempt: bool
@@ -121,7 +122,7 @@ const FACT = Object.fromEntries(C.facts.map(f => [f.id, f]));
 const segFacts = C.facts.filter(f => f.value && 'extra_km' in f.value && f.value.start);
 const stopFacts = C.facts.filter(f => f.value && 'duration_s' in f.value && 'm_from_pickup' in f.value && f.value.lat);
 // exempt: true / false / null (undecided — no ruling yet)
-const segs = segFacts.map(f => ({ id:f.id, s:isoSec(f.value.start), e:isoSec(f.value.end), km:f.value.extra_km, exempt: (C.exempt && !SHOW) ? C.exempt.includes(f.id) : null, f }));
+const segs = segFacts.map(f => ({ id:f.id, s:isoSec(f.value.start), e:isoSec(f.value.end), km:f.value.extra_km, exempt: (C.findings && !SHOW && C.findings[f.id]) ? fState(C.findings[f.id]) : null, f }));
 const stops = stopFacts.map(f => ({ id:f.id, s:isoSec(f.value.start), e:isoSec(f.value.end), lon:f.value.lon, lat:f.value.lat, dur:f.value.duration_s, f }));
 const pickupLL = [T.pickup.lon, T.pickup.lat], dropLL = [T.dropoff.lon, T.dropoff.lat];
 const segCls = s => s.exempt === null ? 'und' : s.exempt ? 'amb' : 'red';
@@ -165,15 +166,15 @@ feedEvents.sort((a,b) => a.t - b.t);
 // ---------------- HUD ----------------
 (function hud(){
   const sel = $('caseSel');
-  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')]];
-  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = c.group === 'benchmark' && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
+  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')], [`Held-out set · ${cases.filter(c => c.group === 'held-out').length} cases`, cases.filter(c => c.group === 'held-out')]];
+  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = (c.group === 'benchmark' || c.group === 'held-out') && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
   if (!cases.some(c => c.case_id === CID)) { const o = el('option', '', CID); o.value = CID; o.selected = true; sel.appendChild(o); }
   sel.onchange = () => { const q = new URLSearchParams(); q.set('case', sel.value); if (THEME === 'light') q.set('theme', 'light'); location.search = q.toString(); };
   const TYPE = { route_deviation:['Route deviation','amber'], no_show:['No-show','purple'], safety:['Safety','red'] }[C.type] || [C.type, ''];
   $('hudBadges').innerHTML = `<span class="badge ${TYPE[1]}">${TYPE[0]}</span><span class="badge">${SHOW ? esc(caseTitle(C.id)) : esc(C.id) + ' · ' + esc(T.trip_id)}</span><span class="badge">${esc(T.service_type)}</span><span class="badge">${esc(C.weather.description)}${C.weather.rain_mm>0?' · '+C.weather.rain_mm+' mm':''}</span>`
     + (CF ? `<span class="badge cf" title="${esc(controls.counterfactual[CF]||'')}">counterfactual · ${esc(CF)}</span>` : '');
   $('hudStops').innerHTML = `<div class="stop"><i></i><div class="n">${esc(T.pickup.name)}</div><div class="m">${MODE==='no_show' ? 'pickup point · ' + (T.arrived ? 'reached ' + hm(T.arrived) : 'never reached') : 'pickup ' + hm(PICK)}</div></div><div class="stop b"><i></i><div class="n">${esc(T.dropoff.name)}</div><div class="m">${DROP ? 'drop-off ' + hm(DROP) : CANCEL ? 'cancelled ' + hm(CANCEL) + ' by ' + esc(T.cancelled_by) : ''}</div></div>`;
-  const f1 = FACT.F1 && FACT.F1.value || {};
+  const f1 = (C.facts.find(f => f.value && (MODE === 'no_show' ? 'nearest_m' in f.value : 'actual_km' in f.value)) || {}).value || {};
   const kv = MODE === 'no_show'
     ? [['Cancellation fee', '$' + (C.fare.cancellation_fee||0).toFixed(2)], ['Closest approach', (f1.nearest_m != null ? f1.nearest_m : '—') + ' m'], ['Pricing', C.fare.pricing || '—']]
     : [['Charged', '$' + (C.fare.total||0).toFixed(2)], ['Driven', (f1.actual_km||0).toFixed(1) + ' km'], ['Optimal', (T.estimated_km||0).toFixed(1) + ' km']];
@@ -319,7 +320,8 @@ function buildMarkers(){
   }
   if (MODE !== 'no_show') for (const st of stops) { st.m = lmk(`<div class="stoppin"><b>${SHOW ? '⏸' : st.id}</b>stopped ${Math.floor(st.dur/60)} min ${st.dur%60?st.dur%60+' s':''}</div>`, 'side', 'l', [st.lon, st.lat]); st.m.getElement().firstChild.classList.add('hidden'); }
   if (MODE === 'no_show' && HERE) {
-    const d = FACT.F2 && FACT.F2.value && FACT.F2.value.m_from_pickup || Math.round(haver(posAt(HERE).p, pickupLL));
+    const hereF = C.facts.find(f => f.value && f.value.m_from_pickup_at_tap != null);
+    const d = hereF ? hereF.value.m_from_pickup_at_tap : Math.round(haver(posAt(HERE).p, pickupLL));
     hereM = lmk(`<div class="herepin"><b>${T.hereAuto ? 'Arrival auto-confirmed' : "I'm Here"}</b> ${T.hereAuto ? '' : 'tapped '}${hm(HERE)} · ${d} m from pickup</div>`, 'side', 'l', posAt(HERE).p); hereM.getElement().firstChild.classList.add('hidden');
     gapM = mk(`<div class="gaplab" style="display:none">0 m</div>`, { anchor:'center' }).setLngLat(pickupLL).addTo(map);
   }
@@ -428,7 +430,7 @@ addEventListener('keydown', e => { if (e.target.tagName === 'SELECT' || e.target
 // ---------------- feed / bubbles ----------------
 const feedEl = $('feed');
 // what the judge read that code could not: a safety concern, an evidence gap
-function judgeNotes(r){ const out = []; if (r.safety_concern && r.safety_concern !== 'none') out.push(`<div><span class="seglab red" style="animation:none">safety concern · ${esc(r.safety_concern)}</span><span>${(r.safety_basis||[]).map(b=>cite(b)).join(', ') || 'no basis listed'}</span></div>`); if (r.evidence_gap) out.push(`<div><span class="seglab und" style="animation:none">evidence gap</span><span>${esc(r.evidence_gap)}</span></div>`); return out.length ? `<div class="segf">${out.join('')}</div>` : ''; }
+function judgeNotes(r){ const out = []; if (r.safety_concern === 'unscreened') out.push(`<div><span class="seglab und" style="animation:none">safety screen not run</span><span>the judge never answered; a person reads the chat</span></div>`); else if (r.safety_concern && r.safety_concern !== 'none') out.push(`<div><span class="seglab red" style="animation:none">safety concern · ${esc(r.safety_concern)}</span><span>${(r.safety_basis||[]).map(b=>cite(b)).join(', ') || 'no basis listed'}</span></div>`); if (r.evidence_status && r.evidence_status !== 'sufficient') out.push(`<div><span class="seglab und" style="animation:none">evidence · ${esc(r.evidence_status)}</span><span>${esc(r.evidence_gap || 'no detail given')}</span></div>`); else if (r.evidence_gap) out.push(`<div><span class="seglab und" style="animation:none">evidence gap</span><span>${esc(r.evidence_gap)}</span></div>`); return out.length ? `<div class="segf">${out.join('')}</div>` : ''; }
 function setPill(cls, txt){ const p = $('pill'); p.className = 'pill ' + cls; p.querySelector('span').textContent = txt; }
 // nothing in the fact table labels a message; a red mark appears only when the judge's safety screen named this line (safety_basis).
 // a hint word is shown as a neutral note: it only tells the reader (and the judge) to read the line in context.
@@ -583,7 +585,7 @@ function traceLine(l, i, inst){
   const WORD = { ok:'Applies', no:'Does not apply', ask:'Judge decides', na:'Not relevant' };
   const subj = m[5] === 'case' ? '' : (SEGNAME[m[5]] ? SEGNAME[m[5]] : (factLabel(FACT[m[5]]) || m[5])) + ': ';
   let elem = m[4].replace(/\s*RULE:.*$/, '').replace(/\s*—.*$/, '').replace(/\s*\(repeated breach → flag_account\)/, ''); if (!elem) elem = CLAUSE[m[2]] || m[2];
-  if (m[2] === 'RD-6') elem = 'Repeat offender: ' + elem; if (m[2] === 'RD-1') elem = 'Driver left the direct route: ' + elem;
+  if (m[2] === 'RD-6') elem = 'Repeat offender: ' + elem; if (m[2] === 'RD-1' && /^off-route segment/i.test(elem)) elem = 'Driver left the direct route: ' + elem;
   const tail = mark === '?' ? ' <span class="muted">→ the judge decides</span>' : mark === '–' ? ' <span class="muted">(not needed)</span>' : '';
   return `<div class="line ${cls}" style="animation-delay:${inst?0:i*110}ms" title="${esc(m[2] + (m[3] ? '(' + m[3] + ')' : '') + ' · ' + m[6])}"><b class="word">${WORD[cls]}</b><span>${esc(subj)}${esc(elem)}</span></div>`;
 }

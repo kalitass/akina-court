@@ -2,20 +2,21 @@
  "arm": "judge_only",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:45:40+00:00",
+ "started_at": "2026-10-10T13:33:19+00:00",
  "fingerprint": {
-  "case_sha256": "ddeb7f012f4eb7ba",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "ccb902d41402fdce",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:45:40+00:00"
+  "issued_at": "2026-10-10T13:33:19+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.17,
-  "recommended_action": "Issue a Ryde voucher of $4.17 to the rider (NS-7) for the unexcused detour, and note the RD-1 breach on the driver's record for the 2.96 km off-route segment.",
+  "amount": 4.33,
+  "recommended_action": "Issue a $4.33 Ryde voucher to the rider (RydeTAXI metered overcharge, RD-2/NS-7) and record the RD-1 breach on the driver's file; no account flag (RD-6 not met).",
   "confidence": 0.82,
+  "reasoning": "The trip is RydeTAXI, so the fare is metered and extra kilometres enter the fare directly [F6][RD-2]; the app quote (21.2 km) is not binding but the driver's RD-1 duty to take the shortest and most direct route is [F1][RD-1]. One off-route segment exists: 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, adding 3.07 km [F3], and the trace settles that no RD-4 incident excuses it [F13][RD-4].\n\nThe remaining questions are RD-3 and RD-5. The chat record is complete and every message is timestamped [F9]; it contains only a pickup greeting and the driver's car description [F7][F8]. No rider message before 09:24:50 asks for a stop or names any place or road, so there is no rider-agreed route the segment could fall under [F7][F8][RD-5], and no rider-named stop for RD-3(a) to exempt [RD-3]. The driver's post-trip statement that \"the GPS sent me; it rerouted\" is a claim in his own statement, not rider consent, and does not excuse the deviation [F10][RD-5]. The segment therefore counts in full under RD-2 [F3][RD-2].\n\nAmount: the fare record gives this trip's rate as distance fare ÷ distance km = $34.42 ÷ 24.41 km = $1.4101/km [F4][F6][RD-2]. The segment's extra distance is 3.07 km [F3]; 3.07 km × $1.4101/km = $4.3290, so $4.33. The trace note of $3.20 km × $1.4101 = $4.51 [F4] is the whole-trip excess, which includes non-segment mileage (corridor return trips, map-matching jitter) that RD-2 does not refund; only the measured off-route segment is refundable.\n\nOn the driver's profile: 1 upheld dispute in 90 days, but it is a no-show case and route disputes upheld = 0 [F16], so the \"repeated\" condition of RD-6 is not met and no account flag is raised [RD-6]. The rider's profile (0 upheld disputes) is not used to decide the case [F15]. Refund is via Ryde voucher per NS-7 [NS-7].\n\nSafety screen: I read the complaint, both chat messages and the driver's statement in context — no threat, intimidation, harassment or dangerous-driving allegation appears [F7][F8][F10]; the complaint alleges only silent rerouting and extra distance [F1][F3]. Safety_concern: none [SAFE-1].",
   "cited_facts": [
    "F1",
    "F3",
@@ -25,9 +26,9 @@
    "F8",
    "F9",
    "F10",
-   "F11",
    "F13",
-   "F14"
+   "F15",
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
@@ -36,6 +37,7 @@
    "RD-4",
    "RD-5",
    "RD-6",
+   "NS-7",
    "SAFE-1"
   ],
   "escalate": false,
@@ -46,13 +48,23 @@
     "finding": "counts",
     "basis": [
      "F7",
-     "F8"
+     "F8",
+     "F9",
+     "F10"
     ],
-    "reason": "No RD-5 consent: the in-app chat is empty, so no rider message before 09:32 agrees to a route the driver named, and the driver's post-trip statement of a GPS reroute is not consent [F7][F8][RD-5]. No RD-4 excuse: no incident on the replaced stretch and only band 4 speed records [F11][F9][F10][RD-4]. No RD-3 stop was named or measured [F7][RD-3(a)]. The 2.96 km extra is therefore refundable [F3][RD-2]."
+    "reason": "Complete, fully timestamped chat [F9] shows no rider message before 09:24:50 requesting a stop or agreeing to a route change — only a pickup greeting [F7] and the driver's car description [F8]. No place or road is named by the rider, so RD-3(a) cannot exempt the segment [RD-3] and no rider consent under RD-5 exists; the driver's post-trip statement that the GPS rerouted him is not rider consent [F10][RD-5]. The segment's 3.07 km extra is refundable under RD-2 [F3][RD-2]."
    }
   ],
   "rejected_claims": [],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8",
+   "F10"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "eligibility": {
@@ -62,23 +74,23 @@
    {
     "type": "refund_partial",
     "mode": "auto",
-    "detail": "$4.17 Ryde voucher to the rider (NS-7)"
+    "detail": "$4.33 Ryde voucher to the rider (NS-7)"
    }
   ],
   "what_would_change": [
-   "F3: if the judge finds the rider agreed to this route or named this stop beforehand, it is exempt; if not, $4.17 is refunded; if the record cannot settle it, a person decides.",
+   "F3: the judge found no rider agreement covering this segment, so $4.33 is refunded; a rider message agreeing to it before it started would have exempted it.",
    "Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag."
   ]
  },
- "latency_s": 6.74,
+ "latency_s": 7.69,
  "model_calls": 2,
  "provider_trace_ids": [
-  "33ff1791cc2607f4ed4bfc16d48138e5",
-  "1a7155720189303a82c58e275aa72c3e"
+  "27132c5966903b158cc46b2ec27860ad",
+  "9d68042d7518bdba46d762a5ef64fe2d"
  ],
  "provider_response_ids": [
-  "938b6757-b907-496f-b04e-c5ba46f1e86e",
-  "ca4a5c92-e9e7-49d7-9465-4334008248c8"
+  "f360ac17-4d7b-44c3-a08b-ac259777d5d6",
+  "439ee81b-8ff6-4ac8-ae2e-7fb62134cb92"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -91,25 +103,25 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 10850,
-   "completion_tokens": 1061,
-   "total_tokens": 11911,
+   "prompt_tokens": 12253,
+   "completion_tokens": 1429,
+   "total_tokens": 13682,
    "prompt_tokens_details": {
-    "cached_tokens": 10624
+    "cached_tokens": 12032
    },
-   "prompt_cache_hit_tokens": 10624,
-   "prompt_cache_miss_tokens": 226
+   "prompt_cache_hit_tokens": 12032,
+   "prompt_cache_miss_tokens": 221
   },
   {
-   "prompt_tokens": 1029,
-   "completion_tokens": 265,
-   "total_tokens": 1294,
+   "prompt_tokens": 1142,
+   "completion_tokens": 221,
+   "total_tokens": 1363,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 773
+   "prompt_cache_miss_tokens": 886
   }
  ],
- "finished_at": "2026-10-09T19:45:47+00:00"
+ "finished_at": "2026-10-10T13:33:26+00:00"
 }

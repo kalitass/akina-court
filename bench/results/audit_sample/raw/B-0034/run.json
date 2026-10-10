@@ -2,20 +2,21 @@
  "arm": "raw",
  "case_id": "B-0034",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:45:02+00:00",
+ "started_at": "2026-10-10T13:32:36+00:00",
  "fingerprint": {
-  "case_sha256": "8d9668aa10aa8f6d",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "ba0f8ed8a7585e17",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:45:02+00:00"
+  "issued_at": "2026-10-10T13:32:36+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and remind the driver that the \"I'm Here\" / wait-to-cancel flow requires the full 3-minute wait at the pickup point before cancelling.",
-  "confidence": 0.86,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver account flag on this record.",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: the chat (two driver messages about waiting and cancelling) and the rider's complaint contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation; nothing to escalate on safety grounds. Safety concern: none.\n\nNo-show analysis (NS-0 → NS-1/NS-2). cancelled_by = driver and the driver's stated reason is rider no-show, so NS-1 governs. Requirement (i): driver pressed \"I'm Here\" at 13:02:35 — satisfied. Requirement (ii): the pressed-here GPS sample at 13:02:30 is lat 1.352366, lon 103.944349, which is ~18 m from the pickup 1.3525, 103.9447 — well inside the 200 m radius, so (ii) is satisfied (no flag_account under NS-2). Requirement (iii): the driver must then wait continuously > 3 minutes at the pickup. The GPS trace is continuous on the 30 s grid from 13:02:30 through the 13:05:30 cancel with speeds of ~0–2 km/h and no gap, so the driver did remain on scene. But the wait window is only 13:02:35 → 13:05:30 = 175 seconds, which is below 3:01 / 180 s; even measuring from the 13:02:30 sample it is 180 s at most, not \"more than 3 minutes\" (the driver's own chat at 13:05:20 claimed \"more than 3 min already\", which the timeline contradicts). NS-1 (iii) therefore fails → NS-2: the $6.61 cancellation fee is refunded in full, refund_full, amount = $6.61.\n\nThe driver's statement (\"waited more than 3 minutes\") is a statement, and the trip timeline shows 2 min 55 s, so the system record governs. The rider's own admission that she came out a minute after cancellation is not relevant: the fee fails because the driver's threshold was not met, not because of promptness. Profile facts (driver's 1 upheld no-show dispute in 90 days) are not used to decide this case; NS-2's flag condition (GPS outside 200 m at tap) is not met, so no account flag.\n\nEvidence check: ticket, timeline (all arrival/here/cancel timestamps), 30 s GPS grid covering the approach, the wait and the cancellation moment, and complete chat are present. evidence_status = sufficient.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -28,19 +29,27 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Driver states he waited more than 3 minutes, but the timeline shows 'I'm Here' pressed at 13:02:45 and cancellation at 13:05:40 — 2 min 55 s (175 s), short of the >180 s required by NS-1(iii). System records override statements. (The 4 min 30 s since driver_arrived_at does not count; the clock runs from the 'I'm Here' press.)"
+    "id": "driver_statement_wait_over_3min",
+    "reason": "The driver states he waited more than 3 minutes after pressing I'm Here, but the trip timeline (pressed here 13:02:35, cancelled 13:05:30 = 175 s) and the continuous 30 s GPS trace (stationary until 13:05:30) show the wait fell short of the >3-minute (≥180 s) threshold in NS-1 (iii)."
+   },
+   {
+    "id": "rider_came_out_late",
+    "reason": "The rider says she came out a minute after cancellation; this does not create the fee — the fee fails on the driver's own unmet NS-1 (iii) wait requirement, so no need to weigh the rider's timing."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.55,
+ "latency_s": 4.59,
  "model_calls": 1,
  "provider_trace_ids": [
-  "c9c4fe8d32b88975e833d75bc33cb601"
+  "8fd735476bcc732980f59605c59823bd"
  ],
  "provider_response_ids": [
-  "343293de-be35-4eaf-9e8e-8ed66a465a97"
+  "e221a5a5-218c-42cf-b364-48f33b74746c"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -53,15 +62,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 11394,
-   "completion_tokens": 1037,
-   "total_tokens": 12431,
+   "prompt_tokens": 12375,
+   "completion_tokens": 1035,
+   "total_tokens": 13410,
    "prompt_tokens_details": {
-    "cached_tokens": 11260
+    "cached_tokens": 12160
    },
-   "prompt_cache_hit_tokens": 11260,
-   "prompt_cache_miss_tokens": 134
+   "prompt_cache_hit_tokens": 12160,
+   "prompt_cache_miss_tokens": 215
   }
  ],
- "finished_at": "2026-10-09T19:45:07+00:00"
+ "finished_at": "2026-10-10T13:32:40+00:00"
 }

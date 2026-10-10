@@ -4,50 +4,52 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:21:00.385958+00:00",
+ "ts": "2026-10-10T13:20:32.250937+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver account action required.",
-  "confidence": 0.92,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; no driver-side action (driver never tapped \"I'm Here\").",
+  "confidence": 0.97,
+  "reasoning": "Safety screen: the only statement is the driver's neutral \"I was on my way when the rider cancelled\" [F8]; no chat messages exist [F7]; no threat, harassment, sexual remark or dangerous-driving allegation appears, so no escalation under SAFE-1/SAFE-2. safety_concern = none.\n\nThis is a rider-cancelled (immediate) booking, so the fee's validity runs through NS-0 → NS-4. The cancellation was made 1 min 40 s after matching [F2] — within Ryde's 3-minute free-cancellation window (≤ 3:00). NS-4 is explicit: \"All cancellations made within 3 minutes of matching are not chargeable.\" The $6.61 fee is therefore not chargeable and must be returned in full: refund_full, $6.61.\n\nThe recorded driver-side evidence is consistent with this and shows no ground for the fee: the driver never came within 200 m of the pickup (closest 2138 m at the moment of cancellation [F1]), arrival was never recorded [F3], and no \"I'm Here\" tap or automatic arrival exists [F4]. Surge was 1.0× [F6]; traffic was a mid-band speed record on Eu Tong Sen Street with no incidents [F9][F10]; weather fair [F11]. None of this creates any chargeable item.\n\nNS-8 (driver late vs ETA) is not cited: Ryde has no such rule and the file carries no ETA field, so the rider's \"driver was nowhere near\" is not the basis of the refund — NS-4's 3-minute rule alone is. NS-1/NS-2 are not reached, because the driver did not cancel on a no-show basis and never pressed \"I'm Here\", so the flag_account trigger in NS-2 (tap while GPS shows away from pickup) does not apply. RD-6 is not triggered: no route deviation was upheld and the driver's profile shows 0 upheld disputes in 90 days [F13]. The rider's 2 upheld no-show disputes [F12] are noted but never decide this case.\n\nEvidence status sufficient: the GPS approach distance, the acceptance timestamp and the cancellation timestamp settle every element NS-4 needs; no record is missing.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
    "F8",
-   "F12",
    "F13"
   ],
   "cited_policy": [
    "NS-0",
    "NS-4",
-   "NS-7",
-   "NS-1",
-   "NS-2"
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "F8",
-    "reason": "Driver's statement that he was on his way does not support any charge: the fee was levied on a rider cancellation (NS-4), and system records show he was 2597 m away with no 'I'm Here' tap (F1, F3, F4), so no NS-1 no-show conditions were met either."
+    "id": "driver_statement",
+    "reason": "The driver's written statement that he 'was on his way' [F8] is an unrecorded claim and carries no weight against the system records [F1][F3][F4]; in any event it does not affect NS-4, which turns only on the time between matching and the rider's cancellation."
    },
    {
-    "id": "rider-reason",
-    "reason": "The rider's claim that the driver was 'nowhere near' is consistent with GPS (F1) but is not the basis of the ruling — NS-4 makes the fee depend only on the 3-minute matching window, not on driver arrival."
+    "id": "eta_based_free_cancel",
+    "reason": "The rider's ground that the driver was nowhere near does not itself create a fee waiver: Ryde has no ETA-lateness free-cancellation rule (NS-8 is informational only) and no ETA field exists in the file. The fee is refunded under NS-4's 3-minute rule instead."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.6,
- "input_tokens": 8683,
- "output_tokens": 942,
+ "latency_s": 4.69,
+ "input_tokens": 9708,
+ "output_tokens": 993,
  "requests": 1,
  "llm_calls": 1
 }

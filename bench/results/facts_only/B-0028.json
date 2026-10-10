@@ -4,28 +4,30 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:20:37.708392+00:00",
+ "ts": "2026-10-10T13:20:08.182721+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee on this no-show; no refund to the rider. No account action against the driver.",
-  "confidence": 0.9,
+  "ruling": "refund_full",
+  "amount": 6.61,
+  "recommended_action": "Refund the $6.61 cancellation fee as a Ryde voucher and remind the driver that the \"I'm Here\" no-show flow requires the tap and the continuous >3-minute wait to count from the tap itself.",
+  "confidence": 0.86,
+  "reasoning": "Screening: chat messages [F9][F10] and the driver's statement [F12] contain no threat, harassment, sexual remark or dangerous-driving allegation; dispute type is no_show, not safety. safety_concern = none.\n\nThis is a driver-cancelled no-show claim, so NS-0 routes it to NS-1/NS-2.\n\nNS-1 requires all three: (i) \"I'm Here\" tapped; (ii) at the tap the driver within 200 m of pickup; (iii) a continuous wait at the pickup point of more than 3 minutes measured from the tap.\n- (i) satisfied: tap at 17:19:15 [F6].\n- (ii) satisfied: 41 m from pickup at tap [F6].\n- (iii) fails. Within-200 m time after the tap was 3 min 40 s [F6] — that is > 3:00 but does not reach the policy's ≥ 3:01 threshold, i.e. \"waited for more than 3 minutes\". The driver's own message \"3 min up, cancelling the trip\" [F10] and the cancellation 5 min 5 s after platform-recorded arrival [F5] confirm he treated exactly 3 minutes as sufficient, which is one second short of the required wait.\n\nThe 5 min 5 s cumulative time within 200 m before cancellation [F2] cannot supply the missing second: NS-1 (iii) counts only waiting after the tap, and the pre-tap stationing at 17:17:50–17:19:15 [F2][F3] is expressly excluded. The driver's statement that he \"waited over 3 minutes\" [F12] is a statement and is overridden by the timeline [F6]. Note also this case shows the arrival confirmation was a driver_tap [F6], not a platform_auto.\n\nBecause NS-1 (iii) is not met, NS-2 applies: the $6.61 cancellation fee is refunded in full (refund_full, $6.61). The NS-2 flag trigger — a tap made while GPS showed the driver outside 200 m — does not apply, since 41 m ≤ 200 m [F6]; no flag_account. The driver's 2 previously upheld no-show disputes [F17] are profile facts and cannot decide this case; the NS-2 flag clause is not triggered, so no account flag.\n\nEvidence is sufficient: GPS is continuous and covers the cancellation moment [F3][F5][F6], every chat message is timestamped [F11], and no needed record is missing.",
   "cited_facts": [
-   "F1",
    "F2",
    "F3",
    "F4",
    "F5",
    "F6",
-   "F7",
    "F10",
+   "F11",
    "F12",
    "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
+   "NS-2",
    "NS-7"
   ],
   "escalate": false,
@@ -33,23 +35,27 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "Rider says she came out a minute after cancellation, but she was charged $6.61 for nothing. The system records (F2 4 min 40 s within 200 m, F3 4 min 5 s stationary, F5 cancelled 4 min 40 s after GPS arrival, F6 3 min 40 s within 200 m after the 'I'm Here' tap) show all NS-1 conditions were met, so the fee is valid; system records override statements."
-   },
-   {
-    "id": "NS-4",
-    "reason": "Rider-side 3-minute grace period does not apply: cancellation was by the driver (cancelled_by = driver), not by the rider, so NS-0 routes this to NS-1/NS-2 rather than NS-4."
-   },
-   {
     "id": "F12",
-    "reason": "Driver's written statement is consistent with, and adds nothing beyond, the GPS/timeline records; it was not needed as a claim of consent or of arrival, the objective records already establish NS-1."
+    "reason": "Driver's post-trip statement claims he 'waited over 3 minutes', but timeline/GPS records show only 3 min 40 s within 200 m after the tap [F6], and system records override statements; the >3-minute requirement of NS-1 (iii) is met only from 3:01, which the record does not establish."
+   },
+   {
+    "id": "F2",
+    "reason": "Cumulative 5 min 5 s within 200 m before cancellation is not usable for NS-1 (iii); the clause counts only the continuous wait measured from the 'I'm Here' tap, and the pre-tap period 17:17:50–17:19:15 is excluded."
+   },
+   {
+    "id": "F17",
+    "reason": "Driver's 3 disputes / 2 no-show upholdings in 90 days is a profile fact; profile facts cannot alone decide a case, and the NS-2 account flag requires a tap made outside the 200 m pickup radius, which did not occur (41 m, [F6])."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.92,
- "input_tokens": 8845,
- "output_tokens": 1067,
+ "latency_s": 5.34,
+ "input_tokens": 9857,
+ "output_tokens": 1200,
  "requests": 1,
  "llm_calls": 1
 }

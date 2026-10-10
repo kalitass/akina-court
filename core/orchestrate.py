@@ -16,6 +16,7 @@ from core.agents.advocate import REBUTTAL, AdvocateDeps, build_advocate, build_r
 from core.receipt import fingerprint
 from core.llm import describe_model
 from core.agents.judge import build_judge, build_notice_writer, judge_prompt
+from core.notices import consistent, escalation_notices, fallback_notices
 from core.facts.tools import build_fact_table
 from core.policy import citable_ids
 from core.policy_engine import check_ruling, evaluate
@@ -45,7 +46,7 @@ def trip_summary(case: Case) -> str:
     if t.cancelled_at:
         return (f"{t.service_type} {t.pickup.name} → {t.dropoff.name}, accepted {t.accepted_at:%H:%M:%S}, "
                 f"cancelled by {t.cancelled_by} at {t.cancelled_at:%H:%M:%S}; cancellation fee ${f.cancellation_fee:.2f}")
-    return (f"{t.service_type} {t.pickup.name} → {t.dropoff.name}, estimate {t.estimated_km:.1f} km / {t.estimated_min:.0f} min, "
+    return (f"{t.service_type} {t.pickup.name} → {t.dropoff.name}, estimate {t.estimated_km:.1f} km / {t.estimated_min:.1f} min, "
             f"pickup {t.pickup_at:%H:%M} drop-off {t.dropoff_at:%H:%M}; charged ${f.total:.2f} ({f.pricing})")
 
 
@@ -68,6 +69,29 @@ def rebuttal_body(r: Rebuttal) -> str:
     if r.revised_outcome:
         out.append(f"Revised ask: {r.revised_outcome.action}" + (f" ${r.revised_outcome.amount:.2f}" if r.revised_outcome.amount else ""))
     return "\n".join(out)
+
+
+def judge_unavailable_ruling(err: str) -> Ruling:
+    """The ruling code writes when the judge never answered (timeout, provider error, no balance): straight to a person.
+    The safety screen did not run, so safety_concern is "unscreened" (never "none"); the evidence was not weighed, so
+    evidence_status is "unknown"."""
+    return Ruling(ruling="escalate", recommended_action="human review", confidence=0.0, reasoning=f"Judge unavailable: {err}",
+                  cited_facts=[], cited_policy=[], escalate=True, escalation_reason=err,
+                  safety_concern="unscreened", evidence_status="unknown", evidence_gap="the judge did not run; nothing was weighed")
+
+
+def reviewer_looks_at(ruling: Ruling, cert) -> list[str]:
+    """Plain words for the escalation notice, from the structured grounds only."""
+    out = []
+    if ruling.safety_concern != "none" or (cert is not None and cert.dispute_type == "safety"):
+        out.append("the messages exchanged and both parties' accounts of what happened")
+    if any(sf.finding == "undetermined" for sf in ruling.segment_findings):
+        out.append("what was agreed about the route and which stretch it covered")
+    if ruling.evidence_status != "sufficient" or (cert is not None and cert.insufficient):
+        out.append("the trip record, including the parts that are missing from it")
+    if not out:
+        out.append("the trip record, the route taken and the messages exchanged")
+    return out
 
 
 def empty_brief(side: str, why: str) -> CaseBrief:
@@ -120,7 +144,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     cert = evaluate(case, table)
     judge_items = [f"{p.clause} for {p.subject}: {p.element} — {p.detail}" for p in cert.predicates if p.status == "judge"]
     if cert.insufficient:
-        judge_items.append(f"EVIDENCE: {cert.insufficient} — the only outcome is escalate; state what is missing in evidence_gap")
+        judge_items.append(f"EVIDENCE: {cert.insufficient} — the only outcome is escalate; evidence_status = insufficient and evidence_gap says what is missing")
     log.emit("verify", "check", "Policy execution trace (code): " + (f"{len(judge_items)} element(s) left to the judge" if judge_items else "outcome fully determined by code"),
              "\n".join(cert.lines()), certificate=cert.lines())
 
@@ -180,9 +204,9 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     if pc:
         jprompt += "\n\n" + pc
     jr, err = await _staged(judge.run(jprompt), TIMEOUTS["judge"], "judge")
+    last = jr      # the judge round whose messages a later correction continues from
     if err:
-        raw = Ruling(ruling="escalate", recommended_action="human review", confidence=0.0, reasoning=f"Judge unavailable: {err}",
-                     cited_facts=[], cited_policy=[], escalate=True, escalation_reason=err)
+        raw = judge_unavailable_ruling(err)
     else:
         raw = jr.output
         if "fake_clause" in inject:
@@ -195,7 +219,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                                                   "Do not change the outcome unless the correction requires it.",
                                                 message_history=jr.all_messages()), TIMEOUTS["judge"], "judge self-correction")
             if not err2:
-                raw = jr2.output
+                raw, last = jr2.output, jr2
     if "flag_text" in inject:
         raw = raw.model_copy(update={"recommended_action": (raw.recommended_action or "") + " + flag_account (demo text)"})
     if "wrong_amount" in inject and raw.amount:
@@ -213,17 +237,20 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                 + "\nThe trace is binding on ✓/✗ elements and on the amount formula. Re-issue the Ruling so that: the outcome is in the allowed set; "
                   "segment findings agree with every code-settled segment; the amount equals the formula to the cent; flag_account is "
                   "recommended only when the trace requires it. If the record does not let you decide a ? element, rule escalate with "
-                  "that ground (safety_concern, an undetermined finding on a ? segment, or the specific missing fact in evidence_gap); "
+                  "that ground (safety_concern, an undetermined finding on a ? segment, or evidence_status insufficient / unknown with the missing record named in evidence_gap); "
                   "elements marked ✓/✗ are settled and are not grounds. A person then decides.",
-                  message_history=jr.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
+                  message_history=last.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
             if not err3 and not citation_problems(jr3.output, table, clause_ids):
                 raw = jr3.output
+    if table.dispute_type != "route_deviation" and raw.segment_findings:
+        raw = raw.model_copy(update={"segment_findings": []})      # the field is for off-route segments only; the verifier drops them too
     log.emit("judge", "ruling", f"Proposed ruling: {raw.ruling}" + (f" ${raw.amount:.2f}" if raw.amount else "") + f" (model confidence {raw.confidence:.2f})",
              raw.reasoning, ruling=raw)
     ruling, lines = verify_ruling(raw, table, clause_ids, (briefs["rider"], briefs["driver"]), certificate=cert)
     if degraded and not ruling.escalate:
         ruling = ruling.model_copy(update={"ruling": "escalate", "amount": None, "escalate": True, "escalation_reason": "; ".join(degraded)})
         lines.append("an advocate stage failed → human review")
+    final_findings = {sf.fact_id: sf.finding for sf in ruling.segment_findings}
     log.emit("verify", "check", "Ruling verification against the policy certificate", "\n".join(lines), certificate=cert.lines())
     if ruling.escalate:
         log.emit("verify", "escalate", "Routed to human review", ruling.escalation_reason or "")
@@ -231,20 +258,30 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         log.emit("judge", "summary", f"Final: {ruling.ruling}" + (f" ${ruling.amount:.2f}" if ruling.amount else "") + f" · {ruling.recommended_action}",
                  "eligible for automation; " + ("account flag → human review; " if ruling.flag_account else "")
                  + f"cites {' '.join(ruling.cited_facts)} / {' '.join(ruling.cited_policy)}"
-                 + ("\nWhat would change this ruling: " + " | ".join(cert.what_would_change()) if cert.what_would_change() else ""))
+                 + ("\nWhat would change this ruling: " + " | ".join(cert.what_would_change(final_findings)) if cert.what_would_change(final_findings) else ""))
 
-    # ---- notices (cosmetic; never fail the case) ----
+    # ---- notices: what they may promise comes from the FINAL structured ruling, never from the judge's draft ----
     notices: list[Notice] = []
-    nw = build_notice_writer()
-    ctx = (f"Case {case.case_id}. Outcome: {ruling.ruling}" + (f" ${ruling.amount:.2f}" if ruling.amount else "")
-           + f". Recommended action: {ruling.recommended_action}. Escalated: {ruling.escalate}.\nReasoning:\n{ruling.reasoning}")
-    nr, nerr = await _staged(nw.run(ctx), TIMEOUTS["notice"], "notice writer")
-    if nerr:
-        log.emit("system", "notify", "Notice generation skipped", nerr)
+    if ruling.escalate:
+        rider_n, driver_n = escalation_notices(case.case_id, ruling, reviewer_looks_at(ruling, cert))
+        notices = [Notice(to="rider", text=rider_n), Notice(to="driver", text=driver_n)]
+        log.emit("system", "notify", "Notices sent to rider and driver (fixed text: case is with a reviewer, nothing promised)", f"RIDER: {rider_n}\n\nDRIVER: {driver_n}")
     else:
-        n = nr.output
-        notices = [Notice(to="rider", text=n.rider), Notice(to="driver", text=n.driver)]
-        log.emit("system", "notify", "Notices sent to rider and driver", f"RIDER: {n.rider}\n\nDRIVER: {n.driver}")
+        nw = build_notice_writer()
+        ctx = (f"Case {case.case_id}. Final outcome: {ruling.ruling}" + (f", amount ${ruling.amount:.2f} as a Ryde voucher" if ruling.amount else ", no amount")
+               + f". Account flag: {'yes' if ruling.flag_account else 'no'}. Recommended action: {ruling.recommended_action}.\nReasoning:\n{ruling.reasoning}")
+        nr, nerr = await _staged(nw.run(ctx), TIMEOUTS["notice"], "notice writer")
+        rider_n, driver_n = (nr.output.rider, nr.output.driver) if not nerr else (None, None)
+        on_record = [x for x in (case.fare.cancellation_fee, case.fare.total) if x]     # a no-refund notice may name the charge that stands
+        bad = [who for who, t in (("rider", rider_n), ("driver", driver_n)) if t is None or not t.strip() or not consistent(t, ruling, on_record)]
+        if bad:
+            tr, td = fallback_notices(ruling)
+            rider_n = tr if "rider" in bad else rider_n
+            driver_n = td if "driver" in bad else driver_n
+            log.emit("verify", "check", "Notice check: model text replaced by the template for " + ", ".join(bad),
+                     nerr or "the text carried an amount or a promise the final ruling does not")
+        notices = [Notice(to="rider", text=rider_n), Notice(to="driver", text=driver_n)]
+        log.emit("system", "notify", "Notices sent to rider and driver", f"RIDER: {rider_n}\n\nDRIVER: {driver_n}")
 
     ok, reasons = (not ruling.escalate), ([ruling.escalation_reason] if ruling.escalate and ruling.escalation_reason else [])
     actions = []
@@ -260,12 +297,22 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     record = CaseRecord(case_id=case.case_id, dispute=case.dispute, trip_summary={"text": summary},
                         status="escalated" if ruling.escalate else "resolved", facts=table, events=log.events,
                         ruling=ruling, proposed_ruling=raw, certificate=cert.lines(),
-                        eligibility={"auto": ok, "reasons": reasons, "actions": actions, "what_would_change": cert.what_would_change()},
+                        eligibility={"auto": ok, "reasons": reasons, "actions": actions, "what_would_change": cert.what_would_change(final_findings)},
                         briefs=briefs, rebuttals=rebuttals, notices=notices,
                         receipt=fingerprint(case, describe_model(), jprompt))
     if not inject and "~" not in case.case_id:              # demo runs (injection / counterfactual) leave no trace in the stores
         replay(hooks.after_ruling(record), log.emit)       # precedent consistency + index, SLA routing (flags)
     return record.model_copy(update={"events": log.events})
+
+
+def model_outage(record: CaseRecord) -> list[str]:
+    """Why this hearing is a default hand-off rather than a decision: the judge never answered, an advocate stage failed
+    or the rebuttal was skipped. Empty when every model stage completed. Runners refuse to store such a run as finished."""
+    out = [e.title for e in record.events if (e.kind == "brief" and "unavailable" in e.title.lower())
+           or (e.kind == "check" and "skipped" in e.title.lower() and "rebuttal" in e.title.lower())]
+    if record.ruling.safety_concern == "unscreened":
+        out.insert(0, "judge unavailable: " + (record.ruling.escalation_reason or ""))
+    return out
 
 
 def save_record(record: CaseRecord, out_dir: Path = Path("runs")) -> Path:

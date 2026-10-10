@@ -4,39 +4,43 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:26.359154+00:00",
+ "ts": "2026-10-10T13:18:42.156565+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; close the dispute with the $6.61 / $5.00 voucher-window and 30-day appeal note if re-raised.",
-  "confidence": 0.86,
+  "recommended_action": "Uphold the $6.61 cancellation fee; advise the rider that cancellation fees apply after 3 minutes from matching and that fee disputes are handled via RydeHELP within 30 days.",
+  "confidence": 0.9,
+  "reasoning": "Dispute is a rider-filed no-show/cancellation-fee dispute. The trip record shows cancelled_by = rider, so under NS-0 the case is routed to NS-4 (immediate/on-demand booking; no scheduled-trip fields present).\n\nArithmetic: accepted_at 2026-09-21T08:40:00, cancelled_at 2026-09-21T08:46:40 → 6 min 40 s after matching, well beyond the 3-minute grace period (≤3:00 is free). The $6.61 cancellation fee therefore stands; no refund.\n\nThe rider's ground — \"the driver had not even arrived\" — is not a valid basis for waiver: NS-4 provides that a driver not yet having arrived does not entitle the rider to free cancellation, and Ryde has no ETA-based waiver rule (NS-8 is informational only / no ETA field). In any event the record shows the driver had arrived: driver_arrived_at 08:41:25, driver pressed \"I'm Here\" at 08:42:15, and the GPS trace places him stationary at ~1.28430, 103.85149 from 08:42:00 through the cancellation at 08:46:40 — roughly 60–100 m from the Raffles Place pickup, i.e. within the 200 m arrival radius — so the rider's \"not even arrived\" claim is rejected on the record.\n\nThe driver had also waited in the zone continuously for about 4 min 25 s (08:42:15–08:46:40), satisfying NS-1 (i)(ii)(iii), though the cancellation was rider-initiated so NS-1/NS-2 do not decide the outcome; NS-4 governs. No GPS gaps (30 s grid maintained throughout).\n\nProfiles: rider disputes_upheld_90d = 0; driver no_show_disputes_upheld_90d = 2 is a profile fact and cannot decide this case — it also only concerns the driver's own cancellations, not this rider-initiated one. No RD-6 basis (no route deviation, no upheld route dispute).\n\nSafety screen: chat is limited to a pickup notice and the rider's cancellation message; the driver's statement is neutral. No threat, abuse, harassment or dangerous-driving allegation → safety_concern none.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-4",
-   "NS-7",
-   "SAFE-1",
-   "SAFE-2"
+   "NS-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_plans_changed",
-    "reason": "A change of plans is not a ground to waive the cancellation fee under NS-4; the fee attaches to cancelling more than 3 minutes after matching (6:40 elapsed)."
+    "id": "rider_not_arrived",
+    "reason": "Contradicted by system records: driver_arrived_at 08:41:25, 'I'm Here' at 08:42:15, and GPS placing the car stationary at the pickup from 08:42:00 to the 08:46:40 cancellation; the driver was at the pickup point. In any case NS-4 does not make non-arrival a ground for free cancellation."
    },
    {
-    "id": "rider_driver_not_arrived",
-    "reason": "Driver non-arrival is not a published ground for free cancellation (Ryde has no ETA-based waiver; NS-8 is informational only). GPS in fact places the driver at the pickup from 08:42:00, before the 08:46:40 cancellation."
+    "id": "plans_changed",
+    "reason": "A change of plans by the rider is not a ground for waiving the cancellation fee under NS-4; cancellation at 6 min 40 s after matching exceeds the 3-minute free window."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "latency_s": 4.3,
- "input_tokens": 11175,
- "output_tokens": 882,
+ "input_tokens": 12175,
+ "output_tokens": 1005,
  "requests": 1,
  "llm_calls": 1
 }

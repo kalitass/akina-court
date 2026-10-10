@@ -4,42 +4,52 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:50.456543+00:00",
+ "ts": "2026-10-10T13:18:04.826379+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the ticket: the deviation via Bedok South Avenue 3 was consented to by the rider in chat before the turn-off, so the metered fare stands. No refund of the fare difference.",
-  "confidence": 0.72,
+  "ruling": "refund_partial",
+  "amount": 7.9,
+  "recommended_action": "Refund S$7.90 to the rider as a Ryde voucher (5.60 extra km on the un-exempt segment x S$1.41/km metered rate), and send the driver's account to Ryde review as a repeated route-deviation breach + flag_account",
+  "confidence": 0.78,
+  "reasoning": "Service type is RydeTAXI, so the fare is metered and detour kilometres feed directly into the fare; the overcharge is measured per RD-2 as extra_km x per-km rate.\n\nMeasured detour (GPS, 30 s thinned grid). The quoted route (10.993 km) runs from NEX Serangoon south along Upper Serangoon / Bendemeer / Kallang to Suntec. The executed trace follows it to about 1.3427,103.8687, then turns NE into Braddell Road (1.3437,103.86696 -> 1.34428,103.86471 -> 1.34354,103.8625 -> 1.34276,103.86093), reaches 1.34054,103.8617 at 22:45:55, doubles back about 143 m SE and re-joins the corridor at 1.3383,103.8623. That loop adds roughly 0.6-0.7 km - within GPS matching noise (0.2 km) plus a short jog, not a deviation. The real problem starts at 22:47:55 (1.33157,103.86256, still on the corridor): the trace turns SE down Paya Lebar Road (1.33013,103.86378 -> 1.32916,103.86592 -> 1.32838,103.86813 -> 1.32727,103.86981 -> 1.32557,103.87143 -> 1.32377,103.87293, 0 km/h at 22:51:25), then E along the PIE (1.32163,103.87456 -> 1.31992,103.87505), down to 1.31667,103.87511 (8.1 km/h), NE to 1.31680,103.87797, SE to 1.31448,103.87931 and 1.31317,103.8821, out to the furthest point 1.31115,103.88538 at 22:58:55, then back W via 1.31067,103.88309 -> 1.31031,103.88138 -> 1.30989,103.87942, with a 134 m W jog at 23:01:25, re-joining the corridor at about 23:04 (1.299,103.8776). Traced length of that stretch is about 11.9 km against about 1.8 km for the corridor sub-segment (1.33157,103.86256)-(1.299,103.8776), i.e. about 10 km of extra driving over a stretch the quoted route covers in about 1.7 km. It is one continuous, deliberate detour, so RD-1 treats it as a single un-exempt segment (seg1).\n\nNo exemption applies. Traffic: there is no LTA incident (incidents = []), so RD-4(a) fails; the only band-2 record on a route road is PAN ISLAND EXPRESSWAY SYN-0009 (22:32:55-22:54:50), which is band 2 on the PIE the driver said he was avoiding, and under RD-4(b) a speed band alone is only corroborative in the MVP and cannot exempt; the driven Paya Lebar Road / eastern-PIE stretch has no band 1-2 record. Consent (RD-5): the only chat is the driver at 22:51:15 (\"traffic on Pan Island Expressway is building up, mind if I go round via Guillemard Road?\") and the rider at 22:51:55 (\"Sure, go ahead.\"). (i) The rider's agreement covers only Guillemard Road, and the record affirmatively places the driven segment elsewhere: the driver's own statement routes him via Guillemard Road while every halfway-consistent GPS point at that time is on Paya Lebar Road / the eastern PIE, and nothing shows the car on Guillemard Road, so the named-road agreement does not cover seg1 - this is a finding of \"counts\", not \"undetermined\", because the record contradicts rather than fails to tie the segment. (ii) In any event the consent (22:51:55) postdates the off-route movement (begun about 22:47:55, the car already at 1.33013,103.86378 by 22:48:25), so it is not consent \"before you go\". (iii) The 22:46:25 mid-segment halt (movement 30 m in 30 s) was a brief stop, and a stop the rider asked for without naming a place does not excuse the driver's far-flung choice of route (RD-3); in any case it occurred before the 22:47:55 deviation. The driver's claim of verbal agreement beyond the record is a claim only (G11). Waiting fee of 0.11 is a metered taxi minute, not the $5 boarding wait.\n\nAmount (RD-2, RydeTAXI). Metered rate = distance_fare 19.15 / distance_km 13.58 = S$1.41/km. The traced excess (roughly 10 km) and the corridor-ratio estimate (route 10.993 km at a 41% straight-line ratio over the 6.525 km straight pickup-to-dropoff, so about 2.95 km corridor over that stretch -> about 8.9 km extra) bracket the excess at roughly 9-10 km, but the 30 s thinning can smooth the loop, so I hold only part of that differential: 5.60 extra km x S$1.41 = S$7.90. The rider still pays the metered waiting component and the unexplained remainder of the 2.587 km distance difference (13.58 vs 10.993 km), which is not recoverable under RD-2.\n\nFlag. This is an upheld deviation with a refund > 0, and the driver's profile shows route_disputes_upheld_90d = 2, so RD-6 applies and the case is flagged for account review as repeated. Safety screen: the chat, complaint and driver statement contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation; no safety escalation.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "exempt",
+    "finding": "counts",
     "basis": [],
-    "reason": "Off-route segment via Bedok South Avenue 3 (trace leaves ECP ~23:06, rejoins ~23:15). Driver proposed the route at 23:03:00 naming the detour road and rider replied 'Sure, go ahead.' at 23:03:40 — rider's own message, timestamped before the segment start — so the deviation is consented under RD-5 and not a detour under RD-3(a)/RD-5. RD-4 also checked: ECP band 4 and no incidents, so the exemption rests on consent alone."
+    "reason": "Off-route from about 22:47:55 (1.33157,103.86256) until re-joining the quoted corridor at about 23:04 (1.299,103.8776): SE down Paya Lebar Road, E along the PIE to the furthest point 1.31115,103.88538 (22:58:55), then back W to the corridor. Extra about 10 km (driven about 11.9 km vs quoted about 1.8 km between the same endpoints). Un-exempt: no LTA incident, so RD-4(a) fails; the band-2 record SYN-0009 is on the PAN ISLAND EXPRESSWAY the detour was meant to avoid and is only corroborative under RD-4(b); and the 22:51:15 driver message plus the 22:51:55 rider agreement name Guillemard Road, which the record affirmatively places elsewhere (the driver's own statement routes him via Guillemard Road while every halfway-consistent GPS point sits on Paya Lebar Road / the eastern PIE; none on Guillemard, Upper Serangoon, Bendemeer or Kallang), so the named-road agreement does not cover this segment and the consent in any event postdates the off-route movement by over four minutes (RD-5). RD-1 un-exempt segment; refunded per RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "The rider seeks the difference between the quoted fare and the metered fare. The extra distance is explained by the Bedok South Avenue 3 detour, which the rider expressly agreed to at 23:03:40 before the driver left the ECP (RD-5), so it is not an unexempted detour and RD-2 yields no refundable amount."
+    "id": "driver-verbal-consent",
+    "reason": "RD-5/G11: a driver's claim that the rider agreed verbally beyond the record is not consent; only the rider's own pre-detour message counts. The only recorded rider message is the 22:51:55 'Sure, go ahead.', which postdates the about-22:47:55 off-route movement and covers a road the record does not tie to the driven path."
+   },
+   {
+    "id": "driver-traffic-band-2",
+    "reason": "RD-4(b): the band-2 record is on PAN ISLAND EXPRESSWAY SYN-0009; a speed band alone, on a road that was only the alternative, does not exempt the detour in the MVP, and there is no LTA incident (RD-4(a) unmet)."
    }
   ],
-  "flag_account": false
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 6.29,
- "input_tokens": 16375,
- "output_tokens": 1247,
- "requests": 1,
+ "latency_s": 20.11,
+ "input_tokens": 37012,
+ "output_tokens": 4723,
+ "requests": 2,
  "llm_calls": 1
 }

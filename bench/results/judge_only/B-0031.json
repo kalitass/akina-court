@@ -4,13 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:46:03.630811+00:00",
+ "ts": "2026-10-10T13:22:16.646986+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher within the 30-day window; no account flag — the driver was physically at the pickup (33 m) and simply failed to tap \"I'm Here\".",
-  "confidence": 0.88,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and remind the driver that a no-show cancellation requires a valid arrival confirmation.",
+  "confidence": 0.93,
+  "reasoning": "NS-0 routes this case: cancelled_by = driver and the driver claims rider no-show, so it is governed by NS-1/NS-2 [F4][F12][NS-0]. NS-1 requires all three of (i) an arrival confirmation (driver tap or platform auto), (ii) GPS at the pickup at that moment, and (iii) more than 3 minutes of continuous waiting inside the radius after the confirmation, before the $6.61 can stand [F6][F5][NS-1].\n\nElement (i) fails outright: the record shows no \"I'm Here\" tap and no platform auto-arrival (driver_pressed_here_at is null) [F6]. The driver himself admits he forgot to press the button [F12]. Elements (ii) and (iii) therefore have no reference moment and cannot be established: the 5 min 20 s cumulative time within 200 m runs from first entering the radius at 22:41:30 [F2], and the 4 min 0 s stationary period runs 22:42:50–22:46:50 [F3] — neither is measured after an arrival confirmation, and NS-1 expressly excludes pre-tap time in the vicinity [F5][NS-1]. A driver's post-hoc statement that he was physically there is a claim, not a substitute for the required confirmation [F12][NS-1].\n\nBecause NS-1 (i) (and consequently (ii) and (iii)) is not satisfied, NS-2 applies: the $6.61 cancellation fee must be refunded in full, i.e. refund_full of $6.61, matching the fee on record [F7][F4][NS-2]. NS-2's extra flag_account attaches only where the driver pressed \"I'm Here\" while GPS showed him outside the pickup radius (m_from_pickup_at_tap > 200); here there was no confirmation at all and the closest approach was 34 m, so no fraud flag arises [F1][F6][NS-2]. The trace's own note confirms this: flag_account required False [F6][F1].\n\nThe traffic record is irrelevant to a no-show case — no incidents near the route [F14], and a moderate speed band on Woodlands Avenue 5 does not bear on the cancellation conditions [F13][NS-1]. The chat is consistent with the driver having been nearby, but agreeing on location is not the same as the confirmation the policy requires [F9][F10][F11][NS-1]. Profile facts (long-standing accounts, no prior upheld disputes on either side) play no part in deciding the case and are not cited as a basis [F16][F17][NS-1].",
   "cited_facts": [
    "F1",
    "F2",
@@ -25,27 +27,35 @@
    "F12",
    "F13",
    "F14",
-   "F15",
-   "F16"
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher within the 30-day window; no account flag — the driver was physically at the pickup (33 m) and simply failed to tap \"I'm Here\".",
-  "confidence": 0.88,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and remind the driver that a no-show cancellation requires a valid arrival confirmation.",
+  "confidence": 0.93,
+  "reasoning": "NS-0 routes this case: cancelled_by = driver and the driver claims rider no-show, so it is governed by NS-1/NS-2 [F4][F12][NS-0]. NS-1 requires all three of (i) an arrival confirmation (driver tap or platform auto), (ii) GPS at the pickup at that moment, and (iii) more than 3 minutes of continuous waiting inside the radius after the confirmation, before the $6.61 can stand [F6][F5][NS-1].\n\nElement (i) fails outright: the record shows no \"I'm Here\" tap and no platform auto-arrival (driver_pressed_here_at is null) [F6]. The driver himself admits he forgot to press the button [F12]. Elements (ii) and (iii) therefore have no reference moment and cannot be established: the 5 min 20 s cumulative time within 200 m runs from first entering the radius at 22:41:30 [F2], and the 4 min 0 s stationary period runs 22:42:50–22:46:50 [F3] — neither is measured after an arrival confirmation, and NS-1 expressly excludes pre-tap time in the vicinity [F5][NS-1]. A driver's post-hoc statement that he was physically there is a claim, not a substitute for the required confirmation [F12][NS-1].\n\nBecause NS-1 (i) (and consequently (ii) and (iii)) is not satisfied, NS-2 applies: the $6.61 cancellation fee must be refunded in full, i.e. refund_full of $6.61, matching the fee on record [F7][F4][NS-2]. NS-2's extra flag_account attaches only where the driver pressed \"I'm Here\" while GPS showed him outside the pickup radius (m_from_pickup_at_tap > 200); here there was no confirmation at all and the closest approach was 34 m, so no fraud flag arises [F1][F6][NS-2]. The trace's own note confirms this: flag_account required False [F6][F1].\n\nThe traffic record is irrelevant to a no-show case — no incidents near the route [F14], and a moderate speed band on Woodlands Avenue 5 does not bear on the cancellation conditions [F13][NS-1]. The chat is consistent with the driver having been nearby, but agreeing on location is not the same as the confirmation the policy requires [F9][F10][F11][NS-1]. Profile facts (long-standing accounts, no prior upheld disputes on either side) play no part in deciding the case and are not cited as a basis [F16][F17][NS-1].",
   "cited_facts": [
    "F1",
    "F2",
@@ -60,15 +70,14 @@
    "F12",
    "F13",
    "F14",
-   "F15",
-   "F16"
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -76,25 +85,33 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "The driver's implicit position that the $6.61 no-show fee should stand fails: NS-1 (i) requires the driver to have pressed \"I'm Here\", but the timeline shows no tap (driver_pressed_here_at null) [F6] and the driver admits forgetting to press it [F12], so NS-2 requires the fee to be refunded in full [NS-1][NS-2]. His physical proximity (33 m, 4 min stationary) [F1][F3] does not substitute for the tap."
+    "reason": "The driver's assertion that he waited 4 minutes at the pickup and cancelled as a no-show [F12] rests on an arrival confirmation he never made — the record shows no 'I'm Here' tap and no platform auto-arrival (driver_pressed_here_at null) [F6] — and NS-1 (i) requires that confirmation before any waiting period counts; the 4 min 0 s stationary period 22:42:50–22:46:50 [F3] is not measured after any confirmation and cannot establish NS-1 (iii) [NS-1]. His alternative request for no_action therefore fails and NS-2 requires the full refund of $6.61 [F7][NS-2]."
    },
    {
     "id": "C1",
-    "reason": "The rider's requested outcome of no_action is rejected as too favourable to Ryde: on these facts the $6.61 must be returned, since NS-1 is not satisfied and NS-2 mandates a full refund [F6][F7][NS-1][NS-2]."
+    "reason": "The rider advocate's request for no_action is not reconcilable with the record: NS-0 takes cancelled_by = driver with a no-show claim into NS-1/NS-2 [F4][F12][NS-0], and because no arrival confirmation exists [F6], NS-2 mandates refund_full of the $6.61 charged [F7][NS-2]; the request is thus rejected in form while its underlying complaint succeeds."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: D1, C1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.88 (diagnostic only; automation is decided by the certificate)"
+  "dropped rejected_claims not in any live brief: D1, C1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0031.record.json",
- "latency_s": 7.47,
- "input_tokens": 11530,
- "output_tokens": 1604,
+ "latency_s": 8.03,
+ "input_tokens": 12402,
+ "output_tokens": 1556,
  "requests": 2,
  "llm_calls": 2
 }

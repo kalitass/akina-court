@@ -34,7 +34,8 @@ def with_chat(case, lines):
 
 
 def ruling(**kw):
-    base = dict(ruling="no_action", recommended_action="x", confidence=0.9, reasoning="[F1][RD-1]", cited_facts=["F1"], cited_policy=["RD-1"])
+    base = dict(ruling="no_action", recommended_action="x", confidence=0.9, reasoning="[F1][RD-1]", cited_facts=["F1"], cited_policy=["RD-1"],
+                safety_concern="none", evidence_status="sufficient")
     base.update(kw)
     return Ruling(**base)
 
@@ -182,9 +183,9 @@ def test_evidence_gap_escalate_is_not_reset_by_the_verifier():
     case = load("C-0004")
     table = build_fact_table(case)
     cert = evaluate(case, table)
-    r = ruling(ruling="escalate", escalate=True, evidence_gap="the arrival tap time contradicts the trace and the record does not say which is right", cited_policy=["NS-1"])
+    r = ruling(ruling="escalate", escalate=True, evidence_status="insufficient", evidence_gap="the arrival tap time contradicts the trace and the record does not say which is right", cited_policy=["NS-1"])
     out, lines = verify_ruling(r, table, citable_ids(), certificate=cert)
-    assert out.escalate and out.ruling == "escalate" and "evidence gap" in (out.escalation_reason or "")   # never turned back into a ruling
+    assert out.escalate and out.ruling == "escalate" and "evidence insufficient" in (out.escalation_reason or "")   # never turned back into a ruling
     ok, why = check_ruling(cert, r)
     assert not ok and any("end to end" in w for w in why)                      # ...but on a case the trace settles, the judge is asked once more first
 
@@ -207,7 +208,7 @@ def test_escalate_on_a_mechanical_case_without_a_missing_fact_is_sent_back():
     case = load("C-0005")                                                      # rider cancelled: NS-4 settles it end to end
     cert = evaluate(case, build_fact_table(case))
     assert cert.mechanical
-    ok, why = check_ruling(cert, ruling(ruling="escalate", escalate=True, evidence_gap="the gap is interpretive, not evidentiary"))
+    ok, why = check_ruling(cert, ruling(ruling="escalate", escalate=True, evidence_status="insufficient", evidence_gap="the gap is interpretive, not evidentiary"))
     assert not ok and any("settles this case end to end" in w for w in why)
     ok, why = check_ruling(cert, ruling(ruling="escalate", escalate=True))
     assert not ok and any("without a ground" in w for w in why)

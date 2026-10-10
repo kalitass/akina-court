@@ -4,49 +4,59 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:03:54.595656+00:00",
+ "ts": "2026-10-10T13:17:11.939692+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the dispute as no overcharge; no refund due — rider consented to the Sims Avenue diversion before it began (RD-3/RD-5), and the extra metered distance is not refundable where the detour is exempt.",
-  "confidence": 0.66,
+  "ruling": "refund_partial",
+  "amount": 0.92,
+  "recommended_action": "Refund S$0.92 (Ryde voucher) for the unexempted 0.65 km detour via Sims Avenue/generic turn-off; note the RD-1 breach.",
+  "confidence": 0.6,
+  "reasoning": "Service type RydeTAXI → metered, so extra distance directly enters the fare (RD-2). Quoted route 15.472 km / 21.8 min vs metered 19.4 km / 31.75 min; per-km rate = distance_fare ÷ distance_km = 27.35 ÷ 19.4 = 1.4098 S$/km.\n\nTrace vs quoted route: from pickup (12:14:20) the car follows the quoted corridor along the CTE up to ~12:25:50 (1.32431,103.872327). The only off-route place is the 12:26:20–12:30:20 stretch: the car turns off at Jalan Eunos (1.32245,103.873718), stops (speed 0) at 12:26:50 on Sims Avenue East (1.32171,103.87427), then doubles back west via 1.318841,103.875336 and 1.31776,103.875035 and rejoins the corridor at ~12:30:50 (1.314746,103.874873). Off-corridor length ≈ 0.90 km, on-corridor overlap ≈ 1.30 km → net excess ≈ 0.65 km.\n\nThe chat shows the rider consented before the turn-off (12:27:30 rider \"Sure, go ahead.\" vs turn-off at ~12:26:20–12:26:50 and stop at 12:26:50; the driver's 12:26:50 message precedes). But the consent is to a named road, Sims Avenue: under RD-5, a named-road consent covers driving on that road only and the record must tie the driven segment to that road; the SIMS AVE EAST stop over the 200 m corridor (m_from_route > 200 for 12:26:50–12:28:20) is exempt, while the post-stop westward backtrack to rejoin is not tied to Sims Avenue and is even partly under the PIE (band 2 = moderate, not the band 1–2 severe-congestion requirement) → counts (RD-4(b) cannot exempt alone).\n\nAmount: 0.65 km × 1.4098 = S$0.92 (rounded). The metered waiting component ($0.11 = 26¢ per 45 s unit, wait standing during the Sims stop) is retained per RD-3(c) (RydeTAXI waiting is chargeable), so no separate waiver. The rider's expectation of fixed-quote pricing does not apply to RydeTAXI (policy §0).",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
+   "RD-4",
    "RD-5",
-   "RD-4"
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
+    "finding": "counts",
+    "basis": [],
+    "reason": "Take off at Jalan Eunos (12:26:20, 1.32245,103.873718) and the westward backtrack along Sims Avenue East after the stop (12:28:20–12:30:20, 1.320077,103.876669 → 1.31776,103.875035) are off the quoted corridor. The rider's 12:27:30 consent to 'via Sims Avenue' is a named-road consent: the stop over Sims Ave East is covered, but the backtrack to rejoin is not tied to Sims Avenue (RD-5, G13). PIE band 2 at 12:20:50 is at a different time/base point and is only corroborative, cannot alone exempt (RD-4(b), G3). Net excess ≈ 0.65 km."
+   },
+   {
+    "fact_id": "seg2",
     "finding": "exempt",
-    "basis": [
-     "chat[] driver 12:24:05",
-     "chat[] rider 12:24:45"
-    ],
-    "reason": "Driver proposed the Sims Avenue diversion before leaving the optimal route and at 12:24:05 asked 'ok if I go round via Sims Avenue?'; rider replied 'Sure, go ahead' at 12:24:45, i.e. the rider's own message precedes the GPS-visible divergence (~12:30–12:36) and matches the Sims Avenue/Bedok North routing actually taken. RD-5 consent to this specific route change is established; the segment is also consistent with RD-3(a)/(b) because the rider was told the location before the change. RD-4(a) has no supporting incident and RD-4(b) band 4 is only corroborative (G3), but neither is needed given RD-5."
+    "basis": [],
+    "reason": "The rider's own message 'Sure, go ahead.' at 12:27:30, sent before the car's own movement into the stop, consents to the driver's proposed route via Sims Avenue (RD-5). The stop at 1.32171,103.87427 (12:26:50) lies on Sims Avenue East (m_from_route > 200 m, the only 'off-route' sample) and is covered by the named-road consent (RD-3(a)/RD-5), and its standing time is chargeable on RydeTAXI (RD-3(c)); the exit from the stop back to Sims Avenue East is on Sims Avenue (RD-5)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "Rider claims the driver took a longer way than the app showed and wants the difference back. The extra metered distance (~3.77 km: 19.24 km driven vs 15.472 km quoted) is real, but the off-route segment is exempt under RD-5/RD-3 because the rider gave prior written consent to the Sims Avenue route in chat at 12:24:45. No unexempted extra_km remains, so under RD-2 the refundable amount is 0."
+    "id": "driver_statement",
+    "reason": "The driver's claim of a verbal pre-trip agreement adds nothing beyond the chat; the chat itself (12:26:50 driver / 12:27:30 rider) is the recorded consent, and it covers the named road only, not the whole detour (RD-5, G11)."
    },
    {
-    "id": "driver_traffic_claim",
-    "reason": "Driver says traffic was building up, implying a reasonable-cause detour under RD-4. traffic.incidents is empty (RD-4(a) not met) and the only speed-band records are band 4, which under RD-4(b) and gap G3 cannot independently exempt a segment. The exemption therefore rests on RD-5 consent, not on the traffic justification."
+    "id": "rider_complaint_paid_more",
+    "reason": "The rider's claim that the fare should equal the app estimate is rejected: RydeTAXI is metered, not quoted (policy §0, RD-2), so the difference between the 15.472 km quoted route and the 19.4 km driven route is not in itself refundable; only the unexempted off-route excess is."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.65,
- "input_tokens": 15630,
- "output_tokens": 1768,
+ "latency_s": 7.22,
+ "input_tokens": 16381,
+ "output_tokens": 1457,
  "requests": 1,
  "llm_calls": 1
 }

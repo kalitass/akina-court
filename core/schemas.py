@@ -13,6 +13,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Optional
 
+from pathlib import Path
+
 from pydantic import BaseModel, Field, model_validator
 
 # ----------------------------------------------------------------------------
@@ -269,7 +271,8 @@ class SegmentFinding(BaseModel):
         return {"exempt": True, "counts": False}.get(self.finding)
 
 
-SafetyConcern = Literal["none", "suspected", "confirmed"]
+SafetyConcern = Literal["none", "suspected", "confirmed", "unscreened"]   # unscreened = the judge never ran (timeout, provider error); set by code only, always escalates
+EvidenceStatus = Literal["sufficient", "insufficient", "unknown"]
 
 
 class Ruling(BaseModel):
@@ -283,11 +286,28 @@ class Ruling(BaseModel):
     rejected_claims: list[RejectedClaim] = []
     flag_account: bool = False                    # structured account-flag decision; the only thing actions / checks read
     segment_findings: list[SegmentFinding] = []   # route cases: one entry per off-route segment fact (drives the map colours)
-    safety_concern: SafetyConcern = "none"        # the judge's reading of every message, statement and complaint (SAFE-1 / SAFE-2); never a keyword
+    safety_concern: SafetyConcern                 # REQUIRED: the judge's reading of every message, statement and complaint (SAFE-1 / SAFE-2);
+                                                  # "none" means "read and found nothing", never "not read"
     safety_basis: list[str] = []                  # fact ids that raised the concern
-    evidence_gap: Optional[str] = None            # what is missing when the judge cannot decide (one sentence) — a ground for escalate
+    evidence_status: EvidenceStatus               # REQUIRED: sufficient = the record settles the elements the ruling needs;
+                                                  # insufficient = a needed record is missing (say what in evidence_gap); unknown = cannot tell.
+                                                  # Only "sufficient" can execute; the other two are grounds to escalate.
+    evidence_gap: Optional[str] = None            # what is missing (one sentence); null when evidence_status is sufficient
     escalate: bool = False
     escalation_reason: Optional[str] = None
+
+
+def legacy_ruling(v: dict) -> dict:
+    """Migration for ruling dicts written BEFORE safety_concern / evidence_status were required (stored runs and
+    benchmark files from 2026-10-09 and earlier). Called only by the explicit record loaders (CaseRecord.load,
+    bench readers of archived files) — never by validation, so a new model output missing either field fails."""
+    if not isinstance(v, dict) or ("safety_concern" in v and "evidence_status" in v):
+        return v
+    v = dict(v)
+    v.setdefault("safety_concern", "none")
+    if "evidence_status" not in v:
+        v["evidence_status"] = "insufficient" if (v.get("evidence_gap") and (v.get("escalate") or v.get("ruling") == "escalate")) else "sufficient"
+    return v
 
 
 class Notice(BaseModel):
@@ -344,3 +364,17 @@ class CaseRecord(BaseModel):
     notices: list[Notice] = []
     precedent_id: Optional[str] = None
     receipt: Optional[dict] = None                # fingerprints fixed at ruling time (core/receipt.py)
+
+    @classmethod
+    def load(cls, path) -> "CaseRecord":
+        """The one entry point for stored runs. Rulings written before safety_concern / evidence_status were required
+        are migrated here, explicitly (legacy_ruling); nothing else fills those fields in."""
+        import json
+        d = json.loads(Path(path).read_text(encoding="utf-8"))
+        for k in ("ruling", "proposed_ruling"):
+            if isinstance(d.get(k), dict):
+                d[k] = legacy_ruling(d[k])
+        for ev in d.get("events", []):
+            if isinstance(ev, dict) and isinstance(ev.get("ruling"), dict):
+                ev["ruling"] = legacy_ruling(ev["ruling"])
+        return cls.model_validate(d)

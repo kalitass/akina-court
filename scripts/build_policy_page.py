@@ -53,9 +53,9 @@ NOT_RULES = [
     ("Arrival radius 200 m", "The data layer decides whether the driver was \"at the pick-up point\" from GPS. Ryde publishes no distance (gap G2)."),
     ("Detour measurement", "A GPS point more than 200 m off the route is off-route; runs merge across gaps under 120 s; under 0.2 km is map noise (gap G1)."),
     ("Traffic match 300 m", "An LTA incident counts as \"on the route\" within 300 m of it (gap G3)."),
-    ("Threat keyword list", "Words such as threat, kill, hit you, lock the door trigger a safety review. They trigger, they never decide."),
+    ("Hint words", "Words such as threat, kill, lock the door only mark a chat line for the reader. Whether a message is a threat is the judge's reading of it (SAFE-1); no word list decides or triggers anything."),
     ("Citation check", "Every claim must cite a fact id and a clause id that exist. Anything else is struck before the judge sees it."),
-    ("Confidence gate 0.70", "Below it, or on any safety case, the ruling goes to a human instead of being executed (gap G8)."),
+    ("Confidence is recorded, not a gate", "The judge's confidence is shown for diagnosis only. Whether a ruling executes is decided by the policy execution trace and the code checks on the ruling; safety cases never execute (gap G8)."),
     ("Records over statements", "GPS, timeline and fare records beat chat messages and statements when they conflict."),
     ("History never decides", "Profile facts (past disputes, rating) can add an account flag, never decide the outcome."),
 ]

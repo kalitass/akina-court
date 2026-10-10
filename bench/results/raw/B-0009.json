@@ -4,44 +4,56 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:11.977906+00:00",
+ "ts": "2026-10-10T13:17:32.980505+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 10.4,
-  "recommended_action": "Refund S$10.40 to the rider as a Ryde voucher (RD-2, metered RydeTAXI excess distance), and record the RD-1 breach on the driver's file; no account flag (route_disputes_upheld_90d = 0).",
-  "confidence": 0.72,
+  "amount": 7.45,
+  "recommended_action": "Refund S$7.45 (voucher) to the rider for 5.284 km of unexempted detour on this RydeTAXI metered trip; note the driver's RD-1 breach (record only, no account flag).",
+  "confidence": 0.68,
+  "reasoning": "Service type is RydeTAXI (metered), so extra distance enters the fare and RD-2's taxi branch applies: refund = Σ(unexempted segment extra_km) × (distance_fare ÷ distance_km) = 5.284 × (22.50 ÷ 15.96) = 5.284 × 1.409774 = S$7.45.\n\nSegments. The quoted route is the NUH→AYE→CTE→Raffles Place corridor (10.624 km). The GPS trace shows the driver leaving it early: he loops north around Kent Ridge (09:00–09:02), picks up at NUS at 09:03, then runs west on the AYE past his own turn-off — deviating south through Clementi Road / Pasir Panjang (09:14–09:20, where the trace sits 1.6–2.6 km south of the quoted corridor) — before rejoining and taking the CTE. Fact table gives one off-route segment totalling +5.32 km of excess distance.\n\nDriver's weather/expressway defence (RD-4). The AYE band-2 record (SYN-EE9E22, 2–3.6 km) sits on the quoted corridor and its window covers 09:10–09:13, so the AYE is partly corroborated as slow — but RD-4(b) alone does not exempt (G3), and the record cannot support the much larger portion of the detour (the Kent Ridge loop and the Clementi/Pasir Panjang stretch, roughly 4 km) as any avoidance of a slow link on the replaced corridor. No traffic incident exists (incidents = []). The driver's own account names the AYE as what he avoided, so his explanation does not reach the segment placed elsewhere.\n\nConsent (RD-5): the chat record is empty, so there is no rider message agreeing to any route change. A verbal agreement in the driver's statement is a claim, not consent (G11). Nothing in the record ties the driven detour to any agreed road.\n\nArithmetic on the amount: the fare carries 15.96 km (~5.3 km over the 10.624 km quoted route). Attributing the record's whole off-route excess to the unexempted segment is the conservative-for-the-driver adjustment to the fact table's 3.8–4.2 km; it still leaves the 0.44 km of excess outside any segment unrefunded per RD-2. Waiting fee is $0.00 and tolls $0.00 (no unconsumed metered waiting recorded; ERP handling is FARE-2, not triggered). No app edit-destination fee exists for RydeTAXI (RD-3(c)).\n\nRD-6 does not apply: driver route_disputes_upheld_90d = 0 (the two upheld disputes are of other types), so there is one upheld route dispute, not \"repeated\" — no flag_account. Safety screen: chat empty, driver statement contains no threat, abuse, harassment or dangerous-driving allegation, and the dispute type is not safety, so safety_concern = none.\n\nConfidence: the off-route measurements and the fare arithmetic are settled by system records (GPS + fare), but the segment km figures come from the fact table I could not re-run, and the alignment of the band-2 link with the detour timing leaves some room; hence 0.68.",
   "cited_facts": [
-   "seg1"
+   "gps-detour-seg1"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "RD-6",
+   "G3",
+   "G11"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "seg1",
+    "fact_id": "gps-detour-seg1",
     "finding": "counts",
     "basis": [],
-    "reason": "Off-route from ≈09:10:20 (1.283625,103.809743), where the driver left the quoted AYE/East Coast corridor, south onto the MCE (09:14:20 1.279653,103.823843; 09:17:20 1.268412,103.822738), rejoining only at 09:26:20 (1.280408,103.8277) — ≈5.5 km of extra MCE loop. No incident on the replaced stretch (traffic.incidents = [], RD-4(a) unmet), CXE band 4 / AYE band 2 are corroborative only and cannot exempt alone (RD-4(b)); empty chat means no rider-named stop (RD-3) and no consent before the detour (RD-5). Driver's rain/AYE claim is unevidenced and disconfirmed by his ~40 km/h sustained speeds. Unexempted → RD-1 breach, refund per RD-2."
+    "reason": "One off-route segment with extra_km > the RD-1 noise tolerance; no rider consent in chat (RD-5, G11) and the driver's congestion claim is not corroborated by any traffic incident on the replaced corridor and only weakly by the AYE speed band (RD-4(a),(b), G3). Rides as an unexempted detour under RD-1/RD-2."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Claimed AYE was crawling and flooding so the detour was reasonable. traffic.incidents = [] (no incident on the replaced route stretch, RD-4(a) unmet); speed on the abandoned AYE corridor is band 2 (0<9/10<19 km/h range, corroborative only per RD-4(b)) and his own GPS shows sustained 35–44 km/h through 09:09–09:14 and the swept MCE, so the 'crawling/flooding' justification is not supported by system records, which override the statement."
+    "id": "driver_weather_defence",
+    "reason": "RD-4(b) band evidence alone does not exempt (G3); no traffic incident on the replaced corridor; the band-2 window covers only a small stretch of the corridor and cannot explain the Kent Ridge loop or the Clementi/Pasir Panjang stretch of the detour."
+   },
+   {
+    "id": "driver_verbal_consent",
+    "reason": "Chat record is empty; a verbal agreement asserted only in the driver's statement is a claim, not consent (RD-5, G11)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.74,
- "input_tokens": 15122,
- "output_tokens": 1782,
+ "latency_s": 6.84,
+ "input_tokens": 16003,
+ "output_tokens": 1333,
  "requests": 1,
  "llm_calls": 1
 }

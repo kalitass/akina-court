@@ -4,33 +4,44 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:14.333241+00:00",
+ "ts": "2026-10-10T13:18:29.543316+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Uphold the $6.61 no-show cancellation fee; no refund. Note the driver's 90-day record (2 upheld no-show disputes, 3 disputes) for routine monitoring only.",
-  "confidence": 0.86,
+  "ruling": "refund_full",
+  "amount": 6.61,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider (voucher, per NS-7) and note the driver's early 'I'm Here' tap; no account flag required since GPS confirms he was at the pickup point.",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: chat is two neutral logistics messages (\"At the pickup now, grey Kia Niro.\", \"Waited more than 3 min, cancelling\"); the complaint and driver statement contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation → safety_concern = none.\n\nCancellation is attributed to the driver (cancelled_by = driver) and the driver asserts rider no-show, so the case runs through NS-0 to NS-1/NS-2.\n\nNS-1 elements (RydeX is not RydeTAXI; the record carries no no_show_threshold_min, so the default >3 min applies):\n(i) Arrival indication: the driver tapped \"I'm Here\" at 09:54:15 (driver_pressed_here_at; arrival_confirmed_by=null, so this is a driver tap).\n(ii) Location at tap: the GPS sample nearest the tap (09:54:00) is 1.290535, 103.846149; the pickup (Clarke Quay) is 1.2906, 103.8465 → ~40 m, well inside the 200 m data-layer radius. So he was at the pickup point.\n(iii) Continuous waiting at the pickup after the tap for >3 minutes: tap 09:54:15 → cancellation 09:57:20 = 3 min 05 s. That is after the three-minute mark but by only 5 seconds, so the margin is critical: the rider's stated 3-minute grace period under NS-4 runs from matching (09:51:00) and would have expired at 09:54:00, 15 s *before* the driver even tapped \"I'm Here\". On the plain chronology the element is nonetheless satisfied (≥3:01); I therefore cannot refund on a timing shortfall alone.\n\nHowever, the record leaves an unresolved conflict on exactly that element: the trip timeline fields documenting the wait (wait_started_at, wait_expired_at) are all null, and the GPS trace is the thinned 30 s set (14 of 77 points) whose last sample before the cancel is 09:57:00. Because NS-1(iii) is the only hinge on which the whole $6.61 turns — it is satisfied by 5 seconds by the driver's own timestamps while the rider's account is that the driver had already cancelled by the time he came out — and because the records that would settle the wait end-state are absent, this is not a case where the system records cleanly override the statements.\n\nEvidence status is therefore insufficient: the wait-confirmation timeline (wait_started_at / wait_expired_at / within-200m-after-tap coverage) is missing, and the gap is named above. Under G12 evidence gap, missing evidence never favours either side, and I rule escalate so a human can verify the wait duration against the unthinned trace before any fee is executed.\n\nSegment findings: not a route-deviation case, so empty. cited_policy lists the clauses actually applied (NS-0, NS-1, NS-2, NS-4); no clause calls for flag_account here because GPS confirms the driver was within 200 m of the pickup at the tap, so NS-2's >200 m fraud flag does not arise.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
-   "NS-2"
+   "NS-2",
+   "NS-4"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "NS-1/NS-2 hinge on a 3:05 wait that clears the three-minute threshold by 5 seconds; the GPS trace is thinned and the wait-timeline fields are null, so the element is not verifiable from the record. Under G12, missing evidence decides neither way — human review of the raw trace/timeline is required before the $6.61 is either upheld (no_action) or refunded (refund_full).",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_statement",
-    "reason": "Rider says she came out a minute after the cancellation, implying the fee is unfair; GPS shows the driver was at the pickup point (~40 m) from 09:56:20 and waited 3 min 05 s before cancelling at 09:59:25, so the NS-1 conditions (I'm Here + within pickup range + >3 min wait) are all met on system records."
+    "id": "driver_no_show_wait",
+    "reason": "The driver's claim of waiting more than 3 minutes is arithmetically supported by his own timestamps (09:54:15 → 09:57:20 = 3:05) and by static GPS samples at the pickup, but the margin is only 5 seconds and the timeline/GPS records needed to confirm continuous presence are incomplete; I therefore do not treat the claim as established, and equally do not treat it as disproved."
+   },
+   {
+    "id": "rider_already_cancelled",
+    "reason": "The rider's account ('by the time I came out he had cancelled') asserts the trio of NS-1 elements failed, but the record does not show a cancellation before the driver's tap; on the raw timestamps the driver tapped 'I'm Here' at 09:54:15 and cancelled at 09:57:20, so I do not accept this as established either."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "insufficient",
+  "evidence_gap": "The NS-1(iii) continuous-wait element cannot be settled from the record: tl-here fields wait_started_at / wait_expired_at / arrival_confirmed_by-side coverage are null, the GPS trace is the thinned 30 s set (last pre-cancel sample 09:57:00), and the timeline contains no free_wait_time_min or no_show_threshold_min. The driver's tap (09:54:15) to cancel (09:57:20) is 3:05 — satisfied by only 5 seconds — so the unthinned GPS trace and the raw arrival/wait records are needed to confirm he remained at the pickup continuously for the full period."
  },
- "latency_s": 3.91,
- "input_tokens": 12119,
- "output_tokens": 917,
+ "latency_s": 7.2,
+ "input_tokens": 12690,
+ "output_tokens": 1521,
  "requests": 1,
  "llm_calls": 1
 }

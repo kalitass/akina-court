@@ -174,9 +174,21 @@ def test_no_show_within_200m_waited():
 
 # ---------------------------------------------------------------------------- fare / chat / traffic
 
+def _no_distance_fare(case):
+    """A fare record without a distance line: the per-km rate must then come from rates.json (and say so)."""
+    return case.model_copy(update={"fare": case.fare.model_copy(update={"distance_fare": 0.0})})
+
+
+def test_fare_uses_the_trips_own_rate_when_the_record_gives_one():
+    facts = get_fare_facts(route_case())
+    ex = by_id(facts, "fare-excess")
+    f = route_case().fare
+    assert ex.value["rate_km"] == pytest.approx(f.distance_fare / f.distance_km, abs=1e-6) and "distance fare ÷ distance km" in ex.text
+
+
 def test_fare_default_rate_when_rates_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(tools, "RATES_PATH", tmp_path / "rates.json")
-    facts = get_fare_facts(route_case())
+    facts = get_fare_facts(_no_distance_fare(route_case()))
     ex = by_id(facts, "fare-excess")
     assert ex.value["rate_km"] == 1.41
     assert ex.value["excess_amount"] == pytest.approx((7.4 - 3.5) * 1.41, abs=0.01)
@@ -188,7 +200,7 @@ def test_fare_reads_rates_file(monkeypatch, tmp_path):
     p = tmp_path / "rates.json"
     p.write_text('{"rate_km": 2.0, "rate_wait": 0.5}')
     monkeypatch.setattr(tools, "RATES_PATH", p)
-    facts = get_fare_facts(route_case())
+    facts = get_fare_facts(_no_distance_fare(route_case()))
     assert by_id(facts, "fare-excess").value["rate_km"] == 2.0
     assert "default" not in by_id(facts, "fare-excess").text
     assert "2.2 min" in by_id(facts, "fare-wait").text
@@ -298,22 +310,26 @@ def test_platform_auto_arrival_counts_as_arrival_confirmation():
     assert wait.value["wait_window_s"] == 300
     cert = evaluate(case, build_fact_table(case))
     i = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(i)"))
-    assert i.status == "pass" and "platform auto-arrival" in i.detail
+    assert i.status == "pass" and "platform_auto arrival" in i.detail
     assert cert.allowed == ["no_action", "escalate"]
 
 
 def test_policy_params_override_wait_window_and_fee():
+    """A record-stated no-show threshold and fee replace Ryde's defaults; a free-wait window alone changes nothing."""
     from core.policy_engine import evaluate, GRACE_S, CANCEL_FEE
     from core.schemas import PolicyParams
     base = no_show_case(stop_offset_m=50, wait_s=240)        # 4 min inside the radius
     base = base.model_copy(update={"trip": base.trip.model_copy(update={"driver_pressed_here_at": base.trip.driver_arrived_at})})
     default = evaluate(base, build_fact_table(base))
-    assert default.grace == GRACE_S and default.fee == CANCEL_FEE and default.allowed == ["no_action", "escalate"]    # 4 min > Ryde's 3 min
-    stricter = base.model_copy(update={"policy_params": PolicyParams(free_wait_min=5, cancellation_fee=5.0)})
+    assert default.wait_threshold == GRACE_S and default.fee == CANCEL_FEE and default.allowed == ["no_action", "escalate"]    # 4 min > Ryde's 3 min
+    stricter = base.model_copy(update={"policy_params": PolicyParams(no_show_threshold_min=8, free_wait_min=5, cancellation_fee=5.0)})
     cert = evaluate(stricter, build_fact_table(stricter))
-    assert cert.grace == 300 and cert.fee == 5.0
-    assert cert.allowed == ["refund_full", "escalate"] and "5.00" in cert.amount_formula                         # 4 min < the record's 5 min
-    assert any("parameters from the case record" in l for l in cert.lines())
+    assert cert.wait_threshold == 480 and cert.wait_inclusive and cert.fee == 5.0
+    assert cert.allowed == ["refund_full", "escalate"] and "$5.00" in cert.amount_formula    # 4 min does not reach 8 min
+    assert any("case record" in l and "8 min" in l for l in cert.lines())
+    free_only = base.model_copy(update={"policy_params": PolicyParams(free_wait_min=5)})
+    cert2 = evaluate(free_only, build_fact_table(free_only))
+    assert cert2.wait_threshold == GRACE_S and cert2.allowed == ["no_action", "escalate"]    # free wait is not the no-show threshold
 
 
 def test_call_attempts_are_counted_in_chat_facts():

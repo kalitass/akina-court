@@ -12,14 +12,20 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
+
+# The benchmark and the stored demo runs are the bare court: no precedent store feeding earlier rulings into later
+# prompts, no SLA queue or bad-faith signals writing extra facts or repo files. Whatever the shell exports is ignored.
+for _k in [k for k in os.environ if k.startswith("STRETCH_")]:
+    os.environ.pop(_k)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core.counterfactual import apply  # noqa: E402
-from core.orchestrate import run_case  # noqa: E402
+from core.orchestrate import model_outage, run_case  # noqa: E402
 from core.schemas import Case  # noqa: E402
 
 DEMOS = {
@@ -41,6 +47,8 @@ async def one(name: str) -> Path:
         case = apply(case, spec["cf"]).model_copy(update={"case_id": f"{cid}~{spec['cf']}"})
     rec = await run_case(case, inject=spec.get("inject"))
     rid = f"{cid}~{name}"
+    if model_outage(rec):
+        raise SystemExit(f"{rid}: a model stage failed ({'; '.join(model_outage(rec))}) — not stored; run this one again")
     out = ROOT / "runs" / f"{rid}.json"
     out.write_text(rec.model_copy(update={"case_id": rid}).model_dump_json(indent=1), encoding="utf-8")
     r = rec.ruling

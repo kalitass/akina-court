@@ -33,6 +33,7 @@ def ruling_from_expected(cid, exp, cert):
     upheld = any(f.finding == "counts" for f in findings) or any(sg["exempt"] is False for sg in cert.segments.values())
     flag = bool(cert.flag_required) if cert.flag_required is not None else bool(cert.flag_conditional and upheld)
     return Ruling(ruling=exp["ruling"], amount=exp.get("amount"), recommended_action="x" + (" + flag_account" if flag else ""), flag_account=flag,
+                  safety_concern="none", evidence_status="sufficient",
                   confidence=0.9, reasoning="[F1][RD-1]", cited_facts=["F1"], cited_policy=exp["cited_policy"],
                   segment_findings=findings, escalate=exp["escalate"])
 

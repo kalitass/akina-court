@@ -4,27 +4,46 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:38.222073+00:00",
+ "ts": "2026-10-10T13:18:58.484335+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Escalate to Ryde Trust & Safety: preserve the full GPS trace and any telematics, review the dangerous-driving and abusive-language allegations against the driver, brief the rider on the 995 / driver commercial-insurance / RydeHELP reporting paths, and take account action per Ryde's Code of Conduct if the abuse is confirmed. Do not auto-rule on fare.",
-  "confidence": 0.9,
+  "recommended_action": "Route to Ryde Trust & Safety for human review of the dangerous-driving allegation (speeding / hard braking / shoulder overtaking); preserve the GPS trace and driver statement; advise rider of the 995 / RydeHELP reporting path, and hold any fare decision pending investigation. + flag_account",
+  "confidence": 0.85,
+  "reasoning": "Safety screen first (per the mandatory screen): the dispute type is \"safety\" and the rider alleges dangerous driving — \"speeding and braking hard the whole way, overtaking on the shoulder\" — which is a dangerous-driving allegation under SAFE-2; the rider also says \"I was scared and felt unsafe\". Independently, the driver's own statement calls the rider \"stupid\", which is abusive language aimed at the other party and is abuse under SAFE-1 (\"abuse of any kind\" is barred by Ryde's code of conduct). Either strand is enough: under SAFE-1/SAFE-2 no automatic ruling is issued and the case goes to a human reviewer with a factual summary.\n\nFactual summary for the reviewer: Trip T-2048, RydeX (fixed-price), NUS → Raffles Place, quoted 10.624 km / 16.5 min, requested 08:28:10, matched 08:28:45, driver pressed \"I'm Here\" 08:35:50 (arrival_confirmed_by is null), pickup 08:36:00, dropoff 08:51:55 — 15 min 55 s elapsed vs 16.5 min estimate, so the trip was not abnormally fast overall. The GPS trace (thinned to 30 s samples) shows pre-pickup speeds of ~22–30 km/h, then run-time samples of 34–41.6 km/h and a maximum of 43.1 km/h, i.e. it is internally consistent with ordinary arterial traffic and does not on its own evidence shoulder-running or extreme speeding; no LTA incident is recorded (traffic.incidents empty) and the two speed-band records on the traced corridor (AYER RAJAH EXPRESSWAY, CENTRAL EXPRESSWAY) are band 4, i.e. not congested. Weather was fair. The chat contains only pickup logistics (rider's blue shirt, driver's ETA and car) — no threat, no abuse from the rider. Fare detail: fixed RydeX fare, total $24.64 = base $3.90 + distance fare $14.98 + time fare $4.29 + platform fee $1.47, no waiting fee, no tolls, no edit-destination fee; nothing here is chargeable to the rider as an overcharge on its face, and no RD/NS/FARE defect is established from the record. The driver's statement (\"I drove normally\") conflicts with the rider's allegation; resolution of that conflict requires a human assessment of the driving (possible GPS-derived acceleration/braking analysis, telematics) rather than an automated ruling, and the abuse of the rider in the driver's statement is itself a conduct matter for Ryde.\n\nBecause safety is involved I do not compute any refund; the fare remains unchanged pending review. The driver statement's hostile language warrants sending the account for conduct review.",
   "cited_facts": [],
   "cited_policy": [
-   "SAFE-1",
-   "SAFE-2"
+   "SAFE-2",
+   "SAFE-1"
   ],
   "escalate": true,
-  "escalation_reason": null,
+  "escalation_reason": "Dangerous-driving allegation (speeding, hard braking, shoulder overtaking) plus an abusive remark by the driver toward the rider in his statement — SAFE-1/SAFE-2 require escalation to a human reviewer instead of an automatic ruling; 995 / driver's commercial motor insurance / RydeHELP reporting path to be offered.",
   "segment_findings": [],
-  "rejected_claims": [],
-  "flag_account": false
+  "rejected_claims": [
+   {
+    "id": "driver_claim_drove_normally",
+    "reason": "Not a defence on the safety issue: the driver's statement merely asserts normal driving and simultaneously abuses the rider; the rider's specific allegation of speeding, hard braking and shoulder overtaking is unresolved on the record and must be assessed by a human (SAFE-2), not accepted or rejected automatically. Profile (rating 4.78, no disputes in 90d) cannot decide the case."
+   },
+   {
+    "id": "driver_claim_rider_on_phone",
+    "reason": "Irrelevant to the dangerous-driving allegation and no system record supports it; in any event it would not excuse speeding or shoulder overtaking."
+   }
+  ],
+  "flag_account": true,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "Rider complaint (dispute filed 2026-09-25T09:16:55+08:00): driver 'speeding and braking hard the whole way, overtaking on the shoulder'; rider states 'I was scared and felt unsafe' — dangerous-driving allegation (SAFE-2).",
+   "Driver statement: 'The rider is stupid and was on the phone the whole trip.' — abusive language aimed at the other party (SAFE-1).",
+   "Dispute type recorded as 'safety'."
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 4.09,
- "input_tokens": 13805,
- "output_tokens": 806,
+ "latency_s": 6.39,
+ "input_tokens": 14601,
+ "output_tokens": 1305,
  "requests": 1,
  "llm_calls": 1
 }

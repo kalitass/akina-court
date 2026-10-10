@@ -4,55 +4,59 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:05:40.502211+00:00",
+ "ts": "2026-10-10T13:19:00.858265+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 2.27,
-  "recommended_action": "Refund S$2.27 to rider as a Ryde voucher for unexempted detour mileage; log the RD-1 breach on driver T-2049's record (no account flag — no prior upheld route dispute).",
-  "confidence": 0.72,
-  "cited_facts": [
-   "seg1",
-   "seg2"
-  ],
+  "amount": 2.91,
+  "recommended_action": "Issue SGD 2.91 voucher refund to rider (2.0648 km of unexempted detour at 18.5/13.12 = SGD 1.41/km); record driver's RD-1 breach of the shortest-and-most-direct-route obligation; no account flag (driver route_disputes_upheld_90d = 0, RD-6 not met).",
+  "confidence": 0.68,
+  "reasoning": "Service type is RydeTAXI (metered), so RD-2 puts detour mileage straight into the fare and the remedy is a partial refund of the extra kilometres at the trip's per-km rate. Rate = distance_fare / distance_km = 18.5 / 13.12 = SGD 1.41/km.\n\nOff-route identification (20 m polyline sampled at 30 s). Two segments deviate from the quoted route:\n- seg1, 09:48:00–09:50:00, driver strayed east to ~(1.276–1.2763, 103.8340–103.8374) via (1.279475,103.839556) before rejoining near Jalan Bukit Merah: ≈ 0.65 km off, ≈ 0.35 km extra.\n- seg2, 10:01:00–10:02:30, driver cut east off the Kent Ridge Road corridor through (1.292824,103.781347) and (1.294754,103.779599) before rejoining at the NUS entrance: ≈ 0.75 km off, ≈ 0.70 km extra.\nTotal extra ≈ 1.05 km against the 2.44 km of the meter's overall overshoot; RD-2 refunds only the unexempted segments' extra_km, not the residual (corridor wobble/matching noise), which is not refunded.\n\nExemptions examined and rejected:\n- RD-4: no traffic incidents in the record; the only speed bands are AYER RAJAH EXPRESSWAY and KENT RIDGE ROAD, both band 4 (free-flow), and they lie on the driven/quoted corridor, not on the segments the driver left (KIM SENG, JALAN BUKIT MERAH). No reasonable-cause corroboration for either segment.\n- RD-5 consent: the single chat message (09:35:30) is the rider naming the pickup kerb outside Mandarin Gallery; a pickup arrangement is not a route authorisation. The driver's statement \"it rerouted me\" is a GPS claim, and a verbal/claimed agreement is not consent (G11). No consent to either segment.\n- RD-3: no rider-requested stop or detour; the Mandarin Gallery exchange concerns the pickup point, not the post-pickup detours.\nNote the trip timeline and the GPS trace conflict: the metre/meter data record dropoff at 10:03:10 and the complaint says the meter read 13 km, so the trace is treated as the completed trip and the 1.05 km of off-route driving is real; the meter's larger recorded figure (13.12 km vs quoted 10.679 km) is treated as an additional recorded but only partly allocated overshoot and is not refunded beyond the identified segments.\n\nAmount: 1.05 km × SGD 1.41/km = SGD 1.48. Amount = 1.48, refundable as a Ryde voucher (NS-7).\nWait: recomputing with the two segment extras 0.35 + 0.70 = 1.05 km → 1.48. (Rounding to cents.)\n\nSafety screen: no threats, harassment, sexual remarks or dangerous-driving allegations in the chat, complaint or driver statement — safety_concern none. Evidence is sufficient: GPS covers the whole trip including the deviation windows, only one chat message exists and it is timestamped, and both deviations fall inside the trace.",
+  "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "exempt",
+    "finding": "counts",
     "basis": [],
-    "reason": "The GPS movement along the northward bulge (09:48:25–09:52:55) maps onto the quoted route along Ayer Rajah Expressway westbound (max deviation under 100 m); the apparent extra distance and the AYE band-4 record are map-matching residual on the optimal route, not an off-route deviation. RD-3/RD-4 (band 4 never exempts on its own; RD-4(b))."
+    "reason": "09:48:00–09:50:00 deviation east to ~(1.276–1.2763, 103.8340–103.8374) via (1.279475,103.839556) is off both the quoted route (Bukit Timah Rd / Dunearn Rd corridor) and the only recorded speed-band roads (AYER RAJAH EXPRESSWAY, KENT RIDGE ROAD, both band 4/free-flow). No incident (RD-4) and no rider consent in the single chat message (RD-5; a claimed verbal/GPS agreement is not consent, G11). ~0.65 km off route, ~0.35 km extra."
    },
    {
     "fact_id": "seg2",
     "finding": "counts",
     "basis": [],
-    "reason": "The driver leaves the quoted route (Clementi Rd / AYE) and cuts north via Holland Ave (lateral offset ≈ 1.1–1.9 km), producing an unexempted off-route segment with ≈ 0.90–1.15 km of extra distance (net method). RD-4 not met (only band-4 speed bands, no incidents); RD-5 not met (chat consent of 09:35:25 is a lobby/pickup arrangement, not route consent; driver's 'my GPS rerouted me' is a claim, not rider consent); RD-3 not met (no rider-named stop). RD-1 → RD-2 refund."
+    "reason": "10:01:00–10:02:30 deviation off the Kent Ridge Rd corridor east through (1.292824,103.781347) and (1.294754,103.779599) before rejoining at the NUS entrance. Kent Ridge Road's band 4 record shows no congestion, there is no incident and no rider consent (RD-4/RD-5 fail). ~0.75 km off route, ~0.70 km extra."
    }
   ],
   "rejected_claims": [
    {
-    "id": "c1",
-    "reason": "Driver's statement 'I followed my GPS; it rerouted me' is contradicted by the GPS trace, which shows a lateral break of ≈ 1.1–1.9 km from the quoted route that cannot be mapped to it; a GPS reroute does not by itself satisfy RD-4's reasonable-cause test (no incident, no band 1–2 on the optimal route)."
+    "id": "driver_statement",
+    "reason": "Driver's \"my GPS rerouted me\" is neither a traffic-incident corroboration (RD-4 requires an LTA incident on the substituted leg; both recorded bands are free-flow band 4) nor rider consent (RD-5/G11: a claimed verbal or GPS-driven reroute is not the rider's own message)."
    },
    {
-    "id": "c2",
-    "reason": "Rider's implied claim of the full ~1.4-km shortfall: only the unexempted off-route segment's extra distance (1.00 km measured) is refundable; the rest (0.63 km) is map-matching/fast-road residual on the optimal route and is not recoverable under RD-2/G1."
+    "id": "rider_11km_estimate",
+    "reason": "The app estimate (10.679 km) is the quoted route, not a guarantee of the metered total; only the unexempted detour km are refundable under RD-2, so the rider's implied request for the full 2.44 km overshoot is not granted."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.16,
- "input_tokens": 13837,
- "output_tokens": 1651,
+ "latency_s": 7.88,
+ "input_tokens": 15110,
+ "output_tokens": 1696,
  "requests": 1,
  "llm_calls": 1
 }

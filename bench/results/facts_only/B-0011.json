@@ -4,20 +4,21 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:20:01.556627+00:00",
+ "ts": "2026-10-10T13:19:24.797182+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 2.4,
-  "recommended_action": "Refund $2.40 (1.70 km of unbilled detour on the metered RydeTAXI fare) as a Ryde voucher, and record the driver's RD-1 violation for route deviation; send the driver's account for review (RD-6).",
+  "recommended_action": "Refund $2.40 to the rider as a Ryde voucher (NS-7) — the metered distance overcharge for the non-exempt 1.70 km; uphold the $1.15 metered waiting charge as a valid RD-3(c) taxi waiting unit; record the driver's RD-1 breach and send the account for review + flag_account.",
   "confidence": 0.82,
+  "reasoning": "Safety screen: chat is a plain stop request and \"Sure\" [F9][F10]; the driver's written statement [F12] is factual; the complaint alleges overcharging only. No threat, abuse, harassment or dangerous-driving allegation. safety_concern = none.\n\nRoute (RydeTAXI, metered — RD-2 taxi branch). One off-route segment: 14:21–14:31, 3.81 km vs 2.11 km optimal, +1.70 km, up to 554 m off route [F4]. It is not noise (>0.2 km data tolerance, not a policy threshold).\n\nRD-3: the rider named the place (\"Can you stop at Clementi Mall\") and the car stopped there [F2 at (1.3149, 103.7641), 14:23–14:27], so the stop itself is authorised. But RD-3(a) exempts the segment only when the named stop lies on the optimal route (no gps-detour segment) or when the rider named a different place that generates the deviation. Here the stop is 3159 m from pickup and 2466 m from drop-off [F2] — a deliberate off-route stop — and the driver's own account [F12] places the driven segment at that stop, i.e. the detour is the trip to and from the mall, not the route to NUS. So the segment is not exempt: counts. RD-5 does not rescue it: the only consent in the record is agreement to a specific named place (Clementi Mall) [F9][F10]; that authorises stopping there, and since the record ties the driven segment to that errand (stop at the mall per F2/F12), it is the driver's own errand-branch rather than a general route choice for reaching NUS — under RD-5 the general-authorisation carve-out does not cover the driver's own affair, and the \"named road\" reading equally does not cover it. No traffic excuse: no incidents [F15]; the bands on AYE and Jurong Town Hall Road are band 4 and 3 [F13][F14], not band 1/2, so RD-4(b) could not apply even as corroboration.\n\nAmount (RD-2 taxi branch, only mileage units refunded): extra_km of the non-exempt segment 1.70 km × this trip's per-km rate $1.41/km (F5: distance fare ÷ distance km) = $2.397 → $2.40. I use the segment's own 1.70 km rather than the billed excess of 1.96 km [F5], since the residual 0.26 km is map-matching/200 m corridor noise spread outside the segment and is not refunded under RD-2. The complaint's \"$2.76 excess\" (1.96 km) is therefore only partly upheld.\n\nWaiting fee $1.15 [F6] is not refunded: on RydeTAXI, time stopped at the rider's own named stop is metered waiting and is charged as per the taxi company's waiting unit — RD-3(c) says such waiting is collected and not refunded. (This is the metered branch; the $5 non-metered boarding-wait rule is not in play.) No toll/ERP or unpublished item appears in [F8], so FARE-1/FARE-2 add nothing.\n\nRD-6 flag: this case establishes an RD-1 breach and a refund > 0, and the driver's profile shows route_disputes_upheld_90d = 2 [F18], so this is a \"repeated\" route breach → flag_account. The profile is used only as the basis for the additional account-review action, not to decide the route issue.",
   "cited_facts": [
    "F1",
    "F2",
    "F4",
    "F5",
    "F6",
-   "F7",
    "F8",
    "F9",
    "F10",
@@ -26,7 +27,7 @@
    "F13",
    "F14",
    "F15",
-   "F16",
+   "F17",
    "F18"
   ],
   "cited_policy": [
@@ -35,7 +36,10 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1",
+   "FARE-2",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -46,37 +50,35 @@
     "basis": [
      "F9",
      "F10",
-     "F15",
-     "F13",
-     "F14",
-     "F16"
+     "F2",
+     "F12"
     ],
-    "reason": "Rider's stop request at Clementi Mall [F9] with driver's advance agreement [F10] is an exempt stop request under RD-3(a)/RD-5, so the 4 min dwell is the rider's request (metered waiting per RD-3(c)). However the route change itself has no reasonable cause: F15 records no traffic incident on the optimal route, so RD-4(a) is not met; F13/F14 are only speed-band records and per RD-4(b) cannot exempt on their own (and neither lies on the substituted optimal segment); F16 light rain is not a reasonable cause. The segment is therefore unexempted under RD-1/RD-4(c) and its 1.70 km extra is refundable."
+    "reason": "Single off-route segment 14:21–14:31, +1.70 km, up to 554 m off the optimal route [F4]. The rider's request named Clementi Mall and the car stopped there [F9][F2], but the stop is not on the optimal route (3159 m from pickup) and the driver's own account ties the driven segment to that errand [F12], so RD-3(a) exempts only the stop itself, not the deviation required to reach it — RD-3(b)/RD-5 general-authorisation carve-out (driver's own affair) leaves the extra 1.70 km counted. No RD-4 excuse: no incidents [F15]; bands 4 and 3 [F13][F14] are not band 1/2. Refund 1.70 km × $1.41 = $2.40."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F6",
-    "reason": "4 min metered waiting time on a RydeTAXI trip is chargeable on the meter and non-refundable per RD-3(c); it is not the $5 pick-up waiting fee of NS-6."
+    "id": "rider_fare_estimate",
+    "reason": "The rider's framing that the whole overage is overcharged is only partly right: on a metered RydeTAXI the fare follows the meter, and the refundable portion is limited to the non-exempt segment's extra 1.70 km × $1.41 = $2.40 (RD-2), not the full $2.76 billed excess [F5]; the $1.15 metered waiting charge [F6] is valid under RD-3(c)."
    },
    {
-    "id": "F7",
-    "reason": "No surge was applied (1.0×), so the fare increase cannot be attributed to surge."
+    "id": "driver_statement_consent_scope",
+    "reason": "The driver's post-trip statement [F12] confirms the stop but is a claim, not rider consent (G11); the chat [F9][F10] consents only to stopping at the named place, and does not cover the deviation as a route choice, so the segment is not exempt under RD-3/RD-5."
    },
    {
-    "id": "F8",
-    "reason": "Platform fee $1.47 is a published additional charge under FARE-1 and is not refundable."
-   },
-   {
-    "id": "F12",
-    "reason": "Driver's post-trip statement that the rider asked for the stop is consistent with the chat [F9], which is itself in evidence; the statement is not relied on for any consent beyond the chat."
+    "id": "driver_traffic_excuse",
+    "reason": "No traffic incident on the optimal route during the trip window [F15]; the recorded speed bands (AYE band 4, Jurong Town Hall Road band 3) [F13][F14] are not band 1/2, so RD-4 cannot exempt the segment."
    }
   ],
-  "flag_account": true
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 6.6,
- "input_tokens": 8955,
- "output_tokens": 1563,
+ "latency_s": 8.25,
+ "input_tokens": 9979,
+ "output_tokens": 1767,
  "requests": 1,
  "llm_calls": 1
 }

@@ -22,7 +22,7 @@ def exact(rul, t):
     if rul.get("ruling") != t["ruling"]:
         return False
     a, b = float(rul.get("amount") or 0), float(t.get("amount") or 0)   # None and 0 are the same "no money" (as in bench/report.py)
-    return abs(a - b) <= 0.01
+    return abs(round(a * 100) - round(b * 100)) <= 1      # one cent, in whole cents (same rule as bench/report.py and bench/gate_ablation.py)
 
 rows, allfiles = [], []
 for arm in ["raw", "facts_only", "judge_only", "court", "raw_swap", "facts_only_swap", "court_swap"]:

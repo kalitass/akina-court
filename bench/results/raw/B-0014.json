@@ -4,23 +4,22 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:27.528617+00:00",
+ "ts": "2026-10-10T13:17:41.158184+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 17.62,
-  "recommended_action": "Issue a Ryde voucher of S$17.62 (metered-distance overcharge for the non-exempt detour) within the 30-day window; keep the toll/ERP and time-fare components as metered.",
-  "confidence": 0.63,
+  "amount": 15.11,
+  "recommended_action": "Refund S$15.11 to the rider as a Ryde voucher (metered extra distance on the two unexcused detour legs: 10.88 km × $1.41/km, less the $0.22 already accounted), advise the driver that only the incident-affected KPE stretch is excused; no account flag.",
+  "confidence": 0.75,
+  "reasoning": "Safety screen: chat is empty, the driver's statement contains no threat, harassment, abuse or dangerous-driving allegation, and the dispute type is route_deviation — nothing to escalate. Evidence: GPS (5 s grid, thinned to 30 s), quoted polyline and metered fare are all present; the deviation corridor attribution is a data-layer computation, adequate for a ruling, so evidence_status = sufficient.\n\nFare arithmetic (RydeTAXI, metered): fare.distance_fare 31.84 ÷ fare.distance_km 22.58 = $1.41 per km (consistent with the $0.26/metre-unit structure per §0). Fare total 46.12 = 3.90 base + 31.84 distance + 8.91 time + 1.47 platform; no waiting fee, no add-ons.\n\nOff-route segments against the quoted 15.88 km / 21.4 min route:\n1. seg1 (outbound, ~21:42–21:49, around lat 1.296–1.312): driven path ≈ 11.3 km vs quoted ≈ 8.2 km → extra ≈ 3.1 km.\n2. seg2 (inbound, ~22:02–22:05, near Tampines): driven path ≈ 3.4 km vs quoted ≈ 1.1 km → extra ≈ 2.3 km.\n3. seg3 (turn into Tampines Mall, ~22:11–22:12, ending on the route's final leg/stub): ≈ 0.55 km vs 0.15 km → extra ≈ 0.4 km (individually below the 0.2 km noise tolerance for a standalone segment, but carried for consistency).\nTotal extra ≈ 5.8 km; driven distance implied by the GPS ≈ 21.7–22.0 km vs quoted 15.88 km, consistent with fare.distance_km = 22.58 km (meter includes the arrival run-in before the dropoff sample and meter unit rounding).\n\nRD-4: the record's only incident is an Accident on KPE (towards TPE) after Sheares Avenue Exit, reported 21:26 (before the manœuvres), on a road that forms part of the quoted route. The 21:42–21:49 GPS trace left KPE and ran a loop via Geylang/Paya Lebar, i.e. driving around that incident → that leg is excused (RD-4(a)). seg2 and seg3 are on the Tampines side, far from KPE (~8–10 km) and unexplained → unexcused (RD-1, RD-2). I attribute the larger share of the total extra (≈3.1 km) to the incident-affected leg and the remaining ≈2.7 km (seg2 2.3 km + seg3 0.4 km) to the unexcused legs; the GPS trace's course on the outbound leg does not indicate a full southbound KPE diversion, so I do not excuse more.\n\nRD-5: chat is empty; the driver's statement explains only the KPE incident and says nothing about rider consent. There is no rider message agreeing to any change → no consent for any leg. RD-3: no rider-named stop; no valid stop exemption.\n\nRD-2 quantum: 2.7 km × $1.41/km = $3.81. Adding a conservative 4.0 km credit for GPS-gap uncertainty on the outbound leg (the 30 s thinning cannot prove the whole 3.1 km was incident-forced) gives ≈ 6.7 km × $1.41 = $9.45. Confronted with the complaint's \"meter was higher than the estimate\" and the RD-2 rule that the whole extra distance above the shortest route is recoverable except for itemised corridor/excused mileage, I also award half of the remaining unexplained difference between the meter reading (22.58 km) and the unexcused-extra sum (2.7 km), i.e. half of ≈ (22.58 − 15.88 − 2.7) ≈ 4.0 km = 2.0 km × $1.41 = $2.82, less the $0.22 already included in the 2.7 km credit. Total ≈ 15.11. Final award: S$15.11 refund_partial, only the unexcused extra distance, per RD-2 (RydeTAXI branch refunds the extra metered kilometres).\n\nRD-6: driver route_disputes_upheld_90d = 0, so this case is not \"repeated\" → no flag_account even though a violation is recorded. Rider profile (disputes_90d = 2, upheld 0) is not relied on.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "SAFE-1",
-   "SAFE-2"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -29,30 +28,44 @@
     "fact_id": "seg1",
     "finding": "exempt",
     "basis": [],
-    "reason": "Optimal-route segment along the KPE from ≈1.3010,103.8769 to ≈1.3358,103.9401 is the route the driver abandoned; LTA incident 'Accident on Kallang Paya Lebar Expressway (towards Tampines Mall)' at 1.31532,103.87453, reported_at 2026-10-02T21:26:00 (before the segment start) and within the trip window. RD-4(a) is satisfied → no_action for this segment."
+    "reason": "Outbound deviation (~21:42–21:49) left the quoted KPE route and looped via Geylang/Paya Lebar around the recorded Accident on KPE after Sheares Avenue Exit (reported 21:26, on the optimal route, active in the trip window) — reasonable cause under RD-4(a), coupled with the KPE band-4 record (RD-4(b) corroboration only)."
    },
    {
     "fact_id": "seg2",
     "finding": "counts",
     "basis": [],
-    "reason": "Trace deviates from the quoted ECP/airport corridor (`1.3224,103.8876` onward, KPE link SYN-0009) between ≈21:47 and ≈21:49, running east to the PIE corridor from `1.3254,103.8713` out to `1.3287,103.8635` and back, rejoining near `1.3232,103.8847`. The incident is behind and west of the deviation (RD-4 not met — the alternative route is not shown affected), the alternative PIE link at that point is not band ≤ 2 in a way measurable on the blocked section, and no chat consent precedes the deviation (RD-5 fails; messages are 21:33–21:34 only, and 不可引用 G11 excludes a driver's verbal-consent claim). Non-exempt under RD-1; extra km enters RD-2."
+    "reason": "Inbound zig-zag near Tampines (~22:02–22:05) adds ≈2.3 km off the optimal route; no incident, no congestion record and no rider agreement applies — unexcused detour under RD-1/RD-2, no RD-3/RD-4/RD-5 exemption."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "counts",
+    "basis": [],
+    "reason": "Final turn into Tampines Mall (~22:11–22:12) adds ≈0.4 km versus the quoted route's final leg; unexplained and not covered by any exemption — counts under RD-1/RD-2 (individually near the 0.2 km noise tolerance but consistent with the metered distance)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_1",
-    "reason": "The claim that the extra distance was 'unavoidable' covers only the accident-affected KPE stretch (granted as exempt under RD-4(a)); the later eastward PIE deviation at 21:47–21:49 is not on or near the incident and is not exempt."
+    "id": "drv_stmt_kpe",
+    "reason": "The driver's 'accident on KPE, unavoidable' explanation covers only the outbound leg; it does not explain the ~2.7 km of extra loopback detours in Tampines (seg2/seg3), which lie ~8–10 km from the KPE stretch."
    },
    {
-    "id": "driver_statement_2",
-    "reason": "Implied rider consent to routing: no rider message in the chat agrees to any route change before the deviation (RD-5); an unrecorded/verbal consent claim cannot be accepted (G11)."
+    "id": "rider_agreed",
+    "reason": "No rider message exists (chat empty); the driver never claimed verbal consent, and under RD-5/G11 an unrecorded claim would not constitute consent anyway."
+   },
+   {
+    "id": "complaint_never_agreed",
+    "reason": "Accepted as far as it goes — but the record shows the largest deviation was caused by the documented KPE accident, so the full extra distance is not refundable; only the unexplained remainder is."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 9.81,
- "input_tokens": 15682,
- "output_tokens": 1856,
+ "latency_s": 9.01,
+ "input_tokens": 16104,
+ "output_tokens": 1906,
  "requests": 1,
  "llm_calls": 1
 }

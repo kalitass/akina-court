@@ -2,32 +2,34 @@
  "arm": "court",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-09T19:46:16+00:00",
+ "started_at": "2026-10-10T13:33:59+00:00",
  "fingerprint": {
-  "case_sha256": "ddeb7f012f4eb7ba",
-  "policy_sha256": "55047a1dd798c068",
-  "code_sha256": "1e912719f75f0c94",
+  "case_sha256": "ccb902d41402fdce",
+  "policy_sha256": "22732a5091cb274a",
+  "code_sha256": "f89f0d73edae9782",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-09T19:46:16+00:00"
+  "issued_at": "2026-10-10T13:33:59+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.18,
-  "recommended_action": "Refund $4.18 (Ryde voucher per NS-7) for the unexempted 2.96 km off-route segment; record the RD-1 breach on the trip; no account flag.",
-  "confidence": 0.9,
+  "amount": 4.33,
+  "recommended_action": "Issue a $4.33 voucher refund to the rider (RydeTAXI metered-fare overcharge), and remind the driver that unexplained off-route mileage is a breach of the shortest-and-most-direct obligation.",
+  "confidence": 0.86,
+  "reasoning": "RD-1: the trip is RydeTAXI (metered), so extra kilometres enter the fare directly; the GPS record shows one unexplained off-route segment 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, +3.07 km and up to 688 m off the optimal route [F3], and no exemption applies, so the segment is refundable under RD-2 [F3][RD-1].\n\nRD-4: no incident was recorded near the route during the trip window [F13]; the only congestion evidence is speed band 5 (40–49 km/h) on East Coast Parkway and Airport Boulevard [F11][F12], which is outside RD-4(b)'s band 1–2, and band evidence is corroborative only (G3). With no RD-4(a) incident the segment falls to RD-2 treatment [F11][F12][F13][RD-4].\n\nRD-5: the driver's post-trip statement \"I went where the GPS sent me; it rerouted\" is not rider consent and, appearing only in his own statement, cannot exempt the segment (G11) [F10]. The chat is complete and timestamped: a 09:04 rider pickup note and a 09:05 driver \"2 min away,\" with no route discussion before the segment started at 09:24 [F7][F8][F9]; the trace timestamps the segment start at 09:24:50, so no rider message sent before 09:24:50 agrees to anything. A complete chat record with no rider agreement before the segment counts; the trace also notes no stop was measured, so RD-3 gives no exemption either [F3][F7][F8][F9][RD-5].\n\nAmount (RD-2): the refund is the unexempted segment's extra kilometres priced at this trip's own per-km rate, which the fare record supplies as distance fare ÷ distance km = $34.42 ÷ 24.41 km = $1.41008/km [F6]. $1.41008/km × 3.07 km (extra_km in [F3]) = $4.3290, rounded to $4.33. The billed excess line of 3.20 km is a separate figure covering the whole-trip excess; RD-2 refunds only the segment's extra_km and expressly does not refund mileage outside any segment, so the award is computed from [F3], not from the 3.20 km in [F4] [F3][F4][F6][RD-2].\n\nRD-6: the driver's 90-day profile shows route_disputes_upheld_90d = 0 [F16], so the \"repeated\" route-deviation predicate is absent and no flag_account attaches; the profile facts (F15, F16) carry neither side's finding [F15][F16][RD-6].",
   "cited_facts": [
-   "F1",
    "F3",
-   "F4",
    "F6",
+   "F4",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F14"
+   "F13",
+   "F16",
+   "F15"
   ],
   "cited_policy": [
    "RD-1",
@@ -35,9 +37,7 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6",
-   "SAFE-1",
-   "SAFE-2"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -47,26 +47,48 @@
     "finding": "counts",
     "basis": [
      "F7",
-     "F8"
+     "F8",
+     "F9",
+     "F10"
     ],
-    "reason": "The 09:32–09:38 off-route segment (2.96 km, up to 974 m off the optimal route) is unexempted. The chat record is empty, so no rider message before 09:32:20 names a place (RD-3(a)) or agrees to any driver-named road/area/route (RD-5); the only 'agreement-like' material is the driver's post-trip statement 'I followed my GPS; it rerouted me', which is a claim, not rider consent (G11), and cannot beat the GPS record. No RD-4(a) incident exists and band 4 congestion cannot exempt on its own (RD-4(b)). [F3][F7][F8][RD-1][RD-3][RD-4][RD-5]"
+    "reason": "The off-route segment 09:24–09:30 (+3.07 km, up to 688 m off the optimal route) is unexempted: the chat is complete and contains only a 09:04 rider pickup note and a 09:05 driver '2 min away', so no rider message before the 09:24:50 segment start agrees to any route change, and the driver's post-trip 'the GPS rerouted' is his own statement, not consent (G11). It is also not a rider-named stop, as no stop was measured in the segment. Refundable under RD-2 at the trip's per-km rate [F3][F7][F8][F9][F10][RD-3][RD-5][RD-2]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "D2",
-    "reason": "The driver's attempt to frame the segment via his own GPS statement (F8) as anything other than unexempted fails: RD-4 requires a DataMall incident on the displaced optimal stretch (none, F11) and bans exemption on speed bands alone, and the bands here are only 4, not 1/2 (F9, F10) [F8][F9][F10][F11][RD-4]. The segment counts."
+    "id": "D4",
+    "reason": "The $4.51 in [F4] prices 3.20 km of whole-trip excess; RD-2 refunds only the unexempted segment's extra_km (3.07 km per [F3]) at the trip rate ($34.42 ÷ 24.41 km = $1.41008/km [F6]), giving $4.33, and expressly does not refund mileage outside any segment [F3][F4][F6][RD-2]."
+   },
+   {
+    "id": "D1",
+    "reason": "Its premise that the refund should be measured by the billed excess is wrong: RD-2 measures the unexempted segment's extra_km, so 3.07 km at $1.41008/km, not the 3.20 km whole-trip figure [F1][F3][F4][F6][RD-2]."
    },
    {
     "id": "D6",
-    "reason": "Rejected so far as it invites a RD-6 flag on the generic '1 upheld dispute' figure: RD-6's trigger is route_disputes_upheld_90d ≥ 1, which is 0 here (F14); the generic upheld count is not the trigger [F14][RD-6]."
+    "reason": "Accepted; the prior 90-day upheld dispute is a no-show matter with route count 0 [F16], so RD-6's repeated-route-deviation predicate is absent and no flag_account attaches — the claim is upheld and therefore not a ground against this ruling [F16][RD-6]."
+   },
+   {
+    "id": "D5",
+    "reason": "Accepted on the safety screen: the chat and statement contain no threat, harassment or dangerous-driving allegation [F7][F8][F10], so SAFE-1/SAFE-2 escalation does not trigger; this is a finding, not a defence to the refund [F7][F8][F10]."
    },
    {
     "id": "C7",
-    "reason": "Withdrawn by the rider, and in any case unsupported: RD-6 requires route_disputes_upheld_90d ≥ 1, which is 0 (F14), so no account flag follows [F14][RD-6]."
+    "reason": "The rider's and driver's profile histories [F15][F16] do not decide the merits and are not used to establish the deviation; the finding rests on [F3] and [F6], and no flag_account arises under RD-6 [F15][F16][RD-6]."
+   },
+   {
+    "id": "C2",
+    "reason": "The whole-trip totals (+3.2 km, +15%; +8.4 min) [F1][F2] are not themselves refundable: RD-2 refunds only mileage attributed to an unexempted off-route segment, which here is 3.07 km, not the full 3.2 km [F1][F2][F3][RD-2]."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F7",
+   "F8",
+   "F10"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "status": "resolved",
  "eligibility": {
@@ -76,37 +98,39 @@
    {
     "type": "refund_partial",
     "mode": "auto",
-    "detail": "$4.18 Ryde voucher to the rider (NS-7)"
+    "detail": "$4.33 Ryde voucher to the rider (NS-7)"
    }
   ],
   "what_would_change": [
-   "F3: if the judge finds the rider agreed to this route or named this stop beforehand, it is exempt; if not, $4.17 is refunded; if the record cannot settle it, a person decides.",
+   "F3: the judge found no rider agreement covering this segment, so $4.33 is refunded; a rider message agreeing to it before it started would have exempted it.",
    "Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag."
   ]
  },
- "latency_s": 19.22,
- "model_calls": 9,
+ "latency_s": 22.56,
+ "model_calls": 10,
  "provider_trace_ids": [
-  "50f1eab50ab3fb677382090544e621f7",
-  "062116a8856ee74cf35bbe6ab4ad35c6",
-  "e6ab286f772491fd66f25d35e9229ffe",
-  "d2d50dc6965e8c7bfbf1fbe6f71c896f",
-  "4191a57ff34d667d17908178cf8d8b70",
-  "f80a375c15a314b52c64d41ca83fa547",
-  "f2d2679d66375ade3cb5d8b1b9c694f3",
-  "f3722c659fe3e6dce35642e94f37ed49",
-  "62d149b006cc8d4914ca75dbd0b5f60c"
+  "f549003311b79446a47d867296501b56",
+  "51cd80aef9cd6599eed3d088636e743d",
+  "9267d713d39156e7f535b968ba626f52",
+  "3309ad46a4e1853e5290c1ebae8afc40",
+  "32a36434f118876b21b27e25acd4cc26",
+  "cedded952cb0d0c134bb43272a1633e6",
+  "b462056ddf2dc3332094192bf1f54ece",
+  "7890cc92aff4dd988466d7c0142dd159",
+  "f74c8aa2c594f04f8a9cc69aad46ae93",
+  "02dd2ba26fc0242b008cddcd3b3c673a"
  ],
  "provider_response_ids": [
-  "7ae76533-af10-4aff-b6a3-c1af75e5925d",
-  "99d77ce2-19d9-4bf0-a76d-cf030cde1a82",
-  "79c2fb82-b09e-46a4-a8ae-59a07ce7b327",
-  "ccfc2622-52ec-4f92-9ea9-a249c79dbad6",
-  "a40bf4eb-117f-4725-af1e-d019f9bea35c",
-  "ef39b35a-b078-4172-9928-bddd307ff1f1",
-  "154170af-b370-4dbe-9915-4dc0ea9aba72",
-  "44804469-73f3-4e99-8eda-bf216ec7d37c",
-  "33ce7e4e-49a9-4008-aa26-e74a50a79cc7"
+  "8ae3d51b-aef4-4bbb-8fc8-9a6b5b1f46aa",
+  "be2e1516-f459-42a2-a094-5a77f0786417",
+  "37ec2030-4e6a-450f-ab76-0ad5a6d215f4",
+  "a877cf12-1b87-4702-8fb0-5e5257a7adf4",
+  "aca77ebd-c285-417d-9134-32b814743743",
+  "85e75bcb-d073-40c1-b56e-64aa96b3c65b",
+  "b7dc77dd-ef6a-490f-9859-f45d1b3cdcf8",
+  "7868024d-a9e3-4a7a-9b54-372dad33d352",
+  "27297fdc-c87d-4ddc-abdc-9ec39e4fda3a",
+  "f782d722-53f6-4b37-b75b-338f294648b4"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -119,95 +143,105 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 8772,
-   "completion_tokens": 145,
-   "total_tokens": 8917,
-   "prompt_tokens_details": {
-    "cached_tokens": 8576
-   },
-   "prompt_cache_hit_tokens": 8576,
-   "prompt_cache_miss_tokens": 196
-  },
-  {
-   "prompt_tokens": 8768,
-   "completion_tokens": 215,
-   "total_tokens": 8983,
-   "prompt_tokens_details": {
-    "cached_tokens": 8576
-   },
-   "prompt_cache_hit_tokens": 8576,
-   "prompt_cache_miss_tokens": 192
-  },
-  {
-   "prompt_tokens": 9466,
-   "completion_tokens": 74,
-   "total_tokens": 9540,
+   "prompt_tokens": 9447,
+   "completion_tokens": 179,
+   "total_tokens": 9626,
    "prompt_tokens_details": {
     "cached_tokens": 9216
    },
    "prompt_cache_hit_tokens": 9216,
-   "prompt_cache_miss_tokens": 250
+   "prompt_cache_miss_tokens": 231
   },
   {
-   "prompt_tokens": 9818,
-   "completion_tokens": 1037,
-   "total_tokens": 10855,
+   "prompt_tokens": 9451,
+   "completion_tokens": 179,
+   "total_tokens": 9630,
    "prompt_tokens_details": {
-    "cached_tokens": 8960
+    "cached_tokens": 9216
    },
-   "prompt_cache_hit_tokens": 8960,
-   "prompt_cache_miss_tokens": 858
+   "prompt_cache_hit_tokens": 9216,
+   "prompt_cache_miss_tokens": 235
   },
   {
-   "prompt_tokens": 9835,
-   "completion_tokens": 1088,
-   "total_tokens": 10923,
+   "prompt_tokens": 10402,
+   "completion_tokens": 40,
+   "total_tokens": 10442,
+   "prompt_tokens_details": {
+    "cached_tokens": 9600
+   },
+   "prompt_cache_hit_tokens": 9600,
+   "prompt_cache_miss_tokens": 802
+  },
+  {
+   "prompt_tokens": 10406,
+   "completion_tokens": 40,
+   "total_tokens": 10446,
+   "prompt_tokens_details": {
+    "cached_tokens": 10240
+   },
+   "prompt_cache_hit_tokens": 10240,
+   "prompt_cache_miss_tokens": 166
+  },
+  {
+   "prompt_tokens": 10608,
+   "completion_tokens": 1010,
+   "total_tokens": 11618,
+   "prompt_tokens_details": {
+    "cached_tokens": 10368
+   },
+   "prompt_cache_hit_tokens": 10368,
+   "prompt_cache_miss_tokens": 240
+  },
+  {
+   "prompt_tokens": 10604,
+   "completion_tokens": 1388,
+   "total_tokens": 11992,
+   "prompt_tokens_details": {
+    "cached_tokens": 10368
+   },
+   "prompt_cache_hit_tokens": 10368,
+   "prompt_cache_miss_tokens": 236
+  },
+  {
+   "prompt_tokens": 13018,
+   "completion_tokens": 900,
+   "total_tokens": 13918,
+   "prompt_tokens_details": {
+    "cached_tokens": 10496
+   },
+   "prompt_cache_hit_tokens": 10496,
+   "prompt_cache_miss_tokens": 2522
+  },
+  {
+   "prompt_tokens": 13023,
+   "completion_tokens": 939,
+   "total_tokens": 13962,
    "prompt_tokens_details": {
     "cached_tokens": 9472
    },
    "prompt_cache_hit_tokens": 9472,
-   "prompt_cache_miss_tokens": 363
+   "prompt_cache_miss_tokens": 3551
   },
   {
-   "prompt_tokens": 11966,
-   "completion_tokens": 822,
-   "total_tokens": 12788,
+   "prompt_tokens": 15742,
+   "completion_tokens": 1784,
+   "total_tokens": 17526,
    "prompt_tokens_details": {
-    "cached_tokens": 8704
+    "cached_tokens": 10624
    },
-   "prompt_cache_hit_tokens": 8704,
-   "prompt_cache_miss_tokens": 3262
+   "prompt_cache_hit_tokens": 10624,
+   "prompt_cache_miss_tokens": 5118
   },
   {
-   "prompt_tokens": 11991,
-   "completion_tokens": 870,
-   "total_tokens": 12861,
-   "prompt_tokens_details": {
-    "cached_tokens": 9344
-   },
-   "prompt_cache_hit_tokens": 9344,
-   "prompt_cache_miss_tokens": 2647
-  },
-  {
-   "prompt_tokens": 13954,
-   "completion_tokens": 1540,
-   "total_tokens": 15494,
-   "prompt_tokens_details": {
-    "cached_tokens": 9472
-   },
-   "prompt_cache_hit_tokens": 9472,
-   "prompt_cache_miss_tokens": 4482
-  },
-  {
-   "prompt_tokens": 1213,
-   "completion_tokens": 294,
-   "total_tokens": 1507,
+   "prompt_tokens": 1148,
+   "completion_tokens": 328,
+   "total_tokens": 1476,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 957
+   "prompt_cache_miss_tokens": 892
   }
  ],
- "finished_at": "2026-10-09T19:46:35+00:00"
+ "finished_at": "2026-10-10T13:34:21+00:00"
 }

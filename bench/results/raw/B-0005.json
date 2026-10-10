@@ -4,52 +4,59 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:03.243722+00:00",
+ "ts": "2026-10-10T13:17:19.162152+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 1.44,
-  "recommended_action": "Raise a fare-review credit of $1.44 (Ryde voucher, NS-7) for the unexcused 1.02 km detour segment; note the driver's RD-1 shortest-route breach on file. No account flag (driver has no upheld route dispute in 90 days).",
-  "confidence": 0.78,
+  "amount": 3.13,
+  "recommended_action": "Refund S$3.13 (voucher, NS-7) for the unexempted detour (SEG-2, 2.22 km) on this RydeTAXI metered trip; the ECP/CBD segment is exempt under RD-4(a) because of the LTA-documented vehicle breakdown on the route. No account flag.",
+  "confidence": 0.62,
+  "reasoning": "Safety screen: chat empty, driver's statement and the complaint contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation — nothing triggers SAFE-1/SAFE-2. Evidence: one record gap — chat is empty, so RD-5 consent cannot be tested; that gap does not change the outcome (there is no consent claim to test and both branches, consent and RD-4 exemption, are applied to their own segments), so evidence_status = sufficient.\n\nArithmetic. Driver's GPS (18:35:25–18:42:25, trace re-sampled at 30 s) matches the quoted polyline: the south of the pickup (1.2771→1.2798, 103.8478→103.8494), the U-turn dip at 1.2781/103.8583, then north up the ECP corridor (1.2952–1.2959 / 103.870–103.885). That is the ECP. At 18:42:55–18:43:25 the trace sits at 1.2955/103.876–103.879 — precisely on the ECP polyline and on the ECP speed-band geometry (speed_band 5, window 18:19:25–19:15:40) — while the quoted route left that corridor at 18:42 and went inland through 1.298–1.318/103.899–103.966. So the driver stayed on the ECP through the exact point of the LTA DataMall incident (Vehicle breakdown, 1.3093/103.93514, reported 18:27, i.e. before the segment, on the ECP towards Changi, i.e. on the replaced optimal stretch). RD-4(a) is satisfied for that replaced stretch → SEG-1 exempt (no_action).\n\nSegment 2. 18:46:25–18:51:25 (GPS 1.2970/103.8970 → 1.3081/103.9086) is roughly 1.2 km north of the quoted route corridor there (quote 1.3032–1.3064/103.9162–103.927) and 18:51:55–18:58:25 is a loop back west/south to 1.3026/103.9116 then east again — a sealed two-way excursion. That 12-minute stretch produced 2.22 extra km (72 km/h × 0.2 h ≈ 4.0 km versus 1.81 km along the route), with no chat, no incident and no speed-band record on the replaced optimal stretch (the only band entry, band 5, applies to the driver's own ECP detour route, not to the optimal inland route, and RD-4(b) cannot exempt alone in any event). No rider consent exists (chat is empty; any verbal consent would not count, G11). So SEG-2 counts under RD-1.\n\nRefund (RD-2, RydeTAXI): distance_fare 33.33 / distance_km 23.64 = S$1.4099/km; billable 0.2 km units → 2.22 km = 11 units × 0.2 × 1.4099 = S$3.10, nearest 0.2 km = 2.2 km → S$3.10–3.13. Ruled refund_partial S$3.13. The residual query against the quoted 21.469 km (meter 23.64 km) is matching/loop noise not attributable to any identified segment and is not refunded per RD-2; no ERP/toll item exists, so nothing under FARE-2. No published extra fee was added. RD-6 does not apply: the driver's route_disputes_upheld_90d = 0, so no flag_account. Amounts are estimates from GPS geometry (trace thinned to 30 s), hence confidence 0.62.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "G11",
+   "G12"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "counts",
+    "finding": "exempt",
     "basis": [],
-    "reason": "Early off-route loop ~18:35:20–18:38:50 around the Marina East area (~1.0–1.3 km) that leaves the quoted route and returns at the ECP corridor (1.2797,103.8594). No chat message of any kind (chat is empty), so no rider consent under RD-5; no traffic incident matches the replaced Tanjong Pagar/ECP stretch at that time (RD-4). RD-3 inapplicable (no rider-requested stop). Unexcused detour under RD-1; extra_km enters the RD-2 refund."
+    "reason": "Driver stayed on the ECP through the LTA-documented vehicle breakdown on the optimal route (incident 1.3093/103.93514, reported 18:27, before the detour; speed-band geometry/speed_band 5 window covers the trip). RD-4(a): traffic incident on the replaced optimal stretch → exempt, no_action for that segment."
    },
    {
     "fact_id": "seg2",
-    "finding": "exempt",
+    "finding": "counts",
     "basis": [],
-    "reason": "Mid-trip detour ~18:53:50–18:58:20 off the ECP corridor near 1.3040,103.9103 / 1.3017,103.9098. The trace loses about 9 km/h and turns off right after the LTA 'Vehicle breakdown on East Coast Parkway' incident at 1.31236,103.95178 reported 18:27 (RD-4(a)) — a DataMall incident on the replaced best route, reported before the segment and within 300 m matching distance — so the driver's 'whole road was slow, took another way' is corroborated for this segment and it is not counted as a deviation."
+    "reason": "18:46:25–18:58:25 the trace runs ~1.2 km north of the quoted route and performs a return loop, giving 2.22 extra km with no incident on the replaced optimal stretch and no speed-band support; chat is empty so no RD-5 consent (a verbal 'agreement' would not count, G11). Unexempted detour under RD-1 → refund of 11 metered units × 0.2 km × $1.4099/km (RD-2)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_reasonable_cause_all_segments",
-    "reason": "The LTA breakdown incident (ECP, 1.31236/103.95178, 18:27) is on the route and exempts only the later segment (RD-4(a)); it is roughly 5 km and > 25 minutes away from the early Tanjong Pagar/Marina deviation, which has no incident or speed-band support. The driver's blanket claim of a road closure is therefore rejected for the early segment."
+    "id": "rider_claim_whole_detour",
+    "reason": "The complaint seeks the full 3 km / 24 km overage refunded, but the whole ECP/CBD stretch around the breakdown is exempt under RD-4(a) — the driver's alternative was 'reasonable cause' with LTA incident evidence on the replaced optimal route (RD-4). Only the unexplained northern loop segment counts."
    },
    {
-    "id": "rider_claim_never_asked_consent",
-    "reason": "Correct as a fact (chat empty, no rider message), but it does not by itself entitle the rider to the full quoted-vs-meter difference; only the unexcused measured extra distance (1.02 km) is refundable under RD-2, not the entire 2.36 km discrepancy."
+    "id": "driver_claim_all_explained",
+    "reason": "The driver's statement ('the whole road was slow, I took another way') does not cover the entire deviation: after rejoining at 18:51:55 the driver left the optimal route again north of the corridor until 18:58:25, which no incident or speed-band evidence explains and which the rider never agreed to (RD-1/RD-4(c))."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 7.65,
- "input_tokens": 16435,
- "output_tokens": 1634,
+ "latency_s": 7.98,
+ "input_tokens": 16773,
+ "output_tokens": 1649,
  "requests": 1,
  "llm_calls": 1
 }

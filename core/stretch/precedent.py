@@ -154,7 +154,7 @@ def seed_from_runs(runs_dir: Path = RUNS_DIR) -> int:
     """Index every runs/C-*.json CaseRecord (demo bootstrap). Returns the number indexed."""
     n = 0
     for p in sorted(runs_dir.glob("C-*.json")):
-        rec = CaseRecord.model_validate_json(p.read_text(encoding="utf-8"))
+        rec = CaseRecord.load(p)
         if index(rec, runs_dir):
             n += 1
     return n

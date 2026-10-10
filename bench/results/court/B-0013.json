@@ -4,19 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:48:26.419521+00:00",
+ "ts": "2026-10-10T13:24:34.577140+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 6.74,
-  "recommended_action": "Release a $6.74 Ryde voucher to the rider for the un-consented 18:59–19:08 detour (RydeTAXI metered fare, RD-2); take no account action against the driver (RD-6 predicate unmet).",
-  "confidence": 0.85,
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send the file to a human reviewer to fix the scope of the rider's 18:43 \"Sure, your call.\" (RD-5): if it is treated as a general routing authorisation, only F4 is refundable ($6.74); if F3's path cannot be tied to Rifle Range Road and F3 is instead left unexempted, a further $7.98 (5.66 km × $1.4100/km) would also fall due. No account action against the driver (route_disputes_upheld_90d = 0).",
+  "confidence": 0.62,
+  "reasoning": "The trip is a metered RydeTAXI booking (F8: $61.32, distance component $43.64 over 30.95 km), so diversion mileage enters the fare and RD-2's mileage-unit refund is the only refund mechanism here [F8][RD-2]. GPS records two off-route segments, F3 (18:46–18:56, +5.66 km) and F4 (19:03–19:12, +4.78 km), each tested separately against RD-3/RD-4/RD-5 [F3][F4][RD-1].\n\nF4 is settled: the rider's last message is timestamped 18:43, twenty minutes before F4 started at 19:03, and the complete timestamped chat record contains no rider message authorising any route change after that [F10][F11][F4]. The driver's post-trip statement \"the second turn-off was my GPS rerouting\" is a driver claim, not the rider's own pre-segment message, so it is not consent (G11) [F12][F4][RD-5]. No RD-4 exemption applies: only speed band 4 on BKE/PIE and no incidents near the route, so RD-4(a) is unmet and band evidence cannot exempt alone [F13][F14][F15][RD-4]. F4 therefore counts under RD-2 [F4][RD-2]. No stop is involved, so RD-3 does not apply to either segment [F3][F4][RD-3].\n\nF3 I cannot settle. The rider did send \"Sure, your call.\" at 18:43, before the 18:46 segment start, answering the 18:42 proposal to go round via Rifle Range Road, so the RD-5 timing is met [F9][F10][F11][F3]. But the scope is not readable: the only named road is Rifle Range Road, and no fact ties the driven 18:46–18:56 path (7.10 km driven where the optimal route covers 1.43 km, straying up to 1923 m) to that road, no stop was measured on it, and the driver's statement names no road for this segment either; \"your call\" can equally be read as a general routing choice, which would not cover a loop that is nothing of the driver's own but would cover the route chosen to get there [F9][F10][F12][F3][RD-5]. Under RD-5 that is undetermined (G13).\n\nThe undetermined scope of F3 changes the amount: if the consent is read as general, only F4 counts (4.78 km × $1.4100/km = $6.74); if F3 is treated as being off the consented road, F3 also counts (5.66 km × $1.4100/km = $7.98, total $14.72, the sum of the two segments' extra km; the rate is F5's distance fare ÷ distance km, $43.64 ÷ 30.95 = $1.40998/km, and the remainder of the $14.64 excess-distance line stays unrecovered) [F3][F4][F5][RD-2]. Because the record does not settle which reading applies, a person must decide; a machine applying either reading would risk under- or over-refunding [F3][RD-5].\n\nNo RD-6 flag arises: the trace marks the prior-upheld-route-dispute precondition ✗ (route_disputes_upheld_90d = 0 for this driver), and profile facts alone never decide or add an account action [F17][F18][RD-6]. The $0.11 meter waiting unit and the $1.47 platform fee are undisturbed in either reading [F6][F8][RD-3][FARE-1].\n\nSafety screen: I read the complaint, both chat messages and the driver's statement; they concern congestion and routing only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F9][F10][F12]. The escalation rests on the undetermined RD-5 scope of F3, not on safety.",
   "cited_facts": [
-   "F1",
    "F3",
    "F4",
    "F5",
-   "F7",
+   "F6",
    "F8",
    "F9",
    "F10",
@@ -24,75 +25,98 @@
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F17",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7",
-   "SAFE-1"
+   "FARE-1"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "segment finding undetermined for F3",
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
+    "finding": "undetermined",
     "basis": [
-     "F8",
-     "F9"
+     "F9",
+     "F10",
+     "F12"
     ],
-    "reason": "Driver at 18:37 named the alternative corridor (\"go round via Kranji Expressway\") [F8] and the rider's own message at 18:38 \"Sure, go ahead.\" [F9] agreed before the segment's 18:40 start [F3]; the complete timestamped record shows no different destination [F10], so F3 is the route consented to and is exempt under RD-5."
+    "reason": "The rider's message \"Sure, your call.\" at 18:43 (F10) answers the driver's 18:42 proposal \"ok if I go round via Rifle Range Road?\" (F9) and precedes the 18:46 segment start (F3), so RD-5's timing condition is met; but the named road (Rifle Range Road) is not tied to the driven 18:46–18:56 path by any fact, no stop on it was measured, and the driver's statement names no road for this segment (F12), while the words also read as a general routing choice. The scope of consent therefore cannot be read (G13), which changes the amount (5.66 km × $1.4100/km = $7.98) — a person must decide (F3, F4, F5, RD-5)."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
     "basis": [
-     "F9",
-     "F8",
-     "F11"
+     "F10",
+     "F11",
+     "F12"
     ],
-    "reason": "The only rider consent, \"Sure, go ahead.\" at 18:38 [F9], answered the Kranji Expressway question [F8] and predates the 18:59 segment start [F4] by 21 minutes; it does not cover this separate, later detour, and a driver statement of agreement (\"the second turn-off was my GPS rerouting\") is not rider consent [F11][RD-5][RD-1]. No incident justifies it and no rider message precedes it [F14][F10], so it counts under RD-2."
+    "reason": "The rider's last message is at 18:43 (F10) and F4 began at 19:03 (F4); the complete timestamped chat record (F11) contains no rider message authorising any route change for this segment, and the driver's post-trip statement that the second turn-off was \"my GPS rerouting\" (F12) is a driver claim, not the rider's own pre-segment message, so it is not consent (G11). No RD-4 exemption: only speed band 4 on BKE/PIE (F13, F14) and no incidents near the route (F15), so RD-4(a) is unmet and band evidence cannot exempt alone (RD-4). F4 is an unexempted off-route segment and its 4.78 km × $1.4100/km = $6.74 is refundable under RD-2 (F4, F5, RD-2)."
    }
   ],
   "rejected_claims": [
    {
+    "id": "D3",
+    "reason": "Reading \"Sure, your call.\" (F10) as a trip-wide general authorisation is not established: it answers a proposal naming a specific road, Rifle Range Road (F9), and no fact ties the 18:46–18:56 path to that road; on this record the scope is undetermined, not a trip-wide authority, and an undetermined scope cannot exempt the segment (F9, F10, F3, RD-5)."
+   },
+   {
+    "id": "D1",
+    "reason": "The assertion that F3 is exempt by consent and only F4 can be chargeable is not settled: F3 is neither exempt nor chargeable on this record because the RD-5 scope of the 18:43 consent cannot be read (F9, F10, F12, F3, RD-5)."
+   },
+   {
     "id": "D4",
-    "reason": "No reasonable cause is evidenced for the reroute: Bukit Timah Expressway at band 5 (40–49 km/h) [F12] is not band 1 or 2 and cannot exempt a segment, and F14 records no incident on the replaced stretch, so RD-4 is not met [F12][F14][RD-4]. Fair weather [F15] removes no-cause mitigation rather than supplying it, and F15 is not cited as fact."
-   },
-   {
-    "id": "D6",
-    "reason": "The GPS-reroute explanation exists only in the post-trip driver statement [F11], which is not rider consent (G11) and does not displace the shortest-and-most-direct obligation [F11][F4][RD-5][RD-1]."
-   },
-   {
-    "id": "D8",
-    "reason": "RD-6 requires route_disputes_upheld_90d ≥ 1 for the flag; the driver's PC1 shows route: 0 [F17], so no account flag is available [F17][RD-6]."
-   },
-   {
-    "id": "C5",
-    "reason": "The statement \"the second turn-off was my GPS rerouting\" [F11] is used only to show the driver turned off on his own initiative; it is not treated as consent and the segment finding rests on the chat timing, not on the statement [F11][F9][RD-5]."
+    "reason": "Rejected as an exemption argument: band 4 on BKE/PIE is neither band 1 nor band 2 and there are no incidents near the route, so there is no reasonable-cause exemption under RD-4(a), and band evidence alone cannot exempt under RD-4(b) (F13, F14, F15, RD-4)."
    },
    {
     "id": "C8",
-    "reason": "Flag_account is refused: this is the driver's first route dispute and PC1 route upheld = 0, so 'repeated' under RD-6 is not made out [F17][RD-6]."
+    "reason": "A fixed $6.74 refund is not issuable while F3's RD-5 scope is undetermined: if the consent is read as general the figure is 4.78 km × $1.4100/km = $6.74, but if F3 is left unexempted the figure is $6.74 + 5.66 km × $1.4100/km = $14.72, so the amount cannot be fixed on this record (F3, F4, F5, RD-2, RD-5)."
+   },
+   {
+    "id": "C4",
+    "reason": "The rider advocate's own concession that F3's consent scope is undetermined is adopted as the finding: because it changes the amount, the case goes to a person rather than being ruled on (G13, F3, F4, F5, RD-5)."
+   },
+   {
+    "id": "C10",
+    "reason": "Accepted in effect: no upheld route dispute in 90 days appears for this driver, so RD-6's precondition for flag_account is not met and no account action is taken (F18, RD-6)."
+   },
+   {
+    "id": "D9",
+    "reason": "Accepted: route_disputes_upheld_90d = 0, so the RD-6 repeated-violation precondition fails and no flag_account is warranted (F18, RD-6)."
+   },
+   {
+    "id": "C6",
+    "reason": "Accepted as to F4: the driver's post-trip statement (F12) is not the rider's pre-segment message, so it is not consent for the 19:03 segment (G11, F11, F12, F4, RD-5)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_partial",
-  "amount": 6.74,
-  "recommended_action": "Release a $6.74 Ryde voucher to the rider for the un-consented 18:59–19:08 detour (RydeTAXI metered fare, RD-2); take no account action against the driver (RD-6 predicate unmet).",
-  "confidence": 0.85,
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send the file to a human reviewer to fix the scope of the rider's 18:43 \"Sure, your call.\" (RD-5): if it is treated as a general routing authorisation, only F4 is refundable ($6.74); if F3's path cannot be tied to Rifle Range Road and F3 is instead left unexempted, a further $7.98 (5.66 km × $1.4100/km) would also fall due. No account action against the driver (route_disputes_upheld_90d = 0).",
+  "confidence": 0.62,
+  "reasoning": "The trip is a metered RydeTAXI booking (F8: $61.32, distance component $43.64 over 30.95 km), so diversion mileage enters the fare and RD-2's mileage-unit refund is the only refund mechanism here [F8][RD-2]. GPS records two off-route segments, F3 (18:46–18:56, +5.66 km) and F4 (19:03–19:12, +4.78 km), each tested separately against RD-3/RD-4/RD-5 [F3][F4][RD-1].\n\nF4 is settled: the rider's last message is timestamped 18:43, twenty minutes before F4 started at 19:03, and the complete timestamped chat record contains no rider message authorising any route change after that [F10][F11][F4]. The driver's post-trip statement \"the second turn-off was my GPS rerouting\" is a driver claim, not the rider's own pre-segment message, so it is not consent (G11) [F12][F4][RD-5]. No RD-4 exemption applies: only speed band 4 on BKE/PIE and no incidents near the route, so RD-4(a) is unmet and band evidence cannot exempt alone [F13][F14][F15][RD-4]. F4 therefore counts under RD-2 [F4][RD-2]. No stop is involved, so RD-3 does not apply to either segment [F3][F4][RD-3].\n\nF3 I cannot settle. The rider did send \"Sure, your call.\" at 18:43, before the 18:46 segment start, answering the 18:42 proposal to go round via Rifle Range Road, so the RD-5 timing is met [F9][F10][F11][F3]. But the scope is not readable: the only named road is Rifle Range Road, and no fact ties the driven 18:46–18:56 path (7.10 km driven where the optimal route covers 1.43 km, straying up to 1923 m) to that road, no stop was measured on it, and the driver's statement names no road for this segment either; \"your call\" can equally be read as a general routing choice, which would not cover a loop that is nothing of the driver's own but would cover the route chosen to get there [F9][F10][F12][F3][RD-5]. Under RD-5 that is undetermined (G13).\n\nThe undetermined scope of F3 changes the amount: if the consent is read as general, only F4 counts (4.78 km × $1.4100/km = $6.74); if F3 is treated as being off the consented road, F3 also counts (5.66 km × $1.4100/km = $7.98, total $14.72, the sum of the two segments' extra km; the rate is F5's distance fare ÷ distance km, $43.64 ÷ 30.95 = $1.40998/km, and the remainder of the $14.64 excess-distance line stays unrecovered) [F3][F4][F5][RD-2]. Because the record does not settle which reading applies, a person must decide; a machine applying either reading would risk under- or over-refunding [F3][RD-5].\n\nNo RD-6 flag arises: the trace marks the prior-upheld-route-dispute precondition ✗ (route_disputes_upheld_90d = 0 for this driver), and profile facts alone never decide or add an account action [F17][F18][RD-6]. The $0.11 meter waiting unit and the $1.47 platform fee are undisturbed in either reading [F6][F8][RD-3][FARE-1].\n\nSafety screen: I read the complaint, both chat messages and the driver's statement; they concern congestion and routing only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F9][F10][F12]. The escalation rests on the undetermined RD-5 scope of F3, not on safety.",
   "cited_facts": [
-   "F1",
    "F3",
    "F4",
    "F5",
-   "F7",
+   "F6",
    "F8",
    "F9",
    "F10",
@@ -100,74 +124,97 @@
    "F12",
    "F13",
    "F14",
-   "F17"
+   "F15",
+   "F17",
+   "F18"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7",
-   "SAFE-1"
+   "FARE-1"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "The RD-5 scope of the rider's only consent message (F10, sent 18:43 in reply to F9's proposal naming Rifle Range Road) cannot be read against the driven path: no fact ties the 18:46–18:56 segment (F3) to that road and no stop was measured, so F3 is undetermined (G13) and the amount it changes (either $6.74 for F4 alone, or $14.72 if F3 also counts, at F5's $1.4100/km) cannot be fixed by the machine. A person must decide the scope of consent.",
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
+    "finding": "undetermined",
     "basis": [
-     "F8",
-     "F9"
+     "F9",
+     "F10",
+     "F12"
     ],
-    "reason": "Driver at 18:37 named the alternative corridor (\"go round via Kranji Expressway\") [F8] and the rider's own message at 18:38 \"Sure, go ahead.\" [F9] agreed before the segment's 18:40 start [F3]; the complete timestamped record shows no different destination [F10], so F3 is the route consented to and is exempt under RD-5."
+    "reason": "The rider's message \"Sure, your call.\" at 18:43 (F10) answers the driver's 18:42 proposal \"ok if I go round via Rifle Range Road?\" (F9) and precedes the 18:46 segment start (F3), so RD-5's timing condition is met; but the named road (Rifle Range Road) is not tied to the driven 18:46–18:56 path by any fact, no stop on it was measured, and the driver's statement names no road for this segment (F12), while the words also read as a general routing choice. The scope of consent therefore cannot be read (G13), which changes the amount (5.66 km × $1.4100/km = $7.98) — a person must decide (F3, F4, F5, RD-5)."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
     "basis": [
-     "F9",
-     "F8",
-     "F11"
+     "F10",
+     "F11",
+     "F12"
     ],
-    "reason": "The only rider consent, \"Sure, go ahead.\" at 18:38 [F9], answered the Kranji Expressway question [F8] and predates the 18:59 segment start [F4] by 21 minutes; it does not cover this separate, later detour, and a driver statement of agreement (\"the second turn-off was my GPS rerouting\") is not rider consent [F11][RD-5][RD-1]. No incident justifies it and no rider message precedes it [F14][F10], so it counts under RD-2."
+    "reason": "The rider's last message is at 18:43 (F10) and F4 began at 19:03 (F4); the complete timestamped chat record (F11) contains no rider message authorising any route change for this segment, and the driver's post-trip statement that the second turn-off was \"my GPS rerouting\" (F12) is a driver claim, not the rider's own pre-segment message, so it is not consent (G11). No RD-4 exemption: only speed band 4 on BKE/PIE (F13, F14) and no incidents near the route (F15), so RD-4(a) is unmet and band evidence cannot exempt alone (RD-4). F4 is an unexempted off-route segment and its 4.78 km × $1.4100/km = $6.74 is refundable under RD-2 (F4, F5, RD-2)."
    }
   ],
   "rejected_claims": [
    {
+    "id": "D3",
+    "reason": "Reading \"Sure, your call.\" (F10) as a trip-wide general authorisation is not established: it answers a proposal naming a specific road, Rifle Range Road (F9), and no fact ties the 18:46–18:56 path to that road; on this record the scope is undetermined, not a trip-wide authority, and an undetermined scope cannot exempt the segment (F9, F10, F3, RD-5)."
+   },
+   {
+    "id": "D1",
+    "reason": "The assertion that F3 is exempt by consent and only F4 can be chargeable is not settled: F3 is neither exempt nor chargeable on this record because the RD-5 scope of the 18:43 consent cannot be read (F9, F10, F12, F3, RD-5)."
+   },
+   {
     "id": "D4",
-    "reason": "No reasonable cause is evidenced for the reroute: Bukit Timah Expressway at band 5 (40–49 km/h) [F12] is not band 1 or 2 and cannot exempt a segment, and F14 records no incident on the replaced stretch, so RD-4 is not met [F12][F14][RD-4]. Fair weather [F15] removes no-cause mitigation rather than supplying it, and F15 is not cited as fact."
-   },
-   {
-    "id": "D6",
-    "reason": "The GPS-reroute explanation exists only in the post-trip driver statement [F11], which is not rider consent (G11) and does not displace the shortest-and-most-direct obligation [F11][F4][RD-5][RD-1]."
-   },
-   {
-    "id": "D8",
-    "reason": "RD-6 requires route_disputes_upheld_90d ≥ 1 for the flag; the driver's PC1 shows route: 0 [F17], so no account flag is available [F17][RD-6]."
-   },
-   {
-    "id": "C5",
-    "reason": "The statement \"the second turn-off was my GPS rerouting\" [F11] is used only to show the driver turned off on his own initiative; it is not treated as consent and the segment finding rests on the chat timing, not on the statement [F11][F9][RD-5]."
+    "reason": "Rejected as an exemption argument: band 4 on BKE/PIE is neither band 1 nor band 2 and there are no incidents near the route, so there is no reasonable-cause exemption under RD-4(a), and band evidence alone cannot exempt under RD-4(b) (F13, F14, F15, RD-4)."
    },
    {
     "id": "C8",
-    "reason": "Flag_account is refused: this is the driver's first route dispute and PC1 route upheld = 0, so 'repeated' under RD-6 is not made out [F17][RD-6]."
+    "reason": "A fixed $6.74 refund is not issuable while F3's RD-5 scope is undetermined: if the consent is read as general the figure is 4.78 km × $1.4100/km = $6.74, but if F3 is left unexempted the figure is $6.74 + 5.66 km × $1.4100/km = $14.72, so the amount cannot be fixed on this record (F3, F4, F5, RD-2, RD-5)."
+   },
+   {
+    "id": "C4",
+    "reason": "The rider advocate's own concession that F3's consent scope is undetermined is adopted as the finding: because it changes the amount, the case goes to a person rather than being ruled on (G13, F3, F4, F5, RD-5)."
+   },
+   {
+    "id": "C10",
+    "reason": "Accepted in effect: no upheld route dispute in 90 days appears for this driver, so RD-6's precondition for flag_account is not met and no account action is taken (F18, RD-6)."
+   },
+   {
+    "id": "D9",
+    "reason": "Accepted: route_disputes_upheld_90d = 0, so the RD-6 repeated-violation precondition fails and no flag_account is warranted (F18, RD-6)."
+   },
+   {
+    "id": "C6",
+    "reason": "Accepted as to F4: the driver's post-trip statement (F12) is not the rider's pre-segment message, so it is not consent for the 19:03 segment (G11, F11, F12, F4, RD-5)."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [
+   "F9",
+   "F10",
+   "F12"
+  ],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "status": "resolved",
- "events": 27,
+ "status": "escalated",
+ "events": 28,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate)"
+  "judge escalates → human review: segment finding undetermined for F3"
  ],
  "record_path": "bench/results/court/B-0013.record.json",
- "latency_s": 23.24,
- "input_tokens": 89330,
- "output_tokens": 7104,
- "requests": 9,
+ "latency_s": 41.28,
+ "input_tokens": 153708,
+ "output_tokens": 12063,
+ "requests": 12,
  "llm_calls": 6
 }

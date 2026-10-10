@@ -94,6 +94,19 @@ SCENARIO = {
     "safe_innocuous_chat_dangerous_driving": "Safety · dangerous driving alleged, chat clean",
     "safe_no_chat_harassment": "Safety · harassment alleged, no chat",
     "safe_keyword_only_in_statement": "Safety · hint word only in driver's statement",
+    # held-out set
+    "bl_general_consent": "Detour \u00b7 \"whichever way is faster\"",
+    "bl_general_consent_cn": "Detour \u00b7 general consent, in Chinese",
+    "bl_general_errand": "Detour \u00b7 general consent, driver's own stop inside",
+    "bl_negation": "Detour \u00b7 rider said no",
+    "bl_named_singlish": "Detour \u00b7 consent in Singlish",
+    "bl_named_cn": "Detour \u00b7 consent in Chinese",
+    "bl_named_elsewhere": "Detour \u00b7 agreed road, driver says he went another way",
+    "bl_gps_tail_missing": "Detour \u00b7 GPS trace ends before the drop-off",
+    "bl_record_threshold_7m50": "No-show \u00b7 record says 8 min, waited 7:50",
+    "bl_record_threshold_8m10": "No-show \u00b7 record says 8 min, waited 8:10",
+    "bl_hole_in_wait": "No-show \u00b7 hole in the GPS during the wait",
+    "bl_cancelled_by_missing": "No-show \u00b7 record does not say who cancelled",
 }
 
 ID_RE = re.compile(r"\b((?:RD|NS|SAFE|FARE)-\d+)(\([a-z]\)|\s\((?:i|ii|iii|iv)\))?")
@@ -123,7 +136,7 @@ def chip(cid: str, label: str | None, cls: str = "chip") -> str:
 def clause_tag(ids: list[str]) -> str:
     """One short tag ("10 clauses") that opens a popover listing every cited clause with its title and policy-page link."""
     if not ids:
-        return '<span class="muted">—</span>'
+        return '<span class="muted">no clause cited</span>'
     rows = []
     for c in ids:
         base = re.sub(r"\([a-z]\)$", "", c)
@@ -158,11 +171,13 @@ def plain_reason(reason: str, rec: dict) -> str:
     """One line, <=140 chars, plain language, no ids. Pattern-based; falls back to a stripped clip of the reason."""
     low = reason.lower()
     dtype = rec["dispute"]["type"]
+    if "unscreened" in low or "judge unavailable" in low:
+        return "The judge did not answer (timeout or provider error); nothing was weighed → a person decides"
     if low.startswith("safety concern"):
         return "The judge read a threat or intimidation in the chat or statements → human review (safety)"
     if "segment finding undetermined" in low:
-        return "The judge could not settle from the record whether the rider agreed to the route → a person decides"
-    if low.startswith("evidence gap") or "evidence insufficient" in low:
+        return "The judge could not settle from the record what the rider agreed to, or whether this stretch is the road agreed → a person decides"
+    if low.startswith("evidence gap") or "evidence insufficient" in low or "evidence unknown" in low:
         return "Evidence the policy needs is missing from the record → a person decides"
     if "harass" in low or "sexual" in low:
         return "Harassment alleged in a safety complaint → policy forbids automatic ruling"
@@ -189,6 +204,9 @@ def load() -> list[dict]:
         cid = rec["case_id"]
         run_path = COURT / f"{cid}.json"
         run = json.loads(run_path.read_text()) if run_path.exists() else {}
+        if not run.get("ok", True):
+            print(f"ops_page: {cid} run failed ({run.get('error', '')[:80]}); its record is not a queue item until it is re-run", file=sys.stderr)
+            continue
         man = manifest.get(cid)
         if man is None:
             print(f"warning: {cid} has a record but no manifest entry", file=sys.stderr)
@@ -198,9 +216,7 @@ def load() -> list[dict]:
         elig = rec.get("eligibility") or {}
         ruling = rec.get("ruling") or {}
         actions = elig.get("actions") or []
-        flag = bool(ruling.get("flag_account")) or any(
-            a.get("type") == "flag_account" or (a.get("mode") or "").startswith("human") and a.get("type") == "flag_account"
-            for a in actions)
+        flag = (bool(ruling.get("flag_account")) and not ruling.get("escalate")) or any(a.get("type") == "flag_account" for a in actions)   # an escalated case creates no account action; the reviewer decides
         auto = bool(elig.get("auto")) and not ruling.get("escalate")
         rows.append({
             "id": cid, "name": man["name"], "title": SCENARIO.get(man["name"]) or humanize(man["name"]),

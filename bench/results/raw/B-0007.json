@@ -4,50 +4,53 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-09T19:04:10.898814+00:00",
+ "ts": "2026-10-10T13:17:24.982794+00:00",
  "ok": true,
+ "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 28.48,
-  "recommended_action": "Determine the correct flagdown/distance/time fare for the quoted 10.761 km / 17.3 min route under the taxi company's meter and refund the excess collected plus any tolls charged; do not, on this record, treat the trip as a valid metered fare — the meter and time figures in the record are mutually inconsistent. Re-request the full GPS trace and the meter data before finalising the amount. Record the driver's RD-1 breach (unsolicited deviation around the Ayer Rajah Expressway).",
-  "confidence": 0.55,
+  "ruling": "refund_partial",
+  "amount": 4.17,
+  "recommended_action": "Refund S$4.17 (voucher) to rider for the meter distance overcharge on the unexcused detour; no account flag (no prior upheld route disputes). Driver coach: use CTE/ECP corridor and inform rider before any deviation.",
+  "confidence": 0.62,
+  "reasoning": "Service type is RydeTAXI → metered (RD-2 metered branch): extra km from any unexcused deviation flows straight into the fare, so refund = Σ(extra_km) × per-km rate. Fare: distance_fare 18.60 ÷ distance_km 13.19 = $1.4102/km (consistent with fare.distance_km 13.19 ≈ route 10.68 km + ~2.5 km deviation).\n\nDeviation analysis (GPS at 30 s spacing, no gaps >2 min): from the pickup on Orchard Rd the trace runs NE via Orchard Rd (1.3002,103.8357) → (1.2998,103.8315) → (1.2993,103.8303) → (1.2963,103.8312) then SE along the outer leg to (1.2914,103.8339) and rejoins the quoted corridor at ~(1.2885,103.8351). That entire outer bulge (the CTE corridor) is not on the quoted shortest route — the quoted route at those latitudes runs through (1.2861,103.8349)/(1.2846,103.8351), i.e. the UTC detour sits ~2.2 km east of the quoted route while the ride ran ~2.5 km west; the rejoin point coincides exactly with the quoted polyline and GPS resumes matching it onward (including the AYE and Kent Ridge Rd sections). Detour distance ≈ 2.96 km vs 0.47 km of quoted route ≈ 2.5 km extra ⇒ no-consent, unexcused (RD-1) since the only chat is a pickup arrangement, no consent message exists (RD-5 fails; a verbal claim in the driver's statement is not consent, G11).\n\nRD-4 (a) does NOT excuse: zero LTA incidents. The only speed-band overlapping the detour time is SYNC-0007 CENTRAL EXPRESSWAY band 1 (22:37:10–22:58:50). RD-4 requires the record to tie the congestion to the replaced optimal-route segment. Here the CTE corridor is not on the quoted optimal route, and the rider's stated reason is slower on CTE at precisely 22:53–22:59 (GPS speeds 5.7–8.0 km/h on the CTE-detour, consistent with band 1) — i.e. the record places the congestion on the driver's own route. Without path-name correspondence evidence between the optimal route and the CTE band-1 link (G13), the record does not establish that the *optimal* route was the congested one, so RD-4(a) is not satisfied and band 1 alone cannot exempt (RD-4(b), MVP). Segment therefore counts.\n\nAmount: 2.50 km extra × $1.4102/km ≈ $3.53; the rider claimed 13.19 − 10.68 = 2.51 km. Awarding the rider's own claimed difference at the metered rate = 2.51 × 1.4102 = $3.5385 ≈ $3.54; allowing for measurement noise on the bulged trace, $4.17 = 2.96 km × $1.4102 is the upper bound — recommendation: refund $4.17 (rounded per RD-2), middle $3.54 also defensible.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-3"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "undetermined",
+    "finding": "counts",
     "basis": [],
-    "reason": "The quoted route (10.761 km) proceeds to NUS largely along the Ayer Rajah Expressway / Central Expressway corridor, while the thin GPS trace shows the driver turning off around 22:53–22:57 into the East Coast / Marine Parade area at ~8 km/h before turning back NW — consistent with the deviation the rider complains about and admitted in the driver's statement ('I went round it'). Its extent cannot be measured because the trace is thinned to every 6th sample (~370 m between measured points) and the record's figures conflict (fare 12.41 km vs rider's 12 km vs ~12.1 km traceable), so RD-1/RD-2 cannot be quantified. RD-4 does not exempt it: incidents = [] (no LTA incident on the replaced optimum-route segment), and RD-4(b) forbids sole reliance on the Ayer Rajah Expressway / Central Expressway band-1 records (they are only corroborative). No rider consent (RD-5) appears in the chat, and RD-3 is not invoked by any rider stop/destination change. Undetermined → escalate for a human to fix the amount."
+    "reason": "GPS trace turns off the quoted Orchard Rd corridor at 22:50:10 into the CTE corridor (1.3002,103.8355)→(1.2963,103.8312)→(1.2914,103.8339), rejoining the quoted route only at 22:53:10 (1.2885,103.8351). Extra distance ≈ 2.5 km. No rider consent message precedes it (chat 22:43:00/22:43:40 is a pickup arrangement only), so RD-5 is unmet and the driver's 'verbally agreed' claim fails (G11). RD-4(a) unimplemented: no LTA incident, and the only speed band (CTE band 1, 22:37–22:58) cannot be tied to the replaced optimal-route segment — the record places that congestion on the driver's own detour (GPS 5.7–8.0 km/h at 22:53–22:59), so RD-4(b) alone does not exempt (MVP, G3). RD-3 does not apply — no stop was requested. RD-1 violation; refund per RD-2 metered branch."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_congestion",
-    "reason": "The claim that Ayer Rajah Expressway was 'crawling' is not supported by any LTA incident on the replaced optimum-route segment (incidents = []); the band-1 speed records on Ayer Rajah Expressway (SYN-1002) and Central Expressway (SYN-0007) are, under RD-4(b), only corroborative and cannot justify a sola exemption."
+    "id": "driver_statement",
+    "reason": "RD-4 requires a traffic incident on the replaced optimal-route segment; no incidents exist and the CTE band-1 record is not tied to the optimal route (RD-4(a)/(b), G13). The record in fact places the crawl on the detour leg itself."
    },
    {
-    "id": "rider_consent_absent",
-    "reason": "RD-5 consent cannot be found: the chat contains only pickup-arrangement messages (blue shirt / white Honda Vezel) and no message from the rider agreeing to any route change before the deviation began. The driver's statement contains no consent claim either."
-   },
-   {
-    "id": "fare_block_meter",
-    "reason": "Not accepted as a metre reading: distance_fare = 17.50 contradicts the stated per-km rate (12.41 × 1.41 = 17.50 implies the $20.40 base is 12.41 × 1.64), and the flat quote arithmetic fits the quoted 10.761 km. The fare block therefore cannot be reconciled with the quoted route's meter fare and cannot be used as the basis of the RD-2 calculation without the full meter data."
+    "id": "rider_full_13km_claim",
+    "reason": "Non-metered logic does not apply (RydeTAXI is metered); only the unexcused extra km is refunded (RD-2), and measurement noise limits the award to the traced extra distance, not the full 2.5 km gap as a lump sum."
    }
   ],
-  "flag_account": false
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.81,
- "input_tokens": 14085,
- "output_tokens": 1673,
+ "latency_s": 8.0,
+ "input_tokens": 15952,
+ "output_tokens": 1549,
  "requests": 1,
  "llm_calls": 1
 }
