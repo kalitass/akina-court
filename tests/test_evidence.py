@@ -26,6 +26,13 @@ from core.schemas import Case, PolicyParams, Ruling, SegmentFinding
 from core.verify import citation_problems, verify_ruling
 from test_facts import no_show_case
 
+
+def _sf(**kw):
+    """A SegmentFinding whose ground follows its finding (the tests here are about timing, basis and amounts, not the ground)."""
+    kw.setdefault("ground", {"exempt": "general_route_consent", "counts": "consent_after_or_none", "undetermined": "named_road_untied"}[kw["finding"]])
+    return SegmentFinding(**kw)
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -173,7 +180,7 @@ def test_trace_insufficient_overrides_a_judge_who_says_sufficient():
 def test_every_nested_id_is_checked():
     case = load("C-0001")
     table = build_fact_table(case)
-    r = ruling(segment_findings=[SegmentFinding(fact_id="F5", finding="counts", basis=["F999"], reason="counts under [RD-999]")],
+    r = ruling(segment_findings=[_sf(fact_id="F5", finding="counts", basis=["F999"], reason="counts under [RD-999]")],
                safety_basis=["F998"], rejected_claims=[{"id": "D1", "reason": "contradicted by [F997]"}])
     problems = citation_problems(r, table, citable_ids())
     joined = " ".join(problems)
@@ -271,7 +278,7 @@ def test_undetermined_finding_that_cannot_change_the_outcome_may_still_rule():
                                    "profiles": case.profiles.model_copy(update={"driver": case.profiles.driver.model_copy(update={"route_disputes_upheld_90d": 0})})})
     table = build_fact_table(case); cert = evaluate(case, table)
     assert any(s["exempt"] is None for s in cert.segments.values())
-    findings = [SegmentFinding(fact_id=f, finding=("undetermined" if s["exempt"] is None else ("exempt" if s["exempt"] else "counts")),
+    findings = [_sf(fact_id=f, finding=("undetermined" if s["exempt"] is None else ("exempt" if s["exempt"] else "counts")),
                                reason=("named road; no record ties the segment to it (G13)" if s["exempt"] is None else "code-settled [RD-4]"))
                 for f, s in cert.segments.items()]
     r = ruling(ruling="no_action", cited_policy=["RD-1", "RD-2"], segment_findings=findings)

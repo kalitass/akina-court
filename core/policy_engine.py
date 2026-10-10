@@ -24,7 +24,7 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from core.facts.tools import _project
-from core.schemas import Case, FactTable, Ruling
+from core.schemas import GROUND_CONSEQUENCE, Case, FactTable, Ruling
 
 Status = Literal["pass", "fail", "judge", "n/a"]
 NEAR_ROUTE_M = 300          # data-layer parameter (gap G3)
@@ -515,6 +515,17 @@ def check_ruling(cert: Certificate, ruling: Ruling) -> tuple[bool, list[str]]:
             if sg["exempt"] is not None and sf.exempt != sg["exempt"]:
                 reasons.append(f"judge finding for {fid} ({sf.finding}) contradicts code ({sg['why']})")
                 continue
+            if sg["exempt"] is None:
+                # a judge-decided segment: the words name the ground, the policy fixes the consequence
+                want = GROUND_CONSEQUENCE.get(sf.ground)
+                if want is None:
+                    reasons.append(f"segment {fid}: finding {sf.finding} rests on no named ground (ground 'other'): name the policy branch the words fall under "
+                                   f"(rider_named_stop, general_route_consent, named_road_tied / _untied / _elsewhere, driver_errand, scope_other, consent_after_or_none)")
+                    continue
+                if sf.finding != want:
+                    reasons.append(f"segment {fid}: ground '{sf.ground}' means {want} under the policy, but the finding is {sf.finding}: "
+                                   f"either the ground or the finding is wrong")
+                    continue
             if sf.finding == "undetermined":
                 if sg.get("changes_outcome", True):
                     reasons.append(f"segment {fid} undetermined and the finding changes the outcome → a person decides (escalate)")

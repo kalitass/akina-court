@@ -250,11 +250,33 @@ class RejectedClaim(BaseModel):
 Finding = Literal["exempt", "counts", "undetermined"]
 
 
+Ground = Literal["incident",                  # RD-4: a qualifying incident on the replaced stretch (code settles this one)
+                 "rider_named_stop",          # RD-3(a): a rider message before the segment named the place and the car stopped there
+                 "general_route_consent",     # RD-5: the rider gave a general route choice ("whichever way is faster") and the loop goes there
+                 "named_road_tied",           # RD-5: the rider agreed to a named road and a record ties the driven segment to it
+                 "named_road_untied",         # RD-5 + G13: agreed to a named road, nothing ties the segment to it, nothing places it elsewhere
+                 "named_road_elsewhere",      # RD-5: agreed to a named road, but the record places the segment somewhere else
+                 "driver_errand",             # RD-5 / RD-3(b): a stop or loop of the driver's own inside the segment that no rider message asked for
+                 "scope_other",               # RD-5: the rider agreed to something else (a short stop, a different change), not this segment
+                 "consent_after_or_none",     # RD-5: no rider message before the segment agrees to it (asked only, agreed after, refused, silent)
+                 "other"]                     # none of the above: the judge must say what, and cannot execute on it
+
+# The consequence the written policy attaches to each ground. The judge reads the words and names the ground; code
+# holds it to the consequence (check_ruling): a finding that contradicts its own ground is sent back, then escalated.
+GROUND_CONSEQUENCE: dict = {
+    "incident": "exempt", "rider_named_stop": "exempt", "general_route_consent": "exempt", "named_road_tied": "exempt",
+    "named_road_untied": "undetermined",
+    "named_road_elsewhere": "counts", "driver_errand": "counts", "scope_other": "counts", "consent_after_or_none": "counts",
+}
+
+
 class SegmentFinding(BaseModel):
     """The judge's reading of one off-route segment. Code settles what it can measure (RD-4 incident); the meaning of
-    what was said (RD-3 / RD-5) is the judge's, and it may be undetermined — then the case goes to a person."""
+    what was said (RD-3 / RD-5) is the judge's: the judge names the ground (which policy branch the words fall under)
+    and the finding, and code checks the finding is the consequence the policy attaches to that ground."""
     fact_id: str                                  # the gps off-route segment fact, e.g. "F5"
-    finding: Finding                              # exempt = RD-3/RD-4/RD-5 excuses it; counts = refundable under RD-2; undetermined = evidence does not settle it
+    finding: Finding                              # exempt = RD-3/RD-4/RD-5 excuses it; counts = refundable under RD-2; undetermined = evidence does not set
+    ground: Ground = "other"                      # the policy branch the finding rests on (see GROUND_CONSEQUENCE); records before 2026-10-11 carry "other"
     basis: list[str] = []                         # the chat / statement fact ids the finding rests on (code checks they exist, who wrote them and when)
     reason: str                                   # one clause-cited sentence
 

@@ -76,6 +76,16 @@ RULES
   or "undetermined" (the record does not settle it — the case then goes to a person); basis = the chat / statement
   fact ids your finding rests on (code checks they exist, who wrote them and that they came before the segment);
   reason with clause ids. Empty for other types.
+  ground = the policy branch the words fall under, one of: "rider_named_stop" (RD-3(a): a rider message before the
+  segment named the place and the car stopped there → exempt), "general_route_consent" (RD-5: "whichever way is
+  faster" and the loop goes there → exempt), "named_road_tied" (RD-5: agreed to a named road and a record ties the
+  segment to it → exempt), "named_road_untied" (RD-5 + G13: nothing ties the segment to the named road, nothing
+  places it elsewhere → undetermined), "named_road_elsewhere" (the record places the segment somewhere else →
+  counts), "driver_errand" (a stop or loop of the driver's own that no rider message asked for → counts),
+  "scope_other" (the rider agreed to something else, e.g. a short stop → counts), "consent_after_or_none" (no rider
+  message before the segment agrees to it → counts). You read the words and name the ground; the policy fixes the
+  consequence and code checks that your finding is that consequence — a finding that contradicts its own ground is
+  sent back to you once, then goes to a person. "other" cannot execute.
 - "undetermined" is for what the record cannot settle: a message's meaning or timing, or whether an agreed route is
   the one driven. It is never for elements the trace marks ✓ or ✗ (an RD-4 incident screen, a measured segment, an
   arrival confirmation) — those are settled by code. The trace tells you whether a finding changes the outcome: when
