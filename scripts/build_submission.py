@@ -54,6 +54,65 @@ def audit() -> Optional[dict]:
             "matched_reference": {a: f"{matched[a]}/{n[a]}" for a in ("court", "judge_only", "facts_only", "raw")}}
 
 
+def human_reasons(court_rows: list[dict]) -> dict:
+    """Why the court's hand-offs happened, counted from the final rulings' grounds."""
+    out = {"safety": 0, "undetermined": 0, "evidence": 0, "other": 0}
+    for r in court_rows:
+        ru = r["ruling"]
+        if not ru.get("escalate"):
+            continue
+        if ru.get("safety_concern", "none") != "none":
+            out["safety"] += 1
+        elif any(sf.get("finding") == "undetermined" for sf in ru.get("segment_findings") or []):
+            out["undetermined"] += 1
+        elif ru.get("evidence_status", "sufficient") != "sufficient":
+            out["evidence"] += 1
+        else:
+            out["other"] += 1
+    return out
+
+
+def blind_numbers() -> Optional[dict]:
+    """The held-out set's scores, when it has been run (bench/results/blind/<arm>/X-*.json)."""
+    sys.path.insert(0, str(ROOT / "bench"))
+    import blind_report
+    man = ROOT / "data" / "bench" / "blind" / "manifest.json"
+    res = ROOT / "bench" / "results" / "blind"
+    if not man.exists() or not res.exists():
+        return None
+    truth = {c["case_id"]: c["truth"] for c in json.loads(man.read_text())["cases"]}
+    out = {"cases": len(truth)}
+    for arm in sorted(p.name for p in res.iterdir() if p.is_dir()):
+        files = [f for f in sorted(glob.glob(str(res / arm / "X-*.json"))) if not f.endswith(".record.json") and ".r" not in Path(f).name[6:]]
+        if not files:
+            continue
+        ok = wrong = failed = 0
+        for f in files:
+            rec = json.loads(Path(f).read_text()); t = truth[rec["case_id"]]; ru = rec.get("ruling") or {}
+            if not rec.get("ok"):
+                failed += 1; continue
+            if blind_report.exact(ru, t):
+                ok += 1
+            elif not ru.get("escalate"):
+                wrong += 1
+        out[arm] = {"exact": ok, "wrong_executed": wrong, "failed": failed}
+    return out
+
+
+def demo_numbers() -> dict:
+    """Figures the landing page quotes from the demo cases themselves (never typed by hand)."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from core.facts.tools import build_fact_table
+    from core.schemas import Case
+    exp = lambda cid: json.loads((ROOT / "data" / "expected" / f"{cid}.json").read_text())
+    case = lambda cid: Case.model_validate(json.loads((ROOT / "data" / "cases" / f"{cid}.json").read_text()))
+    c4 = build_fact_table(case("C-0004"))
+    tap_m = next(f.value["m_from_pickup_at_tap"] for f in c4.facts if f.value and "m_from_pickup_at_tap" in f.value)
+    return {"c0001_refund": exp("C-0001")["amount"], "c0004_fee": exp("C-0004")["amount"], "c0004_tap_m": tap_m,
+            "disp002_fee": case("DISP-002").fare.cancellation_fee, "c0005_fee": exp("C-0005").get("amount") or case("C-0005").fare.cancellation_fee}
+
+
 def build() -> dict:
     d = dashboard.load_all()
     S, G = d["summary"], d["gate"]["arms"]
@@ -61,12 +120,15 @@ def build() -> dict:
     n = ct["cases"]
     rows = run_files()
     ts = sorted(r["ts"] for r in rows)
-    window = f"{ts[0][:16].replace('T', ' ')} to {ts[-1][11:16]} UTC"
-    cnt = lambda rate: round(rate * n)
+    window = f"{ts[0][:16].replace('T', ' ')} to {ts[-1][11:16] if ts[-1][:10] == ts[0][:10] else ts[-1][:16].replace('T', ' ')} UTC"
+    def cnt(arm: str) -> int:
+        """Exact-match count for an arm: the number of ok cases whose core decision matched (never a rounded mean × 49)."""
+        return sum(1 for v in S[arm]["per_case"].values() if v.get("exact"))
     au = audit()
     gps_s = round(d["gps_interval_s"] * d["gps_thin"])
-    court_base = [r for r in rows if r["arm"] == "court" and not r.get("swap") and r.get("repeat", 0) == 0]
-    flags = sum(1 for r in court_base if r["ruling"].get("flag_account"))
+    court_base = [r for r in rows if r["arm"] == "court" and not r.get("swap") and r.get("repeat", 0) == 0 and r.get("ok") and r.get("ruling")]
+    failed_runs = sorted(f"{r['arm']}/{r['case_id']}" for r in rows if not (r.get("ok") and r.get("ruling")))
+    flags = sum(1 for r in court_base if r["ruling"].get("flag_account") and not r["ruling"].get("escalate"))   # same rule as orchestrate: no action on an escalated case
     cites_ct = ct["citations"] + ct["fact_citations"]
     cites_raw = raw["citations"] + raw["fact_citations"]
     return {
@@ -90,10 +152,41 @@ def build() -> dict:
             "nature": "synthetic trips on real OneMap road geometry; GPS traces simulated; no real rider or driver",
         },
         "policy": {"clauses": d["policy"]["policy_clauses"], "citable": d["policy"]["citable"], "informational": d["policy"]["informational"], "open_gaps": d["policy"]["gaps"]},
+        # machine-readable copy of every figure the pages may quote (tests/test_numbers.py scans the pages against it)
+        "numbers": {
+            "cases": n,
+            "arms": {arm: {"exact": cnt(arm), "wrong_executed_single_call": S[arm].get("wrong_executed", 0), "core_wrong": G[arm]["core_wrong"],
+                           "wrong_and_executed_with_gate": G[arm]["wrong_and_executed"], "auto": G[arm]["auto"], "human": G[arm]["human_flow"],
+                           "blocked_by_gate": G[arm]["blocked_by_gate"]} for arm in ("raw", "facts_only", "judge_only", "court")},
+            "court": {"auto": G["court"]["auto"], "human": G["court"]["human_flow"], "flags": flags,
+                      "voucher": sum(1 for r in court_base if r["ruling"].get("ruling") in ("refund_full", "refund_partial", "fee_waived") and not r["ruling"].get("escalate")),
+                      "no_refund": sum(1 for r in court_base if r["ruling"].get("ruling") == "no_action" and not r["ruling"].get("escalate")),
+                      "latency_mean_s": ct["latency_mean_s"], "latency_p95_s": ct["latency_p95_s"],
+                      "swap_invariance": ct.get("swap_invariance"), "pass_all_repeats": ct.get("pass_all_repeats")},
+            "tests": d["tests"],
+            "failed_runs": failed_runs,      # result files whose run produced no ruling: never counted as a decision
+            # everything else a page may quote; scripts/sync_numbers.py writes these into README / index / i18n and
+            # tests/test_numbers.py refuses any figure that is not one of them
+            "per_arm": {arm: {"latency_mean_s": S[arm]["latency_mean_s"], "llm_calls_mean": S[arm]["llm_calls_mean"], "input_tokens_mean": S[arm]["input_tokens_mean"],
+                              "cites_invalid": S[arm]["invalid_citations"] + S[arm]["invalid_fact_citations"], "cites_total": S[arm]["citations"] + S[arm]["fact_citations"]}
+                        for arm in ("raw", "facts_only", "judge_only", "court")},
+            "ratios": {"latency_x": round(ct["latency_mean_s"] / raw["latency_mean_s"]) if raw["latency_mean_s"] else None,
+                       "tokens_x": round(ct["input_tokens_mean"] / raw["input_tokens_mean"]) if raw["input_tokens_mean"] else None,
+                       "judge_only_token_share": round(ct["input_tokens_mean"] / jo["input_tokens_mean"]) if jo["input_tokens_mean"] else None},
+            "types": {t: sum(1 for c in d["manifest"]["cases"] if c["type"] == t) for t in ("route_deviation", "no_show", "safety")},
+            "human_reasons": human_reasons(court_base),
+            "provenance": {"runs": len(rows), "calls": sum(r.get("llm_calls", 0) for r in rows), "input_tokens_m": round(sum(r.get("input_tokens", 0) for r in rows) / 1e6, 1),
+                           "window": window, "window_date": ts[0][:10], "http_calls": (au or {}).get("http_calls"), "audit_runs": (au or {}).get("runs"),
+                           "audit_matched": (au or {}).get("matched_reference"), "served_model": (au or {}).get("provider_model_reported")},
+            "blind": blind_numbers(),
+            "policy": {"clauses": d["policy"]["policy_clauses"], "citable": d["policy"]["citable"], "informational": d["policy"]["informational"],
+                       "gaps": d["policy"]["gaps"], "predicates": len({l.split()[1] for c in d["manifest"]["cases"] for l in c["certificate"] if l[:1] in "✓✗?–" and len(l.split()) > 1})},
+            "demo": demo_numbers(),
+        },
         "metrics": [
             {"name": "exact core decision, one model call",
-             "value": f"{cnt(fo['exact'])}/{n} ({fo['exact']*100:.1f}%)",
-             "comparator": f"{cnt(raw['exact'])}/{n} ({raw['exact']*100:.1f}%) with a raw case record, GPS thinned to {gps_s} s",
+             "value": f"{cnt('facts_only')}/{n} ({fo['exact']*100:.1f}%)",
+             "comparator": f"{cnt('raw')}/{n} ({raw['exact']*100:.1f}%) with a raw case record, GPS thinned to {gps_s} s",
              "denominator": n, "scope": f"same DeepSeek model, one call each, {n} synthetic cases",
              "limitations": "measures the value of code-computed facts, not a contribution attributable to any one agent", "evidence_url": "/report.html"},
             {"name": "wrong core decisions that would execute",
@@ -102,8 +195,8 @@ def build() -> dict:
              "denominator": n, "scope": f"full court with the pre-execution policy check; {n} cases plus repeat runs",
              "limitations": "synthetic policy-conformance batch", "evidence_url": "/report.html"},
             {"name": "full court match to the policy-derived reference core decision",
-             "value": f"{cnt(ct['exact'])}/{n}",
-             "comparator": f"judge + policy check without advocates: {cnt(jo['exact'])}/{n}",
+             "value": f"{cnt('court')}/{n}",
+             "comparator": f"judge + policy check without advocates: {cnt('judge_only')}/{n}",
              "denominator": n, "scope": "outcome, amount to the cent, escalation",
              "limitations": "policy conformance, not production accuracy; reference answers derived from the written policy, no blind human labelling yet", "evidence_url": "/report.html"},
             {"name": "prototype routing",
@@ -147,8 +240,8 @@ def build() -> dict:
             "requested_model": (au or {}).get("requested_model", "deepseek-chat"), "api": "DeepSeek API (pydantic-ai)",
             "api_reported_model_in_audit_sample": (au or {}).get("provider_model_reported"),
             "benchmark_window_utc": window,
-            "stored_runs": len(rows), "recorded_model_calls": sum(r["llm_calls"] for r in rows),
-            "input_tokens_total": sum(r["input_tokens"] for r in rows),
+            "stored_runs": len(rows), "recorded_model_calls": sum(r.get("llm_calls", 0) for r in rows),
+            "input_tokens_total": sum(r.get("input_tokens", 0) for r in rows),
             "audit_sample": au,
             "verify": "python bench/provenance.py --hashes", "doc": "README.md (Where the numbers come from)",
         },

@@ -103,10 +103,10 @@ ul.cited{list-style:none;margin:0 0 4px;padding:0}ul.cited li{display:flex;gap:1
   // policy trace
   const lines = r.certificate || [];
   const trace = lines.map(l => {
-    const m = l.match(/^([✓✗?])\s+([A-Z]+-\d+(?:\s*\([a-z]+\))?)\s+(.*)$/);
+    const m = l.match(/^([✓✗?–])\s+([A-Z]+-\d+(?:\s*\([a-z]+\))?)\s+(.*)$/);
     if (!m) { const pretty = l.replace(/^allowed outcomes:/, 'Allowed outcomes:').replace(/flag_account required: (True|False)/, (x, v) => 'Account flag required: ' + (v === 'True' ? 'yes' : 'no')).replace(/\b(refund_partial|refund_full|no_action|fee_waived|escalate)\b/g, k => OUT[k].toLowerCase()); return `<li class="sum"><span class="ic">·</span><span>${esc(pretty)}</span></li>`; }
-    const cls = m[1] === '✓' ? 'ok' : m[1] === '✗' ? 'bad' : 'open';
-    const [rule, obs] = m[3].split(/\s*\[case\]\s*/);
+    const cls = m[1] === '✓' ? 'ok' : m[1] === '✗' ? 'bad' : m[1] === '–' ? 'na' : 'open';
+    const [rule, obs] = m[3].split(/\s*\[(?:case|F\d+)\]\s*/);
     const cid = m[2].replace(/\s*\(.*$/, '');
     return `<li class="${cls}"><span class="ic">${m[1]}</span><a class="cid" href="/policy.html#${esc(cid)}" target="_blank" rel="noopener">${esc(m[2])}</a><span><span class="rule">${esc(rule)}</span>${obs ? `<span class="obs">${esc(obs)}</span>` : ''}</span></li>`;
   }).join('');

@@ -266,12 +266,11 @@ def precedents():
 def override(cid: str, body: dict, x_demo_token: Optional[str] = Header(default=None)):
     _check_token(x_demo_token)
     """Human reviewer overrides a ruling (STRETCH_FEEDBACK): body = {ruling, amount, reasoning, reviewer, note}."""
-    from core.schemas import Ruling
     from core.stretch import Hooks
+    from core.stretch.feedback import ruling_from_override
     r = RUNS.get(cid)
-    rec = r.record if r and r.record else (CaseRecord.model_validate_json((RUNS_DIR / f"{cid}.json").read_text()) if (RUNS_DIR / f"{cid}.json").exists() else None)
-    new = Ruling(ruling=body["ruling"], amount=body.get("amount"), recommended_action=body.get("recommended_action", "per reviewer"),
-                 confidence=1.0, reasoning=body.get("reasoning", ""), cited_facts=[], cited_policy=[], escalate=False)
+    rec = r.record if r and r.record else (CaseRecord.load(RUNS_DIR / f"{cid}.json") if (RUNS_DIR / f"{cid}.json").exists() else None)
+    new = ruling_from_override(body, rec.ruling if rec else None)
     out = Hooks(RUNS_DIR).on_human_override(cid, new, reviewer=body.get("reviewer", "reviewer"), note=body.get("note", ""), record=rec)
     return out.model_dump(mode="json") if out else {"status": "feedback flag off"}
 
