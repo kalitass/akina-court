@@ -81,7 +81,7 @@ def build() -> dict:
         "built_with": ["CodeBuddy", "Pydantic AI", "DeepSeek-chat via the DeepSeek API", "FastAPI", "MapLibre", "OneMap Singapore routing"],
         "target_users": ["Ryde support and trust-and-safety operations (primary)", "riders and drivers (plain-language notices)", "compliance and audit (reproducibility receipt)"],
         "differentiation": "Facts are computed by code from platform, user and external records; the policy is a public, numbered, sourced document that runs as code; the agents may only cite both; a pre-execution policy check decides what may execute. Money can be automatic, account punishment never is.",
-        "agents": ["Rider Advocate (tools, brief, rebuttal)", "Driver Advocate (tools, brief, rebuttal)", "Judge (no tools, rules only on open questions)", "Notice writer"],
+        "agents": ["Rider Advocate (tools, brief, rebuttal)", "Driver Advocate (tools, brief, rebuttal)", "Judge (no tools, rules only on open questions)"],
         "dispute_categories": {"adjudicated": ["route deviation", "no-show fee"], "escalation_only": ["safety"]},
         "data": {
             "demo_cases": len([c for c in d["cases"] if c.startswith("C-")]),
@@ -129,7 +129,7 @@ def build() -> dict:
             "synthetic_or_simulated": ["riders, drivers, trips, GPS traces", f"{len([c for c in d['cases'] if c.startswith('C-')])} demo cases and {n} benchmark scenarios", "policy-derived reference outcomes", "traffic, congestion and weather values per scenario", "wallet, voucher and trust-and-safety integrations"],
             "model_never_authorizes": ["facts or their values", "allowed outcomes or the amount", "execution of a refund", "account punishment", "automatic ruling on safety complaints"],
         },
-        "pages": {"landing": "/", "guided_case": "/replay.html?case=C-0001", "facts": "/facts.html?case=DISP-002", "ops_handoff": "/ops.html", "results": "/report.html", "policy": "/policy.html", "expert_court": "/court.html", "architecture": "/architecture-system.png", "health": "/api/health", "receipt_example": "/api/runs/C-0001/receipt"},
+        "pages": {"landing": "/", "guided_case": "/replay.html?case=C-0001", "facts": "/facts.html?case=DISP-002", "ops_handoff": "/ops.html", "results": "/report.html", "policy": "/policy.html", "expert_court": "/court.html", "architecture": "/architecture-current.svg", "health": "/api/health", "receipt_example": "/api/runs/C-0001/receipt"},
         "live_runs": "off on the public site; `Run live` works on a local copy with DEEPSEEK_API_KEY set (README, Run it)",
         "evidence": [
             {"claim": "facts computed by code", "path": "core/facts/tools.py"},

@@ -1,10 +1,10 @@
 # Akina Court · Ryde Dispute Court
 
-**AI can argue; only verified policy can authorize an action.** Code computes the facts, tests every policy clause, and blocks unsupported outcomes or amounts. Two AI advocates and an AI judge hear a ride-hailing dispute (route deviation, no-show fee, safety) in about 23 seconds; a refund voucher is cleared automatically only when the ruling agrees with the policy as code, and everything else goes to a human with the case prepared.
+**AI can argue; only verified policy can authorize a proposed action.** Code computes the facts, tests every policy clause, and blocks unsupported outcomes or amounts. Two AI advocates and an AI judge hear a ride-hailing dispute (route deviation, no-show fee, safety). The prototype can mark a voucher refund as eligible only when the ruling agrees with the policy as code; it does not transfer money. Cases that cannot be cleared go to a human with the evidence prepared.
 
 Team **Akina Court** (named after Mount Akina, the pass where speed is everything: fast rulings, right rulings, every decision step reproducible). Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 · Ryde track · built with CodeBuddy.
 
-**Live demo:** https://akina.kalitas.cc · **Results page:** `/report.html` · **Architecture:** `web/architecture-system.png` (components) · `web/architecture.png` (process)
+**Live demo:** https://akina.kalitas.cc · **Results page:** `/report.html` · **Architecture:** `web/architecture-current.svg` (components) · `web/architecture.png` (process)
 
 ## Results at a glance
 
@@ -30,17 +30,17 @@ A rider says the driver took the long way; the driver says the road was closed. 
 
 1. **Code computes the facts.** GPS vs the optimal OneMap route, each off-route segment with its extra kilometres, stops, who tapped what and when, fare lines, LTA speed bands and incidents, weather, both histories → a numbered fact table, identical on every run (`core/facts/tools.py`). Both parties' words are copied verbatim with their times and nothing more: what a message *means* (did the rider agree, is this a threat) is never computed by code — the advocates argue it and the judge finds it, and may find it undetermined. Missing evidence (no GPS trace, a hole in it, an untimed message, a metered trip without a distance fare) is itself a fact and never reads as "nothing happened". Then 21 sourced policy clauses run as predicates — applies / does not apply / left to the judge — producing the allowed outcomes and the amount formula; escalating to a person is always among them (`core/policy_engine.py`).
 2. **Three agents argue (Pydantic AI, DeepSeek-chat via the DeepSeek API).** The **Rider Advocate** and **Driver Advocate** read facts through logged tool calls, write a brief each (claims citing fact ids and clause ids) and rebut each other point by point, append-only. The **Judge** reads both verified briefs, the policy trace and the open questions, and rules only on those questions (`core/agents/`). Every tool call, brief, rebuttal point and check is one event on an SSE stream: **inter-agent communication is observable** in the court UI.
-3. **Code decides what may execute.** Every citation must resolve to a real fact and clause; the outcome must be one the policy allows; the amount must match the formula to the cent; an account flag exists only as a structured field, never as free text. The judge's reading of a message is checked for form, not re-read: an exempt segment must rest on a rider message that exists and was sent before the segment; a driver's statement that the rider agreed verbally is not consent. Pass → refund paid as a Ryde voucher. Fail → human review queue with the reason. A judge who records a safety concern, an undetermined finding or an evidence gap sends the case to a person and code never turns that back into a ruling (`core/verify.py`, `core/orchestrate.py`). Account actions always go to a human.
+3. **Code decides what may be proposed.** Every citation must resolve to a real fact and clause; the outcome must be one the policy allows; the amount must match the formula to the cent; an account flag exists only as a structured field, never as free text. The judge's reading of a message is checked for form, not re-read: an exempt segment must rest on a rider message that exists and was sent before the segment; a driver's statement that the rider agreed verbally is not consent. Pass → a voucher refund recommendation is eligible for automation in a future Ryde integration, with no money transferred by this prototype. Fail → human review queue with the reason. A judge who records a safety concern, an undetermined finding or an evidence gap sends the case to a person and code never turns that back into a ruling (`core/verify.py`, `core/orchestrate.py`). Account actions always go to a human.
 
 ## Evidence by judging dimension
 
 | Dimension | Evidence | Where |
 |---|---|---|
-| Impact & Relevance | 3 dispute categories; 41/49 cleared automatically; the ops queue receives only what code could not clear (16%) | `/report.html` |
-| Human-Centered Design | Plain-language notice to each party; money automatic, punishment never; "what would change this ruling" on every case; appeal route in the receipt | `/replay.html?case=C-0004&phase=court` |
+| Impact & Relevance | 3 dispute categories; 42/49 eligible for automatic handling in the historical benchmark, 7 routed to a person | `/report.html` |
+| Human-Centered Design | Plain-language notice to each party; proposed money action separate from execution, account review always human; "what would change this ruling" on every case; appeal route in the receipt | `/replay.html?case=C-0004&phase=court` |
 | AI Interaction | Two advocates with tools and logged reads, briefs, rebuttals with concessions, judge constrained to open questions | `/replay.html?case=C-0001&phase=court` |
-| Technical Execution | Fact engine, policy-as-code, verifier, SSE event log, 4-arm benchmark + gate ablation, 56 tests, Docker + Caddy | `core/`, `bench/`, `tests/`, `deploy/` |
-| Feasibility | Every clause carries a source; 10 rules Ryde has not published are listed as gaps; Lighthouse deployment; limits table below | `policy/policy.md`, `deploy/` |
+| Technical Execution | Fact engine, policy-as-code, verifier, SSE event log, 4-arm benchmark + gate ablation, 91 tests, Docker + Caddy | `core/`, `bench/`, `tests/`, `deploy/` |
+| Feasibility | Every clause carries a source; 12 open policy gaps are disclosed; Lighthouse deployment; limits table below | `policy/policy.md`, `deploy/` |
 | Demo & Storytelling | Animated replay on real roads, plain-language court cards, pre-recorded fault injection and counterfactuals | `/` |
 | Innovation & Creativity | The policy runs as code and locks the outcome space before the model speaks; the model fills only interpretive gaps | `core/policy_engine.py` |
 | UX & Accessibility | Simple view for an audience, Expert view for auditors; text trip feed mirrors the animation; keyboard scrubbing; pause; reduced-motion respected; light theme | `/replay.html?case=C-0001&theme=light` |
@@ -88,11 +88,12 @@ Each claim made on the landing page maps to code, data or a page. Paths are rela
 | Unsupported rulings cannot execute; account flags and safety always go to a person | 0 wrong core decisions executed in 49 cases | `core/orchestrate.py` · `/replay.html?case=C-0001&run=C-0001~wrong_amount&phase=court` · `/ops.html` |
 | Inter-agent communication is observable and replayable | every run | `runs/*.json`, `bench/results/court/*.record.json` · `/replay.html?case=C-0001&phase=court&mode=expert` |
 | Four systems compared on 49 synthetic cases, with a judge-only ablation | 196 case-system runs, 499 model calls | `bench/results/summary.md` · `bench/results/gate_ablation.json` · `/report.html` |
-| Rulings are reproducible: case, policy, code and model fingerprints | every run stored by the service | `core/receipt.py` · `/receipt.html?run=C-0001` (rendered) · `/api/runs/C-0001/receipt` (JSON) |
+| Rulings are reproducible: case, policy, code and model fingerprints | stored runs with receipts | `core/receipt.py` · `/receipt.html?run=C-0001` (rendered) · `/api/runs/C-0001/receipt` (JSON) |
 | Benchmark provenance: model ids, time window, token counts, full-capture audit sample | 49 cases × 4 systems | this README (Where the numbers come from) · `bench/provenance.py --hashes` · `bench/results/audit_sample/` |
 | Automated tests | 91 tests, no API key needed | `tests/` · `requirements.lock` |
 
 Machine-readable summary with denominators and caveats: `web/submission.json`.
+The required materials and a form-ready English description are in `docs/SUBMISSION_CHECKLIST.md`.
 
 ## The organisers' sample dataset
 
@@ -124,7 +125,7 @@ No key needed to browse: `runs/` ships the six demo rulings and eight pre-record
 
 - `/` — landing page: what it is, four numbers, guided cases, where each judging dimension is on screen.
 - `/replay.html?case=C-0001` — animated replay + court. Simple view by default; `&mode=expert` shows every fact id, clause id and tool call. `&phase=court` skips to the court, `&cf=<name>` loads a counterfactual, `&run=<id>` replays a stored run, `&inject=a,b&autorun=1` runs live with fault injection, `&theme=light`.
-- `/ops.html` — what reaches a human after the 49-case batch: funnel, the 8 human cases with reasons, account-action lane, boundary panel. `/policy.html` — the policy in English with every clause's source kind and the 10 disclosed gaps.
+- `/ops.html` — what reaches a human after the 49-case batch: funnel, the 7 human cases with reasons, account-action lane, boundary panel. `/policy.html` — the policy in English with every clause's source kind and the 12 disclosed gaps.
 - `/report.html` — results dashboard. `/court.html` — expert court page (three columns, queue, override). `/submission.json` — machine-readable claims with denominators and caveats.
 - API: `/api/cases`, `/api/runs/{id}` (GET / POST / `/stream` SSE / `/receipt`), `/api/demo-controls`, `/api/queue`, `/api/precedents`, `/api/policy`, `/api/health`.
 
@@ -135,7 +136,7 @@ No key needed to browse: `runs/` ships the six demo rulings and eight pre-record
 | Data | 6 hand-built + 49 synthetic cases on real OneMap routes; no images | Ryde case export → `Case` schema (`core/schemas.py`) |
 | Reference answers | Derived from the written policy + scenario labels | Blind human labelling of a sample; appeal outcomes as ground truth |
 | Model | DeepSeek-chat only (the provider is a configuration switch) | Second-model smoke test before claiming model independence |
-| Cost / latency | ~92k input tokens, 6 calls, 23.9 s per case (7× a single call) | Judge + policy check alone reaches 48/49 at 1/8 of the cost; use the full court where the rebuttal matters |
+| Cost / latency | Historical benchmark: about 99k input tokens, 6 calls, 23.0 s mean per case; current code no longer makes the extra notice-model call and has not been re-benchmarked | Judge + policy check is a lower-cost option; measure the current version before quoting a new live latency or token cost |
 | Serving | Single uvicorn worker; live runs capped (`MAX_LIVE_RUNS`, `LIVE_RUNS_PER_IP_10MIN`), optional `DEMO_TOKEN`; timeouts per stage fall back to human review | Worker pool, queue, per-agent model keys and usage dashboards, OpenTelemetry → Tencent APM |
 | Actions | Refund = Ryde voucher (advice, not execution); account flags queued for a person | Hook `eligibility.actions` to Ryde's wallet and trust-and-safety APIs |
 
