@@ -24,9 +24,11 @@ def apply(case: Case, name: str) -> Case:
     if name == "swap_profiles":
         r, d = c.profiles.rider, c.profiles.driver
         c.profiles.rider = r.model_copy(update={"account_age_days": d.account_age_days, "rating": d.rating, "disputes_90d": d.disputes_90d,
+                                                "disputes_window_days": d.disputes_window_days,
                                                 "disputes_upheld_90d": d.disputes_upheld_90d, "route_disputes_upheld_90d": d.route_disputes_upheld_90d,
                                                 "no_show_disputes_upheld_90d": d.no_show_disputes_upheld_90d})
         c.profiles.driver = d.model_copy(update={"account_age_days": r.account_age_days, "rating": r.rating, "disputes_90d": r.disputes_90d,
+                                                 "disputes_window_days": r.disputes_window_days,
                                                  "disputes_upheld_90d": r.disputes_upheld_90d, "route_disputes_upheld_90d": r.route_disputes_upheld_90d,
                                                  "no_show_disputes_upheld_90d": r.no_show_disputes_upheld_90d})
     elif name == "blank_profiles":

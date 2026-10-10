@@ -106,6 +106,8 @@ def detect(table: FactTable, case: Optional[Case] = None) -> list[Signal]:
         v, party = pf.value, pf.value.get("party")
         if party not in ("rider", "driver"):
             continue
+        if v.get("disputes_window_days") != 90:
+            continue  # a total with no stated time window cannot establish a 90-day pattern
         if v["disputes_90d"] >= REPEAT_DISPUTES_90D and v["disputes_upheld_90d"] >= REPEAT_UPHELD_90D:
             out.append(Signal(code="REPEAT_OFFENDER", party=party, severity="medium", evidence=[pf.id],
                               text=(f"{party.title()} profile: {v['disputes_90d']} disputes in 90 d, {v['disputes_upheld_90d']} upheld "

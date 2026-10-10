@@ -90,9 +90,11 @@ def convert(d: dict) -> dict:
         h = p.get("dispute_history", {})
         out = {"account_age_days": p.get("account_age_days", 0), "rating": p.get("avg_rating", 0),
                "disputes_90d": h.get("total_disputes", 0), "disputes_upheld_90d": h.get("upheld", h.get("upheld_against", 0)),
-               "route_disputes_upheld_90d": 0, "no_show_disputes_upheld_90d": 0}
+               "route_disputes_upheld_90d": 0, "no_show_disputes_upheld_90d": 0,
+               "disputes_window_days": None}
         if driver:
             out["trips_90d"] = p.get("total_trips", 0)
+            out["trips_window_days"] = None
         return out
     case = {
         "case_id": tk["dispute_id"],

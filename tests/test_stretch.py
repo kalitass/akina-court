@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from core.facts.tools import build_fact_table
 from core.schemas import Case, CaseRecord, Fact, FactSource, Ruling
 from core.stretch import Hooks, enabled, feedback, fraud, precedent, renumber, replay, sla
 from core.stretch._util import make_event, now
@@ -181,10 +182,11 @@ def test_fraud_signals_per_fixture():
         "C-0006": set(),                 # threats are the judge's reading (SAFE-1 screen), not a code signal
     }
     for cid, want in expect.items():
-        if not (RUNS / f"{cid}.json").exists():
+        if not (CASES / f"{cid}.json").exists():
             continue
-        t = record(cid).facts
-        sigs = fraud.detect(t, case(cid) if (CASES / f"{cid}.json").exists() else None)
+        current_case = case(cid)
+        t = build_fact_table(current_case)
+        sigs = fraud.detect(t, current_case)
         assert {(s.code, s.party) for s in sigs} == want, cid
         ids = t.ids()
         assert all(e in ids for s in sigs for e in s.evidence), cid

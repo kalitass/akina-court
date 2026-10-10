@@ -488,8 +488,12 @@ def get_traffic_facts(case: Case) -> list[Fact]:
     return facts
 
 
+def _window_label(n: int, window: int | None, noun: str) -> str:
+    return f"{n} {noun} in {window} d" if window is not None else f"{n} {noun} (window unknown)"
+
+
 def get_profile_facts(case: Case) -> list[Fact]:
-    """Profile facts for both parties: account age, rating, 90-day dispute counts (source: profile).
+    """Profile facts for both parties with the source's stated time window.
 
     GEN-5: these may support an outcome or trigger flag_account, never decide the case alone.
     """
@@ -497,12 +501,13 @@ def get_profile_facts(case: Case) -> list[Fact]:
     return [
         Fact(id="profile-rider", source="profile",
              text=(f"Rider: account age {r.account_age_days} d ({r.account_age_days / 365:.1f} y), rating {r.rating}, "
-                   f"{r.disputes_90d} disputes in 90 d, {r.disputes_upheld_90d} upheld "
+                   f"{_window_label(r.disputes_90d, r.disputes_window_days, 'disputes')}, {r.disputes_upheld_90d} upheld "
                    f"(route: {r.route_disputes_upheld_90d}, no-show: {r.no_show_disputes_upheld_90d})."),
              value={"party": "rider", **r.model_dump()}),
         Fact(id="profile-driver", source="profile",
              text=(f"Driver: account age {d.account_age_days} d ({d.account_age_days / 365:.1f} y), rating {d.rating}, "
-                   f"{d.trips_90d} trips in 90 d, {d.disputes_90d} disputes, {d.disputes_upheld_90d} upheld "
+                   f"{_window_label(d.trips_90d, d.trips_window_days, 'trips')}, "
+                   f"{_window_label(d.disputes_90d, d.disputes_window_days, 'disputes')}, {d.disputes_upheld_90d} upheld "
                    f"(route: {d.route_disputes_upheld_90d}, no-show: {d.no_show_disputes_upheld_90d})."),
              value={"party": "driver", **d.model_dump()}),
     ]

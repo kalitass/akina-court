@@ -8,7 +8,7 @@ Team **Akina Court** (named after Mount Akina, the pass where speed is everythin
 
 ## Results at a glance
 
-3 core agents · 3 dispute categories · 6 runnable demo cases on real Singapore roads · 49-case benchmark · 4 systems compared · 196 case-system runs · 72 automated tests.
+3 core agents · 3 dispute categories · 6 runnable demo cases on real Singapore roads · 49-case benchmark · 4 systems compared · 196 case-system runs · 89 automated tests.
 
 | | Raw LLM, one call | Facts by code, one call | Judge + policy check | Full court |
 |---|---|---|---|---|
@@ -83,14 +83,14 @@ Each claim made on the landing page maps to code, data or a page. Paths are rela
 | Claim | Scope | Evidence |
 |---|---|---|
 | Facts are computed by code, never asked of the model | all cases | `core/facts/tools.py` · `/api/cases/C-0001/facts` |
-| The policy runs as code and fixes allowed outcomes and the amount formula | 21 clauses | `core/policy_engine.py` · `/policy.html` · `policy/sources.md` |
+| The policy runs as code and fixes allowed outcomes and the amount formula | 17 citable clauses plus 4 informational entries | `core/policy_engine.py` · `/policy.html` · `policy/sources.md` |
 | Advocates can only cite facts they read and clauses that exist; invalid claims are struck | 0 invalid citations in 961 (court arm) | `core/verify.py` · `/replay.html?case=C-0001&run=C-0001~fake_fact&phase=court` |
 | Unsupported rulings cannot execute; account flags and safety always go to a person | 0 wrong core decisions executed in 49 cases | `core/orchestrate.py` · `/replay.html?case=C-0001&run=C-0001~wrong_amount&phase=court` · `/ops.html` |
 | Inter-agent communication is observable and replayable | every run | `runs/*.json`, `bench/results/court/*.record.json` · `/replay.html?case=C-0001&phase=court&mode=expert` |
 | Four systems compared on 49 synthetic cases, with a judge-only ablation | 196 case-system runs, 499 model calls | `bench/results/summary.md` · `bench/results/gate_ablation.json` · `/report.html` |
 | Rulings are reproducible: case, policy, code and model fingerprints | every run stored by the service | `core/receipt.py` · `/receipt.html?run=C-0001` (rendered) · `/api/runs/C-0001/receipt` (JSON) |
 | Benchmark provenance: model ids, time window, token counts, full-capture audit sample | 49 cases × 4 systems | this README (Where the numbers come from) · `bench/provenance.py --hashes` · `bench/results/audit_sample/` |
-| Automated tests | 72 tests, no API key needed | `tests/` · `requirements.lock` |
+| Automated tests | 89 tests, no API key needed | `tests/` · `requirements.lock` |
 
 Machine-readable summary with denominators and caveats: `web/submission.json`.
 
@@ -111,7 +111,7 @@ Result: cancellation charge upheld (`no_action`), as the sample's own "Expected 
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt     # or: pip install -r requirements.lock
 cp .env.example .env                       # DEEPSEEK_API_KEY (only needed for live runs)
 scripts/dev.sh                             # http://localhost:8000
-.venv/bin/python -m pytest -q              # 72 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
+.venv/bin/python -m pytest -q              # 89 tests, no API key needed; includes a link check over every page (paths, #ids, ?case=, shared header)
 ```
 
 No key needed to browse: `runs/` ships the six demo rulings and eight pre-recorded audits (fault injection, counterfactuals); the replay page plays them back. A key is needed only for **Run live**; the public demo site runs without one, so there the button is disabled and every case plays back a stored run. CLI: `scripts/run_case.py C-0001` (or `all`) compares a fresh run with `data/expected/`. Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Docker: `deploy/`.
