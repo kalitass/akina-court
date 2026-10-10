@@ -219,6 +219,7 @@ class CaseBrief(BaseModel):
     claims: list[Claim]
     weaknesses: list[str]                         # the advocate must list its own weak points
     requested_outcome: RequestedOutcome
+    segment_grounds: dict[str, Ground] = {}       # off-route segment fact id -> the policy ground this side's reading of the record supports
 
 
 class RebuttalPoint(BaseModel):
@@ -236,6 +237,7 @@ class Rebuttal(BaseModel):
     side: Party
     points: list[RebuttalPoint]
     revised_outcome: Optional[RequestedOutcome] = None   # only if the advocate changes its ask
+    segment_grounds: dict[str, Ground] = {}       # the side's grounds after reading the opponent (empty = unchanged from the brief)
 
 
 # ----------------------------------------------------------------------------

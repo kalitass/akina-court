@@ -472,7 +472,7 @@ def _evidence_form(cert: Certificate, ruling: Ruling) -> list[str]:
     return r
 
 
-def check_ruling(cert: Certificate, ruling: Ruling) -> tuple[bool, list[str]]:
+def check_ruling(cert: Certificate, ruling: Ruling, stipulated: dict | None = None) -> tuple[bool, list[str]]:
     """Is the judge's ruling consistent with the certificate? (eligible_for_automation, reasons).
 
     An escalate is never inconsistent: it executes nothing. Everything else must sit inside what code measured."""
@@ -517,6 +517,10 @@ def check_ruling(cert: Certificate, ruling: Ruling) -> tuple[bool, list[str]]:
                 continue
             if sg["exempt"] is None:
                 # a judge-decided segment: the words name the ground, the policy fixes the consequence
+                if stipulated and fid in stipulated and sf.ground != stipulated[fid]:
+                    reasons.append(f"segment {fid}: both advocates read the record as '{stipulated[fid]}' (stipulated), the ruling says '{sf.ground}': "
+                                   f"a ground both sides state binds the judge; rule on '{stipulated[fid]}' ({GROUND_CONSEQUENCE[stipulated[fid]]}) or name the fact that refutes them")
+                    continue
                 want = GROUND_CONSEQUENCE.get(sf.ground)
                 if want is None:
                     reasons.append(f"segment {fid}: finding {sf.finding} rests on no named ground (ground 'other'): name the policy branch the words fall under "

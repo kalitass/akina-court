@@ -70,6 +70,9 @@ RULES OF ARGUMENT
 OUTPUT
 - Return a CaseBrief. side = "{SIDE}". Claim ids: {PREFIX}1, {PREFIX}2, ... Write in English, concise, each
   assertion one or two sentences that a judge can check against the cited facts.
+- segment_grounds: for EVERY off-route segment fact (the gps facts that say "Off-route segment ..."), the policy
+  ground your honest reading of the record supports, one of "rider_named_stop" (RD-3(a): a rider message before the segment named the place and the car stopped there), "general_route_consent" (RD-5: a general route choice such as "whichever way is faster", and the loop goes there), "named_road_tied" (RD-5: agreed to a named road and a record ties the segment to it), "named_road_untied" (agreed to a named road, nothing ties the segment to it, nothing places it elsewhere: G13), "named_road_elsewhere" (the record places the segment somewhere else), "driver_errand" (a stop or loop of the driver's own that no rider message asked for), "scope_other" (the rider agreed to something else, e.g. a short stop), "consent_after_or_none" (no rider message before the segment agrees to it), "incident" (RD-4), "other". This is a statement of what the record shows, not of what helps your side: a ground both
+  advocates state is taken as agreed and binds the judge. Empty for non-route cases.
 
 POLICY (full text)
 {POLICY}
@@ -83,7 +86,9 @@ Answer it point by point. Your original brief stays on the record unchanged. Ret
 claim you contest, a point with target_claim_id = their claim id, a one- or two-sentence response citing facts (F*)
 and clauses; for a point you must concede, set concede = true and target_claim_id to THEIR claim id (or your own
 claim id if you withdraw one of yours). Only cite facts you have read; you may call a tool you have not called yet.
-Set revised_outcome only if you change what you ask for. side = "{SIDE}"."""
+Set revised_outcome only if you change what you ask for. side = "{SIDE}". segment_grounds: restate the ground of every
+off-route segment after reading the opponent (the same vocabulary as in your brief); revise it where the opponent's
+cited facts have shown your first reading wrong."""
 
 
 def _make_tool(name: str):

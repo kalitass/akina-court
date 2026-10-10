@@ -266,3 +266,34 @@ def test_finding_that_contradicts_its_ground_is_blocked_and_other_cannot_execute
                   segment_findings=settled + [SegmentFinding(fact_id=seg, finding="counts", ground="consent_after_or_none", basis=rider_before, reason="[RD-5]")])
     ok, why = check_ruling(cert, good)
     assert ok, why
+
+
+# ---------------------------------------------------------------------------- a ground both advocates state binds the judge
+
+def test_stipulated_ground_binds_the_judge_and_needs_both_sides():
+    from core.orchestrate import stipulated_grounds
+    from core.schemas import CaseBrief, Rebuttal, RequestedOutcome
+    case = load("C-0001")
+    table = build_fact_table(case); cert = evaluate(case, table)
+    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
+    settled = next(s for s, sg in cert.segments.items() if sg["exempt"] is not None)
+    brief = lambda side, g: CaseBrief(side=side, claims=[], weaknesses=["x"], requested_outcome=RequestedOutcome(action="no_action", amount=None), segment_grounds={seg: g, settled: "incident"})
+    # one side only, or "other": nothing is stipulated; a settled segment never is
+    assert stipulated_grounds(cert, {"rider": brief("rider", "rider_named_stop"), "driver": brief("driver", "consent_after_or_none")}, {}) == {}
+    assert stipulated_grounds(cert, {"rider": brief("rider", "other"), "driver": brief("driver", "other")}, {}) == {}
+    # both sides agree in their briefs; a rebuttal may revise one side and dissolve the agreement
+    both = {"rider": brief("rider", "rider_named_stop"), "driver": brief("driver", "rider_named_stop")}
+    assert stipulated_grounds(cert, both, {}) == {seg: "rider_named_stop"}
+    reb = {"rider": Rebuttal(side="rider", points=[], segment_grounds={seg: "scope_other"})}
+    assert stipulated_grounds(cert, both, reb) == {}
+    # the judge's finding must rest on the stipulated ground: a different ground is sent back, the right one passes
+    rider_before = [f.id for f in table.facts if f.source == "chat" and f.value.get("from") == "rider"][:1]
+    base = [SegmentFinding(fact_id=settled, finding="exempt", ground="incident", reason="[RD-4]")]
+    wrong = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
+                   segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="scope_other", basis=rider_before, reason="[RD-5]")])
+    ok, why = check_ruling(cert, wrong, {seg: "rider_named_stop"})
+    assert not ok and any("stipulated" in w for w in why), why
+    right = ruling(ruling="no_action", amount=None,
+                   segment_findings=base + [SegmentFinding(fact_id=seg, finding="exempt", ground="rider_named_stop", basis=rider_before, reason="[RD-3]")])
+    ok, why = check_ruling(cert, right, {seg: "rider_named_stop"})
+    assert ok, why
