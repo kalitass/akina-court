@@ -196,11 +196,37 @@ def road_km(route, name, which="from"):
 
 # ----------------------------------------------------------------------------------------------- records
 
-def approach_trace(rp, start_pt, pickup, accepted: datetime, pickup_at: datetime, wait_s: int, seed: int):
-    """Driver drives to the pickup point, parks there `wait_s` seconds before the rider boards."""
+PAUSE_S = 25            # a halt at a junction: long enough to type a message, far below the 120 s that makes a stop fact
+
+
+def pause_stops(poly, drive_s: int, pauses, used=()):
+    """Stops for `pauses` = [(at_s, dur_s)]: the car halts `dur_s` seconds at the polyline vertex it reaches about `at_s`
+    seconds into a drive that would take `drive_s` seconds without halts (uniform-speed estimate; the trajectory solver
+    re-times the legs). Vertices in `used` (and the two ends) are never chosen, so every leg keeps a length."""
+    pts = [tuple(p) for p in poly]
+    cum = [0.0]
+    for a, b in zip(pts, pts[1:]):
+        cum.append(cum[-1] + haversine_m(a, b))
+    taken = set(used)
+    out = []
+    for at_s, dur in sorted(pauses):
+        target = cum[-1] * at_s / max(drive_s, 1)
+        order = sorted(range(1, len(pts) - 1), key=lambda k: abs(cum[k] - target))
+        vi = next((k for k in order if k not in taken and all(abs(cum[k] - cum[u]) > 1 for u in taken)), None)
+        if vi is None:
+            raise ValueError("no free vertex for a pause")
+        taken.add(vi)
+        out.append(Stop(*pts[vi], start_s=at_s, duration_s=dur))
+    return out
+
+
+def approach_trace(rp, start_pt, pickup, accepted: datetime, pickup_at: datetime, wait_s: int, seed: int, pauses=()):
+    """Driver drives to the pickup point, parks there `wait_s` seconds before the rider boards. `pauses` = [(at_s, dur_s)]:
+    short halts on the way (a red light) during which the driver types a message instead of texting while driving."""
     total = secs(accepted, pickup_at)
     poly = rp.route([start_pt, pickup])["polyline"]
-    return build_trajectory(poly, accepted, total, stops=[Stop(*pickup, start_s=total - wait_s, duration_s=wait_s)], seed=seed)
+    stops = pause_stops(poly, total - wait_s - sum(d for _, d in pauses), pauses, used=(len(poly) - 1,))
+    return build_trajectory(poly, accepted, total, stops=stops + [Stop(*pickup, start_s=total - wait_s, duration_s=wait_s)], seed=seed)
 
 
 def first_within(gps, pt, radius_m=ARRIVAL_RADIUS_M):
@@ -319,7 +345,9 @@ def c0001(rates):
         rp, opt, loops, pickup_at, secs(pickup_at, dropoff_at),
         stops=[Stop(*store, start_s=secs(pickup_at, stop_at), duration_s=stop_s)],
         zones=[Congestion(0.0, 0.5, 8.0)], seed=1)                             # Scotts/Orchard jam: first 500 m at 8 km/h
-    gps = approach_trace(rp, offset(P, 250, 1300), P, accepted, pickup_at, wait_s=10, seed=1) + trip_gps[1:]
+    # the driver's two messages (14:01:00, 14:03:00) are typed at red lights on the way to the pickup, not while driving
+    gps = approach_trace(rp, offset(P, 250, 1300), P, accepted, pickup_at, wait_s=10, seed=1,
+                         pauses=[(15, PAUSE_S), (135, PAUSE_S)]) + trip_gps[1:]
     trip = trip_block("T-1042", "RydeTAXI", place("Orchard Road"), place("Marina Bay Sands"), route,
                       T("2026-09-20 14:00:00"), accepted, gps, T("2026-09-20 14:05:00"), pickup_at, dropoff_at)
     w0, w1 = T("2026-09-20 14:00:00"), T("2026-09-20 14:35:00")
@@ -397,7 +425,9 @@ def c0003(rates):
     accepted, pickup_at, dropoff_at = T("2026-09-21 18:06:00"), T("2026-09-21 18:10:00"), T("2026-09-21 18:42:30")
     opt = [tuple(p) for p in route["polyline"]]
     loops = [{"leave": (1.2729, 103.8536), "via": [(1.2985, 103.8880), (1.3160, 103.9290)], "rejoin": D}]   # MCE -> ECP -> Bedok South
+    # the driver's message at 18:10:20 is typed at the first junction after moving off (halt 18:10:15-18:10:40), not at speed
     _, trip_gps, detours, legs = detour_trace(rp, opt, loops, pickup_at, secs(pickup_at, dropoff_at),
+                                              stops=pause_stops(opt, 24 * 60, [(15, PAUSE_S)]),
                                               loop_zones={0: (1.0, EXPRESSWAY_KMH)}, seed=3)
     gps = approach_trace(rp, (1.2840, 103.8500), P, accepted, pickup_at, wait_s=10, seed=3) + trip_gps[1:]   # from Cecil St
     trip = trip_block("T-1063", "RydeTAXI", place("Tanjong Pagar Centre"), place("Bedok Mall"), route,
@@ -406,7 +436,7 @@ def c0003(rates):
     return {
         "case_id": "C-0003",
         "dispute": {"type": "route_deviation", "filed_by": "rider", "filed_at": T("2026-09-21 19:05:00").isoformat(),
-                    "statement": "Fare was about $2 more than the estimate. The driver went the long way round via the ECP."},
+                    "statement": "Fare was about $5 more than the estimate. The driver went the long way round via the ECP."},
         "trip": trip, "route": route, "gps": gps,
         "traffic": {
             "speed_bands": [band("KALLANG PAYA LEBAR EXPRESSWAY", 1, T("2026-09-21 18:00:00"), T("2026-09-21 18:45:00"), R, trim_start_m=700),   # closed, not taken; geometry past the shared junction
@@ -452,8 +482,9 @@ def c0004(rates):
                                  "the whole time, then he cancelled on me as a no-show and I was charged $6.61."},
         "trip": trip, "route": route, "gps": gps,
         "traffic": {
-            "speed_bands": [band("VICTORIA STREET", 5, T("2026-09-22 08:00:00"), T("2026-09-22 08:30:00"), [route, approach]),
-                            band("NORTH BRIDGE ROAD", 5, T("2026-09-22 08:00:00"), T("2026-09-22 08:30:00"), [route, approach])],
+            # morning peak on the city fringe: band 3 (20-29 km/h), slow but moving — enough to contradict "too jammed to get closer"
+            "speed_bands": [band("VICTORIA STREET", 3, T("2026-09-22 08:00:00"), T("2026-09-22 08:30:00"), [route, approach]),
+                            band("NORTH BRIDGE ROAD", 3, T("2026-09-22 08:00:00"), T("2026-09-22 08:30:00"), [route, approach])],
             "incidents": [],
         },
         "weather": {"rain_mm": 0, "description": "Fair"},
@@ -463,7 +494,7 @@ def c0004(rates):
                      ("2026-09-22 08:17:30", "rider", "I'm at the entrance and I don't see any car. What's your plate?"),
                      ("2026-09-22 08:19:20", "driver", "Waited more than 3 min, cancelling")),
         "driver_statement": "I pressed I'm Here at 08:16 and waited more than 3 minutes. The rider never showed up, "
-                            "so I cancelled as a no-show. Victoria Street was too jammed to get closer.",
+                            "so I cancelled as a no-show. Victoria Street was jammed solid, I could not get any closer.",
         "profiles": profiles((820, 4.9, 0, 0, 0, 0), (700, 4.6, 540, 2, 2, 0, 2)),
     }
 
@@ -486,8 +517,8 @@ def c0005(rates):
     return {
         "case_id": "C-0005",
         "dispute": {"type": "no_show", "filed_by": "rider", "filed_at": T("2026-09-23 09:30:00").isoformat(),
-                    "statement": "I told the driver I was two minutes away and he still charged me $6.61 for cancelling. "
-                                 "I want it refunded."},
+                    "statement": "I told the driver I was two minutes away, then I got held up upstairs, gave up and cancelled, "
+                                 "and I was still charged $6.61. I want it refunded."},
         "trip": trip, "route": route, "gps": gps,
         "traffic": {"speed_bands": [band_from_gps("ANSON ROAD", gps, T("2026-09-23 09:00:00"), T("2026-09-23 09:15:00"), [approach, route])],
                     "incidents": []},
@@ -508,7 +539,10 @@ def c0006(rates):
     route = rp.route([P, D])                                                     # Clemenceau -> CTE -> PIE -> Bedok North
     accepted, pickup_at, dropoff_at = T("2026-09-24 21:29:30"), T("2026-09-24 21:34:20"), T("2026-09-24 21:55:00")
     gps = approach_trace(rp, offset(P, 20, 1200), P, accepted, pickup_at, wait_s=10, seed=6)
+    # the exchange happens on Clemenceau Avenue, before the CTE: the rider asks to get out as the car nears a red light,
+    # the driver answers while halted there (21:36:10-21:36:35), then drives on to the expressway without stopping again
     trip_gps = build_trajectory(route["polyline"], pickup_at, secs(pickup_at, dropoff_at),
+                                stops=pause_stops(route["polyline"], 20 * 60, [(110, PAUSE_S)]),
                                 congestion=[Congestion(road_km(route, "CENTRAL EXPRESSWAY") + 0.3,
                                                        road_km(route, "PAN ISLAND EXPRESSWAY", "to") - 0.3, EXPRESSWAY_KMH)], seed=6)
     gps += trip_gps[1:]
@@ -526,10 +560,10 @@ def c0006(rates):
         },
         "weather": {"rain_mm": 0, "description": "Cloudy"},
         "fare": fixed_fare(route, rates),
-        "chat": chat(("2026-09-24 21:42:00", "rider", "Please stop the car, I want to get out here."),
-                     ("2026-09-24 21:43:00", "driver", "Sit down or I lock the doors.")),
-        "driver_statement": "The rider was drunk and tried to open the door on the expressway. I told her to sit down "
-                            "for her own safety and did not stop until the destination.",
+        "chat": chat(("2026-09-24 21:36:00", "rider", "Please stop the car, I want to get out here."),
+                     ("2026-09-24 21:36:15", "driver", "Sit down or I lock the doors.")),
+        "driver_statement": "The rider was drunk and tried to open the door at the lights on Clemenceau Avenue. I told her to "
+                            "sit down for her own safety and did not stop until the destination.",
         "profiles": profiles((520, 4.8, 0, 0, 0, 0), (2100, 4.9, 1204, 0, 0, 0, 0)),
     }
 

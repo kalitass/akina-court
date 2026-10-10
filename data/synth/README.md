@@ -23,6 +23,30 @@
 4. Rerun `scripts/run_case.py all`, `scripts/run_case.py DISP-002`, `scripts/prerecord_demos.py` and the tests; log any
    moved answer in `data/bench/REFERENCE_CHANGES.md`.
 
+## What the builders do for the story (not checked by the contract, but a reader would notice)
+
+* **Nobody types while driving.** Every driver line sent during a trip (a route request, the petrol ask, "Ok" to a stop,
+  a threat) is timed inside a `PAUSE_S` (25 s) halt of the car at a junction — `_try_trace(pauses_km=...)` on the driven
+  polyline, `pause_stops()` for a plain trajectory, `approach_trace(pauses=...)` for the pickup chatter; the safety scripts
+  put the halt on a surface road (`surface_km`), never on an expressway. A halt is far below the 120 s that makes a stop
+  fact; it is billed as metered waiting like any red light. `build_route` asserts the car is below 5 km/h at every driver line.
+* **A loop goes somewhere.** A `frac` loop must replace >= `MIN_REPLACED_KM` (1.0 km) of the optimal route when its story
+  goes round a stretch (`loop_must_bypass`: an incident on it, an agreement to a named road, "whichever way"), else
+  >= `MIN_REPLACED_PLAIN_KM` (0.5 km), and drive at most `MAX_DETOUR_RATIO` (4x) the stretch it replaces; among the
+  candidates that qualify the smallest extra km (>= `MIN_EXTRA_KM`) wins, so an out-and-back spur or a 7 km loop round
+  1.5 km of road is not written. A loop through a named place keeps the first candidate that measures cleanly: that stop
+  is the rider's own request. A scenario for which the real road network offers no such loop keeps its previously
+  committed record (the run reports it; `main()` writes nothing for it).
+* **A claim of traffic has traffic behind it.** Consent scenarios set `band=2` on the stretch the driver names, backed by a
+  15 km/h crawl before the turn-off (and `CRAWL_PAST_KM` into the slip road); the no-loop scenario in heavy rain drives
+  at a speed that puts the trip over the estimate, so "traffic was slow" and "the fare was higher" are both true.
+* **Incidents read like DataMall.** `EXPRESSWAY_DIR` gives the direction label of each expressway from the way the route
+  runs ("(towards TPE)"), never the trip's destination; a `late` incident is listed 10 min after the driver turned off.
+* **Wording varies.** Chat lines, cars, outfits and the stock statements come from small pools chosen by the case's own
+  rng (`PICKUP_LINES`, `ASK_LINES`, `CANCEL_LINES`, ...); the pickup line names the spot a rider waits at (`PICKUP_SPOT`).
+  Paraphrases keep the words the contract reads ("on X is building", "go round via", "Sure", "Accident on X (").
+* **Dates.** Two cases a day from 2026-09-01 (bench) / 2026-10-03 (held-out): every case is dated before the sets were built.
+
 ## The contract (what the gate refuses)
 
 `contract_for(spec)` turns the conditions into claims; `check(case, contract)` measures the record with its own
@@ -33,9 +57,9 @@ exits 1. There is no retry that changes the story; fix the scenario or the build
 What it checks, by condition:
 
 * route: the number of off-route segments equals the number of loops, each adds >= 0.5 km, segments are in time order;
-  a loop whose story goes *round* a stretch (`incident` on it, `consent` naming a road or "whichever way", i.e.
-  `loop_must_bypass`) bypasses >= `MIN_REPLACED_KM` (1.0 km) of the optimal route and the car drives < 50 % of that
-  stretch (an out-and-back spur bypasses nothing); the driver's request is in the chat >= 60 s before the segment
+  a loop whose story goes *round* a stretch (`incident` on it, `consent` naming a road or "whichever way") bypasses
+  >= `MIN_REPLACED_KM` (1.0 km) of the optimal route and the car drives < 50 % of that stretch (an out-and-back spur
+  bypasses nothing; the builder itself demands this of every `frac` loop); the driver's request is in the chat >= 60 s before the segment
   (`after`: >= 60 s after), the rider's reply before (or after) it as labelled, `negation` is a refusal,
   `request_only` has no reply, `scope_other` has no stop; the road the driver names as jammed is the main road of
   the bypassed stretch; a `named` stop is inside the segment within 150 m of the place the rider named before the

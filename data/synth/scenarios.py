@@ -20,6 +20,7 @@ import json
 import math
 import os
 import random
+import statistics
 import sys
 import urllib.error
 from datetime import datetime, timedelta
@@ -31,8 +32,8 @@ sys.path.insert(0, ROOT)
 
 import contract  # noqa: E402
 import validate  # noqa: E402
-from build_cases import (LOC, ROADS, SGT, Congestion, Stop, along_km, approach_trace, band_from_gps, build_trajectory,  # noqa: E402
-                         compose, detour_trace, dump, incident, measure_detours, nearest_idx, offset, place, profiles,
+from build_cases import (LOC, PAUSE_S, ROADS, SGT, Congestion, Stop, along_km, approach_trace, band_from_gps, build_trajectory,  # noqa: E402
+                         compose, detour_trace, dump, incident, measure_detours, nearest_idx, offset, pause_stops, place, profiles,
                          project, routes, secs, trip_block)
 from fare import cancellation_fare, distance_km, fixed_fare, load_rates, metered_fare, slice_gps  # noqa: E402
 from route_provider import haversine_m  # noqa: E402
@@ -63,19 +64,91 @@ LOC.update({  # real Singapore places, coordinates from common knowledge (~50-10
     "Northpoint City": (1.4295, 103.8355),
     "Great World City": (1.2936, 103.8319),
     "Changi City Point": (1.3345, 103.9623),
+    # more origins / destinations (OneMap search, 2026-10-10) so the same route does not carry a dozen cases
+    "AMK Hub": (1.3694, 103.8484),
+    "Toa Payoh HDB Hub": (1.3321, 103.8485),
+    "NEX Serangoon": (1.3508, 103.8722),
+    "VivoCity": (1.2643, 103.8223),
+    "Suntec City": (1.2955, 103.8585),
+    "Junction 8": (1.3505, 103.8487),
+    "Jurong Point": (1.3395, 103.7066),
+    "Pasir Ris MRT": (1.3730, 103.9492),
+    "Hougang Mall": (1.3725, 103.8937),
+    "Buona Vista MRT": (1.3063, 103.7903),
+    "Kallang Wave Mall": (1.3031, 103.8731),
+    "Compass One": (1.3921, 103.8950),
 })
+# where a rider waits at each pickup (the pickup line names it, instead of a "main entrance" that a kerb or a campus has not)
+PICKUP_SPOT = {
+    "Orchard Road": "at the kerb outside Mandarin Gallery", "NUS": "outside University Hall", "Raffles Place": "at the Raffles Place taxi stand",
+    "Clarke Quay": "at the Clarke Quay taxi stand", "Bugis Junction": "at the Victoria Street entrance", "Marina Bay Sands": "at the Tower 1 taxi stand",
+    "Tanjong Pagar Centre": "at the taxi stand", "Sentosa Beach Station": "outside Beach Station", "Jurong East MRT": "at the taxi stand outside the MRT",
+    "Woodlands Civic Centre": "at the main entrance", "Punggol Waterway Point": "at the taxi stand", "Tampines Mall": "at the taxi stand",
+    "Bedok Mall": "at the taxi stand", "Changi Airport T3": "at the arrival pickup, door 3", "AMK Hub": "at the taxi stand", "Toa Payoh HDB Hub": "at the taxi stand",
+    "NEX Serangoon": "at the taxi stand", "VivoCity": "at the taxi stand", "Suntec City": "at the Tower 3 drop-off", "Junction 8": "at the taxi stand",
+    "Jurong Point": "at the taxi stand", "Pasir Ris MRT": "at the taxi stand outside the MRT", "Hougang Mall": "at the taxi stand",
+    "Buona Vista MRT": "outside exit A", "Kallang Wave Mall": "at the taxi stand", "Compass One": "at the taxi stand",
+}
+CARS = ["silver Toyota Altis", "white Honda Vezel", "black Hyundai Ioniq", "grey Kia Niro", "blue Toyota Prius", "white BYD e6"]
+OUTFITS = ["in a blue shirt", "in a grey hoodie", "with a black backpack", "in a white dress", "in a red cap"]
 
 WEATHER = {"fair": {"rain_mm": 0, "description": "Fair"},
            "light": {"rain_mm": 1.8, "description": "Light rain"},
            "heavy": {"rain_mm": 18.5, "description": "Heavy rain, thundery showers"}}
 BAND_SPEED = {1: 8.0, 2: 15.0}           # km/h injected on the stretch before the detour -> LTA band
 CONGESTION_LEN_KM = 0.45
+CRAWL_PAST_KM = 0.5                      # the crawl runs this far past the turn-off (the slip road is in the same jam), so the
+                                         # 150 s before the measured segment start are still at crawling speed
+MAX_DETOUR_RATIO = 4.0                   # a loop may drive at most this many times the stretch it replaces (what the road network allows)
+MIN_REPLACED_PLAIN_KM = 0.5              # a plain loop (no incident, no agreement on it) must still replace this much of the route: no out-and-back spur
 OFFSET_CANDIDATES = [(1, 1000), (-1, 1000), (1, 1500), (-1, 1500), (1, 700), (-1, 700), (1, 2000), (-1, 2000)]
 SPAN_CANDIDATES = [(1.0, 1.0), (1.5, 1.5), (0.7, 0.7), (2.0, 2.0), (1.0, 2.0), (2.0, 1.0)]
+APPROACH_PAUSE_S = 75                    # the driver's pickup message is typed at a halt this many seconds into the approach
 
-# ordinary pickup chatter; what any line means is for the court to read, nothing is labelled
-INNOCUOUS = [("rider", "Hi, I am at the main entrance in a blue shirt."),
-             ("driver", "Arriving in 2 min, white Honda Vezel.")]
+# LTA DataMall writes an expressway incident with its direction ("(towards TPE)"); axis says which end of the road each label names
+EXPRESSWAY_DIR = {
+    "SELETAR EXPRESSWAY": ("EW", "towards TPE", "towards BKE"),
+    "AYER RAJAH EXPRESSWAY": ("EW", "towards MCE", "towards Tuas"),
+    "TAMPINES EXPRESSWAY": ("EW", "towards PIE", "towards SLE"),
+    "PAN ISLAND EXPRESSWAY": ("EW", "towards Changi", "towards Tuas"),
+    "EAST COAST PARKWAY": ("EW", "towards Changi", "towards MCE"),
+    "MARINA COASTAL EXPRESSWAY": ("EW", "towards ECP", "towards AYE"),
+    "KRANJI EXPRESSWAY": ("EW", "towards BKE", "towards PIE"),
+    "CENTRAL EXPRESSWAY": ("NS", "towards SLE", "towards AYE"),
+    "KALLANG PAYA LEBAR EXPRESSWAY": ("NS", "towards TPE", "towards MCE"),
+    "BUKIT TIMAH EXPRESSWAY": ("NS", "towards Woodlands", "towards PIE"),
+}
+
+# ordinary pickup chatter; what any line means is for the court to read, nothing is labelled. Several wordings per line,
+# chosen by the case's own rng, so a judge opening ten files does not meet the same sentence ten times.
+PICKUP_LINES = ["Hi, I am {spot}, {outfit}.", "Hello, waiting {spot}, {outfit}.", "I'm {spot} already, {outfit}."]
+ARRIVING_LINES = ["Arriving in about {n} min, {car}.", "On my way, about {n} min, {car}.", "{n} min away, {car}."]
+ASK_LINES = ["Traffic ahead on {jam} is building up, ok if I go round via {alt}?",
+             "Jam on {jam} is building up ahead, can I go round via {alt}?",
+             "Looks like traffic on {jam} is building up, mind if I go round via {alt}?"]
+ASK_GENERAL_LINES = ["Traffic ahead on {jam} is building up, shall I take another way?",
+                     "Jam on {jam} is building up ahead, want me to take another way?"]
+YES_LINES = ["Sure, go ahead.", "Sure, no problem.", "Sure, your call."]
+HERE_LINES = ["I'm here at the pickup point, {car}.", "Reached, {car}, waiting at the pickup.", "At the pickup now, {car}."]
+HERE_FAR_LINES = ["I'm here already, {car}, please come out", "Reached already, {car}, come out please"]
+WHERE_LINES = ["I'm at the pickup point and I don't see any car. Where are you?", "I'm at the pickup point, no car here. Where are you?"]
+CANCEL_LINES = ["Waited more than {n} min, cancelling", "More than {n} min already, I have to cancel", "{n} min up, cancelling the trip"]
+HOW_LONG_LINES = ["How long will you be?", "Hi, how far are you?", "Are you near?"]
+ETA_LINES = ["About 5 min, traffic", "5 min more, traffic is slow", "Coming, about 5 min"]
+GPS_LINES = ["I followed my GPS; it rerouted me. Nothing wrong with the fare.",
+             "I went where the GPS sent me; it rerouted. The fare is what the meter showed.",
+             "The GPS rerouted me, that's all. Nothing wrong with the fare."]
+NOSHOW_DRIVER_LINES = ["I pressed I'm Here and waited more than {n} minutes. Rider no-show, so I cancelled.",
+                       "I tapped I'm Here, waited over {n} minutes, nobody came, so I cancelled as a no-show.",
+                       "After pressing I'm Here I waited more than {n} minutes at the pickup. No rider, so I cancelled."]
+ON_WAY_LINES = ["I was on my way when the rider cancelled.", "I was driving to the pickup when the rider cancelled.",
+                "The rider cancelled while I was still on the way."]
+CAME_OUT_LINES = ["I came out a minute after the driver cancelled. I was charged ${fee} for nothing.",
+                  "I got downstairs a minute after he cancelled and was charged ${fee} for nothing.",
+                  "By the time I came out he had cancelled, and I was charged ${fee} anyway."]
+RIDER_NONE_LINES = ["The app estimated {est} km but the driver went a different way and the meter came to {got} km. He never asked me. I want the extra distance refunded.",
+                    "The app estimated {est} km; the driver turned off the route without a word and the meter read {got} km at the end. Please refund the extra distance.",
+                    "My app estimated {est} km. The driver took some other way and the meter ended at {got} km. He never asked. I want the difference refunded."]
 
 
 # ----------------------------------------------------------------------------------------------- small helpers
@@ -236,9 +309,9 @@ SCENARIOS = [
     # ---- route deviation ------------------------------------------------------------------------------------
     R("rd_basic", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}],
       hard="plain unexplained loop; the only trap is the rider overstating the extra km -> refund the measured extra km"),
-    R("rd_consent_before", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], consent="before",
+    R("rd_consent_before", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.55, 0.72)}], consent="before", band=2,
       hard="RD-5: the rider agreed to a named road 3 min before the segment, but no record ties the driven segment to that road (G13) -> undetermined, a person decides"),
-    R("rd_consent_after", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], consent="after",
+    R("rd_consent_after", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], consent="after", band=2,
       hard="same chat as rd_consent_before but timestamped after the segment started -> RD-5 fails, refund"),
     R("rd_incident_on_stretch", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.30, 0.52)}], incident="on_stretch",
       hard="RD-4(a): accident on the replaced stretch reported before -> exempt; the rider's complaint is loud"),
@@ -266,7 +339,7 @@ SCENARIOS = [
       hard="two unexplained segments -> refund the sum"),
     R("rd_fixed_fare", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], service="RydeX",
       hard="RydeX is a fixed quote: real detour, zero refundable km -> no_action (RD-2 non-metered branch)"),
-    R("rd_fixed_fare_consent", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], service="RydeX", consent="before",
+    R("rd_fixed_fare_consent", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], service="RydeX", consent="before", band=2,
       hard="fixed fare + agreement to a named road: the finding changes no amount and no flag -> may stay undetermined, no_action either way"),
     R("rd_prior_flag", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.35, 0.60)}], prior=2,
       hard="RD-6: driver has 2 upheld route disputes -> refund + flag_account"),
@@ -274,15 +347,15 @@ SCENARIOS = [
       hard="fixed fare so no refund, but RD-1 breach + 2 priors -> no_action + flag_account"),
     R("rd_no_deviation", ("Tampines Mall", "Changi Airport T3"), loops=[], weather="heavy",
       hard="rider complains the fare felt high; GPS follows the optimal route -> RD-1 fails, no_action"),
-    R("rd_request_only", ("Clarke Quay", "Sentosa Beach Station"), loops=[{"frac": (0.30, 0.50)}], consent="request_only",
+    R("rd_request_only", ("Clarke Quay", "Sentosa Beach Station"), loops=[{"frac": (0.30, 0.50)}], consent="request_only", band=2,
       hard="driver asked, rider never answered -> no agreement, RD-5 fails -> refund"),
     R("rd_scope_other", ("Woodlands Civic Centre", "Punggol Waterway Point"), loops=[{"frac": (0.40, 0.55)}], consent="scope_other",
       hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it, refund"),
-    R("rd_consent_before_prior", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}], consent="before", prior=2,
+    R("rd_consent_before_prior", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.60)}], consent="before", band=2, prior=2,
       hard="agreement to a named road with no record tying the segment to it (G13); with 2 priors the RD-6 flag depends on the finding -> undetermined, a person decides"),
     R("rd_threat_in_chat", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.40, 0.55)}], threat="driver",
       hard="route dispute whose chat holds an intimidating driver message -> the judge's safety screen (SAFE-1) overrides: escalate, no refund computed"),
-    R("rd_consent_before_light", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], consent="before", weather="light", incident="decoy_far",
+    R("rd_consent_before_light", ("Bugis Junction", "Jurong East MRT"), loops=[{"frac": (0.50, 0.65)}], consent="before", band=2, weather="light", incident="decoy_far",
       hard="agreement to a named road, no record tying the segment to it (G13); the decoy incident is far from the route and settles nothing -> undetermined, a person decides"),
     # ---- no-show ----------------------------------------------------------------------------------------------
     N("ns_fake_here_far", ("Bugis Junction", "Tanjong Pagar Centre"), by="driver", park_m=600, wait_s=210, here=True,
@@ -294,7 +367,7 @@ SCENARIOS = [
     N("ns_rider_cancel_150s", ("Jurong East MRT", "NUS"), by="rider", cancel_s=150, driver="en_route",
       hard="NS-4: cancelled 150 s after matching -> inside the 3-min grace -> refund"),
     N("ns_rider_cancel_200s", ("NUS", "Raffles Place"), by="rider", cancel_s=200, driver="en_route",
-      hard="NS-4: 200 s after matching -> fee stands even though the driver was still 1 km away ('driver was late' is not a Ryde rule, NS-8)"),
+      hard="NS-4: 200 s after matching -> fee stands even though the driver was still over a kilometre away ('driver was late' is not a Ryde rule, NS-8)"),
     N("ns_no_here_tap", ("Woodlands Civic Centre", "Punggol Waterway Point"), by="driver", park_m=40, wait_s=240, here=False,
       hard="driver waited 4 min at the pin but never tapped I'm Here -> NS-1(i) fails -> refund (NS-3), no flag"),
     N("ns_fake_here_350m", ("Punggol Waterway Point", "Tampines Mall"), by="driver", park_m=350, wait_s=240, here=True,
@@ -333,22 +406,32 @@ SCENARIOS = [
     S("safe_keyword_only_in_statement", ("NUS", "Raffles Place"), chat="innocuous", statement_threat=True,
       hard="the only hint word is in the driver's own statement, not the chat; still a safety ticket -> escalate"),
     R("rd_keyword_trap_find_you", ("Orchard Road", "NUS"), loops=[{"frac": (0.35, 0.55)}], threat="trap",
-      hard="route dispute; rider wrote 'I'll find you at the lobby' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour: refund"),
+      hard="route dispute; rider wrote 'I'll find you at the pickup' (a pickup arrangement that contains a threat hint word) -> the court must read it as ordinary chat and rule on the detour: refund"),
 ]
 
 
 # ----------------------------------------------------------------------------------------------- route cases
 
 FRAC_SHIFTS = [0.0, 0.08, -0.08, 0.16, -0.16]
-MIN_REPLACED_KM = contract.MIN_REPLACED_KM   # a loop that claims to go round a stretch must really bypass this much of the optimal route
-OFFLINE_SKIPS: dict[str, int] = {}           # scenario -> loop candidates skipped because their leg is not in the cache (no token)
+MIN_REPLACED_KM = contract.MIN_REPLACED_KM   # a loop whose story goes round a stretch must really bypass this much of the optimal route
 
 
 def loop_must_bypass(spec: dict) -> bool:
     """True when the story says the first loop goes ROUND a stretch: an accident on it (RD-4 tests whether the incident sits on
     the replaced stretch), "go round via X to avoid Y" (the car must not drive the whole of Y), or "take whichever way is
-    faster" (a loop that reaches nothing is a driver's errand). An out-and-back spur (entry = exit) satisfies none of them."""
+    faster" (a loop that reaches nothing is a driver's errand)."""
     return spec["incident"] in ("on_stretch", "seg1", "late") or spec["consent"] in contract.ROAD_NAMING_CONSENT + ("general", "general_cn")
+MIN_EXTRA_KM = 0.6                           # candidate floor: the trace is re-sampled once the halts are in, 0.5 exactly could fall under it
+
+
+def crawl_reaches_segment(trip_gps, seg_start: str, level: int) -> bool:
+    """The contract's own reading of a band record: the median moving speed in the 150 s before the measured segment start
+    sits in the band (LTA band 1: 0-9 km/h, band 2: 10-19 km/h)."""
+    t0 = datetime.fromisoformat(seg_start)
+    pre = [p["speed_kmh"] for p in trip_gps if t0 - timedelta(seconds=150) <= datetime.fromisoformat(p["ts"]) < t0 and p["speed_kmh"] >= 5]
+    lo, hi = {1: (0, 9), 2: (10, 19)}[level]
+    return bool(pre) and lo <= statistics.median(pre) <= hi + 1
+OFFLINE_SKIPS: dict[str, int] = {}           # scenario -> loop candidates skipped because their leg is not in the cache (no token)
 
 
 def _loop_from_spec(opt, cum, lp, cand):
@@ -371,23 +454,39 @@ def _loop_from_spec(opt, cum, lp, cand):
     return {"leave": opt[i1], "via": [via], "rejoin": opt[i2], "i1": i1, "i2": i2}
 
 
+def is_expressway(name: str) -> bool:
+    return any(w in name for w in ("EXPRESSWAY", "PARKWAY", "HIGHWAY"))
+
+
 def avg_speed(route) -> float:
-    """Cruising speed for a trip: 40 km/h when the optimal route has a long expressway run, else 30 km/h."""
-    return 40.0 if any("EXPRESSWAY" in r["name"] and r["to_m"] - r["from_m"] > 3000 for r in route["roads"]) else 30.0
+    """Cruising speed for a trip: 40 km/h when the optimal route has a long expressway-class run (ECP and the highways
+    included), else 30 km/h."""
+    return 40.0 if any(is_expressway(r["name"]) and r["to_m"] - r["from_m"] > 3000 for r in route["roads"]) else 30.0
 
 
-def _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz_level):
-    """Compose the driven polyline, solve the timeline, build the trace, measure. Raises ValueError on mismatch."""
-    poly, spans, legs = compose(rp, opt, [{k: v for k, v in lp.items() if k in ("leave", "via", "rejoin")} for lp in loops])
-    cum = along_km(poly)
-    L = cum[-1]
-    v_avg = avg_speed(route)
+def surface_km(route, km: float, margin_m: float = 150) -> float:
+    """The along-track km nearest to `km` that lies on a surface road of the route (not inside an expressway run): where a
+    car can halt at a junction. Returns `km` itself when it is already on a surface road."""
+    runs = [(r["from_m"] / 1000, r["to_m"] / 1000) for r in route["roads"] if is_expressway(r["name"])]
+    L = route["total_km"]
+    if not any(a - margin_m / 1000 <= km <= b + margin_m / 1000 for a, b in runs):
+        return km
+    cands = []
+    for a, b in runs:
+        cands += [a - margin_m / 1000 - 0.1, b + margin_m / 1000 + 0.1]
+    cands = [c for c in cands if 0.2 <= c <= L - 0.2 and not any(a - margin_m / 1000 <= c <= b + margin_m / 1000 for a, b in runs)]
+    return min(cands, key=lambda c: abs(c - km)) if cands else km
+
+
+def _timing(cum, spans, cz_level, v_avg):
+    """(zones, time_at, km_at) for a driven polyline: time_at(km) = seconds of driving to reach km (zones at their own speed,
+    else v_avg; halts not included), km_at(t) its inverse."""
     zones = []
-    if cz_level:
+    if cz_level and spans:
         z0 = max(spans[0][0] - CONGESTION_LEN_KM, 0.3)
-        zones.append(Congestion(z0, spans[0][0], BAND_SPEED[cz_level]))
+        zones.append(Congestion(z0, min(spans[0][0] + CRAWL_PAST_KM, cum[-1] - 0.3), BAND_SPEED[cz_level]))
 
-    def time_at(km):  # seconds to reach km along the driven polyline (zones at their speed, else v_avg)
+    def time_at(km):
         t, pos = 0.0, 0.0
         for z in sorted(zones, key=lambda z: z.from_km):
             lo, hi = max(pos, z.from_km), min(km, z.to_km)
@@ -397,11 +496,44 @@ def _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz_level):
         t += max(km - pos, 0) / v_avg * 3600
         return t
 
-    stops, extra = [], 0
-    for k, dur in stops_spec:               # stop at loop k's via point
-        vi = nearest_idx(poly, loops[k]["via"][0])
+    def km_at(t):
+        lo, hi = 0.0, cum[-1]
+        for _ in range(48):
+            mid = (lo + hi) / 2
+            if time_at(mid) < t:
+                lo = mid
+            else:
+                hi = mid
+        return lo
+
+    return zones, time_at, km_at
+
+
+def _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz_level, pauses_km=()):
+    """Compose the driven polyline, solve the timeline, build the trace, measure. `pauses_km`: along-track km of the driven
+    polyline where the car halts PAUSE_S seconds (a junction where the driver types a message). Raises ValueError on mismatch.
+    Returns a dict: poly, spans, legs, gps, found, total_s, stops, pause_start_s (per pause, seconds after pickup), time_at, km_at."""
+    poly, spans, legs = compose(rp, opt, [{k: v for k, v in lp.items() if k in ("leave", "via", "rejoin")} for lp in loops])
+    cum = along_km(poly)
+    L = cum[-1]
+    zones, time_at, km_at = _timing(cum, spans, cz_level, avg_speed(route))
+
+    events = []                            # (vertex, duration, tag)
+    for k, dur in stops_spec:              # stop at loop k's via point
+        events.append((nearest_idx(poly, loops[k]["via"][0]), dur, ("stop", k)))
+    taken = {e[0] for e in events}
+    for j, km in enumerate(pauses_km):
+        vi = vertex_at(poly, cum, min(max(km, 0.05), L - 0.05))
+        while vi in taken or vi in (0, len(poly) - 1) or any(abs(cum[vi] - cum[u]) < 0.002 for u in taken):
+            vi += 1
+        taken.add(vi)
+        events.append((vi, PAUSE_S, ("pause", j)))
+    stops, extra, pause_start = [], 0, {}
+    for vi, dur, tag in sorted(events, key=lambda e: cum[e[0]]):
         st = r5(time_at(cum[vi])) + extra
         stops.append(Stop(*poly[vi], start_s=st, duration_s=dur))
+        if tag[0] == "pause":
+            pause_start[tag[1]] = st
         extra += dur
     total_s = r5(time_at(L)) + extra
     _, trip_gps, found, legs2 = detour_trace(rp, opt, [{k: v for k, v in lp.items() if k in ("leave", "via", "rejoin")} for lp in loops],
@@ -412,7 +544,8 @@ def _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz_level):
     hidden = (distance_km(trip_gps) - route["total_km"]) - sum(f["extra_km"] for f in found)
     if not -0.1 <= hidden <= 0.9:          # validate.py allows 1.0 km of extra km hidden inside the 200 m band
         raise ValueError(f"{hidden:.2f} km of extra distance hidden inside the on-route band")
-    return poly, spans, legs2, trip_gps, found, total_s, stops
+    return {"poly": poly, "spans": spans, "legs": legs2, "gps": trip_gps, "found": found, "total_s": total_s, "stops": stops,
+            "pause_start_s": [pause_start[j] for j in range(len(pauses_km))], "time_at": time_at, "km_at": km_at}
 
 
 def build_route(spec, rates, rp, idx, rng):
@@ -426,12 +559,20 @@ def build_route(spec, rates, rp, idx, rng):
     stop_dur = {"named": 240, "unnamed": 250, "driver_errand": 240}.get(spec["stop"], 0)
     stops_spec = [(0, stop_dur)] if spec["stop"] != "none" else []
     cz = spec["band"]
+    consent = spec["consent"]
+    # pickup chatter happens only when nothing else is scripted; decided now because the driver's line needs a halt in the approach
+    innocuous = consent == "none" and spec["stop"] == "none" and not spec["threat"] and rng.random() < 0.5
+    car, outfit = rng.choice(CARS), rng.choice(OUTFITS)
 
     # ---- find loops one at a time (each attempt costs at most two cached OneMap legs) ----
-    loops, found = [], []
+    # a frac loop must replace >= MIN_REPLACED_KM of the optimal route when its story goes round a stretch (else >= MIN_REPLACED_PLAIN_KM:
+    # an out-and-back spur bypasses nothing) and drive at most MAX_DETOUR_RATIO times the stretch it replaces; among the
+    # candidates that qualify the smallest extra km wins.
+    # A loop through a named place is the rider's own request: the first candidate that measures cleanly is kept.
+    loops = []
     for k, lp in enumerate(spec["loops"]):
         cands = SPAN_CANDIDATES if "place" in lp else [(sh, side, d) for sh in FRAC_SHIFTS for side, d in OFFSET_CANDIDATES]
-        ok = False
+        best = None
         for cand in cands:
             loop = _loop_from_spec(opt, cum, lp, cand)
             if loop is None or (loops and loop["i1"] <= loops[-1]["i2"]):
@@ -442,29 +583,62 @@ def build_route(spec, rates, rp, idx, rng):
                 if "leg not in cache" in str(e):
                     OFFLINE_SKIPS[spec["name"]] = OFFLINE_SKIPS.get(spec["name"], 0) + 1   # reported by main(): an online run may choose this candidate
                 continue        # no clean segment, or OneMap found no route (via point in the sea / a reserve)
-            if k == 0 and loop_must_bypass(spec) and trial[4][0]["route_km"] < MIN_REPLACED_KM:
-                continue        # an out-and-back spur replaces no stretch of the route: an incident placed mid-stretch would not sit on it, a
-                                # "go round via X" loop would still drive the whole of the road it claims to avoid, and a "whichever way is
-                                # faster" loop that reaches nothing is a driver's errand, not a route round the jam
-            loops.append(loop)
-            ok = True
-            break
-        if not ok:
+            seg = trial["found"][k]
+            if "place" in lp:
+                best = (seg["extra_km"], loop)
+                break
+            need = MIN_REPLACED_KM if (k == 0 and loop_must_bypass(spec)) else MIN_REPLACED_PLAIN_KM
+            if seg["route_km"] < need or seg["driven_km"] > MAX_DETOUR_RATIO * seg["route_km"] or seg["extra_km"] < MIN_EXTRA_KM:
+                continue
+            t_entry = secs(pickup_at, datetime.fromisoformat(seg["start"]))
+            if k == 0 and cz and not crawl_reaches_segment(trial["gps"], seg["start"], cz):
+                continue        # the crawl must still be on when the measured segment starts (what the contract reads)
+            if k == 0 and (consent != "none" or spec["stop"] != "none") and t_entry < 80:
+                continue        # the chat about this loop needs room before it
+            if best is None or seg["extra_km"] < best[0]:
+                best = (seg["extra_km"], loop)
+        if best is None:
             raise RuntimeError(f"{spec['name']}: no candidate produced loop {k}")
+        loops.append(best[1])
+
+    # ---- first pass: where the loops start in time; then the halts at which the driver types, and the final trace ----
+    pauses_km, chat_plan = [], {}
     if spec["loops"]:
-        poly, spans, legs, trip_gps, found, total_s, stops = _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz)
+        first = _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz)
+        t_entry = secs(pickup_at, datetime.fromisoformat(first["found"][0]["start"]))
+        km_at, spans = first["km_at"], first["spans"]
+
+        def halt(t_s, tag):
+            pauses_km.append(km_at(max(t_s, 10)))
+            chat_plan[tag] = len(pauses_km) - 1
+
+        if consent == "after":
+            halt(t_entry + 120, "ask")
+        elif consent == "scope_other":
+            halt(t_entry - 240, "ask")
+        elif consent != "none":
+            halt(t_entry - 200, "ask")
+        if spec["stop"] in ("named", "unnamed"):
+            halt(t_entry - 210, "stop_ok")
+        if spec["threat"] == "driver":
+            pauses_km.append((spans[0][0] + spans[0][1]) / 2)     # inside the loop, on its surface roads
+            chat_plan["threat"] = len(pauses_km) - 1
+        tr = _try_trace(rp, route, opt, loops, pickup_at, spec, stops_spec, cz, pauses_km)
+        poly, spans, legs, trip_gps, found, total_s, stops = tr["poly"], tr["spans"], tr["legs"], tr["gps"], tr["found"], tr["total_s"], tr["stops"]
+        halts = [pickup_at + timedelta(seconds=s) for s in tr["pause_start_s"]]
     else:
-        total_s = r5(cum[-1] / avg_speed(route) * 3600)
+        # no loop: the trip follows the route; in heavy rain the traffic is slow (the fare runs over the estimate on time)
+        total_s = r5(max(cum[-1] / avg_speed(route) * 3600, route["total_min"] * 60 * 1.35 if spec["weather"] == "heavy" else 0))
         trip_gps = build_trajectory(opt, pickup_at, total_s, seed=spec["seed"])
-        poly, spans, legs, stops = opt, [], [], []
+        poly, spans, legs, stops, found, halts = opt, [], [], [], [], []
     dropoff_at = pickup_at + timedelta(seconds=total_s)
     seg_start = [datetime.fromisoformat(f["start"]) for f in found]
-    gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"]) + trip_gps[1:]
+    gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"],
+                         pauses=[(APPROACH_PAUSE_S, 20)] if innocuous else ()) + trip_gps[1:]
     pressed = pickup_at - timedelta(seconds=10)
     service = spec["service"]
     trip = trip_block(f"T-{2000 + idx}", service, place(spec["pair"][0]), place(spec["pair"][1]), route,
                       accepted - timedelta(seconds=35), accepted, gps, pressed, pickup_at, dropoff_at)
-    R_ = [route, *legs]
     w0, w1 = accepted - timedelta(minutes=5), dropoff_at + timedelta(minutes=5)
 
     # ---- traffic ----
@@ -482,12 +656,32 @@ def build_route(spec, rates, rp, idx, rng):
         bands.append(band_on(road, cz, w0, seg_start[0], opt[loops[0]["i1"]:loops[0]["i2"] + 1]))
     bands += gps_bands(route, legs, trip_gps, w0, w1, skip=set(stretch_roads if cz else []), max_n=2)
     inc_kind = spec["incident"]
+
+    def heading(lo, hi, road):
+        """DataMall direction label for an incident on `road` between optimal km lo..hi, from the way the route runs there."""
+        a, b = opt[vertex_at(opt, cum, lo)], opt[vertex_at(opt, cum, hi)]
+        axis, pos, neg = EXPRESSWAY_DIR.get(road, (None, None, None))
+        if axis == "EW":
+            return pos if b[1] >= a[1] else neg
+        if axis == "NS":
+            return pos if b[0] >= a[0] else neg
+        after = [r["name"] for r in route["roads"] if r["from_m"] >= hi * 1000 and r["name"] != road]
+        return f"towards {after[0].title()}" if after else "towards the city"
+
+    def exit_name(lo, road):
+        """The surface road the route came from before `road` (DataMall names the exit the incident sits after)."""
+        before = [r["name"] for r in route["roads"] if r["to_m"] <= lo * 1000 + 1 and r["name"] != road and not is_expressway(r["name"])]
+        return before[-1].title() if before else None
+
     if inc_kind in ("on_stretch", "seg1", "late"):
         lo, hi = stretches[0]
         pt = opt[vertex_at(opt, cum, (lo + hi) / 2)]
-        at = (seg_start[0] + timedelta(seconds=90)) if inc_kind == "late" else (pickup_at - timedelta(minutes=12))
+        # `late`: listed well after the driver had turned off (he could not have been reacting to a published incident)
+        at = (seg_start[0] + timedelta(seconds=600)) if inc_kind == "late" else (pickup_at - timedelta(minutes=12))
+        road = stretch_roads[0]
+        where = f" after {exit_name(lo, road)} Exit" if exit_name(lo, road) and is_expressway(road) else ""
         incidents.append(incident("Accident", pt[0], pt[1], at,
-                                  f"Accident on {stretch_roads[0].title()} (towards {spec['pair'][1]}). Lanes blocked, expect delays."))
+                                  f"Accident on {road.title()} ({heading(lo, hi, road)}){where}. Avoid lane {rng.choice([1, 2])}."))
     elif inc_kind == "decoy_far":
         lo, hi = stretches[0]
         km = hi + 2.5 if cum[-1] - hi > 3.0 else lo - 2.5
@@ -495,10 +689,10 @@ def build_route(spec, rates, rp, idx, rng):
         pt = opt[vertex_at(opt, cum, km)]
         road = dominant_road(route, km - 0.2, km + 0.2)
         incidents.append(incident("Vehicle breakdown", pt[0], pt[1], pickup_at - timedelta(minutes=8),
-                                  f"Vehicle breakdown on {road.title()}. Left lane blocked."))
+                                  f"Vehicle breakdown on {road.title()} ({heading(km - 0.2, km + 0.2, road)}). Avoid lane 1."))
 
-    # ---- chat ----
-    chat_lines, consent, stop_place = [], spec["consent"], None
+    # ---- chat (every driver line during the trip is typed at a halt; the rider types from the back seat) ----
+    chat_lines, stop_place = [], None
     detour_road, alt_road = {}, {}
     for k, lg in enumerate(legs):
         # the road the driver names must differ from the congested stretch, else "go round via X to avoid X" is self-contradictory
@@ -506,73 +700,66 @@ def build_route(spec, rates, rp, idx, rng):
         detour_road[k] = max(others, key=lambda r: r["to_m"] - r["from_m"])["name"].title().replace("'S ", "'s ")
         rest = [r for r in others if r["name"].title().replace("'S ", "'s ") != detour_road[k]]
         alt_road[k] = (max(rest, key=lambda r: r["to_m"] - r["from_m"])["name"].title().replace("'S ", "'s ") if rest else "the service road alongside")
-    if consent in ("before", "after", "before_seg1"):
-        t_req = seg_start[0] + timedelta(seconds=(120 if consent == "after" else -200))
-        road = detour_road[0]
-        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
-        yes = "Sure, go ahead."
-        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
-    elif consent in ("general", "general_cn", "general_errand"):
-        # a GENERAL route choice: the rider authorises any route that gets there, naming none
-        t_req = seg_start[0] - timedelta(seconds=200)
-        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, shall I take another way?"
-        yes = "随便你，哪条快走哪条，我赶时间。" if consent == "general_cn" else "Just take whichever way is faster lah, I'm late."
-        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
-    elif consent in ("named_singlish", "named_cn", "named_elsewhere"):
-        # agreement to a NAMED road, worded in Singlish / Chinese, or followed by a driver account that puts the car on another road
-        t_req = seg_start[0] - timedelta(seconds=200)
-        road = detour_road[0]
-        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
-        yes = {"named_singlish": "Can lah, go ahead.", "named_cn": f"可以，走 {road} 吧。", "named_elsewhere": "Sure, go ahead."}[consent]
-        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", yes)]
-    elif consent == "negation":
-        t_req = seg_start[0] - timedelta(seconds=200)
-        road = detour_road[0]
-        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {road}?"
-        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=40), "rider", f"No, I'm not okay with that. Please stay on {stretch_roads[0].title()}.")]
-    elif consent == "request_only":
-        t_req = seg_start[0] - timedelta(seconds=200)
-        ask = f"Traffic ahead on {stretch_roads[0].title()} is building up, ok if I go round via {detour_road[0]}?"
-        chat_lines += [(t_req, "driver", ask)]
-    elif consent == "scope_other":
-        t_req = seg_start[0] - timedelta(seconds=240)
-        ask = "Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty."
-        yes = "Sure, no problem."
-        chat_lines += [(t_req, "driver", ask), (t_req + timedelta(seconds=35), "rider", yes)]
-    if spec["stop"] == "named":
-        stop_place = spec["loops"][0]["place"]
-        t_req = seg_start[0] - timedelta(seconds=240)
-        ask = f"Can you stop at {stop_place}? I need to grab a parcel, 3-4 minutes."
-        okm = "Ok"
-        chat_lines += [(t_req, "rider", ask), (t_req + timedelta(seconds=30), "driver", okm)]
-    elif spec["stop"] == "unnamed":
-        t_req = seg_start[0] - timedelta(seconds=240)
-        ask = "Can you stop at a 7-Eleven on the way? Just need 2 minutes."
-        okm = "Ok"
-        chat_lines += [(t_req, "rider", ask), (t_req + timedelta(seconds=30), "driver", okm)]
-    if spec["threat"] == "driver":
-        t = pickup_at + timedelta(seconds=total_s // 2)
-        chat_lines += [(t, "rider", "Why are we going this way? This is not the route on the app."),
-                       (t + timedelta(seconds=45), "driver", "Shut up and let me drive.")]
+    jam = stretch_roads[0].title() if stretch_roads else ""
+    road = detour_road.get(0, "")
+    if "ask" in chat_plan:
+        t_ask = halts[chat_plan["ask"]] + timedelta(seconds=5)
+        if consent in ("before", "after", "before_seg1", "named_elsewhere"):
+            chat_lines += [(t_ask, "driver", rng.choice(ASK_LINES).format(jam=jam, alt=road)), (t_ask + timedelta(seconds=40), "rider", rng.choice(YES_LINES))]
+        elif consent in ("general", "general_cn", "general_errand"):
+            # a GENERAL route choice: the rider authorises any route that gets there, naming none
+            yes = "随便你，哪条快走哪条，我赶时间。" if consent == "general_cn" else "Just take whichever way is faster lah, I'm late."
+            chat_lines += [(t_ask, "driver", rng.choice(ASK_GENERAL_LINES).format(jam=jam)), (t_ask + timedelta(seconds=40), "rider", yes)]
+        elif consent in ("named_singlish", "named_cn"):
+            # agreement to a NAMED road, worded in Singlish / Chinese
+            yes = {"named_singlish": "Can lah, go ahead.", "named_cn": f"可以，走 {road} 吧。"}[consent]
+            chat_lines += [(t_ask, "driver", rng.choice(ASK_LINES).format(jam=jam, alt=road)), (t_ask + timedelta(seconds=40), "rider", yes)]
+        elif consent == "negation":
+            chat_lines += [(t_ask, "driver", rng.choice(ASK_LINES).format(jam=jam, alt=road)),
+                           (t_ask + timedelta(seconds=40), "rider", f"No, I'm not okay with that. Please stay on {jam}.")]
+        elif consent == "request_only":
+            chat_lines += [(t_ask, "driver", rng.choice(ASK_LINES).format(jam=jam, alt=road))]
+        elif consent == "scope_other":
+            chat_lines += [(t_ask, "driver", "Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty."),
+                           (t_ask + timedelta(seconds=35), "rider", "Sure, no problem.")]
+    if "stop_ok" in chat_plan:
+        t_ok = halts[chat_plan["stop_ok"]] + timedelta(seconds=5)
+        if spec["stop"] == "named":
+            stop_place = spec["loops"][0]["place"]
+            ask = f"Can you stop at {stop_place}? I need to grab a parcel, 3-4 minutes."
+        else:
+            ask = "Can you stop at a 7-Eleven on the way? Just need 2 minutes."
+        chat_lines += [(t_ok - timedelta(seconds=25), "rider", ask), (t_ok, "driver", rng.choice(["Ok", "Ok can", "Sure"]))]
+    if "threat" in chat_plan:
+        t = halts[chat_plan["threat"]]
+        chat_lines += [(t - timedelta(seconds=40), "rider", "Why are we going this way? This is not the route on the app."),
+                       (t + timedelta(seconds=5), "driver", "Shut up and let me drive.")]
     elif spec["threat"] == "trap":
         t = accepted + timedelta(seconds=60)
-        line = "I'll find you at the lobby, I am in a red jacket."
+        line = f"I'll find you {PICKUP_SPOT.get(spec['pair'][0], 'at the main entrance')}, I am in a red jacket."
         chat_lines += [(t, "rider", line)]
-    if not chat_lines and rng.random() < 0.5:
+    if innocuous:
         t = accepted + timedelta(seconds=50)
-        chat_lines += [(t, INNOCUOUS[0][0], INNOCUOUS[0][1]), (t + timedelta(seconds=30), INNOCUOUS[1][0], INNOCUOUS[1][1])]
+        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + 5)) / 60))
+        chat_lines += [(t, "rider", rng.choice(PICKUP_LINES).format(spot=PICKUP_SPOT.get(spec["pair"][0], "at the main entrance"), outfit=outfit)),
+                       (accepted + timedelta(seconds=APPROACH_PAUSE_S + 5), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=car))]
     chat_lines.sort(key=lambda x: x[0])
     for t, _, _ in chat_lines:
         assert accepted <= t <= dropoff_at, f"{spec['name']}: chat at {t} outside the trip"
+    for t, who, _ in chat_lines:            # a driver who is driving does not type: every driver line sits in a halt
+        if who == "driver" and t > pickup_at:
+            at = min(gps, key=lambda p: abs((datetime.fromisoformat(p["ts"]) - t).total_seconds()))
+            assert at["speed_kmh"] < 5, f"{spec['name']}: driver line at {t:%H:%M:%S} while moving ({at['speed_kmh']} km/h)"
 
     # ---- fare, statements, profiles ----
     fare = metered_fare(slice_gps(gps, iso(pickup_at), iso(dropoff_at)), rates) if service == "RydeTAXI" else fixed_fare(route, rates)
     extra_km = sum(f["extra_km"] for f in found)
     weather = WEATHER[spec["weather"]]
     rider_lines = {
-        "none": f"The app estimated {route['total_km']:.0f} km but the driver went a different way and the meter came to {fare['distance_km']:.0f} km. He never asked me. I want the extra distance refunded.",
+        "none": rng.choice(RIDER_NONE_LINES).format(est=f"{route['total_km']:.0f}", got=f"{fare['distance_km']:.0f}"),
         "before": "The driver took a longer way round than the app showed and I paid more than the estimate. I want the difference back.",
-        "after": "The driver only mentioned the different route after he had already turned off. I was overcharged for the extra distance.",
+        "after": "The driver only mentioned the different route after he had already turned off. I said sure because we were already on it, "
+                 "not because I agreed beforehand. I was overcharged for the extra distance.",
         "request_only": "The driver asked about another road but I did not reply; he went anyway and the fare was higher than the estimate.",
         "scope_other": "I agreed to a quick petrol stop, not to a long loop. The meter was higher than the estimate and he never stopped for petrol anyway.",
         "before_seg1": "I agreed to go round the jam near the start, but later he went off the route a second time without asking. I want that part refunded.",
@@ -597,35 +784,35 @@ def build_route(spec, rates, rp, idx, rng):
     elif spec["stop"] == "unnamed":
         statement = "I asked for a quick 7-Eleven stop on the way, not a drive to one far off the route. The meter was way above the estimate."
     elif not found:
-        statement = f"The fare was higher than I expected for this trip in heavy rain, the driver must have taken a longer route."
+        statement = "The fare was higher than I expected for this trip in heavy rain, the driver must have taken a longer route."
     elif spec["threat"] == "driver":
         statement = "The driver went a different way and when I asked he told me to shut up. I was overcharged and felt unsafe."
     if inc_kind in ("on_stretch", "seg1") and consent == "none":
         statement = "The driver left the route the app showed and the meter was higher than the estimate. I never agreed to any change."
     driver_lines = {
-        "none": "I followed my GPS; it rerouted me. Nothing wrong with the fare.",
-        "before": f"Traffic was building up ahead so I asked the rider before turning off via {detour_road.get(0, 'the alternative road')} and the rider agreed.",
-        "after": f"I told the rider I was going via {detour_road.get(0, 'another road')} and the rider said sure.",
+        "none": rng.choice(GPS_LINES),
+        "before": f"Traffic was building up ahead so I asked the rider before turning off via {road or 'the alternative road'} and the rider agreed.",
+        "after": f"I told the rider I was going via {road or 'another road'} and the rider said sure.",
         "request_only": "I asked the rider about the alternative road; no objection, so I took it.",
         "scope_other": "The rider agreed to a short stop so I thought a small change of route was fine.",
         "before_seg1": "I asked about going round the jam and the rider agreed. The second turn-off was my GPS rerouting.",
         "general": "Traffic was building up ahead. I asked the rider and the rider said any faster way was fine, so I went round.",
         "general_cn": "Traffic was building up ahead. I asked the rider and the rider said any faster way was fine, so I went round.",
         "general_errand": "The rider said any route was fine. I went round the jam and stopped briefly to collect something on the way.",
-        "named_singlish": f"I asked the rider before turning off via {detour_road.get(0, 'the alternative road')} and the rider said can.",
-        "named_cn": f"I asked the rider before turning off via {detour_road.get(0, 'the alternative road')} and the rider agreed.",
-        "named_elsewhere": f"I asked the rider about going via {detour_road.get(0, 'the alternative road')} and the rider agreed. In the end I went by {alt_road.get(0, 'the service road alongside')} instead because it looked clearer; same direction.",
+        "named_singlish": f"I asked the rider before turning off via {road or 'the alternative road'} and the rider said can.",
+        "named_cn": f"I asked the rider before turning off via {road or 'the alternative road'} and the rider agreed.",
+        "named_elsewhere": f"I asked the rider about going via {road or 'the alternative road'} and the rider agreed. In the end I went by {alt_road.get(0, 'the service road alongside')} instead because it looked clearer; same direction.",
         "negation": "I asked the rider about the alternative road. The traffic was bad so I took it anyway; it was faster.",
     }
     dstmt = driver_lines.get(consent, driver_lines["none"])
     if inc_kind in ("on_stretch", "seg1"):
-        dstmt = f"There was an accident on {stretch_roads[0].title()} ahead, lanes were blocked, so I went round it. The extra distance was unavoidable."
+        dstmt = f"There was an accident on {jam} ahead, lanes were blocked, so I went round it. The extra distance was unavoidable."
     elif inc_kind == "late":
-        dstmt = f"There was an accident on {stretch_roads[0].title()}; I went round it. The extra distance was unavoidable."
+        dstmt = f"There was an accident on {jam}; I went round it. The extra distance was unavoidable."
     elif inc_kind == "decoy_far":
         dstmt = "There was a breakdown on the route, the whole road was slow, so I took another way. Check the LTA incident feed."
-    if spec["band"] and inc_kind == "none":
-        dstmt = f"{stretch_roads[0].title()} was crawling" + (" and flooding in the heavy rain" if spec["weather"] == "heavy" else "") + ", so I went round it. Any driver would have done the same."
+    elif spec["band"] and consent == "none":
+        dstmt = f"{jam} was crawling" + (" and flooding in the heavy rain" if spec["weather"] == "heavy" else "") + ", so I went round it. Any driver would have done the same."
     if spec["stop"] == "named":
         dstmt = f"The rider asked me to stop at {stop_place}, so I drove there and waited while the rider went in."
     elif spec["stop"] == "unnamed":
@@ -728,15 +915,23 @@ def build_noshow(spec, rates, rp, idx, rng):
         trip = trip_block(f"T-{2000 + idx}", spec["service"], place(spec["pair"][0]), place(spec["pair"][1]), route,
                           accepted - timedelta(seconds=30), accepted, gps, pressed, cancelled_at=cancelled, cancelled_by=spec.get("recorded_by", "driver"))
         kind = spec.get("chat")
-        plate = rng.choice(["silver Toyota Altis", "white Honda Vezel", "black Hyundai Ioniq", "grey Kia Niro"])
-        if park_m > 200:
-            chat_lines = [(park_at + timedelta(seconds=25), "driver", f"I'm here already, {plate}, please come out"),
-                          (park_at + timedelta(seconds=80), "rider", "I'm at the pickup point and I don't see any car. Where are you?"),
-                          (cancelled - timedelta(seconds=10), "driver", "Waited more than 3 min, cancelling")]
+        plate = rng.choice(CARS)
+        thr = (spec.get("policy") or {}).get("no_show_threshold_min", 3)     # the wait the driver claims follows the rule on the record
+        here_line = rng.choice(HERE_LINES).format(car=plate)
+        cancel_line = rng.choice(CANCEL_LINES).format(n=thr)
+        if spec.get("recorded_by", "driver") is None:
+            # who cancelled is not on record: neither the chat nor the statements may say it either, or the gap is no gap
+            chat_lines = [(park_at + timedelta(seconds=30), "driver", here_line)]
+            statement = "I was on my way down when the booking disappeared from my app, and I was charged $6.61."
+            dstmt = "I pressed I'm Here and waited at the pickup. The rider never boarded and the booking ended as cancelled."
+        elif park_m > 200:
+            chat_lines = [(park_at + timedelta(seconds=25), "driver", rng.choice(HERE_FAR_LINES).format(car=plate)),
+                          (park_at + timedelta(seconds=80), "rider", rng.choice(WHERE_LINES)),
+                          (cancelled - timedelta(seconds=10), "driver", cancel_line)]
             statement = "The driver marked arrived but was never at the pickup point. I waited there the whole time and then got charged $6.61 as a no-show."
-            dstmt = f"I pressed I'm Here and waited more than 3 minutes at the pickup. The rider never showed up, so I cancelled as a no-show."
+            dstmt = f"I pressed I'm Here and waited more than {thr} minutes at the pickup. The rider never showed up, so I cancelled as a no-show."
         elif kind == "two_more":
-            chat_lines = [(park_at + timedelta(seconds=30), "driver", f"I'm here at the pickup point, {plate}."),
+            chat_lines = [(park_at + timedelta(seconds=30), "driver", here_line),
                           (park_at + timedelta(seconds=100), "rider", "Coming down, give me 2 more minutes"),
                           (cancelled - timedelta(seconds=15), "driver", "Called twice, no answer. Cancelling.")]
             statement = "It was pouring and I told the driver I needed two more minutes. He cancelled and I was charged $6.61."
@@ -760,15 +955,16 @@ def build_noshow(spec, rates, rp, idx, rng):
         elif park_m >= 150:
             chat_lines = [(park_at + timedelta(seconds=30), "driver", f"I'm here, {plate}, at the side road."),
                           (park_at + timedelta(seconds=120), "rider", "I'm at the entrance, I don't see you"),
-                          (cancelled - timedelta(seconds=10), "driver", "Waited more than 3 min, cancelling")]
+                          (cancelled - timedelta(seconds=10), "driver", cancel_line)]
             statement = "The driver was not at the entrance where the pin was. He cancelled and I was charged $6.61."
             dstmt = "I was parked at the pickup, a short walk from the entrance, pressed I'm Here and waited more than 3 minutes."
         else:
-            chat_lines = [(park_at + timedelta(seconds=30), "driver", f"I'm here at the pickup point, {plate}."),
-                          (cancelled - timedelta(seconds=10), "driver", "Waited more than 3 min, cancelling")]
+            chat_lines = [(park_at + timedelta(seconds=30), "driver", here_line),
+                          (cancelled - timedelta(seconds=10), "driver", cancel_line)]
             if wait_s >= 180:
-                statement = "I came out a minute after the driver cancelled. I was charged $6.61 for nothing."
-                dstmt = "I pressed I'm Here and waited more than 3 minutes. Rider no-show, so I cancelled."
+                statement = rng.choice(CAME_OUT_LINES).format(fee="6.61")
+                dstmt = (rng.choice(NOSHOW_DRIVER_LINES).format(n=thr) if thr == 3 else
+                         f"I pressed I'm Here and waited the full {thr} minutes the rule gives. Rider no-show, so I cancelled.")
             else:
                 statement = "The driver cancelled on me after barely two minutes and I was charged $6.61."
                 dstmt = "I pressed I'm Here and waited for the rider, then cancelled as a no-show."
@@ -791,12 +987,16 @@ def build_noshow(spec, rates, rp, idx, rng):
                     break
             else:
                 raise RuntimeError(f"{spec['name']}: no approach route that brings the driver closer in {cancel_s} s")
-            gps = build_trajectory(poly, accepted, cancel_s, seed=spec["seed"])
-            chat_lines = [(accepted + timedelta(seconds=40), "rider", "How long will you be?"),
-                          (accepted + timedelta(seconds=70), "driver", "About 5 min, traffic")] if cancel_s > 120 else []
-            statement = (f"The driver was still far away after {cancel_s // 60} minutes so I cancelled and booked another ride, and got charged $6.61."
-                         if cancel_s > 180 else f"I cancelled within {cancel_s // 60} minutes because the driver was nowhere near, and still got charged $6.61.")
-            dstmt = "I was on my way when the rider cancelled."
+            # the driver answers the rider's question at a halt (a junction about a minute into the drive), not while driving
+            halt_s = 60 if cancel_s > 120 else None
+            gps = build_trajectory(poly, accepted, cancel_s, stops=pause_stops(poly, cancel_s - 20, [(halt_s, 20)]) if halt_s else (), seed=spec["seed"])
+            chat_lines = [(accepted + timedelta(seconds=40), "rider", rng.choice(HOW_LONG_LINES)),
+                          (accepted + timedelta(seconds=halt_s + 5), "driver", rng.choice(ETA_LINES))] if halt_s else []
+            statement = ("The driver was still far away after more than 3 minutes so I cancelled and booked another ride, and got charged $6.61."
+                         if cancel_s > 180 else
+                         rng.choice(["I cancelled within 3 minutes because the driver was nowhere near, and still got charged $6.61.",
+                                     "The driver was nowhere near, so I cancelled less than 3 minutes after matching and still got charged $6.61."]))
+            dstmt = rng.choice(ON_WAY_LINES)
         else:  # driver parked at the pin, rider cancels late
             spot = offset(P, (bearing(D, P)) % 360, 40)
             for _ in range(12):
@@ -813,7 +1013,7 @@ def build_noshow(spec, rates, rp, idx, rng):
             gps = build_trajectory(approach["polyline"], accepted, cancel_s,
                                    stops=[Stop(*spot, start_s=park_s, duration_s=cancel_s - park_s, jitter_m=1.5)], seed=spec["seed"])
             pressed = accepted + timedelta(seconds=park_s + 15)
-            chat_lines = [(pressed, "driver", "I'm here at the pickup, black Hyundai Ioniq."),
+            chat_lines = [(pressed, "driver", rng.choice(HERE_LINES).format(car=rng.choice(CARS))),
                           (accepted + timedelta(seconds=300), "rider", "Sorry, plans changed, I will cancel")]
             statement = "I cancelled because my plans changed and the driver had not even arrived. $6.61 is unfair."
             dstmt = "I was parked at the pickup for minutes when the rider cancelled."
@@ -857,30 +1057,40 @@ def build_safety(spec, rates, rp, idx, rng):
     pickup_at = spec["day"]
     approach_start, approach_s = approach_leg(rp, P, D, rng)
     accepted = pickup_at - timedelta(seconds=approach_s + 10)
-    total_s = r5(along_km(opt)[-1] / avg_speed(route) * 3600)
+    drive_s = r5(along_km(opt)[-1] / avg_speed(route) * 3600)
+    kind = spec["chat"]
+    # the in-car exchange happens at a halt on a surface road (a junction), never at speed on an expressway: the driver's
+    # line is typed during the halt, the rider's from the back seat just before / after it
+    pauses = []
+    if kind in ("driver_threat", "rider_threat"):
+        L = along_km(opt)[-1]
+        halt_km = surface_km(route, L * 0.5)
+        pauses = [(r5(drive_s * halt_km / L), PAUSE_S)]
+    total_s = drive_s + sum(d for _, d in pauses)
     dropoff_at = pickup_at + timedelta(seconds=total_s)
-    trip_gps = build_trajectory(opt, pickup_at, total_s, seed=spec["seed"])
-    gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"]) + trip_gps[1:]
+    trip_gps = build_trajectory(opt, pickup_at, total_s, stops=pause_stops(opt, drive_s, pauses), seed=spec["seed"])
+    gps = approach_trace(rp, approach_start, P, accepted, pickup_at, wait_s=10, seed=spec["seed"],
+                         pauses=[(APPROACH_PAUSE_S, 20)] if kind == "innocuous" else ()) + trip_gps[1:]
     service = spec["service"]
     trip = trip_block(f"T-{2000 + idx}", service, place(spec["pair"][0]), place(spec["pair"][1]), route,
                       accepted - timedelta(seconds=35), accepted, gps, pickup_at - timedelta(seconds=10), pickup_at, dropoff_at)
-    mid = pickup_at + timedelta(seconds=total_s // 2)
-    kind = spec["chat"]
+    halt = pickup_at + timedelta(seconds=pauses[0][0]) if pauses else None
     filed_by = "rider"
     if kind == "driver_threat":
-        chat_lines = [(mid, "rider", "Please stop the car, I want to get out here."),
-                      (mid + timedelta(seconds=60), "driver", "Sit down or I lock the doors.")]
+        chat_lines = [(halt - timedelta(seconds=40), "rider", "Please stop the car, I want to get out here."),
+                      (halt + timedelta(seconds=5), "driver", "Sit down or I lock the doors.")]
         statement = "The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride."
-        dstmt = "The rider tried to open the door while we were moving. I told her to sit down for her own safety."
+        dstmt = "The rider tried to open the door at the lights. I told her to sit down for her own safety and drove on."
     elif kind == "rider_threat":
-        chat_lines = [(mid, "driver", "Please do not smoke in the car."),
-                      (mid + timedelta(seconds=40), "rider", "Say that again and I will punch you.")]
+        chat_lines = [(halt + timedelta(seconds=5), "driver", "Please do not smoke in the car."),
+                      (halt + timedelta(seconds=45), "rider", "Say that again and I will punch you.")]
         filed_by = "driver"
         statement = "The passenger threatened to punch me when I asked him not to smoke. I want this reported."
-        dstmt = "The passenger threatened to punch me when I asked him not to smoke. I want this reported."
+        dstmt = "I asked the passenger politely not to smoke in the car; he said he would punch me if I said it again. I kept driving and did not answer him."
     elif kind == "innocuous":
-        chat_lines = [(accepted + timedelta(seconds=50), INNOCUOUS[0][0], INNOCUOUS[0][1]),
-                      (accepted + timedelta(seconds=80), INNOCUOUS[1][0], INNOCUOUS[1][1])]
+        n = max(1, round((approach_s + 10 - (APPROACH_PAUSE_S + 5)) / 60))
+        chat_lines = [(accepted + timedelta(seconds=50), "rider", rng.choice(PICKUP_LINES).format(spot=PICKUP_SPOT.get(spec["pair"][0], "at the main entrance"), outfit=rng.choice(OUTFITS))),
+                      (accepted + timedelta(seconds=APPROACH_PAUSE_S + 5), "driver", rng.choice(ARRIVING_LINES).format(n=n, car=rng.choice(CARS)))]
         statement = "The driver was speeding and braking hard the whole way, overtaking on the shoulder. I was scared and felt unsafe."
         dstmt = "I drove normally. The rider was on the phone the whole trip and never complained to me."
         if spec.get("statement_threat"):
@@ -960,7 +1170,8 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
             if kind == "undetermined":
                 road = meta.get("detour_roads", {}).get(seg_ids.index(fid), "the named road")
                 notes.append(f"{fid} interpretive slot: the rider agreed to '{road}' before the segment (RD-5), but no record ties this driven segment to that road "
-                             f"(G13) -> undetermined" + (" and it changes the outcome -> a person decides" if s.get("changes_outcome", True) else ", and it changes neither the amount nor the flag -> the ruling stands"))
+                             f"(G13) -> undetermined" + (" and it changes the outcome -> a person decides" if s.get("changes_outcome", True) else
+                                                        ", and it changes neither the amount nor the flag, only whether an RD-1 breach is recorded against the driver -> no_action either way"))
                 if s.get("changes_outcome", True):
                     open_slots.append((fid, road))
             else:
@@ -1013,31 +1224,31 @@ def derive_truth(case_dict: dict, spec: dict, meta: dict) -> dict:
 # with its own seed and the X- prefix; the reference answers come from the same frozen rules (derive_truth).
 BLIND_SEED = 20261010
 BLIND_SCENARIOS = [
-    R("bl_general_consent", ("Bugis Junction", "Changi Airport T3"), loops=[{"frac": (0.40, 0.58)}], consent="general",
+    R("bl_general_consent", ("Bugis Junction", "Changi Airport T3"), loops=[{"frac": (0.40, 0.58)}], consent="general", band=2,
       hard="'whichever way is faster lah': a general route choice covers the loop round the jam -> exempt, no refund"),
-    R("bl_general_consent_cn", ("Clarke Quay", "Bedok Mall"), loops=[{"frac": (0.45, 0.62)}], consent="general_cn",
+    R("bl_general_consent_cn", ("Toa Payoh HDB Hub", "Changi City Point"), loops=[{"frac": (0.42, 0.60)}], consent="general_cn", band=2,
       hard="Chinese general route choice ('哪条快走哪条') -> exempt, no refund"),
-    R("bl_general_errand", ("Woodlands Civic Centre", "Orchard Road"), loops=[{"frac": (0.35, 0.52)}], consent="general_errand", stop="driver_errand",
+    R("bl_general_errand", ("AMK Hub", "VivoCity"), loops=[{"frac": (0.38, 0.55)}], consent="general_errand", stop="driver_errand", band=2,
       hard="general route choice, but the driver stops 4 min inside the loop for his own errand -> the segment is the driver's errand, counts"),
     R("bl_negation", ("Jurong East MRT", "NUS"), loops=[{"frac": (0.30, 0.50)}], consent="negation",
       hard="'No, I'm not okay with that, stay on X': a refusal, driver went anyway -> counts"),
-    R("bl_named_singlish", ("Tampines Mall", "Changi Airport T3"), loops=[{"frac": (0.30, 0.48)}], consent="named_singlish",
+    R("bl_named_singlish", ("Pasir Ris MRT", "Suntec City"), loops=[{"frac": (0.36, 0.54)}], consent="named_singlish", band=2,
       hard="'Can lah, go ahead' to a named road, nothing ties the driven segment to that road (G13) -> undetermined, a person decides"),
-    R("bl_named_cn", ("Raffles Place", "Changi Airport T3"), loops=[{"frac": (0.45, 0.62)}], consent="named_cn",
+    R("bl_named_cn", ("Hougang Mall", "Changi Airport T3"), loops=[{"frac": (0.48, 0.66)}], consent="named_cn", band=2,
       hard="Chinese agreement to a named road ('可以，走 X 吧'), nothing ties the segment to it (G13) -> undetermined, a person decides"),
-    R("bl_named_elsewhere", ("Punggol Waterway Point", "Tampines Mall"), loops=[{"frac": (0.30, 0.50)}], consent="named_elsewhere",
+    R("bl_named_elsewhere", ("Compass One", "Kallang Wave Mall"), loops=[{"frac": (0.40, 0.58)}], consent="named_elsewhere", band=2,
       hard="agreed to road X; the driver's own account says he went by another road -> the agreement does not cover it, counts"),
     R("bl_gps_tail_missing", ("Sentosa Beach Station", "Clarke Quay"), loops=[{"frac": (0.55, 0.72)}], gps_tail_cut_s=240,
       hard="the trace ends 4 min before drop-off: the last stretch cannot be measured (G12) -> escalate"),
-    N("bl_record_threshold_7m50", ("Bugis Junction", "Jurong East MRT"), by="driver", park_m=40, wait_s=490, here=True,
+    N("bl_record_threshold_7m50", ("Junction 8", "Jurong Point"), by="driver", park_m=40, wait_s=490, here=True,
       policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
       hard="record states an 8-min no-show threshold; 7:50 does not reach it (free wait 5 min is not the threshold) -> refund_full $5.00"),
-    N("bl_record_threshold_8m10", ("Clarke Quay", "Sentosa Beach Station"), by="driver", park_m=40, wait_s=510, here=True,
+    N("bl_record_threshold_8m10", ("NEX Serangoon", "VivoCity"), by="driver", park_m=40, wait_s=510, here=True,
       policy={"free_wait_min": 5, "no_show_threshold_min": 8, "cancellation_fee": 5.0},
       hard="record states an 8-min no-show threshold; 8:10 reaches it -> no_action"),
-    N("bl_hole_in_wait", ("NUS", "Raffles Place"), by="driver", park_m=40, wait_s=300, here=True, gps_hole_s=200,
+    N("bl_hole_in_wait", ("Buona Vista MRT", "Suntec City"), by="driver", park_m=40, wait_s=300, here=True, gps_hole_s=200,
       hard="the trace has a 200 s hole during the wait: the time between two samples is not a measured wait (G12) -> escalate"),
-    N("bl_cancelled_by_missing", ("Tanjong Pagar Centre", "Sentosa Beach Station"), by="driver", park_m=40, wait_s=300, here=True, recorded_by=None,
+    N("bl_cancelled_by_missing", ("Toa Payoh HDB Hub", "Pasir Ris MRT"), by="driver", park_m=40, wait_s=300, here=True, recorded_by=None,
       hard="cancelled_by is not on record: NS-1 and NS-4 cannot be told apart (G12) -> escalate"),
 ]
 
@@ -1092,7 +1303,8 @@ def main(limit: int | None = None, blind: bool = False):
         for old in os.listdir(d):          # a renumbered scenario must not leave a stale case behind
             if old.startswith(prefix) and old.endswith(".json"):
                 os.remove(os.path.join(d, old))
-    day0 = datetime(2026, 10, 3, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 25, 8, 0, 0, tzinfo=SGT)
+    # two cases a day; both sets end before 2026-10-10 (the day the reference rules were frozen and the sets were built)
+    day0 = datetime(2026, 10, 3, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 1, 8, 0, 0, tzinfo=SGT)
     hours = [8, 9, 12, 14, 17, 18, 21, 22]
     manifest, failures = [], []
     specs = specs_all[:limit] if limit else specs_all

@@ -12,6 +12,7 @@ import json
 import math
 import os
 import random
+import time
 import urllib.parse
 import urllib.request
 
@@ -95,17 +96,20 @@ class OneMapRouteProvider:
         key = f"{a[0]:.6f},{a[1]:.6f}|{b[0]:.6f},{b[1]:.6f}"
         if key not in self._cache:
             q = urllib.parse.urlencode({"start": f"{a[0]},{a[1]}", "end": f"{b[0]},{b[1]}", "routeType": "drive"})
-            req = urllib.request.Request(f"{self.BASE}/public/routingsvc/route?{q}", headers={"Authorization": self.token()})
-            try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                    data = json.load(r)
-            except urllib.error.HTTPError as e:
-                if e.code != 401 or not (self.email and self.password):
-                    raise
-                self._token = None          # stale ONEMAP_TOKEN: log in again and retry once
+            for attempt in range(4):
                 req = urllib.request.Request(f"{self.BASE}/public/routingsvc/route?{q}", headers={"Authorization": self.token()})
-                with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                    data = json.load(r)
+                try:
+                    with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                        data = json.load(r)
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code == 401 and self.email and self.password and attempt == 0:
+                        self._token = None          # stale ONEMAP_TOKEN: log in again and retry once
+                        continue
+                    if e.code in (429, 500, 502, 503, 504) and attempt < 3:
+                        time.sleep(2.0 * (attempt + 1))   # rate limit / hiccup: a candidate search makes many calls in a row
+                        continue
+                    raise
             if data.get("status_message") != "Found route between points":
                 raise RuntimeError(f"OneMap: {data.get('status_message')} for {key}")
             self._cache[key] = {"route_summary": data["route_summary"], "route_geometry": data["route_geometry"],
