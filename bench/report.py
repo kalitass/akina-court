@@ -73,7 +73,7 @@ def load_truth() -> tuple[dict[str, dict], dict[str, dict]]:
 def amt_eq(a, b, tol) -> bool:
     a = 0.0 if a is None else float(a)
     b = 0.0 if b is None else float(b)
-    return abs(a - b) <= tol + 1e-9
+    return abs(round(a * 100) - round(b * 100)) <= round(tol * 100)   # compared in whole cents: ±$0.01 means one cent, never a float hair
 
 
 def has_flag(r: dict) -> bool:

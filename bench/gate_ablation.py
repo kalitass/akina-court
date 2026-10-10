@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 from core.facts.tools import build_fact_table  # noqa: E402
 from core.policy import citable_ids  # noqa: E402
 from core.policy_engine import evaluate  # noqa: E402
-from core.schemas import Case, Ruling  # noqa: E402
+from core.schemas import Case, Ruling, legacy_ruling  # noqa: E402
 from core.verify import verify_ruling  # noqa: E402
 
 RESULTS = ROOT / "bench" / "results"
@@ -36,19 +36,27 @@ EXPECTED = {Path(p).stem: json.load(open(p)) for p in glob.glob(str(ROOT / "data
 
 
 def core_ok(ruling: str, amount, escalate: bool, exp: dict) -> bool:
-    return ruling == exp["ruling"] and abs(float(amount or 0) - float(exp.get("amount") or 0)) <= 0.0105 and bool(escalate) == bool(exp.get("escalate"))
+    return ruling == exp["ruling"] and abs(round(float(amount or 0) * 100) - round(float(exp.get("amount") or 0) * 100)) <= 1 and bool(escalate) == bool(exp.get("escalate"))
 
 
 def gate_arm(arm: str) -> dict:
     clause_ids = citable_ids()
     rows = []
+    failed = []
     for p in sorted(glob.glob(str(RESULTS / arm / "B-00??.json"))):
         rec = json.load(open(p))
         cid = rec["case_id"]
         exp = EXPECTED[cid]
+        if not rec.get("ok") or not rec.get("ruling"):
+            failed.append(cid)        # the run itself failed (no ruling was produced): counted as such, never as a decision
+            continue
         d = dict(rec["ruling"])
-        for k, v in (("reasoning", ""), ("cited_facts", []), ("cited_policy", []), ("recommended_action", ""), ("confidence", 0.5)):
-            d.setdefault(k, v)
+        if rec.get("ruling_schema", 1) < 2:
+            # result files written before 2026-10-10 did not store safety_concern / evidence_status: migrate them explicitly
+            # (and only them); a schema-2 file missing a field fails validation, as a fresh model output would
+            d = legacy_ruling(d)
+            for k, v in (("reasoning", ""), ("cited_facts", []), ("cited_policy", []), ("recommended_action", ""), ("confidence", 0.5)):
+                d.setdefault(k, v)
         case = Case.model_validate(json.load(open(ROOT / "data" / "bench" / "cases" / f"{cid}.json")))
         table = build_fact_table(case)
         cert = evaluate(case, table)
@@ -66,6 +74,7 @@ def gate_arm(arm: str) -> dict:
     return {
         "arm": arm, "n": n,
         "core_wrong": sum(r["core_wrong"] for r in rows),
+        "failed_runs": failed,
         "model_escalated": sum(r["model_escalated"] for r in rows),
         "blocked_by_gate": sum(r["blocked_by_gate"] for r in rows),
         "wrong_blocked": sum(r["blocked_by_gate"] and r["core_wrong"] for r in rows),
@@ -83,10 +92,14 @@ def gate_arm(arm: str) -> dict:
 def court_arm(arm: str = "court") -> dict:
     """A pipeline arm's own numbers from its records (eligibility.auto decides execution); also used for judge_only."""
     rows = []
+    failed = []
     for p in sorted(glob.glob(str(RESULTS / arm / "B-00??.json"))):
         rec = json.load(open(p))
         cid = rec["case_id"]
         exp = EXPECTED[cid]
+        if not rec.get("ok") or not rec.get("ruling"):
+            failed.append(cid)
+            continue
         r = rec["ruling"]
         rp = Path(p).with_name(Path(p).name[:-5] + ".record.json")
         elig = json.load(open(rp)).get("eligibility") if rp.exists() else None
@@ -95,7 +108,7 @@ def court_arm(arm: str = "court") -> dict:
         rows.append({"case_id": cid, "core_wrong": wrong, "auto": auto, "wrong_and_executed": auto and wrong,
                      "model_escalated": bool(r.get("escalate")), "human_reasons": (elig or {}).get("reasons", [])})
     n = len(rows)
-    return {"arm": arm, "n": n, "core_wrong": sum(r["core_wrong"] for r in rows),
+    return {"arm": arm, "n": n, "core_wrong": sum(r["core_wrong"] for r in rows), "failed_runs": failed,
             "model_escalated": sum(r["model_escalated"] for r in rows), "blocked_by_gate": None, "wrong_blocked": None, "correct_blocked": None,
             "human_flow": sum(not r["auto"] for r in rows), "human_rate": round(sum(not r["auto"] for r in rows) / n, 3) if n else None,
             "auto": sum(r["auto"] for r in rows), "auto_rate": round(sum(r["auto"] for r in rows) / n, 3) if n else None,

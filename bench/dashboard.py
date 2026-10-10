@@ -118,7 +118,7 @@ CONTENT = {
                 "claims, and a plain-language notice to each party.",
          "where": [("Ruling card", "/replay.html?case=C-0001&phase=court"), ("Reproducibility receipt", "/receipt.html?run=C-0001")], "status": "done"},
         {"req": "Evidence is text and structured data: GPS points, chat, fare lines, timestamps, both parties' history",
-         "how": "Every case file carries a 5-second GPS trace, the quoted route, chat, driver statement, fare breakdown, "
+         "how": "Every synthetic case file carries a 5-second GPS trace (the organisers' sample is sampled every 3 minutes), the quoted route, chat, driver statement, fare breakdown, "
                 "LTA traffic bands and incidents, weather and both profiles; code turns them into a numbered fact table.",
          "where": [("Fact table", "/facts.html?case=C-0001"), ("Case files", "/api/cases/C-0001")], "status": "done"},
         {"req": "At least two dispute types",
@@ -227,8 +227,7 @@ CONTENT = {
         "Reference answers are derived from the policy engine plus scenario labels. 'Correct' "
         "therefore means 'agrees with the written policy', not 'agrees with a human ops team'.",
         "One model ({model}) for all four arms; results may differ with other models.",
-        "{n_bench} cases is a small set and the scenarios are related; percentages move by about 2 points per case, and "
-        "each case moves a percentage by about two points.",
+        "{n_bench} cases is a small set and the scenarios are related; one case moves a percentage by about two points.",
         "The court costs roughly {tok_x}× the input tokens and {lat_x}× the latency of a single call — still seconds, "
         "against {manual} of manual handling.",
     ],
@@ -245,9 +244,8 @@ CONTENT = {
                       "requirement, not the gate's discriminative power"),
     "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
                       "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone reaches "
-                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost; its one miss was a 4-cent amount error the "
-                      "certificate caught. The two advocates cut human review from {jo_h} to {ct_h}; their other value is the "
-                      "observable adversarial hearing the track requires."),
+                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost. The two advocates change human review from {jo_h} to {ct_h}; "
+                      "their other value is the observable adversarial hearing the track requires."),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
         "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
@@ -258,8 +256,7 @@ CONTENT = {
         "or its implementation is what a human ops team would decide.",
         "Raw LLM receives the case JSON with the GPS trace thinned to one point every {gps_s} s (native sampling {gps_native} s) "
         "to fit the context window; everything else is verbatim. It is never given fact ids, so it cannot cite them.",
-        "All four systems use the same model with the same temperature settings; the court was additionally run with "
-        "identities swapped and a second time on every case.",
+        "All four systems use the same model with the same temperature settings.{extra_runs}",
     ],
     # One-line meaning for each metric row in the comparison table.
     "metric_meaning": {
@@ -332,6 +329,7 @@ def load_all() -> dict:
     d["manifest"] = jload("data/bench/manifest.json")
     # scenario definitions: count the `hard=` one-liners in the generator and cross-check with the manifest
     scen_src = need("data/synth/scenarios.py").read_text(encoding="utf-8")
+    scen_src = scen_src.split("BLIND_SCENARIOS = [")[0]      # the held-out set has its own manifest and is not part of this page
     d["scenario_hard"] = re.findall(r'^\s*[RNS]\("([a-z0-9_]+)".*?hard="([^"]*)"', scen_src, flags=re.M | re.S)
     # LLM runs: one *.json per run; *.record.json are side files
     runs = {}
@@ -663,8 +661,10 @@ def build(d: dict) -> str:
         if a not in G:
             sys.exit(f"dashboard: gate_ablation.json has no arm {a}")
         g = G[a]
-        if g["n"] != n_bench or g["human_flow"] + g["auto"] != g["n"]:
+        if g["n"] + len(g.get("failed_runs", [])) != n_bench or g["human_flow"] + g["auto"] != g["n"]:
             sys.exit(f"dashboard: gate_ablation.json {a} numbers do not add up")
+        if g.get("failed_runs"):
+            print(f"dashboard: {a} has {len(g['failed_runs'])} failed run(s) {g['failed_runs']}: re-run them (bench/run_bench.py --cases ... --arms {a}) before publishing", file=sys.stderr)
     tok_x = ct["input_tokens_mean"] / raw["input_tokens_mean"]
     lat_x = ct["latency_mean_s"] / raw["latency_mean_s"]
     jo_ratio = ct["input_tokens_mean"] / jo["input_tokens_mean"]
@@ -706,7 +706,7 @@ def build(d: dict) -> str:
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
 <div class="tiles">
 <div class="tile green"><div class="l">Same model, better evidence</div><div class="n">+{lift_pp:.1f}<small>pp</small></div><div class="m">Same model, one call each: computing the facts in code lifts exact core decisions from {pct(raw['exact'])} to {pct(fo['exact'])}.</div></div>
-<div class="tile blue"><div class="l">Matched the written-policy reference</div><div class="n">{ct_ok}<small>/ {n_bench}</small></div><div class="m">The full court matched the policy-derived reference core decision on every case.</div></div>
+<div class="tile blue"><div class="l">Matched the written-policy reference</div><div class="n">{ct_ok}<small>/ {n_bench}</small></div><div class="m">The full court matched the policy-derived reference core decision on {"every case" if ct_ok == n_bench else f"{ct_ok} of {n_bench} cases"}.</div></div>
 <div class="tile purple"><div class="l">Cleared · wrong decisions that passed the check</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small> · {G['court']['wrong_and_executed']}</div><div class="m">{G['court']['auto']} core decisions cleared for automatic execution, {G['court']['wrong_and_executed']} observed wrong core decisions executed. Account flags always go to a human.</div></div>
 <div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">p95 {ct['latency_p95_s']:.1f} s, versus {esc(CONTENT['manual_handling'])} of manual handling. About {tok_x:.0f}× the tokens of one call.</div></div>
 </div>
@@ -811,7 +811,10 @@ def build(d: dict) -> str:
         exp_txt = ruling_word(exp["ruling"]) + (f" {money(exp['amount'])}" if exp.get("amount") else "") + (" + flag" if exp.get("flag_account") else "")
         cells = []
         for a in arms:
-            s = S[a]["per_case"][cid]
+            s = S[a]["per_case"].get(cid)
+            if s is None:
+                cells.append('<td><span class="muted">run failed</span></td>')
+                continue
             g = s["got"]
             got = ruling_word(g.get("ruling")) + (f" {money(g['amount'])}" if g.get("amount") else "")
             mark = '<span class="ok">✓</span>' if s["exact"] else '<span class="bad">✗</span>'
@@ -834,7 +837,7 @@ def build(d: dict) -> str:
 {consistency_block}</div>
 </div>
 <div class="panel mt"><h3>Cost per case</h3><div class="scroll"><table class="t"><tr><th></th>{arm_th}</tr>{cost_rows}</table></div>
-<p class="small muted">Trade-off: the full court averages {ct['latency_mean_s']:.1f} s and six model calls per case, about {lat_x:.0f}× the latency and {tok_x:.0f}× the input tokens of one call, against {esc(CONTENT['manual_handling'])} of manual handling. Judge + code check uses about one-eighth of the court's tokens.</p></div>
+<p class="small muted">Trade-off: the full court averages {ct['latency_mean_s']:.1f} s and {ct['llm_calls_mean']:.0f} model calls per case, about {lat_x:.0f}× the latency and {tok_x:.0f}× the input tokens of one call, against {esc(CONTENT['manual_handling'])} of manual handling. Judge + code check uses about 1/{jo_ratio:.0f} of the court's tokens.</p></div>
 <details class="mt more"><summary>More results — every metric, what the code check prevents, precision / recall, confusion matrices, every case</summary>
 <div class="grid2 mt"><div class="panel"><h3>All metrics, higher is better</h3>{legend(arms)}{bar_chart(big, arms)}</div><div class="panel"><h3>All metrics, lower is better</h3>{legend(arms)}{bar_chart(bad, arms)}</div></div>
 <div class="panel mt"><h3>What the code check prevents <span class="hint">the policy check applied offline to the single-call rulings; no extra model calls</span></h3>
@@ -905,7 +908,10 @@ def build(d: dict) -> str:
     scen_list = "".join(
         f'<li><span class="tip" title="{esc(c["case_id"])} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></li>'
         for c in man)
-    method = "".join(f"<li>{esc(p.format(**fill))}</li>" for p in CONTENT["method"])
+    extra = ((" The court was additionally run with rider and driver identities swapped" if n_swap else "")
+             + (" and a second time on every case" if n_rep and n_swap else (" The court was additionally run a second time on every case" if n_rep else ""))
+             + ("." if (n_swap or n_rep) else ""))
+    method = "".join(f"<li>{esc(p.format(**fill, extra_runs=extra))}</li>" for p in CONTENT["method"])
     A(f"""<section class="sec" id="method"><h2><span class="num">3</span>Data and method</h2>
 <p class="lead">{n_bench} synthetic benchmark trips on real OneMap road geometry, each built around one trap a careless system would fall into, plus {n_demo} hand-built demo cases.</p>
 <div class="callout mt"><h3>Caveats</h3><ul class="hl small" style="margin:0">{"".join(f"<li>{esc(c.format(**fill))}</li>" for c in CONTENT['caveats'])}</ul></div>
