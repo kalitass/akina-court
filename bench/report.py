@@ -76,6 +76,12 @@ def amt_eq(a, b, tol) -> bool:
     return abs(round(a * 100) - round(b * 100)) <= round(tol * 100)   # compared in whole cents: ±$0.01 means one cent, never a float hair
 
 
+def model_escalated(r: dict) -> bool:
+    """The arm's own ruling sent the case to a person: the flag or the outcome label says so. One definition for every
+    scorer, so a ruling such as refund_partial + escalate=True lands in the same bucket in summary.json and gate_ablation.json."""
+    return bool(r.get("escalate")) or r.get("ruling") == "escalate"
+
+
 def has_flag(r: dict) -> bool:
     """Structured field when the run produced one; legacy runs fall back to the text, excluding 'no flag_account'."""
     if "flag_account" in r and r["flag_account"] is not None:
@@ -106,7 +112,7 @@ def score(rec: dict, exp: dict, citable: set, known: set) -> dict:
         "ruling": r.get("ruling") == exp["ruling"],
         "amount_1c": amt_eq(r.get("amount"), exp.get("amount"), 0.01),
         "amount_50c": amt_eq(r.get("amount"), exp.get("amount"), 0.50),
-        "escalate": bool(r.get("escalate")) == bool(exp.get("escalate")),
+        "escalate": model_escalated(r) == bool(exp.get("escalate")),
         "cite_valid": all(c in citable for c in cited) if cited else True,
         "cite_invalid_n": sum(1 for c in cited if c not in citable),
         "cite_n": len(cited),
@@ -124,7 +130,7 @@ def score(rec: dict, exp: dict, citable: set, known: set) -> dict:
     # that is not an escalation is executed; the court executes only what the certificate marks auto-eligible.
     elig = rec.get("eligibility")
     out["executed"] = (bool(elig.get("auto")) if isinstance(elig, dict) else rec.get("status") == "resolved") if "status" in rec or elig is not None \
-        else r.get("ruling") not in ("escalate", None)
+        else (r.get("ruling") is not None and not model_escalated(r))
     out["wrong_executed"] = out["executed"] and not out["exact"]
     return out
 

@@ -25,6 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+import bench.report as report  # noqa: E402
 from core.facts.tools import build_fact_table  # noqa: E402
 from core.policy import citable_ids  # noqa: E402
 from core.policy_engine import evaluate  # noqa: E402
@@ -36,7 +37,8 @@ EXPECTED = {Path(p).stem: json.load(open(p)) for p in glob.glob(str(ROOT / "data
 
 
 def core_ok(ruling: str, amount, escalate: bool, exp: dict) -> bool:
-    return ruling == exp["ruling"] and abs(round(float(amount or 0) * 100) - round(float(exp.get("amount") or 0) * 100)) <= 1 and bool(escalate) == bool(exp.get("escalate"))
+    return ruling == exp["ruling"] and abs(round(float(amount or 0) * 100) - round(float(exp.get("amount") or 0) * 100)) <= 1 \
+        and report.model_escalated({"escalate": escalate, "ruling": ruling}) == bool(exp.get("escalate"))
 
 
 def gate_arm(arm: str) -> dict:
@@ -62,7 +64,7 @@ def gate_arm(arm: str) -> dict:
         cert = evaluate(case, table)
         before = Ruling.model_validate(d)
         after, lines = verify_ruling(before, table, clause_ids, (), certificate=cert)
-        model_escalated = bool(before.escalate) or before.ruling == "escalate"
+        model_escalated = report.model_escalated({"escalate": before.escalate, "ruling": before.ruling})
         blocked = (not model_escalated) and bool(after.escalate)
         auto = not model_escalated and not blocked
         wrong = not core_ok(before.ruling, before.amount, before.escalate, exp)
@@ -106,7 +108,7 @@ def court_arm(arm: str = "court") -> dict:
         auto = bool(elig.get("auto")) if isinstance(elig, dict) else rec.get("status") == "resolved"
         wrong = not core_ok(r["ruling"], r.get("amount"), r.get("escalate"), exp)
         rows.append({"case_id": cid, "core_wrong": wrong, "auto": auto, "wrong_and_executed": auto and wrong,
-                     "model_escalated": bool(r.get("escalate")), "human_reasons": (elig or {}).get("reasons", [])})
+                     "model_escalated": report.model_escalated(r), "human_reasons": (elig or {}).get("reasons", [])})
     n = len(rows)
     return {"arm": arm, "n": n, "core_wrong": sum(r["core_wrong"] for r in rows), "failed_runs": failed,
             "model_escalated": sum(r["model_escalated"] for r in rows), "blocked_by_gate": None, "wrong_blocked": None, "correct_blocked": None,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the benchmark arms over data/bench/ and save one JSON per (arm, case, repeat). Resumable.
 
-    export DEEPSEEK_API_KEY=...   (or put it in .env); export LLM_PROVIDER=deepseek
+    export DEEPSEEK_API_KEY=... in the shell (no script reads .env); export LLM_PROVIDER=deepseek
     .venv/bin/python bench/run_bench.py --arms raw,facts_only,court --limit 2        # smoke test
     .venv/bin/python bench/run_bench.py --arms court --repeats 3                     # consistency (pass^N)
     .venv/bin/python bench/run_bench.py --arms raw,facts_only,court --swap           # identity-swap invariance
@@ -40,12 +40,13 @@ from pydantic_ai import Agent  # noqa: E402
 
 from bench.baseline import run_baseline, usage_of  # noqa: E402
 from core.llm import describe_model  # noqa: E402
-from core.orchestrate import run_case  # noqa: E402
+from core.orchestrate import model_outage, run_case  # noqa: E402
 from core.schemas import Case  # noqa: E402
 
 BENCH = ROOT / "data" / "bench"
 RESULTS = ROOT / "bench" / "results"
 ARMS = ("raw", "facts_only", "judge_only", "court")
+SCHEMA = 2   # 2 = the ruling dict carries every Ruling field (safety_concern, evidence_status ...); files without it are from before 2026-10-10
 # every field of the model's ruling is kept as the model wrote it: the gate ablation re-validates these dicts, and a
 # missing safety_concern / evidence_status would otherwise be filled in as "none" / "sufficient" by the legacy loader
 RULING_KEYS = ("ruling", "amount", "recommended_action", "confidence", "reasoning", "cited_facts", "cited_policy", "escalate",
@@ -115,7 +116,7 @@ async def run_one(arm: str, cid: str, repeat: int, swap: bool, timeout: float, r
     case = load_case(cid, swap)
     rec = {"arm": arm, "case_id": cid, "repeat": repeat, "swap": swap, "model": describe_model(),
            "ts": datetime.now(timezone.utc).isoformat(), "ok": False,
-           "ruling_schema": 2}      # 2 = the ruling dict carries every Ruling field (safety_concern, evidence_status ...); 1 = files from before 2026-10-10
+           "ruling_schema": SCHEMA}
     acc: list = []
     _usage_acc.set(acc)
     t0 = time.monotonic()
@@ -124,12 +125,11 @@ async def run_one(arm: str, cid: str, repeat: int, swap: bool, timeout: float, r
             result_path(arm, cid, repeat, swap).with_suffix(".record.json").unlink(missing_ok=True)   # a failed re-run must not leave the old record behind
             record = await asyncio.wait_for(run_case(case, rebuttal=rebuttal and arm == "court", advocates=arm == "court"), timeout)
             rec["ruling"] = ruling_dict(record.ruling)
-            outage = [e.title for e in record.events if (e.kind == "brief" and "unavailable" in e.title.lower())
-                      or (e.kind == "check" and "skipped" in e.title.lower() and "rebuttal" in e.title.lower())]
-            if record.ruling.safety_concern == "unscreened" or outage:
+            outage = model_outage(record)
+            if outage:
                 # the judge never answered, or an advocate stage failed: the court produced a hand-off by default, not a
                 # decision. Saved for inspection but marked failed, so the resume logic re-runs it and no reader scores it.
-                rec["error"] = "model outage inside the run: " + (record.ruling.escalation_reason or "; ".join(outage))
+                rec["error"] = "model outage inside the run: " + "; ".join(outage)
                 rec["status"] = record.status
                 rec["events"] = len(record.events)
                 rec["record_path"] = str(save_court_record(record, cid, repeat, swap, arm).relative_to(ROOT))
@@ -183,7 +183,8 @@ async def main_async(args) -> int:
         p = result_path(*job)
         if p.exists() and not args.force:
             try:
-                if json.loads(p.read_text()).get("ok"):
+                done = json.loads(p.read_text())
+                if done.get("ok") and done.get("ruling_schema") == SCHEMA:   # a file from an older runner is never "done"
                     continue
             except json.JSONDecodeError:
                 pass
@@ -231,7 +232,7 @@ def main():
     ap.add_argument("--set", default="main", help="main = data/bench -> bench/results; blind = data/bench/blind -> bench/results/blind (held-out cases)")
     args = ap.parse_args()
     if not os.environ.get("DEEPSEEK_API_KEY") and os.environ.get("LLM_PROVIDER", "deepseek") == "deepseek":
-        print("DEEPSEEK_API_KEY not set: export it or put it in .env first")
+        print("DEEPSEEK_API_KEY not set: export it in the shell first")
         return 2
     return asyncio.run(main_async(args))
 

@@ -13,7 +13,7 @@ Team **Akina Court** · Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 · R
 | | Raw LLM, one call | Facts by code, one call | Judge + policy check | Full court |
 |---|---|---|---|---|
 | Matched the reference | <!--n:arms.raw.exact-->21<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.facts_only.exact-->34<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.judge_only.exact-->42<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.exact-->42<!--/n-->/<!--n:cases-->49<!--/n-->** |
-| Wrong decision **and executed** | <!--n:arms.raw.wrong_executed_single_call-->26<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.facts_only.wrong_executed_single_call-->15<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.judge_only.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->49<!--/n-->** |
+| Wrong decision **and executed** | <!--n:arms.raw.wrong_executed_single_call-->25<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.facts_only.wrong_executed_single_call-->15<!--/n-->/<!--n:cases-->49<!--/n--> | <!--n:arms.judge_only.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.wrong_and_executed_with_gate-->7<!--/n-->/<!--n:cases-->49<!--/n-->** |
 | Cleared automatically | – | – | <!--n:arms.judge_only.auto-->42<!--/n-->/<!--n:cases-->49<!--/n--> | **<!--n:arms.court.auto-->42<!--/n-->/<!--n:cases-->49<!--/n-->** |
 | Invalid citations (fact + clause ids) | <!--n:per_arm.raw.cites_invalid-->17<!--/n--> / <!--n:per_arm.raw.cites_total-->230<!--/n--> | <!--n:per_arm.facts_only.cites_invalid-->5<!--/n--> / <!--n:per_arm.facts_only.cites_total-->811<!--/n--> | <!--n:per_arm.judge_only.cites_invalid-->0<!--/n--> / <!--n:per_arm.judge_only.cites_total-->892<!--/n--> | **<!--n:per_arm.court.cites_invalid-->0<!--/n--> / <!--n:per_arm.court.cites_total-->961<!--/n-->** |
 | Mean time | <!--n:per_arm.raw.latency_mean_s:.1f-->6.9<!--/n--> s | <!--n:per_arm.facts_only.latency_mean_s:.1f-->5.9<!--/n--> s | <!--n:per_arm.judge_only.latency_mean_s:.1f-->8.8<!--/n--> s | <!--n:per_arm.court.latency_mean_s:.1f-->23.0<!--/n--> s per case |
@@ -45,7 +45,7 @@ Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. R
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
 cp .env.example .env            # DEEPSEEK_API_KEY, only for live runs
 scripts/dev.sh                  # http://localhost:8000
-.venv/bin/python -m pytest -q   # <!--n:tests-->359<!--/n--> tests, no key needed
+.venv/bin/python -m pytest -q   # <!--n:tests-->361<!--/n--> tests, no key needed
 ```
 
 Without a key the pages play back the stored runs in `runs/` (six demo rulings plus the organisers' sample, and eight pre-recorded fault injections and counterfactuals). Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Deploy: `deploy/` (Docker + Caddy; `deploy/lighthouse.sh` for Tencent Cloud Lighthouse).

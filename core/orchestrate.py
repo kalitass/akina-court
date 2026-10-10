@@ -204,6 +204,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     if pc:
         jprompt += "\n\n" + pc
     jr, err = await _staged(judge.run(jprompt), TIMEOUTS["judge"], "judge")
+    last = jr      # the judge round whose messages a later correction continues from
     if err:
         raw = judge_unavailable_ruling(err)
     else:
@@ -218,7 +219,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                                                   "Do not change the outcome unless the correction requires it.",
                                                 message_history=jr.all_messages()), TIMEOUTS["judge"], "judge self-correction")
             if not err2:
-                raw = jr2.output
+                raw, last = jr2.output, jr2
     if "flag_text" in inject:
         raw = raw.model_copy(update={"recommended_action": (raw.recommended_action or "") + " + flag_account (demo text)"})
     if "wrong_amount" in inject and raw.amount:
@@ -238,7 +239,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                   "recommended only when the trace requires it. If the record does not let you decide a ? element, rule escalate with "
                   "that ground (safety_concern, an undetermined finding on a ? segment, or evidence_status insufficient / unknown with the missing record named in evidence_gap); "
                   "elements marked ✓/✗ are settled and are not grounds. A person then decides.",
-                  message_history=jr.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
+                  message_history=last.all_messages()), TIMEOUTS["judge"], "judge certificate correction")
             if not err3 and not citation_problems(jr3.output, table, clause_ids):
                 raw = jr3.output
     if table.dispute_type != "route_deviation" and raw.segment_findings:
@@ -272,7 +273,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         nr, nerr = await _staged(nw.run(ctx), TIMEOUTS["notice"], "notice writer")
         rider_n, driver_n = (nr.output.rider, nr.output.driver) if not nerr else (None, None)
         on_record = [x for x in (case.fare.cancellation_fee, case.fare.total) if x]     # a no-refund notice may name the charge that stands
-        bad = [who for who, t in (("rider", rider_n), ("driver", driver_n)) if t is None or not consistent(t, ruling, on_record)]
+        bad = [who for who, t in (("rider", rider_n), ("driver", driver_n)) if t is None or not t.strip() or not consistent(t, ruling, on_record)]
         if bad:
             tr, td = fallback_notices(ruling)
             rider_n = tr if "rider" in bad else rider_n
@@ -302,6 +303,16 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     if not inject and "~" not in case.case_id:              # demo runs (injection / counterfactual) leave no trace in the stores
         replay(hooks.after_ruling(record), log.emit)       # precedent consistency + index, SLA routing (flags)
     return record.model_copy(update={"events": log.events})
+
+
+def model_outage(record: CaseRecord) -> list[str]:
+    """Why this hearing is a default hand-off rather than a decision: the judge never answered, an advocate stage failed
+    or the rebuttal was skipped. Empty when every model stage completed. Runners refuse to store such a run as finished."""
+    out = [e.title for e in record.events if (e.kind == "brief" and "unavailable" in e.title.lower())
+           or (e.kind == "check" and "skipped" in e.title.lower() and "rebuttal" in e.title.lower())]
+    if record.ruling.safety_concern == "unscreened":
+        out.insert(0, "judge unavailable: " + (record.ruling.escalation_reason or ""))
+    return out
 
 
 def save_record(record: CaseRecord, out_dir: Path = Path("runs")) -> Path:

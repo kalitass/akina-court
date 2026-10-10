@@ -6,7 +6,7 @@ parameters), the unmodified response body, the provider's response headers (requ
 reviewer can see with their own eyes what the model was asked and what it answered. The ordinary benchmark files
 (bench/results/<arm>/) keep only parsed rulings and usage; this directory is the proof that those come from real runs.
 
-    export DEEPSEEK_API_KEY=...   (or put it in .env); export LLM_PROVIDER=deepseek
+    export DEEPSEEK_API_KEY=... in the shell (no script reads .env); export LLM_PROVIDER=deepseek
     .venv/bin/python bench/audit_sample.py                 # 5 cases x 4 arms -> bench/results/audit_sample/
     .venv/bin/python bench/audit_sample.py --cases B-0001  # subset
 

@@ -23,7 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core.llm import describe_model          # noqa: E402
-from core.orchestrate import run_case, save_record   # noqa: E402
+from core.orchestrate import model_outage, run_case, save_record   # noqa: E402
 from core.schemas import Case                # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,7 +58,9 @@ async def one(cid: str, verbose: bool, rebuttal: bool):
                 for line in ev.body.splitlines():
                     print("         " + line)
     rec = await run_case(case, on_event=show, rebuttal=rebuttal)
-    p = save_record(rec)
+    if model_outage(rec):
+        raise SystemExit(f"{cid}: a model stage failed ({'; '.join(model_outage(rec))}) — not stored; run this case again")
+    p = save_record(rec, ROOT / "runs")
     c = compare(cid, rec)
     print(f"\n{cid}  {time.time() - t:5.1f}s  ruling={'✓' if c['ruling'] else '✗'} amount={'✓' if c['amount'] else '✗'} "
           f"escalate={'✓' if c['escalate'] else '✗'} policy⊇={'✓' if c['policy⊇'] else '✗'}\n   got:  {c['got']}\n   want: {c['want']}\n   saved {p}")

@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from core.counterfactual import apply  # noqa: E402
-from core.orchestrate import run_case  # noqa: E402
+from core.orchestrate import model_outage, run_case  # noqa: E402
 from core.schemas import Case  # noqa: E402
 
 DEMOS = {
@@ -47,6 +47,8 @@ async def one(name: str) -> Path:
         case = apply(case, spec["cf"]).model_copy(update={"case_id": f"{cid}~{spec['cf']}"})
     rec = await run_case(case, inject=spec.get("inject"))
     rid = f"{cid}~{name}"
+    if model_outage(rec):
+        raise SystemExit(f"{rid}: a model stage failed ({'; '.join(model_outage(rec))}) — not stored; run this one again")
     out = ROOT / "runs" / f"{rid}.json"
     out.write_text(rec.model_copy(update={"case_id": rid}).model_dump_json(indent=1), encoding="utf-8")
     r = rec.ruling

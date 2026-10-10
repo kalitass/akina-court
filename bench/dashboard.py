@@ -669,8 +669,8 @@ def build(d: dict) -> str:
     lat_x = ct["latency_mean_s"] / raw["latency_mean_s"]
     jo_ratio = ct["input_tokens_mean"] / jo["input_tokens_mean"]
     lift_pp = 100 * (fo["exact"] - raw["exact"])
-    ct_ok = round(ct["exact"] * n_bench)
-    jo_ok = n_bench - G["judge_only"]["core_wrong"]
+    ct_ok = sum(1 for v in ct["per_case"].values() if v["exact"])     # per-case count: a failed run is neither matched nor missed
+    jo_ok = G["judge_only"]["n"] - G["judge_only"]["core_wrong"]
     pre = d["court_first_run"]
     gps_s = d["gps_interval_s"] * d["gps_thin"]
     fill = dict(n_bench=n_bench, n_demo=n_demo, n_inject=len(d["inject"]), n_cf=len(d["counterfactual"]),

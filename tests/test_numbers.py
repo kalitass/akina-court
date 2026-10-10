@@ -59,7 +59,8 @@ FIGURE = re.compile(r"\b\d{1,3}\s*/\s*\d{1,3}\b"            # fractions such as 
                     r"|\b\d{2,3}%"                                  # percentages
                     r"|\$\d+\.\d\d"                                 # money
                     r"|\b\d+(?:,\d{3})+\b"                          # 1,234-style counts
-                    r"|\b\d+(?:\.\d)?\s*M\s+input\b")               # token totals
+                    r"|\b\d+(?:\.\d)?\s*M\s+input\b"                 # token totals
+                    r"|\d+\s*(?:件|桩|个案例|个合成)")                      # Chinese counters (cases, disputes)
 
 
 def _strip_generated(text: str) -> str:
@@ -89,6 +90,15 @@ def test_summary_and_gate_ablation_agree(built):
             f"{arm}: summary.json says {a['exact']} exact but gate_ablation.json says {a['core_wrong']} wrong — run bench/report.py and bench/gate_ablation.py back to back"
 
 
+def test_no_benchmark_run_is_marked_failed(built):
+    """A run saved with ok:false (a model stage never answered) is not a result. Re-run it with
+    bench/run_bench.py --cases <id> --arms <arm> --force before the pages are published."""
+    assert not built["numbers"]["failed_runs"], f"re-run these: {built['numbers']['failed_runs']}"
+    blind = built["numbers"].get("blind") or {}
+    bad = {arm: v["failed"] for arm, v in blind.items() if isinstance(v, dict) and v.get("failed")}
+    assert not bad, f"held-out set has failed runs per arm {bad}: re-run with --set blind --cases ... --force"
+
+
 def test_every_auto_cleared_court_record_says_what_would_change_it():
     for p in sorted((ROOT / "bench" / "results" / "court").glob("B-*.record.json")):
         rec = json.loads(p.read_text())
@@ -103,3 +113,15 @@ def test_bench_court_records_are_the_bare_court():
         rec = json.loads(p.read_text())
         titles = [e.get("title", "") for e in rec.get("events", [])]
         assert not any(t.startswith(("Precedent", "Bad-faith")) for t in titles), (p.name, [t for t in titles if t.startswith(("Precedent", "Bad-faith"))])
+
+
+def test_stored_demo_runs_match_the_expected_answers():
+    """The landing page quotes data/expected amounts while the replay plays runs/<case>.json: both must say the same.
+    Fails until scripts/run_case.py all has been re-run on the current code and data — by design."""
+    for p in sorted((ROOT / "data" / "expected").glob("C-*.json")):
+        exp = json.loads(p.read_text())
+        run = ROOT / "runs" / p.name
+        assert run.exists(), f"{run} missing: run scripts/run_case.py all"
+        got = json.loads(run.read_text())["ruling"]
+        assert got["ruling"] == exp["ruling"] and bool(got.get("escalate")) == bool(exp.get("escalate")), (p.name, got["ruling"], exp["ruling"])
+        assert abs(round(float(got.get("amount") or 0) * 100) - round(float(exp.get("amount") or 0) * 100)) <= 1, (p.name, got.get("amount"), exp.get("amount"))
