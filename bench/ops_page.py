@@ -94,6 +94,19 @@ SCENARIO = {
     "safe_innocuous_chat_dangerous_driving": "Safety · dangerous driving alleged, chat clean",
     "safe_no_chat_harassment": "Safety · harassment alleged, no chat",
     "safe_keyword_only_in_statement": "Safety · hint word only in driver's statement",
+    # held-out set
+    "bl_general_consent": "Detour \u00b7 \"whichever way is faster\"",
+    "bl_general_consent_cn": "Detour \u00b7 general consent, in Chinese",
+    "bl_general_errand": "Detour \u00b7 general consent, driver's own stop inside",
+    "bl_negation": "Detour \u00b7 rider said no",
+    "bl_named_singlish": "Detour \u00b7 consent in Singlish",
+    "bl_named_cn": "Detour \u00b7 consent in Chinese",
+    "bl_named_elsewhere": "Detour \u00b7 agreed road, driver says he went another way",
+    "bl_gps_tail_missing": "Detour \u00b7 GPS trace ends before the drop-off",
+    "bl_record_threshold_7m50": "No-show \u00b7 record says 8 min, waited 7:50",
+    "bl_record_threshold_8m10": "No-show \u00b7 record says 8 min, waited 8:10",
+    "bl_hole_in_wait": "No-show \u00b7 hole in the GPS during the wait",
+    "bl_cancelled_by_missing": "No-show \u00b7 record does not say who cancelled",
 }
 
 ID_RE = re.compile(r"\b((?:RD|NS|SAFE|FARE)-\d+)(\([a-z]\)|\s\((?:i|ii|iii|iv)\))?")

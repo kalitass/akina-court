@@ -119,7 +119,49 @@ def chart(name: str, n: dict) -> str:
     raise KeyError(f"unknown chart {name}")
 
 
+# the classic benchmark cases the landing page offers behind "More examples": (scenario name, one-line brief). Case ids,
+# titles and outcomes come from the manifests, so the chips follow a regeneration; the briefs carry no figure.
+EXAMPLES = [
+    ("rd_incident_on_stretch", "An accident sat on the stretch the driver left, reported before he turned off: the detour is excused."),
+    ("rd_consent_after", "The rider said \"sure\" two minutes after the car had already left the route: not consent."),
+    ("rd_band2_heavy_rain", "Heavy rain and slow traffic are not a recorded incident: the extra kilometres are refunded."),
+    ("rd_stop_named", "The rider named the mall and asked for the stop: the way there is not a detour."),
+    ("rd_prior_flag", "A detour upheld against a driver with prior upheld route disputes: refund and an account flag for a person."),
+    ("rd_two_segs_consent_seg1", "Two detours, the rider agreed to the first road only: the second is open, a person decides."),
+    ("rd_fixed_fare", "A detour on a fixed-quote trip: nothing to refund, the breach is still recorded."),
+    ("ns_fake_here_far", "\"I'm Here\" tapped hundreds of metres from the pickup: fee refunded, the tap goes to a person."),
+    ("ns_wait_185s_edge", "The driver waited just past the three-minute mark: the fee stands."),
+    ("ns_rider_cancel_175s", "The rider cancelled just inside the grace period: the fee comes back."),
+    ("safe_keyword_only_in_statement", "A threat word appears only in the driver's own statement: screened by the judge, not by a keyword."),
+    ("bl_gps_tail_missing", "The GPS trace ends minutes before the drop-off: the missing stretch cannot be measured, a person decides."),
+    ("bl_cancelled_by_missing", "The record does not say who cancelled: nothing to rule on, a person decides."),
+]
+OUTCOME = {"no_action": "no refund", "refund_partial": "refund", "refund_full": "fee refunded", "escalate": "a person decides"}
+
+
+def examples_block(n: dict) -> str:
+    import json
+    from bench.ops_page import SCENARIO, humanize
+    by_name = {}
+    for m in (ROOT / "data" / "bench" / "manifest.json", ROOT / "data" / "bench" / "blind" / "manifest.json"):
+        for c in json.loads(m.read_text())["cases"]:
+            by_name[c["name"]] = c
+    chips = []
+    for name, brief in EXAMPLES:
+        c = by_name[name]
+        out = OUTCOME[c["truth"]["ruling"]] + (" + account flag" if c["truth"].get("flag_account") else "")
+        title = SCENARIO.get(name) or humanize(name)
+        chips.append(f'<a class="chip" href="/replay.html?case={c["case_id"]}&phase=court"><b>{title}</b><span>{brief}</span><em>{out}</em></a>')
+    blind = n.get("blind") or {}
+    summary = f"More examples · {n['cases']} benchmark cases and {blind.get('cases', 0)} held-out cases, every one replayable"
+    return (f'<!--gen:examples--><details class="audits more"><summary>{summary}</summary><div class="chips">' + "".join(chips)
+            + f'<a class="chip go" href="/replay.html?case=B-0001&phase=court"><b>More →</b><span>All {n["cases"]} benchmark and {blind.get("cases", 0)} held-out cases, one by one, in the replay page.</span></a>'
+            + '</div></details><!--/gen-->')
+
+
 def gen(name: str, n: dict) -> str:
+    if name == "examples":
+        return examples_block(n)
     if name == "meta":
         c = n["court"]
         text = (f"A ride dispute settled in {round(c['latency_mean_s'])} seconds, every ruling on the record. Multi-agent dispute resolution for ride-hailing: "
