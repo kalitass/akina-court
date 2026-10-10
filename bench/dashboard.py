@@ -244,8 +244,7 @@ CONTENT = {
                       "requirement, not the gate's discriminative power"),
     "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
                       "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone reaches "
-                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost. The two advocates change human review from {jo_h} to {ct_h}; "
-                      "their other value is the observable adversarial hearing the track requires."),
+                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost. {advocates_sentence}"),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
         "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
@@ -712,7 +711,7 @@ def build(d: dict) -> str:
 </div>
 <p class="method">{esc(CONTENT['method_caveat'].format(**fill))}</p>
 <div class="chips secondary">
-<span class="chip"><b>{ct['invalid_citations']} / {ct['citations']}</b>invalid citations in court rulings <span class="muted">(plain LLM {raw['invalid_citations']} / {raw['citations']})</span></span>
+<span class="chip"><b>{ct['invalid_citations'] + ct.get('invalid_fact_citations', 0)} / {ct['citations'] + ct.get('fact_citations', 0)}</b>invalid citations in court rulings, fact ids + clause ids <span class="muted">(plain LLM {raw['invalid_citations'] + raw.get('invalid_fact_citations', 0)} / {raw['citations'] + raw.get('fact_citations', 0)})</span></span>
 {swap_chip}
 {repeat_chip}
 <span class="chip"><b>{n_runs}</b>case-system runs · <b>{n_calls:,}</b> model calls</span>
@@ -779,7 +778,7 @@ def build(d: dict) -> str:
     # gate ablation table (new accounting: human flow = model escalated + blocked by gate)
     def case_tip(cid):
         c = hard_by_id.get(cid)
-        return f'<span class="tip" title="{esc(cid)} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span>' if c else esc(cid)
+        return f'<span class="tip" title="{esc(c["name"])}">{esc(cid)} ({esc(plain(c["hard"]))})</span>' if c else esc(cid)
     grows, gnotes = [], []
     for a in arms:
         g = G[a]
@@ -802,7 +801,10 @@ def build(d: dict) -> str:
                      f'<td class="n">{g["human_flow"]} / {g["n"]} ({pct(g["human_rate"], 0)})</td><td class="n">{g["auto"]}</td><td class="n">{wx}</td></tr>')
     gate_sentence = CONTENT["gate_sentence"].format(
         fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_ok=jo_ok, n=n_bench,
-        ratio=f"{jo_ratio:.0f}", jo_h=pct(G["judge_only"]["human_rate"], 0), ct_h=pct(G["court"]["human_rate"], 0))
+        ratio=f"{jo_ratio:.0f}",
+        advocates_sentence=(f"The two advocates leave the human-review rate at {pct(G['court']['human_rate'], 0)}; their value is the observable adversarial hearing the track requires."
+                            if G["judge_only"]["human_rate"] == G["court"]["human_rate"] else
+                            f"The two advocates change human review from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}; their other value is the observable adversarial hearing the track requires."))
     # per-case table
     pc = []
     for i, c in enumerate(man, 1):
