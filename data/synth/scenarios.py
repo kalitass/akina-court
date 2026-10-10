@@ -369,7 +369,7 @@ SCENARIOS = [
     R("rd_request_only", ("Clarke Quay", "Sentosa Beach Station"), loops=[{"frac": (0.30, 0.50)}], consent="request_only", band=2,
       expect={"ruling": "refund_partial", "flag": False}, hard="driver asked, rider never answered -> no agreement, RD-5 fails -> refund"),
     R("rd_scope_other", ("Toa Payoh HDB Hub", "VivoCity"), loops=[{"frac": (0.40, 0.55)}], consent="scope_other",
-      expect={"ruling": "refund_partial", "flag": False}, hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated 1-2 km loop with no stop -> consent does not cover it, refund"),
+      expect={"ruling": "refund_partial", "flag": False}, hard="rider agreed to a 1-min petrol stop just ahead; the segment is an unrelated loop with no stop -> consent does not cover it, refund"),
     R("rd_consent_before_prior", ("NEX Serangoon", "Suntec City"), loops=[{"frac": (0.45, 0.60)}], consent="before", band=2, prior=2,
       expect={"ruling": "escalate", "flag": False}, hard="agreement to a named road with no record tying the segment to it (G13); with 2 priors the RD-6 flag depends on the finding -> undetermined, a person decides"),
     R("rd_threat_in_chat", ("Marina Bay Sands", "Tampines Mall"), loops=[{"frac": (0.40, 0.55)}], threat="driver",
@@ -870,7 +870,8 @@ def build_route(spec, rates, rp, idx, rng, grng):
     elif spec["stop"] == "unnamed":
         statement = "I asked for a quick 7-Eleven stop on the way, not a drive to one far off the route. The meter was way above the estimate."
     elif not found:
-        statement = "The fare was higher than I expected for this trip in heavy rain, the driver must have taken a longer route."
+        statement = ("The fare was higher than I expected for this trip in heavy rain, the driver must have taken a longer route." if spec["weather"] == "heavy"
+                     else "The fare was higher than the estimate, the driver must have taken a longer route than the app showed.")
     elif spec["threat"] == "driver":
         statement = "The driver went a different way and when I asked he told me to shut up. I was overcharged and felt unsafe."
     if inc_kind in ("on_stretch", "seg1") and consent == "none":
@@ -904,7 +905,8 @@ def build_route(spec, rates, rp, idx, rng, grng):
     elif spec["stop"] == "unnamed":
         dstmt = "The rider asked for a 7-Eleven stop. I went to the one I know and waited."
     if not found:
-        dstmt = "I followed the app route exactly. The meter is what it is; it was raining and traffic was slow."
+        dstmt = ("I followed the app route exactly. The meter is what it is; it was raining and traffic was slow." if spec["weather"] == "heavy"
+                 else "I followed the app route exactly. The meter is what it is; traffic was what it was.")
     prior = spec["prior"]
     r_prof = (rng.randint(120, 1500), round(rng.uniform(4.5, 5.0), 1), rng.randint(0, 2), 0, 0, 0)
     d_dis = max(prior, rng.randint(0, 2))
@@ -1376,7 +1378,7 @@ def validate_bench(case_dict: dict, spec: dict, rates, clauses, expected: dict |
 def dated(i: int, blind: bool) -> datetime:
     """The pickup / acceptance time of the i-th scenario of a set: two cases a day, both sets end before 2026-10-10 (the day
     the reference rules were frozen and the sets were built). Fixed by position, so a case keeps its date for ever."""
-    day0 = datetime(2026, 10, 3, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 1, 8, 0, 0, tzinfo=SGT)
+    day0 = datetime(2026, 9, 26, 8, 0, 0, tzinfo=SGT) if blind else datetime(2026, 9, 1, 8, 0, 0, tzinfo=SGT)   # room for 28 held-out cases before the cutoff
     hours = [8, 9, 12, 14, 17, 18, 21, 22]
     return (day0 + timedelta(days=i // 2)).replace(hour=hours[i % len(hours)], minute=(i * 7) % 60, second=0)
 
