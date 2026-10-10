@@ -42,9 +42,9 @@ files changed, the rules did not.
 | case | scenario | before | after | why |
 |---|---|---|---|---|
 | B-0004 | rd_incident_on_stretch | refund_partial $2.44 (RD-4 failed: incident off the 30 m stretch) | no_action | the loop now bypasses 2.1 km containing the accident, reported 12 min before pickup → RD-4 exempts it |
-| B-0006 | rd_incident_late | refund_partial $6.82 | refund_partial $4.34 (now $1.90, see v3d) | same geometry fix; the accident is on the bypassed stretch but reported after the detour began → still not exempt, amount follows the new segment |
+| B-0006 | rd_incident_late | refund_partial $6.82 | refund_partial $4.34 (now $1.90, see v3d) (now refund_partial $3.33, see v4) | same geometry fix; the accident is on the bypassed stretch but reported after the detour began → still not exempt, amount follows the new segment |
 | B-0008 | rd_band1_incident | no_action | no_action | geometry fixed (bypasses 1.5 km instead of 0.2 km); outcome unchanged |
-| B-0014 | rd_two_segs_incident_seg1 | refund_partial $15.21 (both segments) | refund_partial $4.89 (segment 2 only) | segment 1 now bypasses the accident → exempt under RD-4; segment 2 unexplained → counts |
+| B-0014 | rd_two_segs_incident_seg1 | refund_partial $15.21 (both segments) | refund_partial $4.89 (segment 2 only) (now refund_partial $4.41, see v4) | segment 1 now bypasses the accident → exempt under RD-4; segment 2 unexplained → counts |
 
 ## 2026-10-10 v3c — contract gate: every loop that claims a bypass must bypass ≥ 1.0 km
 
@@ -56,8 +56,8 @@ replaced by a 1.2 km bypass). Reference outcomes unchanged except the two blind 
 
 | case | scenario | before | after | why |
 |---|---|---|---|---|
-| X-0004 | bl_negation | refund_partial $14.14 | refund_partial $3.27 | same rule (rider refused, driver went anyway: counts); the loop is now a realistic bypass, so the extra km and the amount changed |
-| X-0007 | bl_named_elsewhere | refund_partial $2.44 | refund_partial $2.21 | same rule (driver's own account puts the car on another road: counts); loop regenerated as a real bypass |
+| X-0004 | bl_negation | refund_partial $14.14 | refund_partial $3.27 (now refund_partial $5.41, see v4) | same rule (rider refused, driver went anyway: counts); the loop is now a realistic bypass, so the extra km and the amount changed |
+| X-0007 | bl_named_elsewhere | refund_partial $2.44 | refund_partial $2.21 (now refund_partial $7.11, see v4) | same rule (driver's own account puts the car on another road: counts); loop regenerated as a real bypass |
 
 ## 2026-10-10 v3d — story realism: loops that go somewhere, halts for every driver message, no case dated after the build
 
@@ -75,20 +75,51 @@ their previously committed record unchanged (dates included): B-0013, B-0014, B-
 
 | case | scenario | before | after | why |
 |---|---|---|---|---|
-| B-0001 | rd_basic | refund_partial $4.17 | refund_partial $1.57 | the 2.96 km out-and-back spur on the ECP is replaced by a loop that bypasses a real stretch |
-| B-0003 | rd_consent_after | refund_partial $7.26 | refund_partial $2.28 | smallest qualifying loop (was a 6.5 km loop round 1.3 km of AYE) |
-| B-0005 | rd_incident_decoy | refund_partial $2.98 | refund_partial $1.49 | smallest qualifying loop; the decoy breakdown stays 2+ km from it |
-| B-0006 | rd_incident_late | refund_partial $4.34 | refund_partial $1.90 | smallest qualifying loop; the accident is still listed after the turn-off (now 10 min after, not 90 s) |
-| B-0007 | rd_band1_no_incident | refund_partial $1.13 | refund_partial $0.99 | smallest qualifying loop; band 1 alone still does not exempt |
-| B-0009 | rd_band2_heavy_rain | refund_partial $10.36 | refund_partial $1.09 | the 9.4 km loop round 2 km of AYE is gone; same rule (band 2 + rain do not exempt) |
-| B-0012 | rd_stop_unnamed | refund_partial $4.47 | refund_partial $2.93 | smallest qualifying loop; the 7-Eleven is still >= 500 m off the route |
-| B-0018 | rd_prior_flag | refund_partial $7.26 + flag_account | refund_partial $2.02 + flag_account | smallest qualifying loop; RD-6 flag unchanged |
-| B-0021 | rd_request_only | refund_partial $3.12 | refund_partial $1.49 | smallest qualifying loop; no reply, RD-5 still fails |
-| B-0049 | rd_keyword_trap_find_you | refund_partial $1.09 | refund_partial $1.07 | re-sampled trace with the pickup halt; same loop |
-| X-0003 | bl_general_errand | refund_partial $5.60 | refund_partial $1.33 | new pair (AMK Hub → VivoCity); the driver's own 4-min stop inside the loop still makes it count |
-| X-0007 | bl_named_elsewhere | refund_partial $2.21 | refund_partial $0.85 | new pair (Compass One → Kallang Wave Mall); the driver's account still puts the car on another road |
+| B-0001 | rd_basic | refund_partial $4.17 | refund_partial $1.57 (now refund_partial $4.33, see v4) | the 2.96 km out-and-back spur on the ECP is replaced by a loop that bypasses a real stretch |
+| B-0003 | rd_consent_after | refund_partial $7.26 | refund_partial $2.28 (now refund_partial $2.74, see v4) | smallest qualifying loop (was a 6.5 km loop round 1.3 km of AYE) |
+| B-0005 | rd_incident_decoy | refund_partial $2.98 | refund_partial $1.49 (now refund_partial $2.76, see v4) | smallest qualifying loop; the decoy breakdown stays 2+ km from it |
+| B-0006 | rd_incident_late | refund_partial $4.34 | refund_partial $1.90 (now refund_partial $3.33, see v4) | smallest qualifying loop; the accident is still listed after the turn-off (now 10 min after, not 90 s) |
+| B-0007 | rd_band1_no_incident | refund_partial $1.13 | refund_partial $0.99 (now refund_partial $2.69, see v4) | smallest qualifying loop; band 1 alone still does not exempt |
+| B-0009 | rd_band2_heavy_rain | refund_partial $10.36 | refund_partial $1.09 (now refund_partial $7.06, see v4) | the 9.4 km loop round 2 km of AYE is gone; same rule (band 2 + rain do not exempt) |
+| B-0012 | rd_stop_unnamed | refund_partial $4.47 | refund_partial $2.93 (now refund_partial $6.90, see v4) | smallest qualifying loop; the 7-Eleven is still >= 500 m off the route |
+| B-0018 | rd_prior_flag | refund_partial $7.26 + flag_account | refund_partial $2.02 + flag_account (now refund_partial $3.00 + flag_account, see v4) | smallest qualifying loop; RD-6 flag unchanged |
+| B-0021 | rd_request_only | refund_partial $3.12 | refund_partial $1.49 (now refund_partial $6.27, see v4) | smallest qualifying loop; no reply, RD-5 still fails |
+| B-0049 | rd_keyword_trap_find_you | refund_partial $1.09 | refund_partial $1.07 (now refund_partial $2.74, see v4) | re-sampled trace with the pickup halt; same loop |
+| X-0003 | bl_general_errand | refund_partial $5.60 | refund_partial $1.33 (now refund_partial $7.12, see v4) | new pair (AMK Hub → VivoCity); the driver's own 4-min stop inside the loop still makes it count |
+| X-0007 | bl_named_elsewhere | refund_partial $2.21 | refund_partial $0.85 (now refund_partial $7.11, see v4) | new pair (Compass One → Kallang Wave Mall); the driver's account still puts the car on another road |
 
 Held-out pairs no longer repeat a bench route: X-0002 Toa Payoh HDB Hub → Changi City Point, X-0003 AMK Hub → VivoCity,
 X-0005 Pasir Ris MRT → Suntec City, X-0006 Hougang Mall → Changi Airport T3, X-0007 Compass One → Kallang Wave Mall,
 X-0009 Junction 8 → Jurong Point, X-0010 NEX Serangoon → VivoCity, X-0011 Buona Vista MRT → Suntec City, X-0012 Toa Payoh
 HDB Hub → Pasir Ris MRT (outcomes unchanged).
+
+## 2026-10-10 v4: the generator rebuilt — pinned loop plans, corridor candidates, target amounts, one linter
+
+The generation flow was redone after an external review: every case is built in memory and published only after the
+contract, an engine-free reference derivation (`reference.py`), the typed `expect`, the format checks and the linter
+(`lint.py`) all pass; loop geometry is searched among corridor candidates (two via points on a parallel road) and
+single-via candidates, scored by the distance of the refundable extra km from a target amount ($3 / $5 / $7 by
+scenario identity) instead of "smallest extra wins", and the chosen plan is pinned in the manifest so a rebuild
+reproduces the file byte for byte. Random streams now derive from the scenario name. Two scenarios changed pair
+(rd_scope_other: Toa Payoh HDB Hub -> VivoCity; rd_consent_before_prior: NEX Serangoon -> Suntec City) because their
+corridors offered no valid loop. No rule changed: rulings, flags and escalations are unchanged; the amounts below follow
+the new loops.
+
+| case | scenario | before | after | why |
+|---|---|---|---|---|
+| B-0001 | rd_basic | refund_partial $1.57 | refund_partial $4.33 | new loop plan (target amount, corridor candidates) |
+| B-0003 | rd_consent_after | refund_partial $2.28 | refund_partial $2.74 | new loop plan (target amount, corridor candidates) |
+| B-0005 | rd_incident_decoy | refund_partial $1.49 | refund_partial $2.76 | new loop plan (target amount, corridor candidates) |
+| B-0006 | rd_incident_late | refund_partial $1.90 | refund_partial $3.33 | new loop plan (target amount, corridor candidates) |
+| B-0007 | rd_band1_no_incident | refund_partial $0.99 | refund_partial $2.69 | new loop plan (target amount, corridor candidates) |
+| B-0009 | rd_band2_heavy_rain | refund_partial $1.09 | refund_partial $7.06 | new loop plan (target amount, corridor candidates) |
+| B-0012 | rd_stop_unnamed | refund_partial $2.93 | refund_partial $6.90 | new loop plan (target amount, corridor candidates) |
+| B-0014 | rd_two_segs_incident_seg1 | refund_partial $4.89 | refund_partial $4.41 | new loop plan (target amount, corridor candidates) |
+| B-0015 | rd_two_segs_plain | refund_partial $3.74 | refund_partial $8.22 | new loop plan (target amount, corridor candidates) |
+| B-0018 | rd_prior_flag | refund_partial $2.02 + flag_account | refund_partial $3.00 + flag_account | new loop plan (target amount, corridor candidates) |
+| B-0021 | rd_request_only | refund_partial $1.49 | refund_partial $6.27 | new loop plan (target amount, corridor candidates) |
+| B-0022 | rd_scope_other | refund_partial $2.44 | refund_partial $6.43 | new loop plan (target amount, corridor candidates) |
+| B-0049 | rd_keyword_trap_find_you | refund_partial $1.07 | refund_partial $2.74 | new loop plan (target amount, corridor candidates) |
+| X-0003 | bl_general_errand | refund_partial $1.33 | refund_partial $7.12 | new loop plan (target amount, corridor candidates) |
+| X-0004 | bl_negation | refund_partial $3.27 | refund_partial $5.41 | new loop plan (target amount, corridor candidates) |
+| X-0007 | bl_named_elsewhere | refund_partial $0.85 | refund_partial $7.11 | new loop plan (target amount, corridor candidates) |
