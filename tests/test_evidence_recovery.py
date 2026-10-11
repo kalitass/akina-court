@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from core.evidence import EvidenceResponse, SyntheticGpsProvider, digest, plan, recover
+from app.evidence import EvidenceResponse, SyntheticGpsProvider, digest, plan, recover
 from core.schemas import Case
 
 ROOT = Path(__file__).resolve().parents[1]
