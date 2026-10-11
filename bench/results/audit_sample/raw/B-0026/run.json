@@ -2,21 +2,21 @@
  "arm": "raw",
  "case_id": "B-0026",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T18:55:52+00:00",
+ "started_at": "2026-10-11T02:36:13+00:00",
  "fingerprint": {
   "case_sha256": "7e8ed3e599eb10cd",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "fe5ca6e9c490331a",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T18:55:52+00:00"
+  "issued_at": "2026-10-11T02:36:13+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and flag the driver's account for GPS-verified 'I'm Here' abuse; no safety referral needed.",
-  "confidence": 0.95,
-  "reasoning": "Cancellation-fee branch: driver cancelled (cancelled_by = driver) claiming rider no-show, so NS-0 routes to NS-1/NS-2.\n\nNS-1 requires (ii) the driver be at the pickup point when 'I'm Here' is pressed. The tap is recorded at 12:06:15; the nearest GPS sample is 12:06:00 at (1.304756, 103.854869), which is ~659 m from the Bugis Junction pickup (1.2994, 103.8555) — well outside the 200 m radius; the driver is stationary near Jalan Besar (his speed drops to ~1 km/h only at ~12:06 and he never approaches the pickup before cancelling at 12:09:25). Requirement (ii) fails.\n\nRequirement (iii) also fails the pickup test: from 12:06:00 to 12:09:25 the driver sits at ~659 m from the pickup for >3 minutes, but not at the pickup point, and the rider's 12:07:15 message (\"I'm at the pickup point, no car here\") corroborates that he never arrived.\n\nThe rider's account (driver marked arrived, car never there) is confirmed by the GPS trace; the driver's statement that he waited at the pickup is contradicted by the system record and is rejected.\n\nConsequence: NS-2 — full refund of the $6.61 cancellation fee, and because the driver pressed 'I'm Here' while GPS shows he was not at the pickup point, an account flag for abuse of the waiting/cancellation button. The driver's profile (no_show_disputes_upheld_90d = 1, disputes_upheld_90d = 1) is noted but profile facts do not decide the case; the flag rests on the GPS-recorded button abuse.\n\nSafety screen: no threats, harassment, sexual remarks or dangerous-driving allegations in the chat, complaint or driver statement — safety_concern = none.",
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher; note the driver tapped \"I'm Here\" ~5.6 km from the pickup point, and send the driver's account for review of the arrival/cancellation-button abuse + flag_account",
+  "confidence": 0.87,
+  "reasoning": "Dispute is a no-show cancellation fee ($6.61) on a completed-cancel flow. cancelled_by = driver, so NS-0 routes the case to NS-1/NS-2.\n\nNS-1 requires all three: (i) \"I'm Here\" pressed (driver_pressed_here_at = 12:06:15, yes); (ii) at that instant the GPS shows the driver at the pickup point — the trace fixes the driver at 1.30476, 103.85487 from 12:06:00 onward, while pickup is 1.29940, 103.85555. That is ~0.0054° of latitude ≈ 600 m — an order of magnitude beyond the 200 m arrival radius; (iii) a continuous >3 min wait inside that radius after the tap — impossible, since the driver was never within the radius at all (he sat ~5.6 km of road away on Jalan Besar). Condition (ii) and (iii) both fail, so NS-1 does not hold.\n\nNS-2 therefore applies: the rider's $6.61 is refunded in full. Because the driver pressed \"I'm Here\" while the GPS places him far outside the pickup radius (m_from_pickup_at_tap ≈ 600 m ≫ 200 m), NS-2's extra limb adds flag_account for abuse of the arrival/cancellation button (Ryde's fraud list: abuse of the cancellation and waiting button).\n\nThe driver's statement (\"waited more than 3 minutes at the pickup\") is contradicted by the system GPS record, which overrides statements; the chat corroborates (rider at 12:07:15: \"I'm at the pickup point, no car here\"; driver's own message at 12:09:15 admits only elapsed time, no location). No GPS gap near the cancellation: samples are continuous to 12:09:25, so the interval can be read directly.\n\nAmount: refund_full = 100% of the $6.61 cancellation fee. The rider's own 90-day record is clean; the driver's profile (no_show_disputes_upheld_90d = 1) is used only as an additional-action basis, per the rule that profiles never decide the case alone. Safety screen: reviewed complaint, chat and driver statement — abusive language, threats and dangerous-driving allegations are absent, so no escalation. Evidence is sufficient: timeline, GPS trace and chat all resolve the elements, no evidence gap.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -24,12 +24,16 @@
    "NS-2"
   ],
   "escalate": false,
-  "escalation_reason": "null",
+  "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement_no_show",
-    "reason": "Contradicted by GPS: at the recorded 'I'm Here' tap (12:06:15) the driver was ~659 m from the pickup point and remained stationary there until cancelling at 12:09:25; he was never within 200 m of the pickup."
+    "id": "driver_statement",
+    "reason": "The claim of waiting >3 min at the pickup is contradicted by the GPS trace: at the 'I'm Here' tap (12:06:15) and throughout the ~200 s until cancellation the driver was at 1.30476, 103.85487, roughly 600 m from the pickup point (1.29940, 103.85555) — far outside the 200 m arrival radius. System records override statements."
+   },
+   {
+    "id": "rider_complaint_implicit",
+    "reason": "Accepted in substance: the rider says the driver was never at the pickup, which the GPS confirms; therefore the fee does not stand, though the outcome follows NS-2, not the rider's characterisation alone."
    }
   ],
   "flag_account": true,
@@ -38,13 +42,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 3.86,
+ "latency_s": 5.04,
  "model_calls": 1,
  "provider_trace_ids": [
-  "75749f7dfbdbe9d6c8f55951403df243"
+  "337cc984355348fe35fb54073a2edd84"
  ],
  "provider_response_ids": [
-  "80704dca-ca14-4995-8228-6bd776152971"
+  "d65915a7-bb57-4905-8623-2f693816f0c8"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -58,8 +62,8 @@
  "usage": [
   {
    "prompt_tokens": 12177,
-   "completion_tokens": 841,
-   "total_tokens": 13018,
+   "completion_tokens": 1052,
+   "total_tokens": 13229,
    "prompt_tokens_details": {
     "cached_tokens": 12032
    },
@@ -67,5 +71,5 @@
    "prompt_cache_miss_tokens": 145
   }
  ],
- "finished_at": "2026-10-10T18:55:55+00:00"
+ "finished_at": "2026-10-11T02:36:18+00:00"
 }

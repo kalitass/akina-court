@@ -137,7 +137,7 @@ def esc(s) -> str:
 def chip(cid: str, label: str | None, cls: str = "chip") -> str:
     t = f' title="{esc(label)}"' if label else ""
     base = re.sub(r"\([a-z]\)$", "", cid)
-    if re.fullmatch(r"(RD|NS|SAFE)-\d+", base):   # clause ids open the policy page at that clause
+    if base in CLAUSE:   # clause ids open the policy page at that clause; an id the policy does not have (a void citation) stays a plain chip
         return f'<a class="{cls}" href="/policy.html#{esc(base)}" target="_blank" rel="noopener"{t}>{esc(cid)}</a>'
     return f'<span class="{cls}"{t}>{esc(cid)}</span>'
 

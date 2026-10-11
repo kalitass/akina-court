@@ -19,7 +19,7 @@ from core.agents.judge import build_judge, build_notice_writer, judge_prompt
 from core.notices import consistent, escalation_notices, fallback_notices
 from core.facts.tools import build_fact_table
 from core.policy import citable_ids
-from core.policy_engine import check_ruling, evaluate
+from core.policy_engine import check_ruling, evaluate, tie_possible
 from core.stretch import Hooks, renumber, replay
 from core.schemas import GROUND_CONSEQUENCE, Case, CaseBrief, CaseRecord, Event, Notice, Rebuttal, RequestedOutcome, Ruling
 from core.verify import citation_problems, verify_brief, verify_rebuttal, verify_ruling
@@ -71,15 +71,38 @@ def rebuttal_body(r: Rebuttal) -> str:
     return "\n".join(out)
 
 
+def record_grounds(cert, grounds: dict) -> dict:
+    """An advocate's segment grounds, corrected where the record cannot support the form of a ground: "named_road_tied" needs a
+    record that ties the segment to the road (a stop in it, a message once it had started); with none on record it is read
+    as "named_road_untied" (G13). The reading of the words stays the advocate's; only the tie, which code can see, is corrected."""
+    out = dict(grounds or {})
+    for fid, g in list(out.items()):
+        if g == "named_road_tied" and fid in cert.segments and cert.segments[fid]["exempt"] is None and not tie_possible(cert, fid):
+            out[fid] = "named_road_untied"
+    return out
+
+
+def ground_corrections(cert, briefs: dict, rebuttals: dict) -> list[str]:
+    """Human-readable list of the corrections record_grounds applied to the briefs and rebuttals (for the event log)."""
+    out = []
+    for side in ("rider", "driver"):
+        for what, src in (("brief", briefs.get(side)), ("rebuttal", rebuttals.get(side))):
+            gs = src.segment_grounds if src else {}
+            for fid, g in gs.items():
+                if record_grounds(cert, {fid: g}).get(fid) != g:
+                    out.append(f"{fid} {side} {what}: '{g}' → 'named_road_untied' (no stop in the segment and no message once it had started: nothing on record can tie the segment to the road, G13)")
+    return out
+
+
 def stipulated_grounds(cert, briefs: dict, rebuttals: dict) -> dict:
     """Open segments (code did not settle them) for which the rider's and the driver's advocates state the same ground —
     each side's rebuttal reading, else its brief reading. "other" never stipulates anything."""
     final = {}
     for side in ("rider", "driver"):
         b, r = briefs.get(side), rebuttals.get(side)
-        final[side] = dict(b.segment_grounds if b else {})
+        final[side] = record_grounds(cert, b.segment_grounds if b else {})
         if r and r.segment_grounds:
-            final[side].update(r.segment_grounds)
+            final[side].update(record_grounds(cert, r.segment_grounds))
     out = {}
     for fid, sg in cert.segments.items():
         if sg["exempt"] is not None:
@@ -87,6 +110,24 @@ def stipulated_grounds(cert, briefs: dict, rebuttals: dict) -> dict:
         g1, g2 = final["rider"].get(fid), final["driver"].get(fid)
         if g1 and g1 == g2 and g1 in GROUND_CONSEQUENCE:
             out[fid] = g1
+    return out
+
+
+def argued_grounds(cert, briefs: dict, rebuttals: dict) -> dict:
+    """Open segments → {side: [grounds that side put forward]} (brief reading, then rebuttal reading if it differs).
+    The judge decides between these; a ground neither side argued is not the judge's to supply (check_ruling)."""
+    out = {}
+    for fid, sg in cert.segments.items():
+        if sg["exempt"] is not None:
+            continue
+        out[fid] = {}
+        for side in ("rider", "driver"):
+            gs = []
+            for src in (briefs.get(side), rebuttals.get(side)):
+                g = record_grounds(cert, src.segment_grounds if src else {}).get(fid)
+                if g and g in GROUND_CONSEQUENCE and g not in gs:
+                    gs.append(g)
+            out[fid][side] = gs
     return out
 
 
@@ -217,7 +258,16 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
             log.emit("verify", "check", f"Rebuttal check — {side}", "\n".join(lines))
 
     # ---- stipulation: a ground both advocates state for an open segment is agreed and binds the judge ----
+    corrections = ground_corrections(cert, briefs, rebuttals) if advocates else []
+    if corrections:
+        log.emit("verify", "check", "Advocate ground corrected by the record: " + "; ".join(c.split(":")[0] for c in corrections), "\n".join(corrections))
     stipulated = stipulated_grounds(cert, briefs, rebuttals) if advocates else {}
+    argued = argued_grounds(cert, briefs, rebuttals) if advocates else None
+    if argued and any(gs for sides in argued.values() for gs in sides.values()):
+        log.emit("verify", "check", "Grounds put forward by the advocates: " + "; ".join(
+                     f"{f} — " + ", ".join(f"{s}: {'/'.join(gs) or '—'}" for s, gs in sides.items()) for f, sides in argued.items()),
+                 "each side named the policy ground its reading of the record supports for every open segment; the judge decides between "
+                 "the argued grounds — a finding on a ground neither side put forward is sent back once, then goes to a person; undetermined is always open")
     if stipulated:
         log.emit("verify", "check", "Stipulated by both advocates: " + ", ".join(f"{f} → {g}" for f, g in stipulated.items()),
                  "each side stated the same policy ground for these segments after reading the other; the judge rules on that ground or names the fact that refutes it")
@@ -225,6 +275,14 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     # ---- ruling (judge) with one self-correction on citation problems ----
     judge = build_judge()
     jprompt = judge_prompt(d, summary, table, [briefs["rider"], briefs["driver"]], rebuttals, cert.lines(), judge_items)
+    if argued and any(gs for sides in argued.values() for gs in sides.values()):
+        jprompt += ("\n\nGROUNDS ARGUED (each advocate's reading of the record, per open segment). You decide between the readings the parties put "
+                    "forward and you may name the sub-branch you read; but a consequence (exempt / counts) that no argued ground leads to is sent back "
+                    "once, then the case goes to a person. Find a segment undetermined only when the record itself does not settle the reading — "
+                    "not because the parties disagree. One exception: where one side reads the rider's words as a general route choice and the "
+                    "other as an agreement to a named road, the kind of agreement is contested and no exemption executes on it — find that segment "
+                    "undetermined.\n" + "\n".join(
+                        f"  {f}: " + "; ".join(f"{s} → {', '.join(gs) or 'none stated'}" for s, gs in sides.items()) for f, sides in argued.items()))
     if stipulated:
         jprompt += "\n\nSTIPULATED (both advocates state the same ground; it binds you unless a fact you cite refutes it):\n" + "\n".join(
             f"  {f}: ground {g} → finding {GROUND_CONSEQUENCE[g]}" for f, g in stipulated.items())
@@ -257,7 +315,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         sf = f0.model_copy(update={"finding": "counts" if f0.finding == "exempt" else "exempt", "reason": "(demo) finding flipped"})
         raw = raw.model_copy(update={"segment_findings": [sf] + raw.segment_findings[1:]})
     if not err and "flip_finding" not in inject and "wrong_amount" not in inject:
-        ok_c, why_c = check_ruling(cert, raw, stipulated)   # an escalate with a real ground (safety, open question, missing evidence) passes; one without is sent back once
+        ok_c, why_c = check_ruling(cert, raw, stipulated, argued)   # an escalate with a real ground (safety, open question, missing evidence) passes; one without is sent back once
         if not ok_c:   # one self-correction against the certificate: the judge sees exactly where it contradicts the code
             log.emit("verify", "check", "Ruling contradicts the policy certificate — returned to judge once", "\n".join(why_c), ruling=raw)
             jr3, err3 = await _staged(judge.run(
@@ -274,7 +332,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         raw = raw.model_copy(update={"segment_findings": []})      # the field is for off-route segments only; the verifier drops them too
     log.emit("judge", "ruling", f"Proposed ruling: {raw.ruling}" + (f" ${raw.amount:.2f}" if raw.amount else "") + f" (model confidence {raw.confidence:.2f})",
              raw.reasoning, ruling=raw)
-    ruling, lines = verify_ruling(raw, table, clause_ids, (briefs["rider"], briefs["driver"]), certificate=cert, stipulated=stipulated)
+    ruling, lines = verify_ruling(raw, table, clause_ids, (briefs["rider"], briefs["driver"]), certificate=cert, stipulated=stipulated, argued=argued)
     if degraded and not ruling.escalate:
         ruling = ruling.model_copy(update={"ruling": "escalate", "amount": None, "escalate": True, "escalation_reason": "; ".join(degraded)})
         lines.append("an advocate stage failed → human review")

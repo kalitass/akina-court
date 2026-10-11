@@ -5,6 +5,16 @@ The reference answer of every benchmark case is derived by `data/synth/scenarios
 model's output. The version string lives in `data/bench/manifest.json` (`reference_version`). Every answer that a
 rule change moves is listed here with the gap and why it moves the outcome.
 
+## 2026-10-11 v4 — no rider message before the segment: settled by code
+
+Rule: RD-5 consent and an RD-3 rider-named stop both need a message from the RIDER sent before the segment started.
+That is timing, which code measures. When every rider message is later than the segment start, or the record holds
+only the driver's messages and the driver's statement (a claim, not consent — G11), both clauses fail and the segment
+counts; the question is no longer put to the judge. No outcome and no amount moves. Nine answers lose RD-5 from
+their cited clauses (the clause fails mechanically instead of being read): B-0003, B-0005, B-0006, B-0009, B-0014,
+B-0015, B-0018, B-0019, B-0021. The policy trace of those cases (and of B-0024, the threat case) marks RD-5 / RD-3 ✗
+where it used to mark them ?. Case files are unchanged.
+
 ## 2026-10-10 v3 — agreement to a named road needs a record tying the driven segment to it (G13)
 
 Rule: a rider's agreement to "go via X" covers driving on X only. The record carries no road names for the driven

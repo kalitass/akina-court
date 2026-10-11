@@ -88,7 +88,7 @@ def test_fake_citation_escalates():
 @pytest.mark.parametrize("name,base,allowed", [
     ("swap_profiles", "C-0001", ["refund_partial", "no_action", "escalate"]), ("heavy_rain", "C-0001", ["refund_partial", "no_action", "escalate"]),
     ("grace_179", "C-0005", ["refund_full", "escalate"]), ("grace_181", "C-0005", ["no_action", "escalate"]),
-    ("no_consent", "C-0001", ["refund_partial", "no_action", "escalate"]),   # the driver's messages and statement remain: the judge reads them (and finds no consent)
+    ("no_consent", "C-0001", ["refund_partial", "escalate"]),   # no rider message before the segment remains: RD-5 / RD-3 fail by timing, code settles the segment (the driver's words and statement are not consent, G11)
     ("metered_to_fixed", "C-0001", ["no_action", "escalate"]),
 ])
 def test_counterfactuals_move_only_where_the_clause_says(name, base, allowed):

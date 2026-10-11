@@ -2,21 +2,21 @@
  "arm": "facts_only",
  "case_id": "B-0034",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T18:56:24+00:00",
+ "started_at": "2026-10-11T02:36:48+00:00",
  "fingerprint": {
   "case_sha256": "ba0f8ed8a7585e17",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "fe5ca6e9c490331a",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T18:56:24+00:00"
+  "issued_at": "2026-10-11T02:36:48+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and record the driver's premature cancellation (no-show claim not supported).",
-  "confidence": 0.9,
-  "reasoning": "Safety screen: the chat contains only pickup arrangement and cancellation notices [F9][F10]; no threat, harassment, sexual remark, abuse or dangerous-driving allegation, so no SAFE-1/SAFE-2 escalation. Evidence is complete and timestamped [F11], so evidence_status = sufficient.\n\nNS-0 routes this to NS-1: the driver cancelled and claims rider no-show [F12]. Testing NS-1's three requirements:\n(i) The driver did press \"I'm Here\" [F6], so (i) holds.\n(ii) At the tap (13:02:35) GPS showed him 39 m from the pickup point [F6], within the 200 m data-layer radius, so (ii) holds.\n(iii) NS-1(iii) requires continuous waiting at the pickup point for more than 3 minutes (≥ 3:01) after the tap. The record shows the opposite: the driver stayed within 200 m for only 2 min 55 s after the tap [F6] and cancelled at 13:05:30, i.e. 2 min 55 s after the tap. The alternative timeline read also fails: cancellation came 4 min 30 s after the platform-recorded arrival at 13:01:00 [F5], but the tap time controls under NS-1, and even on arrival time the stationary window was only 3 min 15 s [F3] ending in the cancellation. Either way the > 3 min continuous wait from the tap is not met. The driver's written claim of \"waited more than 3 minutes\" [F12] is a statement (chat/statement) that the system timeline records override, and the free-wait concept does not substitute for the no-show threshold.\n\nBecause NS-1(iii) fails, NS-2 applies: the $6.61 cancellation fee does not stand and must be refunded in full. Per NS-7 the refund issues as a voucher worth $6.61; no cash. The (ii) condition was satisfied (39 m ≤ 200 m [F6]), so the extra RD-6/NS-2 flag_account for tapping \"I'm Here\" while outside the pickup radius is not triggered. The traffic facts [F13][F14] and weather [F15] are irrelevant to a no-show dispute. Driver profile [F17] (1 upheld no-show in 90 d) is not relied on to decide this case.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; note the driver's no-show claim as not established (continuous in-radius wait after the \"I'm Here\" tap was 2 min 55 s, under the 3-minute threshold).",
+  "confidence": 0.86,
+  "reasoning": "Safety screen: the only messages are two routine, timestamped trip-coordination messages [F9][F10][F11]; the driver's written statement [F12] is a plain factual account. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation — no SAFE-1/SAFE-2 trigger.\n\nBranch (NS-0): this is a completed-booking no-show dispute with cancelled_by = driver [F4]; NS-1/NS-2 govern the $6.61 fee. Trip was RydeX (non-metered), cancellation policy applies [F4][F7].\n\nNS-1 test of the driver's no-show claim:\n(i) Arrival tap: the driver pressed \"I'm Here\" at 13:02:35 [F6]. Note the platform separately logged arrival at 13:01:00 [F5]; the record distinguishes platform_auto from the driver's tap, and the driver tap exists here.\n(ii) Location at tap: 39 m from the pickup point at that moment [F6] — within 200 m, satisfied (driver also stayed within 200 m afterwards [F6], closest approach 38 m [F1]).\n(iii) Continuous > 3 min wait inside the radius after the tap: only 2 min 55 s (13:02:35 → 13:05:30) inside 200 m [F6][F5]. The default threshold is > 3 minutes (≥ 3:01); the arrival log at 13:01:00 and the cumulative 4 min 30 s within 200 m before cancellation [F2] cannot substitute, because NS-1(iii) excludes time spent near the pickup before the tap. The stationary period 13:02:15–13:05:30 (3 min 15 s) [F3] begins 20 s BEFORE the tap, so it does not yield a post-tap band either.\nRecord carries no alternative no-show threshold (free_wait_time is a waiting-fee trigger, not a no-show threshold), so the default 3-minute rule applies.\n\nResult: (iii) fails → NS-2: the $6.61 cancellation fee is refunded in full, refund_full, amount $6.61 [F7]. NS-2's extra flag_account applies only when the driver tapped \"I'm Here\" while GPS showed him outside the pickup radius (m_from_pickup_at_tap > 200) — here the tap was at 39 m [F6], so no flag on that ground. Driver's profile shows 1 prior upheld no-show dispute in 90 d [F17], but RD-6 is a route-deviation clause and this case's failure is the opposite direction (fee refunded, no route violation), so no account flag is added; profile facts cannot decide the case anyway.\n\nTraffic/weather facts [F13][F14][F15] are irrelevant: no route deviation is alleged. Rider profile [F16] not used to decide.\n\nEvidence status: sufficient — GPS/timeline cover the whole window through cancellation, chat is fully timestamped, no gaps.",
   "cited_facts": [
    "F1",
    "F2",
@@ -43,11 +43,11 @@
   "rejected_claims": [
    {
     "id": "F12",
-    "reason": "Driver's post-trip statement that he waited more than 3 minutes after tapping 'I'm Here' conflicts with system timeline/GPS records showing only 2 min 55 s within 200 m after the tap [F6] and cancellation at 13:05:30 [F4]; system records override statements, so NS-1(iii) is not satisfied."
+    "reason": "Driver's post-trip statement claims he waited more than 3 minutes after tapping 'I'm Here'; the timeline/GPS records [F5][F6] show only 2 min 55 s of in-radius time after the tap, so the claim fails NS-1(iii) and the fee is refunded under NS-2."
    },
    {
-    "id": "F2",
-    "reason": "Cumulative time within 200 m before cancellation (4 min 30 s) includes time before the 'I'm Here' tap; NS-1(iii) counts only continuous waiting after the tap, which was 2 min 55 s [F6]."
+    "id": "claim-arrival-1301",
+    "reason": "Pre-tap presence (platform arrival 13:01:00, 4 min 30 s cumulative within 200 m [F2][F5]) is a statement/record of proximity, not 'waiting' under NS-1(iii), which counts only continuous in-radius time after the tap."
    }
   ],
   "flag_account": false,
@@ -56,13 +56,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.15,
+ "latency_s": 5.57,
  "model_calls": 1,
  "provider_trace_ids": [
-  "503e31c26b85caf9ef7486474e44c321"
+  "9310113dc94e10d08d17f0c7f61527b1"
  ],
  "provider_response_ids": [
-  "fd510500-41b9-45b5-b711-0afe89082b85"
+  "d0c623b9-aa95-42d7-9669-e42a80b80cdd"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -76,8 +76,8 @@
  "usage": [
   {
    "prompt_tokens": 10271,
-   "completion_tokens": 1013,
-   "total_tokens": 11284,
+   "completion_tokens": 1152,
+   "total_tokens": 11423,
    "prompt_tokens_details": {
     "cached_tokens": 10112
    },
@@ -85,5 +85,5 @@
    "prompt_cache_miss_tokens": 159
   }
  ],
- "finished_at": "2026-10-10T18:56:29+00:00"
+ "finished_at": "2026-10-11T02:36:53+00:00"
 }

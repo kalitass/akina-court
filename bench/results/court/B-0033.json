@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:47:35.484125+00:00",
+ "ts": "2026-10-11T02:32:20.078165+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; no refund to rider, no account action",
-  "confidence": 0.87,
-  "reasoning": "The fee at issue is the $6.61 charged on a driver-cancellation after a claimed rider no-show [F4][F7]. Under NS-0, a driver-side cancellation with a no-show claim is tested only against NS-1, so the whole dispute turns on NS-1's three elements [F4][NS-0]. Both advocates agree on that routing, and I adopt it.",
+  "recommended_action": "Uphold the $6.61 driver-cancellation fee; close the rider's refund request with a written explanation of the NS-1 wait computation (185 s post-tap inside 200 m).",
+  "confidence": 0.85,
+  "reasoning": "The dispute is a completed driver-side cancellation with a $6.61 cancellation fee on the record, so it enters through NS-0's cancelled_by = driver branch and is tested by NS-1 [F4][F7][NS-0]. The arrival confirmation is a driver tap (\"I'm Here\") at 09:54:15, at which moment the GPS placed the driver 40 m from the pickup point, well inside the 200 m radius — NS-1 (i) and (ii) are satisfied [F6][F1][NS-1].\n\nRequirement (iii) is the whole case. The policy counts only the continuous wait inside the radius after the arrival confirmation, and the trace measures 185 s (3 min 5 s) continuously within 200 m after the 09:54:15 tap, against a 3:01 threshold — the wait exceeds three minutes, so NS-1 (iii) holds [F6][NS-1]. The rider's argument that the pre-tap time must be excluded is correct as a matter of policy [F2][F3][NS-1], but exclusion does not help her: the post-tap figure itself clears the threshold by five seconds, and the record carries no no_show_threshold_min, so the official sample's 8-minute figure she cites is inapplicable [F5][NS-1]. The driver's statement that he waited \"more than 3 minutes\" [F12] adds nothing either way; the system record independently sustains the wait, so the statement is not doing the work [F6][NS-1].\n\nBecause NS-1 (i)–(iii) are all met, no refund trigger under NS-2 fires and the $6.61 stands; the correct outcome is no_action [F7][NS-2]. No other line of the fare is in issue: the charge carries no surge and the record shows no traffic or weather circumstances bearing on it [F8][F13][F14][F15][FARE-1].\n\nThe rider's account-review request under NS-2 fails on its own terms. NS-2's flag_account attaches to a driver who tapped \"I'm Here\" while the GPS showed him outside the pickup radius — here the tap was 40 m out, inside the radius, so the fraud/abuse trigger is not engaged [F1][F6][NS-2]. The driver's history (2 upheld no-show disputes in 90 days) [F17] is offered only as a basis for an extra action and, under RD-6's \"repeated\" logic, that action flows from a case upheld AGAINST the driver; this case is not upheld against him, so no flag is warranted, and profile facts cannot decide or add an action here in any event [F17][RD-6]. Likewise the rider's own clean profile [F16] does not affect the computation.\n\nSafety: I read both chat messages, the driver's written statement and the complaint in full. The messages are a pickup notice (\"At the pickup now, grey Kia Niro\") and a closing notice (\"Waited more than 3 min, cancelling\") [F9][F10][F12]; the complaint is a billing grievance, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — safety screen: none [SAFE-1].\n\nEvidence: the wait is settled by the GPS and timeline records — the trace shows no sampling hole between the arrival confirmation and the cancellation, the chat record is complete and fully timestamped [F2][F6][F11], and the arithmetic driving the outcome (185 s vs 180 s) is on a measured record. No record needed by any cited clause is missing, so evidence_status = sufficient.",
   "cited_facts": [
    "F1",
    "F2",
@@ -21,10 +21,14 @@
    "F5",
    "F6",
    "F7",
+   "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
+   "F14",
+   "F15",
    "F16",
    "F17"
   ],
@@ -32,6 +36,8 @@
    "NS-0",
    "NS-1",
    "NS-2",
+   "FARE-1",
+   "RD-6",
    "SAFE-1"
   ],
   "escalate": false,
@@ -40,39 +46,35 @@
   "rejected_claims": [
    {
     "id": "C2",
-    "reason": "Conceded for the rider: the location element is admitted as met, and it does not carry her case — GPS puts the driver 38–39 m from the pickup [F1][F3], well inside the NS-1(ii) radius."
+    "reason": "The 8-minute no_show_threshold_min the rider cites comes from an official sample; this ticket record carries no threshold field, so the NS-1 default (a post-tap wait exceeding 3 minutes) governs, and the post-tap wait of 185 s clears it [F6][NS-1]."
    },
    {
     "id": "C3",
-    "reason": "The premise that the pre-tap span must be excluded is correct, but the consequence is not: the post-tap span in [F6] is 185 s, which alone exceeds the 180 s threshold [NS-1]."
+    "reason": "Correct that pre-tap time is excluded, but the exclusion is what leaves the controlling figure at 185 s inside 200 m after the 09:54:15 tap, which is still more than 3 minutes [F3][F6][NS-1]."
    },
    {
     "id": "C4",
-    "reason": "The two timestamps do not conflict: [F5] is the platform-detected arrival and [F6] is the driver's tap, and NS-1(iii) expressly counts from the tap [F6][F5][NS-1]. Counting from the tap still yields 3 min 5 s [F6], above 3:01."
+    "reason": "NS-2's refund trigger does not fire: the tap was made 40 m from the pickup (inside the radius) and the post-tap in-radius wait exceeded 3 minutes, so the fee is valid [F1][F6][F7][NS-2]."
    },
    {
     "id": "C5",
-    "reason": "Agreed that the post-trip statement [F12] proves nothing on its own, but the duration element is established by the system record [F6] read with NS-1, not by [F12]."
+    "reason": "The rider is right that a statement cannot create a fee, but wrong that the records contradict the wait: the system record itself shows 185 s inside 200 m after the tap [F6][F12][NS-1]."
    },
    {
     "id": "C6",
-    "reason": "The rider's silence in the chat [F11] is not a defect in the driver's case: nothing in NS-1 requires a further warning beyond the arrival confirmation and the elapse of the waiting time [F9][F10][NS-1]."
+    "reason": "NS-1 imposes no advance-notice-of-intent requirement, and the chat, which is complete and timestamped and shows the driver at the pickup and waiting, does not excuse the charge [F9][F10][F11][NS-1]."
    },
    {
-    "id": "C8",
-    "reason": "flag_account under NS-2 requires the driver to have tapped 'I'm Here' while GPS showed him away from the pickup; the record shows 40 m at the tap [F6] and 38–39 m overall [F1][F3], so the condition fails, and the profile count [F17] cannot substitute (profile facts never decide alone) [NS-2][F17]."
+    "id": "C7",
+    "reason": "NS-2's flag_account attaches only where the driver tapped 'I'm Here' while the GPS showed him outside the pickup radius; here the tap was 40 m out, and profile facts cannot create an account action absent a case upheld against the driver [F1][F6][F17][RD-6][NS-2]."
    },
    {
-    "id": "C1",
-    "reason": "Correct as to the branch only: the driver cancelled [F4] and claimed a no-show, so NS-0 routes this to NS-1 [NS-0][NS-1]; it yields the rider no refund because NS-1 is satisfied."
+    "id": "D4",
+    "reason": "The driver's notice argument is not needed to sustain the fee and is not what decides it; NS-1 turns on the measured arrival confirmation and continuous in-radius wait, not on messages sent to the rider [F9][F10][F6][NS-1]."
    },
    {
-    "id": "C9",
-    "reason": "Immaterial: no traffic or weather record [F13][F14] bears on NS-1's timing elements, which the system records already settle [F6][F4][NS-1]."
-   },
-   {
-    "id": "D8",
-    "reason": "Correct and immaterial — the rider's profile [F16] is neutral background and decides nothing under NS-1/NS-2."
+    "id": "D6",
+    "reason": "The driver's conclusion of no_action is correct, but his reasoning rests on the 3 min 55 s platform-arrival figure; that is not the NS-1 baseline — the controlling figure is the 185 s post-tap inside 200 m [F5][F6][NS-1]."
    }
   ],
   "flag_account": false,
@@ -80,8 +82,7 @@
   "safety_basis": [
    "F9",
    "F10",
-   "F12",
-   "F4"
+   "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -89,9 +90,9 @@
  "pre_verify_ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; no refund to rider, no account action",
-  "confidence": 0.87,
-  "reasoning": "The fee at issue is the $6.61 charged on a driver-cancellation after a claimed rider no-show [F4][F7]. Under NS-0, a driver-side cancellation with a no-show claim is tested only against NS-1, so the whole dispute turns on NS-1's three elements [F4][NS-0]. Both advocates agree on that routing, and I adopt it.",
+  "recommended_action": "Uphold the $6.61 driver-cancellation fee; close the rider's refund request with a written explanation of the NS-1 wait computation (185 s post-tap inside 200 m).",
+  "confidence": 0.85,
+  "reasoning": "The dispute is a completed driver-side cancellation with a $6.61 cancellation fee on the record, so it enters through NS-0's cancelled_by = driver branch and is tested by NS-1 [F4][F7][NS-0]. The arrival confirmation is a driver tap (\"I'm Here\") at 09:54:15, at which moment the GPS placed the driver 40 m from the pickup point, well inside the 200 m radius — NS-1 (i) and (ii) are satisfied [F6][F1][NS-1].\n\nRequirement (iii) is the whole case. The policy counts only the continuous wait inside the radius after the arrival confirmation, and the trace measures 185 s (3 min 5 s) continuously within 200 m after the 09:54:15 tap, against a 3:01 threshold — the wait exceeds three minutes, so NS-1 (iii) holds [F6][NS-1]. The rider's argument that the pre-tap time must be excluded is correct as a matter of policy [F2][F3][NS-1], but exclusion does not help her: the post-tap figure itself clears the threshold by five seconds, and the record carries no no_show_threshold_min, so the official sample's 8-minute figure she cites is inapplicable [F5][NS-1]. The driver's statement that he waited \"more than 3 minutes\" [F12] adds nothing either way; the system record independently sustains the wait, so the statement is not doing the work [F6][NS-1].\n\nBecause NS-1 (i)–(iii) are all met, no refund trigger under NS-2 fires and the $6.61 stands; the correct outcome is no_action [F7][NS-2]. No other line of the fare is in issue: the charge carries no surge and the record shows no traffic or weather circumstances bearing on it [F8][F13][F14][F15][FARE-1].\n\nThe rider's account-review request under NS-2 fails on its own terms. NS-2's flag_account attaches to a driver who tapped \"I'm Here\" while the GPS showed him outside the pickup radius — here the tap was 40 m out, inside the radius, so the fraud/abuse trigger is not engaged [F1][F6][NS-2]. The driver's history (2 upheld no-show disputes in 90 days) [F17] is offered only as a basis for an extra action and, under RD-6's \"repeated\" logic, that action flows from a case upheld AGAINST the driver; this case is not upheld against him, so no flag is warranted, and profile facts cannot decide or add an action here in any event [F17][RD-6]. Likewise the rider's own clean profile [F16] does not affect the computation.\n\nSafety: I read both chat messages, the driver's written statement and the complaint in full. The messages are a pickup notice (\"At the pickup now, grey Kia Niro\") and a closing notice (\"Waited more than 3 min, cancelling\") [F9][F10][F12]; the complaint is a billing grievance, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — safety screen: none [SAFE-1].\n\nEvidence: the wait is settled by the GPS and timeline records — the trace shows no sampling hole between the arrival confirmation and the cancellation, the chat record is complete and fully timestamped [F2][F6][F11], and the arithmetic driving the outcome (185 s vs 180 s) is on a measured record. No record needed by any cited clause is missing, so evidence_status = sufficient.",
   "cited_facts": [
    "F1",
    "F2",
@@ -100,10 +101,14 @@
    "F5",
    "F6",
    "F7",
+   "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
+   "F14",
+   "F15",
    "F16",
    "F17"
   ],
@@ -111,6 +116,8 @@
    "NS-0",
    "NS-1",
    "NS-2",
+   "FARE-1",
+   "RD-6",
    "SAFE-1"
   ],
   "escalate": false,
@@ -119,39 +126,35 @@
   "rejected_claims": [
    {
     "id": "C2",
-    "reason": "Conceded for the rider: the location element is admitted as met, and it does not carry her case — GPS puts the driver 38–39 m from the pickup [F1][F3], well inside the NS-1(ii) radius."
+    "reason": "The 8-minute no_show_threshold_min the rider cites comes from an official sample; this ticket record carries no threshold field, so the NS-1 default (a post-tap wait exceeding 3 minutes) governs, and the post-tap wait of 185 s clears it [F6][NS-1]."
    },
    {
     "id": "C3",
-    "reason": "The premise that the pre-tap span must be excluded is correct, but the consequence is not: the post-tap span in [F6] is 185 s, which alone exceeds the 180 s threshold [NS-1]."
+    "reason": "Correct that pre-tap time is excluded, but the exclusion is what leaves the controlling figure at 185 s inside 200 m after the 09:54:15 tap, which is still more than 3 minutes [F3][F6][NS-1]."
    },
    {
     "id": "C4",
-    "reason": "The two timestamps do not conflict: [F5] is the platform-detected arrival and [F6] is the driver's tap, and NS-1(iii) expressly counts from the tap [F6][F5][NS-1]. Counting from the tap still yields 3 min 5 s [F6], above 3:01."
+    "reason": "NS-2's refund trigger does not fire: the tap was made 40 m from the pickup (inside the radius) and the post-tap in-radius wait exceeded 3 minutes, so the fee is valid [F1][F6][F7][NS-2]."
    },
    {
     "id": "C5",
-    "reason": "Agreed that the post-trip statement [F12] proves nothing on its own, but the duration element is established by the system record [F6] read with NS-1, not by [F12]."
+    "reason": "The rider is right that a statement cannot create a fee, but wrong that the records contradict the wait: the system record itself shows 185 s inside 200 m after the tap [F6][F12][NS-1]."
    },
    {
     "id": "C6",
-    "reason": "The rider's silence in the chat [F11] is not a defect in the driver's case: nothing in NS-1 requires a further warning beyond the arrival confirmation and the elapse of the waiting time [F9][F10][NS-1]."
+    "reason": "NS-1 imposes no advance-notice-of-intent requirement, and the chat, which is complete and timestamped and shows the driver at the pickup and waiting, does not excuse the charge [F9][F10][F11][NS-1]."
    },
    {
-    "id": "C8",
-    "reason": "flag_account under NS-2 requires the driver to have tapped 'I'm Here' while GPS showed him away from the pickup; the record shows 40 m at the tap [F6] and 38–39 m overall [F1][F3], so the condition fails, and the profile count [F17] cannot substitute (profile facts never decide alone) [NS-2][F17]."
+    "id": "C7",
+    "reason": "NS-2's flag_account attaches only where the driver tapped 'I'm Here' while the GPS showed him outside the pickup radius; here the tap was 40 m out, and profile facts cannot create an account action absent a case upheld against the driver [F1][F6][F17][RD-6][NS-2]."
    },
    {
-    "id": "C1",
-    "reason": "Correct as to the branch only: the driver cancelled [F4] and claimed a no-show, so NS-0 routes this to NS-1 [NS-0][NS-1]; it yields the rider no refund because NS-1 is satisfied."
+    "id": "D4",
+    "reason": "The driver's notice argument is not needed to sustain the fee and is not what decides it; NS-1 turns on the measured arrival confirmation and continuous in-radius wait, not on messages sent to the rider [F9][F10][F6][NS-1]."
    },
    {
-    "id": "C9",
-    "reason": "Immaterial: no traffic or weather record [F13][F14] bears on NS-1's timing elements, which the system records already settle [F6][F4][NS-1]."
-   },
-   {
-    "id": "D8",
-    "reason": "Correct and immaterial — the rider's profile [F16] is neutral background and decides nothing under NS-1/NS-2."
+    "id": "D6",
+    "reason": "The driver's conclusion of no_action is correct, but his reasoning rests on the 3 min 55 s platform-arrival figure; that is not the NS-1 baseline — the controlling figure is the 185 s post-tap inside 200 m [F5][F6][NS-1]."
    }
   ],
   "flag_account": false,
@@ -159,22 +162,21 @@
   "safety_basis": [
    "F9",
    "F10",
-   "F12",
-   "F4"
+   "F12"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 26,
+ "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.87 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0033.record.json",
- "latency_s": 29.17,
- "input_tokens": 134546,
- "output_tokens": 8359,
- "requests": 12,
+ "latency_s": 29.61,
+ "input_tokens": 146809,
+ "output_tokens": 8104,
+ "requests": 13,
  "llm_calls": 6
 }

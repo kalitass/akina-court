@@ -2,35 +2,42 @@
  "arm": "judge_only",
  "case_id": "B-0034",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T18:56:55+00:00",
+ "started_at": "2026-10-11T02:37:22+00:00",
  "fingerprint": {
   "case_sha256": "ba0f8ed8a7585e17",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "fe5ca6e9c490331a",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T18:56:55+00:00"
+  "issued_at": "2026-10-11T02:37:22+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; no account action against the driver.",
   "confidence": 0.9,
-  "reasoning": "Driver cancelled the completed-booking pickup (cancelled_by = driver, 13:05:30, $6.61 fee on record), so the case enters through NS-0 and turns on whether the driver's no-show claim satisfies NS-1 (i)–(iii) [F4][F7][NS-0]. The driver did confirm arrival: the driver tapped \"I'm Here\" at 13:02:35 at 39 m from pickup, and the closest approach was 38 m, so (i) and (ii) pass [F1][F6][NS-1]. The continued-wait requirement (iii) fails: after the 13:02:35 tap the driver stayed inside the 200 m radius for only 175 seconds before cancelling at 13:05:30, under the 180-second (> 3 min) threshold; the stationary spell of 3 min 15 s began at 13:02:15, i.e. before the tap, and pre-tap waiting does not count under NS-1 (iii) [F3][F6][NS-1]. Chat #2 \"More than 3 min already, I have to cancel\" is the driver's own assertion of elapsed time and does not extend the measured post-tap wait [F10][NS-1]. Because one of the NS-1 elements fails, the $6.61 must be fully refunded to the rider [F7][NS-2]. The NS-2 rider-side flag is not triggered: the trace shows the arrival confirmation was made at 39 m from pickup, i.e. no fake or off-location confirmation [F1][F6][NS-2]. The driver's profile (2 disputes, 1 upheld no-show, 772 trips) supports nothing on its own and RD-6 concerns upheld route deviation, not no-shows, so no account flag is raised [F17][RD-6]. Amount: the fee charged is $6.61 and is refunded in full — $6.61 [F7][NS-2].",
+  "reasoning": "Driver-cancelled ride with a no-show claim: NS-0 routes the case to NS-1/NS-2 (cancelled_by = driver, $6.61 fee on record) [F4][NS-0]. NS-1 requires all three of (i) arrival confirmation, (ii) being at the pickup at that moment, and (iii) waiting more than 3 minutes continuously at the pickup after the confirmation. (i) is met — the driver tapped \"I'm Here\" at 13:02:35 [F6][NS-1]. (ii) is met — 39 m from the pickup at the tap, closest approach 38 m [F6][F1][NS-1].\n\n(iii) fails: the driver stayed within 200 m for only 175 s (2 min 55 s) after the 13:02:35 tap, short of the 180 s threshold, so the wait was not \"more than 3 minutes\" as NS-1 requires; the earlier time inside the radius (platform arrival 13:01:00, 4 min 30 s before cancellation) does not count, because NS-1 measures only the period after the arrival confirmation [F2][F5][F6][NS-1]. The trace marks NS-1 (iii) ✗ accordingly.\n\nBecause NS-1 (iii) is not satisfied, NS-2 applies: the $6.61 cancellation fee is refunded in full [F7][NS-2]. The flag_account limb of NS-2 is not triggered — the trace confirms the arrival confirmation was not made while the driver was outside the pickup radius (39 m at tap) [F1][F6][NS-2]; the driver's belief that he had waited over 3 minutes [F12][F10] does not change the measured 175 s. Rider profile (0 disputes in 90 d, no-show 0) is noted but does not decide anything [F16]. Driver profile (1 upheld no-show dispute in 90 d) could support a flag only if the case were established against him, which it is not here [F17][RD-6].\n\nAmount: the disputed item is the cancellation fee of $6.61, refunded in full — $6.61 [F7][NS-2]. Per NS-7 the refund is issued as a Ryde voucher and Ryde retains final discretion [NS-7].\n\nSafety screen: chat #1 \"Reached, blue Toyota Prius, waiting at the pickup\" and chat #2 \"More than 3 min already, I have to cancel\", the post-trip driver statement, and the rider's complaint contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — only a routine pickup/cancellation exchange [F9][F10][F12][SAFE-1]. Nothing to escalate on safety grounds.\n\nEvidence: the record is complete — timestamped chat with both messages, arrival tap and GPS coverage of the wait without a hole, and the fee amount — so every element of the NS-1/NS-2 ruling is settled [F11][F2][F6][F7].",
   "cited_facts": [
    "F1",
-   "F3",
+   "F2",
    "F4",
+   "F5",
    "F6",
    "F7",
+   "F9",
    "F10",
+   "F11",
+   "F12",
+   "F16",
    "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "RD-6"
+   "NS-7",
+   "RD-6",
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -41,7 +48,6 @@
   "safety_basis": [
    "F9",
    "F10",
-   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -62,15 +68,15 @@
    "Had NS-1 (iii) held ((iii) stayed at the pickup more than 3 min after the arrival confirmation, until cancelling (NS-1 default: more than 3 min)), the fee would stand and no refund would be due."
   ]
  },
- "latency_s": 6.01,
+ "latency_s": 7.01,
  "model_calls": 2,
  "provider_trace_ids": [
-  "f623f7a85711f290e14501921403007a",
-  "cbc02aa701d23265b89f1e49c50f8b56"
+  "52a7a7538a76e4800de7dffe86b6fdc8",
+  "fcaaf9a77cb51cde6f4e9d63c6956826"
  ],
  "provider_response_ids": [
-  "d6b5693c-8a88-421d-ab1f-57aa86dd424f",
-  "d9df7aab-bd48-40cb-aa40-62e5058127f5"
+  "90d5169a-ebaf-4d3e-96d9-b5ff50c236ca",
+  "eee33162-5e56-47ee-9311-a2629a789690"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -84,8 +90,8 @@
  "usage": [
   {
    "prompt_tokens": 11762,
-   "completion_tokens": 812,
-   "total_tokens": 12574,
+   "completion_tokens": 1134,
+   "total_tokens": 12896,
    "prompt_tokens_details": {
     "cached_tokens": 11520
    },
@@ -93,15 +99,15 @@
    "prompt_cache_miss_tokens": 242
   },
   {
-   "prompt_tokens": 934,
-   "completion_tokens": 279,
-   "total_tokens": 1213,
+   "prompt_tokens": 1158,
+   "completion_tokens": 266,
+   "total_tokens": 1424,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 678
+   "prompt_cache_miss_tokens": 902
   }
  ],
- "finished_at": "2026-10-10T18:57:01+00:00"
+ "finished_at": "2026-10-11T02:37:29+00:00"
 }

@@ -70,7 +70,7 @@ def verify_rebuttal(reb, own: CaseBrief, other: CaseBrief, table: FactTable, cla
                 reason = f"citation check: cites {', '.join(bad_p)} — not a citable clause"
         pts.append(p.model_copy(update={"void": reason is not None, "void_reason": reason}))
         lines.append(f"→{p.target_claim_id}{' (concede)' if p.concede else ''}: {'VOID — ' + reason if reason else 'ok'}")
-    return Rebuttal(side=reb.side, points=pts, revised_outcome=reb.revised_outcome), lines
+    return Rebuttal(side=reb.side, points=pts, revised_outcome=reb.revised_outcome, segment_grounds=reb.segment_grounds), lines
 
 
 def _fact_values(table: FactTable) -> dict[str, dict]:
@@ -116,7 +116,7 @@ def citation_problems(ruling: Ruling, table: FactTable, clause_ids: set[str]) ->
 
 
 def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
-                  briefs: tuple[CaseBrief, ...] = (), certificate=None, stipulated: dict | None = None) -> tuple[Ruling, list[str]]:
+                  briefs: tuple[CaseBrief, ...] = (), certificate=None, stipulated: dict | None = None, argued: dict | None = None) -> tuple[Ruling, list[str]]:
     lines: list[str] = []
     ids = table.ids()
     if table.dispute_type != "route_deviation" and ruling.segment_findings:
@@ -152,7 +152,7 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
     if ruling.ruling == "escalate" or ruling.escalate:
         grounds = escalate_grounds(ruling)
         why = "; ".join(grounds) if grounds else (ruling.escalation_reason or "judge sent the case to a person without naming a ground")
-        ok_g, why_g = (check_ruling(certificate, ruling, stipulated) if certificate is not None else (True, []))
+        ok_g, why_g = (check_ruling(certificate, ruling, stipulated, argued) if certificate is not None else (True, []))
         if ok_g:
             lines.append("judge escalates → human review: " + why)
         else:
@@ -189,7 +189,7 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
 
     # ---- policy execution certificate (code) vs the judge's ruling ----
     if certificate is not None:
-        ok, reasons = check_ruling(certificate, ruling, stipulated)
+        ok, reasons = check_ruling(certificate, ruling, stipulated, argued)
         lines.extend(("✓ " if ok else "✗ ") + r for r in (reasons or ["ruling consistent with the policy certificate"]))
         if not ok:
             return _escalate(ruling, "not eligible for automation: " + "; ".join(reasons)), lines

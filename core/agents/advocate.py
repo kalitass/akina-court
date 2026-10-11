@@ -72,7 +72,14 @@ OUTPUT
   assertion one or two sentences that a judge can check against the cited facts.
 - segment_grounds: for EVERY off-route segment fact (the gps facts that say "Off-route segment ..."), the policy
   ground your honest reading of the record supports, one of "rider_named_stop" (RD-3(a): a rider message before the segment named the place and the car stopped there), "general_route_consent" (RD-5: a general route choice such as "whichever way is faster", and the loop goes there), "named_road_tied" (RD-5: agreed to a named road and a record ties the segment to it), "named_road_untied" (agreed to a named road, nothing ties the segment to it, nothing places it elsewhere: G13), "named_road_elsewhere" (the record places the segment somewhere else), "driver_errand" (a stop or loop of the driver's own that no rider message asked for), "scope_other" (the rider agreed to something else, e.g. a short stop), "consent_after_or_none" (no rider message before the segment agrees to it), "incident" (RD-4), "other". This is a statement of what the record shows, not of what helps your side: a ground both
-  advocates state is taken as agreed and binds the judge. Empty for non-route cases.
+  advocates state is taken as agreed and binds the judge; the judge decides only between the grounds the two of you put forward. Empty for non-route cases.
+  Read the EXCHANGE, not the yes alone. A yes in any words ("sure", "ok go ahead", "can lah", "可以") to a driver's ask that names the road
+  to be taken ("can I go round via X?") is an agreement to X: named_road_tied if you can cite the record that ties the segment to X (a stop
+  on X, a message placing the car on X, a road name in a fact), otherwise named_road_untied — never "tied" without such a record, never
+  "general" because the yes was short. A road named only as the one to be avoided ("jam on the PIE, shall I take another way?") names no
+  route; a yes to that, or words leaving the route to the driver ("whichever way is faster", "随便你"), is general_route_consent, and a
+  loop that leaves the corridor and reaches nothing is still general_route_consent unless a record shows a stop or an errand of the driver's
+  own (then driver_errand). A segment that began before the rider's message, or with no rider message at all, is consent_after_or_none.
 
 POLICY (full text)
 {POLICY}
@@ -86,9 +93,27 @@ Answer it point by point. Your original brief stays on the record unchanged. Ret
 claim you contest, a point with target_claim_id = their claim id, a one- or two-sentence response citing facts (F*)
 and clauses; for a point you must concede, set concede = true and target_claim_id to THEIR claim id (or your own
 claim id if you withdraw one of yours). Only cite facts you have read; you may call a tool you have not called yet.
-Set revised_outcome only if you change what you ask for. side = "{SIDE}". segment_grounds: restate the ground of every
-off-route segment after reading the opponent (the same vocabulary as in your brief); revise it where the opponent's
-cited facts have shown your first reading wrong."""
+Set revised_outcome only if you change what you ask for. side = "{SIDE}". segment_grounds is REQUIRED in a route case
+(a rebuttal without it is returned to you): restate the ground of every off-route segment after reading the opponent (the
+same vocabulary and the same reading rules as in your brief); revise it where the opponent's cited facts have shown your
+first reading wrong, and keep it where they have not — a point you concede in a response must be conceded here too."""
+
+
+def missing_grounds(table: FactTable, grounds: dict) -> list[str]:
+    """Off-route segment fact ids for which an advocate's output states no ground (route cases only)."""
+    if table.dispute_type != "route_deviation":
+        return []
+    return [f.id for f in table.facts if f.source == "gps" and f.text.startswith("Off-route segment") and f.id not in (grounds or {})]
+
+
+def _require_grounds(ctx: RunContext[AdvocateDeps], output):
+    """Output validator: a brief or rebuttal in a route case must state a ground for every off-route segment."""
+    from pydantic_ai import ModelRetry
+    missing = missing_grounds(ctx.deps.table, output.segment_grounds)
+    if missing:
+        raise ModelRetry("segment_grounds must state the policy ground of every off-route segment; missing: " + ", ".join(missing)
+                         + ". Re-issue the whole output with segment_grounds filled (same vocabulary as your instructions).")
+    return output
 
 
 def _make_tool(name: str):
@@ -123,6 +148,7 @@ def build_advocate(side: Party) -> Agent[AdvocateDeps, CaseBrief]:
     )
     for name in TOOL_SOURCES:
         agent.tool(_make_tool(name))
+    agent.output_validator(_require_grounds)
     return agent
 
 
@@ -135,6 +161,7 @@ def build_rebutter(side: Party, advocate: Agent) -> Agent[AdvocateDeps, Rebuttal
     )
     for name in TOOL_SOURCES:
         agent.tool(_make_tool(name))
+    agent.output_validator(_require_grounds)
     return agent
 
 

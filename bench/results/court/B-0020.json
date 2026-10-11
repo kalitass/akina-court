@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:45:51.686784+00:00",
+ "ts": "2026-10-11T02:30:38.796948+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the route-deviation complaint with no refund; the metered fare stands as charged.",
-  "confidence": 0.93,
-  "reasoning": "Route-deviation screen: the trace marks RD-1 \"✗ no off-route segment measured\" and the GPS record confirms it — actual distance 8.5 km equals the optimal 8.5 km, +0.0 km / -0% [F1], and the fare record independently states the billed 8.5 km does not exceed the optimal route [F3]. With no `gps-detour-*` segment in the record, RD-1 has nothing to review and RD-2's refund formula has no input: Σ(unexempted segment extra_km) × per-km rate = 0 × rate = $0.00 [F1][F3][RD-1][RD-2]. Segment_findings is therefore empty; there is no segment to test under RD-3/RD-5.\n\nFare check on the metered RydeTAXI trip: the total $23.08 is fully itemised as base $3.90 + distance $11.99 (8.50 km) + time $5.72 (22.0 min) + waiting $0.00 + platform $1.47, with discount $0.00 and surge 1.0× [F5][F4]. Every component is a published meter/platform item; there is no unpublished add-on and no post-trip manual charge (no waiting fee, no destination-change fee) to waive or refund under FARE-1 [F5][F4][FARE-1]. The rider's felt overcharge is a time effect: 22.0 min against a 16.3 min estimate (+5.7 min) [F2], which on a metered taxi is chargeable time, not a routing defect [F2][F5][RD-2].\n\nThe driver's account is consistent with the records: he states he followed the app route exactly in rain and slow traffic [F7], and the system records show no deviation [F1][F3] plus band 3 (20–29 km/h) on the Pan Island Expressway and Airport Boulevard during 17:09–17:47 under 18.5 mm of heavy rain [F8][F9][F11]. Band-3 is not band 1 or 2, so under RD-4(b) it is corroboration only; there is also no recorded incident [F10], and in any event no segment exists that would need an RD-4 excuse [F1][F10][RD-4]. No in-app chat exists at all, so no rider consent message under RD-5 is available and none is needed [F6][RD-5].\n\nAccount action: RD-6 requires an upheld violation this case (refund > 0 or recorded RD-1 breach) plus an upheld route dispute in the prior 90 days. The rider has 0 disputes and 0 upheld, and the driver has 0 upheld route disputes over 1163 trips in 90 days [F12][F13], so the precondition is unmet and no flag_account follows [F12][F13][RD-6]. Amount is $0.00 and no refund line is computable.\n\nSafety screen: I read the complaint, the driver's post-trip statement [F7] and the fact table; there are no in-app messages [F6]. Nothing in the complaint or statement contains a threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F6][F7]. Finding: none.\n\nEvidence: the record settles every element this ruling needs — a measured equal-distance GPS result [F1], the matching billed distance [F3], and the full fare breakdown [F5]. Evidence status: sufficient.",
+  "recommended_action": "Close the case with no refund: the metered RydeTAXI fare stands as billed; optionally note to the rider that the extra cost was metered time in heavy rain, not extra distance.",
+  "confidence": 0.95,
+  "reasoning": "The trace and the GPS record settle the route question: there is no off-route segment, actual distance 8.5 km equals the optimal 8.5 km with +0.0 km excess [F1], and the billed distance of 8.5 km does not exceed the optimal route [F3]. With no unexempted segment, RD-1 finds no deviation and RD-2 has nothing to refund. The RD-2 computation is $11.99 ÷ 8.50 km = $1.4106/km; 0.00 km × $1.4106/km = $0.00, so the refundable amount is nil [F5][F1][F3][RD-2]. A nil amount means no_action while recording that no RD-1 breach occurred [RD-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -34,7 +34,9 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -42,27 +44,35 @@
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Not rejected in substance (the rider advocate's own concession, and it favours no_action), but the framing is corrected: RD-1/RD-2 produce no remedy because the record shows 8.5 km actual vs 8.5 km optimal, +0.0 km [F1][F3], so there is no unexempted segment to price [RD-1][RD-2]."
+    "reason": "Not rejected as a fact — its content is correct and adopted: F1 shows +0.0 km and F3 confirms the billed 8.5 km does not exceed the optimal 8.5 km, so no segment exists under RD-1. It yields no refund because RD-2 refunds only unexempted extra kilometres, of which there are none [F1][F3][RD-1][RD-2]."
    },
    {
-    "id": "C3",
-    "reason": "Accepted as explanation, not as a refund hook: the +5.7 min over estimate [F2] is metered time of $5.72 [F5], chargeable on a RydeTAXI meter; RD-2 refunds only unexempted extra_km, of which there are none [F1][F3][F5][RD-2]."
+    "id": "C2",
+    "reason": "The rider's framing that the higher fare is explained by 22.0 min vs 16.3 min [F2] and a $5.72 metered time component [F5] in 18.5 mm rain [F11] is accepted as fact but produces no rider-side remedy; on a metered RydeTAXI the time units are lawful under RD-2/RD-4 and no distance excess exists [F2][F5][F11][RD-2][RD-4]."
    },
    {
-    "id": "C4",
-    "reason": "Accepted: the $23.08 is entirely published components (base $3.90 + distance $11.99 + time $5.72 + platform $1.47, waiting $0.00) with no surge [F4][F5]; FARE-1 therefore yields no refundable item [FARE-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "Correct on the record — there are no in-app messages [F6], so no RD-5 consent analysis is possible or necessary; with no deviating segment [F1][F3], RD-5 is moot for this case [RD-5]."
-   },
-   {
-    "id": "C7",
-    "reason": "Accepted: no incident is recorded [F10] and band 3 is not band 1/2, so RD-4(b) is corroboration only; nothing needs exempting because no segment exists [F1][F8][F9][F10][RD-4]."
+    "id": "C5",
+    "reason": "The rider advocate's use of F10 to deny any RD-4 excuse is beside the point: RD-4 only matters to exempt an off-route segment, and the trace records no off-route segment for this trip [F1][F3][F8][F10][RD-4]."
    },
    {
     "id": "C8",
-    "reason": "Accepted: neither side has an upheld route dispute in 90 days [F12][F13], so RD-6's repeated-violation precondition fails and no flag_account is warranted [RD-6]."
+    "reason": "The safety finding is confirmed as 'none', so no escalation follows: F6 shows no chat at all and the post-trip driver statement in F7 contains no threat, harassment or dangerous-driving allegation [F6][F7][SAFE-1][SAFE-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "Accepted in substance and adopted: every component of the $23.08 is a published item (base $3.90, distance $11.99, time $5.72, platform $1.47, waiting $0.00) with surge 1.0x, so FARE-1 leaves nothing to refund [F4][F5][FARE-1]."
+   },
+   {
+    "id": "D4",
+    "reason": "The driver's RD-4 causation narrative is not needed as an exemption ground and is not relied on: since no off-route segment exists [F1][F3], RD-4 has no segment to exempt, and the band 3 speeds [F8][F9] and rain [F11] are background rather than a charging excuse to weigh [F2][F8][F9][F11][RD-4]."
+   },
+   {
+    "id": "D7",
+    "reason": "Correct that no consent question arises because no rider message exists [F6], but the absence of any agreement cannot be used as an affirmative finding under RD-5; the record simply contains no rider message before or during the trip [F6][RD-5]."
+   },
+   {
+    "id": "D8",
+    "reason": "Accepted: with 0 upheld route disputes for the driver and 0 disputes for the rider in 90 days [F12][F13], the RD-6 precondition of a prior upheld route dispute is absent, so no account flag issues [F12][F13][RD-6]."
    }
   ],
   "flag_account": false,
@@ -76,10 +86,10 @@
  },
  "pre_verify_ruling": {
   "ruling": "no_action",
-  "amount": 0.0,
-  "recommended_action": "Close the route-deviation complaint with no refund; the metered fare stands as charged.",
-  "confidence": 0.93,
-  "reasoning": "Route-deviation screen: the trace marks RD-1 \"✗ no off-route segment measured\" and the GPS record confirms it — actual distance 8.5 km equals the optimal 8.5 km, +0.0 km / -0% [F1], and the fare record independently states the billed 8.5 km does not exceed the optimal route [F3]. With no `gps-detour-*` segment in the record, RD-1 has nothing to review and RD-2's refund formula has no input: Σ(unexempted segment extra_km) × per-km rate = 0 × rate = $0.00 [F1][F3][RD-1][RD-2]. Segment_findings is therefore empty; there is no segment to test under RD-3/RD-5.\n\nFare check on the metered RydeTAXI trip: the total $23.08 is fully itemised as base $3.90 + distance $11.99 (8.50 km) + time $5.72 (22.0 min) + waiting $0.00 + platform $1.47, with discount $0.00 and surge 1.0× [F5][F4]. Every component is a published meter/platform item; there is no unpublished add-on and no post-trip manual charge (no waiting fee, no destination-change fee) to waive or refund under FARE-1 [F5][F4][FARE-1]. The rider's felt overcharge is a time effect: 22.0 min against a 16.3 min estimate (+5.7 min) [F2], which on a metered taxi is chargeable time, not a routing defect [F2][F5][RD-2].\n\nThe driver's account is consistent with the records: he states he followed the app route exactly in rain and slow traffic [F7], and the system records show no deviation [F1][F3] plus band 3 (20–29 km/h) on the Pan Island Expressway and Airport Boulevard during 17:09–17:47 under 18.5 mm of heavy rain [F8][F9][F11]. Band-3 is not band 1 or 2, so under RD-4(b) it is corroboration only; there is also no recorded incident [F10], and in any event no segment exists that would need an RD-4 excuse [F1][F10][RD-4]. No in-app chat exists at all, so no rider consent message under RD-5 is available and none is needed [F6][RD-5].\n\nAccount action: RD-6 requires an upheld violation this case (refund > 0 or recorded RD-1 breach) plus an upheld route dispute in the prior 90 days. The rider has 0 disputes and 0 upheld, and the driver has 0 upheld route disputes over 1163 trips in 90 days [F12][F13], so the precondition is unmet and no flag_account follows [F12][F13][RD-6]. Amount is $0.00 and no refund line is computable.\n\nSafety screen: I read the complaint, the driver's post-trip statement [F7] and the fact table; there are no in-app messages [F6]. Nothing in the complaint or statement contains a threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F6][F7]. Finding: none.\n\nEvidence: the record settles every element this ruling needs — a measured equal-distance GPS result [F1], the matching billed distance [F3], and the full fare breakdown [F5]. Evidence status: sufficient.",
+  "amount": null,
+  "recommended_action": "Close the case with no refund: the metered RydeTAXI fare stands as billed; optionally note to the rider that the extra cost was metered time in heavy rain, not extra distance.",
+  "confidence": 0.95,
+  "reasoning": "The trace and the GPS record settle the route question: there is no off-route segment, actual distance 8.5 km equals the optimal 8.5 km with +0.0 km excess [F1], and the billed distance of 8.5 km does not exceed the optimal route [F3]. With no unexempted segment, RD-1 finds no deviation and RD-2 has nothing to refund. The RD-2 computation is $11.99 ÷ 8.50 km = $1.4106/km; 0.00 km × $1.4106/km = $0.00, so the refundable amount is nil [F5][F1][F3][RD-2]. A nil amount means no_action while recording that no RD-1 breach occurred [RD-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -101,7 +111,9 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -109,27 +121,35 @@
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Not rejected in substance (the rider advocate's own concession, and it favours no_action), but the framing is corrected: RD-1/RD-2 produce no remedy because the record shows 8.5 km actual vs 8.5 km optimal, +0.0 km [F1][F3], so there is no unexempted segment to price [RD-1][RD-2]."
+    "reason": "Not rejected as a fact — its content is correct and adopted: F1 shows +0.0 km and F3 confirms the billed 8.5 km does not exceed the optimal 8.5 km, so no segment exists under RD-1. It yields no refund because RD-2 refunds only unexempted extra kilometres, of which there are none [F1][F3][RD-1][RD-2]."
    },
    {
-    "id": "C3",
-    "reason": "Accepted as explanation, not as a refund hook: the +5.7 min over estimate [F2] is metered time of $5.72 [F5], chargeable on a RydeTAXI meter; RD-2 refunds only unexempted extra_km, of which there are none [F1][F3][F5][RD-2]."
+    "id": "C2",
+    "reason": "The rider's framing that the higher fare is explained by 22.0 min vs 16.3 min [F2] and a $5.72 metered time component [F5] in 18.5 mm rain [F11] is accepted as fact but produces no rider-side remedy; on a metered RydeTAXI the time units are lawful under RD-2/RD-4 and no distance excess exists [F2][F5][F11][RD-2][RD-4]."
    },
    {
-    "id": "C4",
-    "reason": "Accepted: the $23.08 is entirely published components (base $3.90 + distance $11.99 + time $5.72 + platform $1.47, waiting $0.00) with no surge [F4][F5]; FARE-1 therefore yields no refundable item [FARE-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "Correct on the record — there are no in-app messages [F6], so no RD-5 consent analysis is possible or necessary; with no deviating segment [F1][F3], RD-5 is moot for this case [RD-5]."
-   },
-   {
-    "id": "C7",
-    "reason": "Accepted: no incident is recorded [F10] and band 3 is not band 1/2, so RD-4(b) is corroboration only; nothing needs exempting because no segment exists [F1][F8][F9][F10][RD-4]."
+    "id": "C5",
+    "reason": "The rider advocate's use of F10 to deny any RD-4 excuse is beside the point: RD-4 only matters to exempt an off-route segment, and the trace records no off-route segment for this trip [F1][F3][F8][F10][RD-4]."
    },
    {
     "id": "C8",
-    "reason": "Accepted: neither side has an upheld route dispute in 90 days [F12][F13], so RD-6's repeated-violation precondition fails and no flag_account is warranted [RD-6]."
+    "reason": "The safety finding is confirmed as 'none', so no escalation follows: F6 shows no chat at all and the post-trip driver statement in F7 contains no threat, harassment or dangerous-driving allegation [F6][F7][SAFE-1][SAFE-2]."
+   },
+   {
+    "id": "D3",
+    "reason": "Accepted in substance and adopted: every component of the $23.08 is a published item (base $3.90, distance $11.99, time $5.72, platform $1.47, waiting $0.00) with surge 1.0x, so FARE-1 leaves nothing to refund [F4][F5][FARE-1]."
+   },
+   {
+    "id": "D4",
+    "reason": "The driver's RD-4 causation narrative is not needed as an exemption ground and is not relied on: since no off-route segment exists [F1][F3], RD-4 has no segment to exempt, and the band 3 speeds [F8][F9] and rain [F11] are background rather than a charging excuse to weigh [F2][F8][F9][F11][RD-4]."
+   },
+   {
+    "id": "D7",
+    "reason": "Correct that no consent question arises because no rider message exists [F6], but the absence of any agreement cannot be used as an affirmative finding under RD-5; the record simply contains no rider message before or during the trip [F6][RD-5]."
+   },
+   {
+    "id": "D8",
+    "reason": "Accepted: with 0 upheld route disputes for the driver and 0 disputes for the rider in 90 days [F12][F13], the RD-6 precondition of a prior upheld route dispute is absent, so no account flag issues [F12][F13][RD-6]."
    }
   ],
   "flag_account": false,
@@ -145,12 +165,12 @@
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0020.record.json",
- "latency_s": 20.99,
- "input_tokens": 106473,
- "output_tokens": 6526,
+ "latency_s": 21.32,
+ "input_tokens": 109681,
+ "output_tokens": 6499,
  "requests": 10,
  "llm_calls": 6
 }

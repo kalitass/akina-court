@@ -258,6 +258,18 @@ def evaluate_route(case: Case, table: FactTable) -> Certificate:
             cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "fail", [], "no chat message on record"))
             cert.segments[fid] = {"exempt": False, "extra_km": seg["extra_km"], "start": seg["start"], "why": "no communication on record"}
             continue
+        rider_before = [cid for cid, c in messages if c.get("from") == "rider" and c.get("ts") and _ts(c["ts"]) < start]
+        if not rider_before and not untimed:
+            # RD-5 consent and an RD-3 rider-named stop both need a RIDER message sent before the segment started; timing is
+            # measured, not read. None on record (every rider message is later, or there are only driver messages and the
+            # driver's statement, which is a claim — G11): both fail, the segment counts, nothing is left to the judge.
+            later = [cid for cid, c in messages if c.get("from") == "rider"]
+            why = (f"the rider's message(s) {', '.join(later)} came after the segment started at {start:%H:%M:%S}" if later
+                   else f"no rider message on record before {start:%H:%M:%S}") + "; the driver's statement is a claim, not consent (G11)"
+            cert.predicates.append(Predicate("RD-5", "rider agreed to this route before the detour", fid, "fail", comm_ids, why))
+            cert.predicates.append(Predicate("RD-3", "rider-requested stop", fid, "fail", comm_ids, f"no rider message before {start:%H:%M:%S} names a place"))
+            cert.segments[fid] = {"exempt": False, "extra_km": seg["extra_km"], "start": seg["start"], "why": "no rider message before the segment started"}
+            continue
         stop_ids = [sid for sid, v in vals.items() if "duration_s" in v and "m_from_pickup" in v and seg["start"] <= v.get("start", "") <= seg["end"]]
         texts = "; ".join(f"{cid}: {table_text(table, cid)}" for cid in before + untimed + ([statement] if statement else []))
         timing = ("" if record.get("complete", True) else f" {len(untimed)} message(s) carry no time: if the finding turns on them, it is undetermined.")
@@ -274,8 +286,8 @@ def evaluate_route(case: Case, table: FactTable) -> Certificate:
                                          f"how long the stop lasted or how far the place was does not reduce it). "
                                          f"A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts."
                                          + (f" Stops in this segment: {', '.join(stop_ids)}." if stop_ids else " No stop measured in this segment.")))
-        cert.segments[fid] = {"exempt": None, "extra_km": seg["extra_km"], "start": seg["start"], "why": "judge reads RD-5 / RD-3 from the chat and statement",
-                              "changes_outcome": changes_outcome}
+        cert.segments[fid] = {"exempt": None, "extra_km": seg["extra_km"], "start": seg["start"], "end": seg["end"], "stops": stop_ids,
+                              "why": "judge reads RD-5 / RD-3 from the chat and statement", "changes_outcome": changes_outcome}
         cert.mechanical = False
     definite_bad = [f for f, sg in cert.segments.items() if sg["exempt"] is False]
     undecided = [f for f, sg in cert.segments.items() if sg["exempt"] is None]
@@ -472,10 +484,25 @@ def _evidence_form(cert: Certificate, ruling: Ruling) -> list[str]:
     return r
 
 
-def check_ruling(cert: Certificate, ruling: Ruling, stipulated: dict | None = None) -> tuple[bool, list[str]]:
+def tie_possible(cert: Certificate, fid: str) -> bool:
+    """Could any record tie this open segment to a named road (RD-5 / G13)? The policy names three kinds of tie: a stop on the
+    road, a message placing the car on it, a road name in a fact. The fact table carries no road names for the driven
+    path, so a tie needs a stop measured inside the segment or a message (not the driver's later statement) sent once the
+    segment had started. With neither on record, "named_road_tied" is not a reading the record can support."""
+    sg = cert.segments.get(fid) or {}
+    if sg.get("stops"):
+        return True
+    start = sg.get("start")
+    return any(c["ts"] and not c["statement"] and start is not None and c["ts"] >= start for c in cert.chat_index.values())
+
+
+def check_ruling(cert: Certificate, ruling: Ruling, stipulated: dict | None = None, argued: dict | None = None) -> tuple[bool, list[str]]:
     """Is the judge's ruling consistent with the certificate? (eligible_for_automation, reasons).
 
-    An escalate is never inconsistent: it executes nothing. Everything else must sit inside what code measured."""
+    An escalate is never inconsistent: it executes nothing. Everything else must sit inside what code measured.
+    stipulated / argued exist only when advocates argued the case (the full court): stipulated = {segment: ground both
+    sides state}; argued = {segment: {side: [grounds that side put forward]}}. A judge-decided finding that executes
+    must rest on a ground some party argued; a ground no party argued is sent back, undetermined is always open."""
     reasons = _evidence_form(cert, ruling)
     if ruling.ruling == "escalate" or ruling.escalate:
         # An escalate executes nothing, but it must rest on a ground the trace leaves open: a safety concern, an
@@ -488,6 +515,14 @@ def check_ruling(cert: Certificate, ruling: Ruling, stipulated: dict | None = No
         open_und = [sf.fact_id for sf in ruling.segment_findings if sf.finding == "undetermined" and sf.fact_id not in settled]
         for fid in bad_und:
             reasons.append(f"finding undetermined for {fid}, but the trace settled that segment ({cert.segments[fid]['why']}): not a ground to escalate")
+        for sf in ruling.segment_findings:
+            # a point both advocates agree on is not open: undetermined on a stipulated ground is sent back once (the judge
+            # may hold to it by naming the fact that refutes the stipulation; a second escalate stands)
+            if sf.fact_id in open_und and stipulated and sf.fact_id in stipulated and sf.ground == stipulated[sf.fact_id] \
+                    and GROUND_CONSEQUENCE[stipulated[sf.fact_id]] != "undetermined":
+                want = GROUND_CONSEQUENCE[stipulated[sf.fact_id]]
+                reasons.append(f"segment {sf.fact_id}: both advocates read the record as '{sf.ground}' (stipulated → {want}); undetermined on a point "
+                               f"both sides agree on is not a ground to escalate — enter the finding '{want}', or name the fact that refutes the stipulation")
         gap = ruling.evidence_status != "sufficient"
         if not open_und and not bad_und and not gap:
             reasons.append("escalate without a ground: no safety concern, no undetermined finding, evidence_status sufficient")
@@ -530,6 +565,25 @@ def check_ruling(cert: Certificate, ruling: Ruling, stipulated: dict | None = No
                     reasons.append(f"segment {fid}: ground '{sf.ground}' means {want} under the policy, but the finding is {sf.finding}: "
                                    f"either the ground or the finding is wrong")
                     continue
+                put_forward = {g for gs in (argued or {}).get(fid, {}).values() for g in gs if g in GROUND_CONSEQUENCE}
+                if put_forward and sf.finding != "undetermined" and sf.finding not in {GROUND_CONSEQUENCE[g] for g in put_forward}:
+                    # the judge decides between the readings the parties argued; a finding (exempt / counts) that no argued ground
+                    # leads to is not the judge's to supply — rule as an argued ground does, or leave the segment undetermined
+                    sides = "; ".join(f"{side}: {', '.join(gs) or '—'}" for side, gs in argued[fid].items())
+                    reasons.append(f"segment {fid}: finding {sf.finding} ('{sf.ground}') is a consequence neither advocate argued for ({sides}): "
+                                   f"rule as one of the argued grounds does, or find the segment undetermined if the record does not settle which")
+                    continue
+                if put_forward and sf.finding == "exempt" and sf.ground in ("general_route_consent", "named_road_tied"):
+                    # an exemption rests on what the rider agreed to; when one side reads the words as a general route choice and
+                    # the other as an agreement to a named road, the kind of agreement itself is contested and no exemption executes
+                    kinds = {"general" if g == "general_route_consent" else "named" for g in put_forward
+                             if g in ("general_route_consent", "named_road_tied", "named_road_untied", "named_road_elsewhere")}
+                    if len(kinds) == 2:
+                        sides = "; ".join(f"{side}: {', '.join(gs) or '—'}" for side, gs in argued[fid].items())
+                        reasons.append(f"segment {fid}: exempt on '{sf.ground}', but the advocates disagree on what the rider agreed to ({sides}): a general "
+                                       f"route choice and a named road are different agreements, and an exemption cannot execute while the kind of agreement "
+                                       f"is contested — find the segment undetermined (a person decides)")
+                        continue
             if sf.finding == "undetermined":
                 if sg.get("changes_outcome", True):
                     reasons.append(f"segment {fid} undetermined and the finding changes the outcome → a person decides (escalate)")

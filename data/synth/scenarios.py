@@ -1380,7 +1380,7 @@ BLIND_SCENARIOS = [
 
 # The reference answers follow the written policy AND the evidence rules frozen on this date. Bump when either changes
 # and record every changed answer in data/bench/REFERENCE_CHANGES.md (what the gap is and why it moves the outcome).
-REFERENCE_VERSION = "2026-10-10 v3: agreement to a named road needs a record tying the driven segment to it (G13); otherwise undetermined, and a person decides when it changes the outcome"
+REFERENCE_VERSION = "2026-10-11 v4: a segment with no rider message before it started is settled by code (RD-5 / RD-3 need one; G11); agreement to a named road still needs a record tying the driven segment to it (G13), otherwise undetermined"
 
 def validate_bench(case_dict: dict, spec: dict, rates, clauses, expected: dict | None = None) -> list[str]:
     if spec.get("gps_tail_cut_s"):

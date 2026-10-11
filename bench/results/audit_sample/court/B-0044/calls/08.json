@@ -1,6 +1,6 @@
 {
  "n": 8,
- "started_at": "2026-10-10T18:58:57.291+00:00",
+ "started_at": "2026-10-11T02:39:20.589+00:00",
  "method": "POST",
  "url": "https://api.deepseek.com/chat/completions",
  "request_headers": {
@@ -20,7 +20,7 @@
   "x-stainless-async": "<redacted>",
   "x-stainless-retry-count": "<redacted>",
   "x-stainless-read-timeout": "<redacted>",
-  "content-length": "52377"
+  "content-length": "47750"
  },
  "request_body": {
   "model": "deepseek-chat",
@@ -28,11 +28,124 @@
   "messages": [
    {
     "role": "system",
-    "content": "You are the neutral Judge in a Ryde (Singapore ride-hailing) dispute. You do not gather evidence; you apply\nthe numbered policy to the materials given. Your ruling is a recommendation — Ryde keeps final discretion (NS-7).\n\nMATERIALS: the complete fact table (every fact has an id and a source), the two advocates' briefs with void claims\nalready removed, the full policy.\n\nRULES\n- reasoning: short paragraphs; every paragraph cites at least one fact as [F3] and one clause as [RD-2]. Cite only\n  ids that exist in the materials. Clauses marked 不可引用 cannot be cited.\n- System records (gps / timeline / fare) override statements (chat / complaint / driver statement) when they\n  conflict. Profile facts never decide a case alone. These are rules of procedure, not clauses: never cite them;\n  cite only the numbered policy clauses (RD-, NS-, FARE-, SAFE-).\n- For every claim of the losing side, give a rejected_claims entry with the reason (fact + clause).\n- amount (SGD) must be computed from numbers in a gps or fare fact; write the arithmetic in reasoning\n  (e.g. \"$13.14 ÷ 9.32 km = $1.4099/km; 2.83 km × $1.4099/km = $3.99 [F5][F9][RD-2]\" — the rate is the fare record's\n  distance fare ÷ distance km, as the trace states it; never a rounded rate). Round to cents.\n- ruling must be one of: refund_full, refund_partial, fee_waived, no_action, escalate. recommended_action is a short imperative for Ryde ops; append\n  \"+ flag_account\" when a clause (RD-6, NS-2) calls for it, AND set the structured field `flag_account: true` — only the\n  structured field creates an account action; free text never does. Never put flag_account in `ruling`.\n- confidence (0–1) is how clearly the clauses apply to these facts, not how much you like the outcome. Code will\n  re-check your citations and may adjust it.\n- SAFETY SCREEN, every case: read every chat message, the driver's statement and the complaint for threats,\n  intimidation, harassment, sexual remarks or dangerous-driving allegations (SAFE-1, SAFE-2). Record your reading in\n  safety_concern: \"none\" (read and found nothing), \"suspected\" or \"confirmed\", with the fact ids in safety_basis — the\n  field is required; \"none\" is a finding, never a default (\"unscreened\" is written by code when no judge ran; never use it). No keyword decides this: a\n  hint word in a fact value only marks a line for you to read in context (\"I'll find you at the lobby\" is a pickup\n  arrangement, not a threat; \"you will regret it\" needs no keyword to be one). Ryde's code of conduct bars \"abuse of\n  any kind\": hostile or abusive language aimed at the other party (telling them to shut up, insults, intimidation) is\n  abuse under SAFE-1 and is at least \"suspected\" — rudeness in a route argument is not a reason to rule. The screen\n  is asymmetric: a false \"suspected\" costs a human look; a missed threat that lets a refund execute is not acceptable.\n  If safety_concern is suspected or confirmed, or the dispute type is safety, do NOT rule: ruling = \"escalate\",\n  escalate = true, reasoning = a factual summary for the human reviewer (what happened, when, what is disputed, which\n  facts to check), citing ids.\n- EVIDENCE, every case: set evidence_status. \"sufficient\" = the record settles every element your ruling needs\n  (evidence_gap must then be null — do not write \"no gap\" in it). \"insufficient\" = a record a clause needs is missing\n  (the trace says so, or you find it: no GPS, a hole, an untimed message) — name it in evidence_gap and rule escalate.\n  \"unknown\" = you cannot tell whether the record settles it — rule escalate. Only \"sufficient\" can carry a ruling.\n  Never treat missing evidence as if it favoured either side.\n- cited_facts / cited_policy: list only the ids you actually applied — every clause in cited_policy must be one whose\n  conditions you checked against a fact in reasoning. Do not pad the list with clauses you merely mention.\n- rejected_claims[].id must be the exact claim id from a brief (C1, D3 ...), nothing else.\n- amount must be null for no_action and escalate.\n- Every id you write anywhere — basis and reason of each segment finding, safety_basis, rejected_claims — is checked\n  against the materials like the top-level lists; an id that does not exist voids the ruling.\n- READING THE CHAT is your job, not code's. Whether a message agrees, asks, refuses or threatens is a reading of its\n  words in context: \"That works for me\" agrees; \"I am not okay with this detour\" refuses; \"ok if I go via X?\" asks.\n  Paraphrase, Singlish and negation all count. Cite the message fact id you read.\n- Rider-named stops (RD-3): when the rider names the place and the car stops there, the segment driven to reach it is not a detour —\n  its extra km are exempt in full (finding = exempt). Do not split a segment into \"the stop\" and \"the way there\".\n- Consent (RD-5) must be the RIDER's message sent BEFORE the segment started; a driver's statement that the rider\n  agreed verbally is a claim, not consent (G11) — such a segment counts. A driver's message after the detour began, or\n  a rider message with no timestamp when timing matters, cannot establish consent. RD-3(b) is about rider-requested\n  STOPS, not driver-proposed routes — do not use it to deny a driver-proposed, rider-agreed route.\n- Consent SCOPE (RD-5) is a reading of the words, in three kinds: (1) a GENERAL route choice (\"take whichever way is\n  faster\", \"up to you\") covers a route chosen to get there, not an errand of the driver's own — a stop away from the\n  route or a loop that reaches nothing still counts; (2) a SPECIFIC named road or area (\"ok, go via X\") covers driving\n  on X only, and the record must tie the segment to X — a stop on X, a message placing the car on X, a road name in a\n  fact. Timing alone does not: the fact table carries no road names for the driven path, so if nothing ties them the\n  finding is undetermined (G13), not exempt. And if the record places the segment somewhere ELSE — a stop away from X,\n  the driver's own statement naming another road or place, a rider-requested stop the driver chose the location of —\n  the agreement to X does not cover it: counts (RD-5: agreeing to \"the PIE\" never includes a trip to a far shop);\n  (3) scope you cannot read: undetermined. A complete chat record with no rider agreement before the segment: counts.\n- segment_findings: for route_deviation cases, one entry per off-route segment fact (the gps facts that say\n  \"Off-route segment ...\"): fact_id; finding = \"exempt\" (RD-3/RD-4/RD-5 excuses it), \"counts\" (refundable under RD-2)\n  or \"undetermined\" (the record does not settle it — the case then goes to a person); basis = the chat / statement\n  fact ids your finding rests on (code checks they exist, who wrote them and that they came before the segment);\n  reason with clause ids. Empty for other types.\n  ground = the policy branch the words fall under, one of: \"rider_named_stop\" (RD-3(a): a rider message before the\n  segment named the place and the car stopped there → exempt), \"general_route_consent\" (RD-5: \"whichever way is\n  faster\" and the loop goes there → exempt), \"named_road_tied\" (RD-5: agreed to a named road and a record ties the\n  segment to it → exempt), \"named_road_untied\" (RD-5 + G13: nothing ties the segment to the named road, nothing\n  places it elsewhere → undetermined), \"named_road_elsewhere\" (the record places the segment somewhere else →\n  counts), \"driver_errand\" (a stop or loop of the driver's own that no rider message asked for → counts),\n  \"scope_other\" (the rider agreed to something else, e.g. a short stop → counts), \"consent_after_or_none\" (no rider\n  message before the segment agrees to it → counts). You read the words and name the ground; the policy fixes the\n  consequence and code checks that your finding is that consequence — a finding that contradicts its own ground is\n  sent back to you once, then goes to a person. \"other\" cannot execute.\n- \"undetermined\" is for what the record cannot settle: a message's meaning or timing, or whether an agreed route is\n  the one driven. It is never for elements the trace marks ✓ or ✗ (an RD-4 incident screen, a measured segment, an\n  arrival confirmation) — those are settled by code. The trace tells you whether a finding changes the outcome: when\n  it changes the amount or the flag, an undetermined finding means escalate; when it changes neither (fixed fare, no\n  prior), you may leave it undetermined and still rule.\n\nOUTPUT: a Ruling. English.\n\nPOLICY (full text)\n# Ryde 纠纷裁决政策（带编号条款）\n\n> 版本 2026-09-28 v2（全条款溯源版）。本文档是 agent 唯一可引用的规则来源；agent 只能引用条款号（如 `NS-1`），不得自创规则。\n> 每条格式：**条件 → 结果**。条件中的数值与事实表（spec 1.5）里的数值直接比对。\n> 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：\n> - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；\n> - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；\n> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、GPS 断档与聊天记录完整性检查）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。\n> 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节\"待 Ryde 确认的规则空缺\"。条款行含\"不可引用\"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。\n\n## 0. 前提：Ryde 的车费模型\n\n- **非计价器服务（RydeX / XL / LUXE / FLASH / POOL / PET）**：车费在下单时按上下车点一次性报价，行程中里程变化不改变车费；行程结束后只能叠加已公布的附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费）。\n- **RydeTAXI**：按所属出租车公司的计价器计费（\"Key in the fare as indicated on your meter\"），计价器结构由 LTA 公布：里程单位（每 400 m / 350 m）+ 等待时间单位（每 45 s）；因此绕路里程直接进入车费。\n- 因此 RD 组条款中\"多出费用\"的计算随服务类型不同（见 RD-2）。\n\n<sub>来源：Ryde 一手 A7、A8、A18（\"Fares quoted for our services are generally fixed, except for RydeTAXI\"；\"all fees for Standard and/or Premium taxis follow that of the respective taxi company\"）；计价器结构 B5（LTA）、B6（PTC \"Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company\"）。</sub>\n\n---\n\n## 1. RD — 绕路（Route Deviation）\n\n**RD-1** 事实表中每一个\"off-route segment\"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是\"在无合理事由时走最短最直接路线\"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。\n<sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)：\"in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route\"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 \"ensure that the shortest and most direct route is taken\"）、C4（CDG Zig \"the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act\"）、D1（NYC TLC §80-16(a)(2) \"shortest reasonable route\"）；Ryde 自身只规定司机可按 GPS 选\"最快或最高效路线\"（A7），无阈值（见空缺 G1）。</sub>\n\n**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差：路线走廊 200 m 内的来回、地图匹配抖动等未归入任何段的里程）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。\n<sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对\"collected a fare … above the metered fare\"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde：\"Drivers who overcharge riders … may face account suspension\"）、A11（\"Overcharging of additional fees\" 被算法标记）、D3（Uber 对\"route deviates from the predicted route\"导致的多收\"happy to review these cases if you feel you were overcharged\"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>\n\n**RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内\"编辑目的地 / 加停靠点\"请求且司机接受）：\n(a) 乘客**指名了地点**，或未指名地点但司机选择的停靠点位于最优路线沿线（未产生 `gps-detour-*` 段） → 该段不构成绕路；\n(b) 乘客未指名地点、司机自行选择了一个使轨迹产生 off-route segment 的地点且**事前未告知乘客该地点** → 该段的 `extra_km` 不因乘客的停靠请求而豁免（乘客同意的是\"停一下\"，不是该路线变更；同意范围按 RD-5 判断），停靠时长仍按 (c) 处理；\n(c) 停靠时长：**RydeTAXI** 按计价器等待时间单位照收（事实表 `fare-wait`），不退；**非计价器服务**：Ryde 公布的等待费只有上车点 $5 一项，行程中停靠没有已公布的收费项，不得收取；app 内改目的地成立时只加已公布的 $3.00（RydeTAXI / 多站 / POOL 不支持 app 内改目的地，只能与司机聊天约定）。\n<sub>来源：(a)(b) 派生自 B1 r.23(1)(c)（义务指向\"the destination named by a passenger\"，乘客指名的地点即新的目的地）、D1（NYC TLC §80-16(a)(1) \"comply with all reasonable and lawful routing requests of the Passenger\"）、C4（Zig：\"passengers have the option to select the route upon boarding\"）、C2（Grab：\"Changing route without passenger's permission\"属违规）；(c) RydeTAXI 等待单位 B5（LTA \"26 cents for every 45 sec of waiting time\"）与 C6（CDG \"Every 45 seconds of waiting or less\"）、A18（RydeTAXI 按计价器）；非计价器 Ryde 一手 A1（仅公布上车点 $5 等待费）+ 派生自 B6（PTC：\"waiting time charge and other fees must be published\"）；$3.00 与 RydeTAXI 不支持改目的地 Ryde 一手 A9。</sub>\n\n**RD-4** 司机主张因封路 / 事故 / 严重拥堵改道（\"合理事由\"） → 必须有 traffic 事实佐证，且佐证针对**被替代的那一段最优路线**：\n(a) `traffic-incident-*`：LTA DataMall 事件（Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic 等 DataMall 类型）位于最优路线上（`m_from_route` ≤ 300 m，数据层匹配半径），`reported_at` 早于该绕路段开始且在行程窗口内仍被列出 → 该段豁免，`no_action`（对该段）；\n(b) `traffic-band-*`：最优路线上道路的速度档位记录为 band 1 或 2（LTA 定义 0 < 9 km/h、10 < 19 km/h）且时间窗覆盖该段 → 作为 (a) 的佐证；单独出现时是否足以豁免待 Ryde 确认（空缺 G3），MVP 不据此单独豁免；\n(c) 无 (a) → 该段按 RD-2 处理。\n<sub>来源：派生自 B1 r.23(1)(c) 的\"reasonable cause\"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9：\"SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19\"；Traffic Incidents 数据集）；Ryde 只允许司机\"按 GPS 选最快或最高效路线\"（A7）、未规定举证方式。</sub>\n\n**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定\"之前\"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意\"走 PIE\"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中\"乘客口头同意了\"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定。同意的范围分三种：**一般路线授权**（\"哪条快走哪条\"）覆盖为到达目的地而选的路线，不覆盖司机自己的事（偏离路线的停留、到不了任何地方的绕圈仍计）；**指定路线授权**（\"好，走 X 路\"）只覆盖在 X 路上的行驶，须有记录把该段与 X 路对应起来（该路上的停留、把车定位在该路上的消息、事实表里的路名）——仅凭时间先后不能证明实际走的就是 X 路，没有对应记录则判 `undetermined`（G13）；**范围读不出**的，判 `undetermined`。`undetermined` 的段若影响金额或账号标记，案件转人工；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时亦然（G12）。\n<sub>来源：Ryde 一手 A7（\"reach a mutual agreement before you go\"）；派生自 C2（Grab：\"Discuss and agree with the user before taking an alternative route\"，\"Changing route without passenger's permission\"列为违规）。\"改道后告知不算同意\"是 \"before you go\" / \"before taking\" 的直接推论。</sub>\n\n**RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为\"repeated\"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。\n<sub>来源：Ryde 一手 A10（\"Repeated or severe breaches may lead to permanent suspension from the Ryde platform\"；\"Where Ryde reasonably suspects serious or repeated violations, it may report such conduct to … Land Transport Authority (LTA)\"）、A11（\"Unusual trip patterns\"由算法标记）；派生自 B2/B4（LTA 扣分累计 6 分暂停、21 分吊销，绕路每次 3 分）。\"repeated\"的计数口径与 90 天窗口 Ryde 未公开（空缺 G4）。</sub>\n\n---\n\n## 2. NS — 爽约（No-Show）与取消费\n\n**NS-0** 取消费 $6.61 只在 Ryde 公布的两种情形之一下成立，按 `cancelled_by` 分支，其余 NS 条款只能经本条进入：\n- `cancelled_by = rider` → 即时单看 NS-4，预约单看 NS-5；\n- `cancelled_by = driver` 且司机主张乘客爽约 → NS-1 / NS-2；司机以其他理由取消 → NS-3；\n- 行程完成后的等待费争议 → NS-6。\n取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。\n<sub>来源：Ryde 一手 A1（\"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)\"）、A18（\"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI\"）、A16（ToU \"If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee\"）。</sub>\n\n**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下\"I'm Here\"（或平台自动确认到达）；(ii) 按下那一刻 GPS 显示司机位于上车点（`tl-here` 的 `m_from_pickup_at_tap` ≤ 200，200 m 为数据层参数，见空缺 G2）；(iii) 按下之后在上车点**连续**等待超过 3 分钟直至取消（≥ 3:01，`tl-here` 的 `within_200m_after_tap_s` > 180；按下之前在附近停留的时间不计） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。案件记录自带爽约阈值时（如官方样例 `no_show_threshold_min = 8`，其时间线写\"threshold reached\"），(iii) 按该记录的阈值与口径执行（达到即成立，≥ 8:00），执行记录标明来源；记录无阈值则用本条默认（超过 3 分钟）。记录里的免费等待时长（`free_wait_time_min`）是等候费起算点，不是爽约阈值，不得代入 (iii)。到达确认是司机按键（`driver_tap`）还是平台自动判定（`platform_auto`），按记录原样写明，不得把自动判定写成\"司机按了按钮\"。等待期间 GPS 有断档（间隔超过该轨迹正常采样间隔两倍且超过 2 分钟）或轨迹未覆盖到取消时刻的，(iii) 不能从两次采样之间推定为\"一直在等\"，案件转人工（G12）。\n<sub>来源：Ryde 一手 A1、A3（\"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins\"）、A2/A5（司机得 $4.50）。\"位于上车点\"的米数 Ryde 未公开（空缺 G2）。</sub>\n\n**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按\"I'm Here\"；按\"I'm Here\"那一刻不在上车点范围内；按下后在范围内连续等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了\"I'm Here\"而那一刻 GPS 显示其不在上车点（`tl-here` 的 `m_from_pickup_at_tap` > 200）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。\n<sub>来源：Ryde 一手 A3（\"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled\"）、A10（欺诈行为清单：\"Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees\"、\"Abuse of Cancellation and Waiting Fee Policy\"）、A11（\"Abuse of the cancellation and waiting time button\"）；同构规则见 C1（Grab \"You will not be charged the $4 cancellation fee if any of the above are not fulfilled\"）、C5（CDG）。</sub>\n\n**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，由 Ryde 的取消率机制处理，不是本案裁决，本条不产生 `flag_account`）。\n<sub>来源：Ryde 一手 A13（\"Refusing or cancelling a trip without a valid reason at pick-up may result in account action\"）、A16（ToU \"the cancellation shall be based on acceptable cancellation reasons as shown in the Application\"）、A10（\"Cancellation Rate (CR) > 17.5%\" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>\n\n**NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布\"司机迟于 ETA 则免费取消\"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。\n<sub>来源：Ryde 一手 A1（\"All cancellations made within 3 minutes of matching are not chargeable\"）、A2（司机侧同文）。</sub>\n\n**NS-5**（不可引用·信息性：本数据集无预约单字段） 预约单：乘客在预约时间 15 分钟以前取消 → 不收费；15 分钟内取消 → 取消费成立；司机在预约时间前 15 分钟之后才接单的，乘客自匹配起有 3 分钟免费取消期。\n<sub>来源：Ryde 一手 A1（\"All cancellations made > 15 minutes before the scheduled trip time are not chargeable … If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period\"）。</sub>\n\n**NS-6** 等待费 $5.00 成立条件：司机按下\"I'm Here\"、GPS 位于上车点（同 NS-1 (ii)）、等待超过 3 分钟后乘客上车且行程完成、司机在行程内（下车时）按下等待费按钮。任一条件不满足 → `fee_waived`（退 $5.00）。\n<sub>来源：Ryde 一手 A1（\"Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses 'I'm Here', waits for > 3 minutes for the rider to board, and continues the trip\"）、A3、A5（\"Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off\" / \"we are unable to charge the rider once the trip is completed\"）。</sub>\n\n**NS-7** 取消费或等待费的争议须在行程后 **30 天内**提出 → 逾期 `no_action`；成立的退款以 Ryde 代金券（取消费 $6.61 / 等待费 $5.00）形式发放，不退现金；Ryde 对最终退款保留裁量权，本系统裁决为建议而非终局。\n<sub>来源：Ryde 一手 A4（\"submit a fee waiver request via RydeHELP in our app within 30 days of the trip … we will issue you a voucher with a unique code worth $6.61 [/ $5.00] as a refund … This voucher is non-refundable and cannot be exchanged for cash\"）、A16（ToU \"Ryde reserves its absolute discretion to any refunds to you … or to your RydeCoins wallet\"）。</sub>\n\n**NS-8**（不可引用·信息性：Ryde 无此规则，且案件文件无 ETA 字段） 其他运营商的规则：司机比 app 显示的预计到达时间晚超过 5 分钟仍未到达，乘客可免费取消（Grab 另有\"首次显示 ETA 后 3 分钟内未到则免取消费\"）。\n<sub>来源：C1（Grab：\"if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee\" / \"Cancellation fees are waived if your driver does not arrive within 3 minutes after the first-shown estimated time of arrival\"）、C3（Gojek：\"If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived\"）。空缺 G7。</sub>\n\n---\n\n## 3. FARE — 车费明细争议\n\n**FARE-1** 非计价器服务的最终车费 = 下单报价 + 已公布附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费 $6.61、平台费 $1.25/$1.47）；出现任何未公布或不满足对应条款的追加项 → 退还该项，`refund_partial`。\n<sub>来源：Ryde 一手 A8（\"Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls\"）、A6（平台费两档）、A9（$3.00）；派生自 B6（PTC：\"this amount must be provided upfront to the commuter prior to the booking … additional stop charge, waiting time charge and other fees must be published\"）。</sub>\n\n**FARE-2** 收取的 ERP/过路费高于实际路线在该时段应缴闸门费之和 → 退还差额，`refund_partial`；ERP 差额若源于未豁免绕路段则并入 RD-2。本数据集无 `tolls` 字段时不触发。\n<sub>来源：Ryde 一手 A8（\"I was overcharged for ERP/toll\"：ERP 按实际发生收取）；闸门核验方法 Ryde 未公开（空缺 G9）。</sub>\n\n**FARE-3**（不可引用·信息性：本数据集无清洁费索赔数据） 司机清洁费索赔成立条件：照片证据（至少一张含车牌）、事发 24 小时内专业清洁、行程后 48 小时内经 app 提交、附收据；上限：食物/饮料 $40，体液/污渍 $120，呕吐 $200。任一条件缺失 → `fee_waived`。\n<sub>来源：Ryde 一手 A15（\"Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours … At least one photo must show the vehicle's car plate number\"）、A16（ToU \"cleaning fee of up to S$200\"）。</sub>\n\n---\n\n## 4. SAFE — 安全事件\n\n**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（是否构成由法庭阅读原文判定，记录于 `Ruling.safety_concern`；代码不判定语义，只在事实值里标出含提示词的句子供阅读） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。每个案件法官都须做此筛查，不以提示词命中为前提。\n<sub>来源：Ryde 一手 A13（Code of Conduct：\"Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable\"；\"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures\"）。</sub>\n\n**SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。\n<sub>来源：Ryde 一手 A14（\"If you're in need of medical assistance, please call 995 … You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP\"）。</sub>\n\n**SAFE-3**（不可引用·信息性：六案中无此情形，Judge 不据此裁决） GPS 与时间线显示行程在乘客未上车的情况下被\"完成\"并收费 → `refund_full` 并 `flag_account`（Ryde 定义为欺诈行为）。\n<sub>来源：Ryde 一手 A10（\"Completing trips without the rider onboard\"属欺诈）、A12（\"If your rider has been charged for a trip that you could not cancel, please let us know\"）。</sub>\n\n---\n\n## 5. 裁决动作词表（Judge 输出 schema 用）\n\n| 动作 | 定义 |\n|---|---|\n| `refund_full` | 争议项（取消费 / 等待费 / 整段被投诉的费用）全额退还乘客。 |\n| `refund_partial` | 只退还争议项中经条款认定多收的部分，金额由事实表数值算出，裁决须注明计算所依据的事实编号。 |\n| `fee_waived` | 某项附加费（等待费、清洁费、改目的地费）因不满足成立条件而取消；等同于对该单项的全额退还，用于附加费争议。 |\n| `no_action` | 投诉不成立，原车费与已收费用维持不变。 |\n| `escalate` | 不输出裁决，转人工处理并附事实摘要；用于安全事件、置信度不足或证据不足以适用任何条款。 |\n| `flag_account` | 附加动作，可与上述任一动作并列：将司机或乘客账号送交 Ryde 审查（欺诈、多次违规）。不单独作为裁决结果。 |\n\n退款动作统一以 Ryde 代金券发放（NS-7），金额单位 SGD。\n\n---\n\n## 6. 待 Ryde 确认的规则空缺\n\n| # | 空缺 | 为什么需要 | 当前采用 / 建议值 | 缺什么依据 |\n|---|---|---|---|---|\n| G1 | 绕路的量化门槛（百分比 / 绝对公里）与噪声容差 | 区分真实绕路与地图匹配误差 | 不设政策门槛（RD-1），数据层 0.2 km 噪声容差（`core/facts/tools.py`） | Ryde / LTA / PTC / Grab / Gojek / CDG 均无量化阈值（B1、C2、C4、D1 只说\"最短最直接\"；Uber D3 只说 \"significantly\"） |\n| G2 | \"at the pick-up location according to GPS data\" 的半径 | NS-1/NS-2/NS-6 的 (ii) 要件需要米数 | 200 m（数据层参数）；建议 Ryde 按其 app 的到达判定给出 | Ryde A3、Grab C1、CDG C5 均无米数；Tada 报道称约 500 m（C7，二手来源）；GPS.gov 只给精度 4.9 m（D5） |\n| G3 | \"严重拥堵\"的档位门槛；路况记录与路线的匹配半径 | RD-4 (b) 能否单独豁免 | band ≤ 2 只作佐证（RD-4）；匹配 300 m（数据层参数） | LTA 只定义档位区间（B7），未定义\"拥堵\"；OneMotoring 图例无 km/h 门槛 |\n| G4 | \"repeated\" 违规的计数口径与时间窗 | RD-6 的 `flag_account` | 近 90 天 ≥ 1 起已成立 + 本案（RD-6）；画像字段本身以 90 天为窗（spec §1.3） | Ryde A10 只说 \"Repeated or severe\"；评分用\"last 100 trips\"，违规窗口未公开；LTA 扣分累计（B4）是官方惩戒口径而非本系统裁决 |\n| G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |\n| G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |\n| G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |\n| G8 | Judge 置信度是否该作为门槛 | spec §5.4/§5.6 要求有置信度阈值 | 不作门槛：置信度只记录，能否自动执行由政策执行记录（第 3 节的代码核查）决定，与置信度无关（`core/verify.py`） | spec 只要求有阈值、未定值；本系统改为按证据与条款核查，待 Ryde 确认是否需要额外的置信度门槛 |\n| G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |\n| G11 | 口头 / 未记录的同意是否可接受 | RD-5：司机常称乘客\"口头同意了\" | 不接受：仅见于司机陈述的同意主张不构成同意；法官无法从聊天记录判定时转人工 | Ryde A7 只说 \"reach a mutual agreement before you go\"，未说明同意须以何种形式留痕 |\n| G12 | 证据缺失时的处理（GPS 缺失、断档或首尾未覆盖、消息无时间戳、计价器行程无里程费、取消方未记录） | RD-1/RD-2/RD-5/NS-0/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利。\"断档\"= 相邻采样间隔超过 2 分钟且超过该轨迹正常采样间隔的两倍（官方样例按约 3 分钟采样，3 分钟间隔不是断档） | Ryde 无相应规定；本系统规则，待 Ryde 确认 |\n| G13 | 乘客同意的指定路线与实际行驶段的对应证据 | RD-5：同意\"走 X 路\"只覆盖 X 路；记录里没有实际行驶路径的路名 | 不推定：没有把该段与所同意路线对应起来的记录（该路上的停留、定位消息、路名事实）时，法官判 `undetermined`，影响结果则转人工；时间先后只是线索。待接入路径路名匹配或由 Ryde 确认推定规则 | Ryde A7 只说 \"mutual agreement before you go\"，未涉及同意范围与实际路线如何对应 |\n| G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |"
+    "content": "You are the Driver Advocate in a Ryde (Singapore ride-hailing) dispute. Your client is the driver.\nYour job: within what the policy allows, get the best outcome for your client. You are an advocate, not a judge —\nyou need not be neutral, but you may ONLY argue from facts in the case fact table, which you read with the tools.\n\nMATERIALS\n- The ticket (below) and a fact INDEX: fact ids and their source only. You do not yet know what any fact says.\n- The full dispute policy (below). Clauses are numbered (RD-1, NS-2, FARE-1 ...). Clauses marked 不可引用 are\n  informational and must not be cited. Only numbered clauses from the policy may be cited; the court's own procedure\n  (the rules below) is not a clause and must never be cited as one.\n\nTOOLS\n- Six get_*_facts(case_id) tools return slices of the fact table. Call at least the tool matching the dispute type\n  (route_deviation → get_route_facts, no_show → get_no_show_facts) plus get_chat_facts; call others when useful.\n  Do not call the same tool twice.\n\nRULES OF ARGUMENT\n- Every claim cites at least one fact id (F3) and at least one clause id (RD-2). A claim citing an id that does\n  not exist is void and the judge never sees it.\n- When chat / statements conflict with gps / timeline / fare facts, the system records win. Do not build\n  a claim on a statement alone when a system record contradicts it.\n- Consent (RD-5) is the rider's own message sent before the segment started; a driver's statement that the rider\n  agreed verbally is a claim, not consent (G11). Quote the message you rely on by its fact id and say what it means\n  and how far it reaches: a general route choice, or a specific named road — and, for a named road, which fact ties\n  the driven segment to that road (if none does, say so: the judge may find it undetermined, G13).\n- If a message, statement or the complaint reads as a threat, intimidation, harassment or a dangerous-driving\n  allegation, say so and cite it (SAFE-1 / SAFE-2): the case then goes to a person. A hint word alone is not a threat.\n- Profile facts can support a flag_account request, never the main finding.\n- weaknesses must list at least one honest weak point of your own case, naming the fact ids the other side will\n  use. An empty list is treated as bad faith.\n- requested_outcome.action must be one of: refund_full, refund_partial, fee_waived, no_action, escalate. amount is SGD, only for refund_* / fee_waived, and must be\n  computable from a fare or gps fact (say which in the claim).\n\nOUTPUT\n- Return a CaseBrief. side = \"driver\". Claim ids: D1, D2, ... Write in English, concise, each\n  assertion one or two sentences that a judge can check against the cited facts.\n- segment_grounds: for EVERY off-route segment fact (the gps facts that say \"Off-route segment ...\"), the policy\n  ground your honest reading of the record supports, one of \"rider_named_stop\" (RD-3(a): a rider message before the segment named the place and the car stopped there), \"general_route_consent\" (RD-5: a general route choice such as \"whichever way is faster\", and the loop goes there), \"named_road_tied\" (RD-5: agreed to a named road and a record ties the segment to it), \"named_road_untied\" (agreed to a named road, nothing ties the segment to it, nothing places it elsewhere: G13), \"named_road_elsewhere\" (the record places the segment somewhere else), \"driver_errand\" (a stop or loop of the driver's own that no rider message asked for), \"scope_other\" (the rider agreed to something else, e.g. a short stop), \"consent_after_or_none\" (no rider message before the segment agrees to it), \"incident\" (RD-4), \"other\". This is a statement of what the record shows, not of what helps your side: a ground both\n  advocates state is taken as agreed and binds the judge; the judge decides only between the grounds the two of you put forward. Empty for non-route cases.\n  Read the EXCHANGE, not the yes alone. A yes in any words (\"sure\", \"ok go ahead\", \"can lah\", \"可以\") to a driver's ask that names the road\n  to be taken (\"can I go round via X?\") is an agreement to X: named_road_tied if you can cite the record that ties the segment to X (a stop\n  on X, a message placing the car on X, a road name in a fact), otherwise named_road_untied — never \"tied\" without such a record, never\n  \"general\" because the yes was short. A road named only as the one to be avoided (\"jam on the PIE, shall I take another way?\") names no\n  route; a yes to that, or words leaving the route to the driver (\"whichever way is faster\", \"随便你\"), is general_route_consent, and a\n  loop that leaves the corridor and reaches nothing is still general_route_consent unless a record shows a stop or an errand of the driver's\n  own (then driver_errand). A segment that began before the rider's message, or with no rider message at all, is consent_after_or_none.\n\nPOLICY (full text)\n# Ryde 纠纷裁决政策（带编号条款）\n\n> 版本 2026-09-28 v2（全条款溯源版）。本文档是 agent 唯一可引用的规则来源；agent 只能引用条款号（如 `NS-1`），不得自创规则。\n> 每条格式：**条件 → 结果**。条件中的数值与事实表（spec 1.5）里的数值直接比对。\n> 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：\n> - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；\n> - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；\n> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、GPS 断档与聊天记录完整性检查）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。\n> 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节\"待 Ryde 确认的规则空缺\"。条款行含\"不可引用\"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。\n\n## 0. 前提：Ryde 的车费模型\n\n- **非计价器服务（RydeX / XL / LUXE / FLASH / POOL / PET）**：车费在下单时按上下车点一次性报价，行程中里程变化不改变车费；行程结束后只能叠加已公布的附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费）。\n- **RydeTAXI**：按所属出租车公司的计价器计费（\"Key in the fare as indicated on your meter\"），计价器结构由 LTA 公布：里程单位（每 400 m / 350 m）+ 等待时间单位（每 45 s）；因此绕路里程直接进入车费。\n- 因此 RD 组条款中\"多出费用\"的计算随服务类型不同（见 RD-2）。\n\n<sub>来源：Ryde 一手 A7、A8、A18（\"Fares quoted for our services are generally fixed, except for RydeTAXI\"；\"all fees for Standard and/or Premium taxis follow that of the respective taxi company\"）；计价器结构 B5（LTA）、B6（PTC \"Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company\"）。</sub>\n\n---\n\n## 1. RD — 绕路（Route Deviation）\n\n**RD-1** 事实表中每一个\"off-route segment\"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是\"在无合理事由时走最短最直接路线\"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。\n<sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)：\"in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route\"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 \"ensure that the shortest and most direct route is taken\"）、C4（CDG Zig \"the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act\"）、D1（NYC TLC §80-16(a)(2) \"shortest reasonable route\"）；Ryde 自身只规定司机可按 GPS 选\"最快或最高效路线\"（A7），无阈值（见空缺 G1）。</sub>\n\n**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差：路线走廊 200 m 内的来回、地图匹配抖动等未归入任何段的里程）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。\n<sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对\"collected a fare … above the metered fare\"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde：\"Drivers who overcharge riders … may face account suspension\"）、A11（\"Overcharging of additional fees\" 被算法标记）、D3（Uber 对\"route deviates from the predicted route\"导致的多收\"happy to review these cases if you feel you were overcharged\"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>\n\n**RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内\"编辑目的地 / 加停靠点\"请求且司机接受）：\n(a) 乘客**指名了地点**，或未指名地点但司机选择的停靠点位于最优路线沿线（未产生 `gps-detour-*` 段） → 该段不构成绕路；\n(b) 乘客未指名地点、司机自行选择了一个使轨迹产生 off-route segment 的地点且**事前未告知乘客该地点** → 该段的 `extra_km` 不因乘客的停靠请求而豁免（乘客同意的是\"停一下\"，不是该路线变更；同意范围按 RD-5 判断），停靠时长仍按 (c) 处理；\n(c) 停靠时长：**RydeTAXI** 按计价器等待时间单位照收（事实表 `fare-wait`），不退；**非计价器服务**：Ryde 公布的等待费只有上车点 $5 一项，行程中停靠没有已公布的收费项，不得收取；app 内改目的地成立时只加已公布的 $3.00（RydeTAXI / 多站 / POOL 不支持 app 内改目的地，只能与司机聊天约定）。\n<sub>来源：(a)(b) 派生自 B1 r.23(1)(c)（义务指向\"the destination named by a passenger\"，乘客指名的地点即新的目的地）、D1（NYC TLC §80-16(a)(1) \"comply with all reasonable and lawful routing requests of the Passenger\"）、C4（Zig：\"passengers have the option to select the route upon boarding\"）、C2（Grab：\"Changing route without passenger's permission\"属违规）；(c) RydeTAXI 等待单位 B5（LTA \"26 cents for every 45 sec of waiting time\"）与 C6（CDG \"Every 45 seconds of waiting or less\"）、A18（RydeTAXI 按计价器）；非计价器 Ryde 一手 A1（仅公布上车点 $5 等待费）+ 派生自 B6（PTC：\"waiting time charge and other fees must be published\"）；$3.00 与 RydeTAXI 不支持改目的地 Ryde 一手 A9。</sub>\n\n**RD-4** 司机主张因封路 / 事故 / 严重拥堵改道（\"合理事由\"） → 必须有 traffic 事实佐证，且佐证针对**被替代的那一段最优路线**：\n(a) `traffic-incident-*`：LTA DataMall 事件（Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic 等 DataMall 类型）位于最优路线上（`m_from_route` ≤ 300 m，数据层匹配半径），`reported_at` 早于该绕路段开始且在行程窗口内仍被列出 → 该段豁免，`no_action`（对该段）；\n(b) `traffic-band-*`：最优路线上道路的速度档位记录为 band 1 或 2（LTA 定义 0 < 9 km/h、10 < 19 km/h）且时间窗覆盖该段 → 作为 (a) 的佐证；单独出现时是否足以豁免待 Ryde 确认（空缺 G3），MVP 不据此单独豁免；\n(c) 无 (a) → 该段按 RD-2 处理。\n<sub>来源：派生自 B1 r.23(1)(c) 的\"reasonable cause\"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9：\"SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19\"；Traffic Incidents 数据集）；Ryde 只允许司机\"按 GPS 选最快或最高效路线\"（A7）、未规定举证方式。</sub>\n\n**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定\"之前\"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意\"走 PIE\"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中\"乘客口头同意了\"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定。同意的范围分三种：**一般路线授权**（\"哪条快走哪条\"）覆盖为到达目的地而选的路线，不覆盖司机自己的事（偏离路线的停留、到不了任何地方的绕圈仍计）；**指定路线授权**（\"好，走 X 路\"）只覆盖在 X 路上的行驶，须有记录把该段与 X 路对应起来（该路上的停留、把车定位在该路上的消息、事实表里的路名）——仅凭时间先后不能证明实际走的就是 X 路，没有对应记录则判 `undetermined`（G13）；**范围读不出**的，判 `undetermined`。`undetermined` 的段若影响金额或账号标记，案件转人工；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时亦然（G12）。\n<sub>来源：Ryde 一手 A7（\"reach a mutual agreement before you go\"）；派生自 C2（Grab：\"Discuss and agree with the user before taking an alternative route\"，\"Changing route without passenger's permission\"列为违规）。\"改道后告知不算同意\"是 \"before you go\" / \"before taking\" 的直接推论。</sub>\n\n**RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为\"repeated\"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。\n<sub>来源：Ryde 一手 A10（\"Repeated or severe breaches may lead to permanent suspension from the Ryde platform\"；\"Where Ryde reasonably suspects serious or repeated violations, it may report such conduct to … Land Transport Authority (LTA)\"）、A11（\"Unusual trip patterns\"由算法标记）；派生自 B2/B4（LTA 扣分累计 6 分暂停、21 分吊销，绕路每次 3 分）。\"repeated\"的计数口径与 90 天窗口 Ryde 未公开（空缺 G4）。</sub>\n\n---\n\n## 2. NS — 爽约（No-Show）与取消费\n\n**NS-0** 取消费 $6.61 只在 Ryde 公布的两种情形之一下成立，按 `cancelled_by` 分支，其余 NS 条款只能经本条进入：\n- `cancelled_by = rider` → 即时单看 NS-4，预约单看 NS-5；\n- `cancelled_by = driver` 且司机主张乘客爽约 → NS-1 / NS-2；司机以其他理由取消 → NS-3；\n- 行程完成后的等待费争议 → NS-6。\n取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。\n<sub>来源：Ryde 一手 A1（\"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)\"）、A18（\"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI\"）、A16（ToU \"If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee\"）。</sub>\n\n**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下\"I'm Here\"（或平台自动确认到达）；(ii) 按下那一刻 GPS 显示司机位于上车点（`tl-here` 的 `m_from_pickup_at_tap` ≤ 200，200 m 为数据层参数，见空缺 G2）；(iii) 按下之后在上车点**连续**等待超过 3 分钟直至取消（≥ 3:01，`tl-here` 的 `within_200m_after_tap_s` > 180；按下之前在附近停留的时间不计） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。案件记录自带爽约阈值时（如官方样例 `no_show_threshold_min = 8`，其时间线写\"threshold reached\"），(iii) 按该记录的阈值与口径执行（达到即成立，≥ 8:00），执行记录标明来源；记录无阈值则用本条默认（超过 3 分钟）。记录里的免费等待时长（`free_wait_time_min`）是等候费起算点，不是爽约阈值，不得代入 (iii)。到达确认是司机按键（`driver_tap`）还是平台自动判定（`platform_auto`），按记录原样写明，不得把自动判定写成\"司机按了按钮\"。等待期间 GPS 有断档（间隔超过该轨迹正常采样间隔两倍且超过 2 分钟）或轨迹未覆盖到取消时刻的，(iii) 不能从两次采样之间推定为\"一直在等\"，案件转人工（G12）。\n<sub>来源：Ryde 一手 A1、A3（\"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins\"）、A2/A5（司机得 $4.50）。\"位于上车点\"的米数 Ryde 未公开（空缺 G2）。</sub>\n\n**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按\"I'm Here\"；按\"I'm Here\"那一刻不在上车点范围内；按下后在范围内连续等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了\"I'm Here\"而那一刻 GPS 显示其不在上车点（`tl-here` 的 `m_from_pickup_at_tap` > 200）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。\n<sub>来源：Ryde 一手 A3（\"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled\"）、A10（欺诈行为清单：\"Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees\"、\"Abuse of Cancellation and Waiting Fee Policy\"）、A11（\"Abuse of the cancellation and waiting time button\"）；同构规则见 C1（Grab \"You will not be charged the $4 cancellation fee if any of the above are not fulfilled\"）、C5（CDG）。</sub>\n\n**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，由 Ryde 的取消率机制处理，不是本案裁决，本条不产生 `flag_account`）。\n<sub>来源：Ryde 一手 A13（\"Refusing or cancelling a trip without a valid reason at pick-up may result in account action\"）、A16（ToU \"the cancellation shall be based on acceptable cancellation reasons as shown in the Application\"）、A10（\"Cancellation Rate (CR) > 17.5%\" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>\n\n**NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布\"司机迟于 ETA 则免费取消\"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。\n<sub>来源：Ryde 一手 A1（\"All cancellations made within 3 minutes of matching are not chargeable\"）、A2（司机侧同文）。</sub>\n\n**NS-5**（不可引用·信息性：本数据集无预约单字段） 预约单：乘客在预约时间 15 分钟以前取消 → 不收费；15 分钟内取消 → 取消费成立；司机在预约时间前 15 分钟之后才接单的，乘客自匹配起有 3 分钟免费取消期。\n<sub>来源：Ryde 一手 A1（\"All cancellations made > 15 minutes before the scheduled trip time are not chargeable … If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period\"）。</sub>\n\n**NS-6** 等待费 $5.00 成立条件：司机按下\"I'm Here\"、GPS 位于上车点（同 NS-1 (ii)）、等待超过 3 分钟后乘客上车且行程完成、司机在行程内（下车时）按下等待费按钮。任一条件不满足 → `fee_waived`（退 $5.00）。\n<sub>来源：Ryde 一手 A1（\"Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses 'I'm Here', waits for > 3 minutes for the rider to board, and continues the trip\"）、A3、A5（\"Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off\" / \"we are unable to charge the rider once the trip is completed\"）。</sub>\n\n**NS-7** 取消费或等待费的争议须在行程后 **30 天内**提出 → 逾期 `no_action`；成立的退款以 Ryde 代金券（取消费 $6.61 / 等待费 $5.00）形式发放，不退现金；Ryde 对最终退款保留裁量权，本系统裁决为建议而非终局。\n<sub>来源：Ryde 一手 A4（\"submit a fee waiver request via RydeHELP in our app within 30 days of the trip … we will issue you a voucher with a unique code worth $6.61 [/ $5.00] as a refund … This voucher is non-refundable and cannot be exchanged for cash\"）、A16（ToU \"Ryde reserves its absolute discretion to any refunds to you … or to your RydeCoins wallet\"）。</sub>\n\n**NS-8**（不可引用·信息性：Ryde 无此规则，且案件文件无 ETA 字段） 其他运营商的规则：司机比 app 显示的预计到达时间晚超过 5 分钟仍未到达，乘客可免费取消（Grab 另有\"首次显示 ETA 后 3 分钟内未到则免取消费\"）。\n<sub>来源：C1（Grab：\"if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee\" / \"Cancellation fees are waived if your driver does not arrive within 3 minutes after the first-shown estimated time of arrival\"）、C3（Gojek：\"If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived\"）。空缺 G7。</sub>\n\n---\n\n## 3. FARE — 车费明细争议\n\n**FARE-1** 非计价器服务的最终车费 = 下单报价 + 已公布附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费 $6.61、平台费 $1.25/$1.47）；出现任何未公布或不满足对应条款的追加项 → 退还该项，`refund_partial`。\n<sub>来源：Ryde 一手 A8（\"Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls\"）、A6（平台费两档）、A9（$3.00）；派生自 B6（PTC：\"this amount must be provided upfront to the commuter prior to the booking … additional stop charge, waiting time charge and other fees must be published\"）。</sub>\n\n**FARE-2** 收取的 ERP/过路费高于实际路线在该时段应缴闸门费之和 → 退还差额，`refund_partial`；ERP 差额若源于未豁免绕路段则并入 RD-2。本数据集无 `tolls` 字段时不触发。\n<sub>来源：Ryde 一手 A8（\"I was overcharged for ERP/toll\"：ERP 按实际发生收取）；闸门核验方法 Ryde 未公开（空缺 G9）。</sub>\n\n**FARE-3**（不可引用·信息性：本数据集无清洁费索赔数据） 司机清洁费索赔成立条件：照片证据（至少一张含车牌）、事发 24 小时内专业清洁、行程后 48 小时内经 app 提交、附收据；上限：食物/饮料 $40，体液/污渍 $120，呕吐 $200。任一条件缺失 → `fee_waived`。\n<sub>来源：Ryde 一手 A15（\"Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours … At least one photo must show the vehicle's car plate number\"）、A16（ToU \"cleaning fee of up to S$200\"）。</sub>\n\n---\n\n## 4. SAFE — 安全事件\n\n**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（是否构成由法庭阅读原文判定，记录于 `Ruling.safety_concern`；代码不判定语义，只在事实值里标出含提示词的句子供阅读） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。每个案件法官都须做此筛查，不以提示词命中为前提。\n<sub>来源：Ryde 一手 A13（Code of Conduct：\"Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable\"；\"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures\"）。</sub>\n\n**SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。\n<sub>来源：Ryde 一手 A14（\"If you're in need of medical assistance, please call 995 … You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP\"）。</sub>\n\n**SAFE-3**（不可引用·信息性：六案中无此情形，Judge 不据此裁决） GPS 与时间线显示行程在乘客未上车的情况下被\"完成\"并收费 → `refund_full` 并 `flag_account`（Ryde 定义为欺诈行为）。\n<sub>来源：Ryde 一手 A10（\"Completing trips without the rider onboard\"属欺诈）、A12（\"If your rider has been charged for a trip that you could not cancel, please let us know\"）。</sub>\n\n---\n\n## 5. 裁决动作词表（Judge 输出 schema 用）\n\n| 动作 | 定义 |\n|---|---|\n| `refund_full` | 争议项（取消费 / 等待费 / 整段被投诉的费用）全额退还乘客。 |\n| `refund_partial` | 只退还争议项中经条款认定多收的部分，金额由事实表数值算出，裁决须注明计算所依据的事实编号。 |\n| `fee_waived` | 某项附加费（等待费、清洁费、改目的地费）因不满足成立条件而取消；等同于对该单项的全额退还，用于附加费争议。 |\n| `no_action` | 投诉不成立，原车费与已收费用维持不变。 |\n| `escalate` | 不输出裁决，转人工处理并附事实摘要；用于安全事件、置信度不足或证据不足以适用任何条款。 |\n| `flag_account` | 附加动作，可与上述任一动作并列：将司机或乘客账号送交 Ryde 审查（欺诈、多次违规）。不单独作为裁决结果。 |\n\n退款动作统一以 Ryde 代金券发放（NS-7），金额单位 SGD。\n\n---\n\n## 6. 待 Ryde 确认的规则空缺\n\n| # | 空缺 | 为什么需要 | 当前采用 / 建议值 | 缺什么依据 |\n|---|---|---|---|---|\n| G1 | 绕路的量化门槛（百分比 / 绝对公里）与噪声容差 | 区分真实绕路与地图匹配误差 | 不设政策门槛（RD-1），数据层 0.2 km 噪声容差（`core/facts/tools.py`） | Ryde / LTA / PTC / Grab / Gojek / CDG 均无量化阈值（B1、C2、C4、D1 只说\"最短最直接\"；Uber D3 只说 \"significantly\"） |\n| G2 | \"at the pick-up location according to GPS data\" 的半径 | NS-1/NS-2/NS-6 的 (ii) 要件需要米数 | 200 m（数据层参数）；建议 Ryde 按其 app 的到达判定给出 | Ryde A3、Grab C1、CDG C5 均无米数；Tada 报道称约 500 m（C7，二手来源）；GPS.gov 只给精度 4.9 m（D5） |\n| G3 | \"严重拥堵\"的档位门槛；路况记录与路线的匹配半径 | RD-4 (b) 能否单独豁免 | band ≤ 2 只作佐证（RD-4）；匹配 300 m（数据层参数） | LTA 只定义档位区间（B7），未定义\"拥堵\"；OneMotoring 图例无 km/h 门槛 |\n| G4 | \"repeated\" 违规的计数口径与时间窗 | RD-6 的 `flag_account` | 近 90 天 ≥ 1 起已成立 + 本案（RD-6）；画像字段本身以 90 天为窗（spec §1.3） | Ryde A10 只说 \"Repeated or severe\"；评分用\"last 100 trips\"，违规窗口未公开；LTA 扣分累计（B4）是官方惩戒口径而非本系统裁决 |\n| G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |\n| G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |\n| G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |\n| G8 | Judge 置信度是否该作为门槛 | spec §5.4/§5.6 要求有置信度阈值 | 不作门槛：置信度只记录，能否自动执行由政策执行记录（第 3 节的代码核查）决定，与置信度无关（`core/verify.py`） | spec 只要求有阈值、未定值；本系统改为按证据与条款核查，待 Ryde 确认是否需要额外的置信度门槛 |\n| G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |\n| G11 | 口头 / 未记录的同意是否可接受 | RD-5：司机常称乘客\"口头同意了\" | 不接受：仅见于司机陈述的同意主张不构成同意；法官无法从聊天记录判定时转人工 | Ryde A7 只说 \"reach a mutual agreement before you go\"，未说明同意须以何种形式留痕 |\n| G12 | 证据缺失时的处理（GPS 缺失、断档或首尾未覆盖、消息无时间戳、计价器行程无里程费、取消方未记录） | RD-1/RD-2/RD-5/NS-0/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利。\"断档\"= 相邻采样间隔超过 2 分钟且超过该轨迹正常采样间隔的两倍（官方样例按约 3 分钟采样，3 分钟间隔不是断档） | Ryde 无相应规定；本系统规则，待 Ryde 确认 |\n| G13 | 乘客同意的指定路线与实际行驶段的对应证据 | RD-5：同意\"走 X 路\"只覆盖 X 路；记录里没有实际行驶路径的路名 | 不推定：没有把该段与所同意路线对应起来的记录（该路上的停留、定位消息、路名事实）时，法官判 `undetermined`，影响结果则转人工；时间先后只是线索。待接入路径路名匹配或由 Ryde 确认推定规则 | Ryde A7 只说 \"mutual agreement before you go\"，未涉及同意范围与实际路线如何对应 |\n| G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |"
    },
    {
     "role": "user",
-    "content": "CASE B-0044 — dispute type: safety, filed by: rider\nComplaint: \"The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.\"\nTrip: RydeX Clarke Quay → Bedok Mall, estimate 15.5 km / 21.8 min, pickup 17:08 drop-off 17:31; charged $32.86 (fixed)\n\nFACT TABLE\n  F1  [gps]  Actual distance 15.4 km vs optimal route 15.5 km: -0.1 km (-0%).\n  F2  [gps]  Trip duration 23.7 min vs estimated 21.8 min (+1.9 min).\n  F3  [chat]  Chat #1 17:09 rider: “Please stop the car, I want to get out here.”\n  F4  [chat]  Chat #2 17:10 driver: “Sit down or I lock the doors.”\n  F5  [chat]  Chat record: 2 message(s), every one timestamped.\n  F6  [chat]  Driver statement (written after the trip, not part of the chat): “The rider tried to open the door at the lights. I told her to sit down for her own safety and drove on.”\n  F7  [profile]  Rider: account age 619 d (1.7 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\n  F8  [profile]  Driver: account age 893 d (2.4 y), rating 4.62, 1038 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).\n\nBRIEF — RIDER ADVOCATE\n  C1: The rider asked to be let out mid-trip: her message at 17:09 reads \"Please stop the car, I want to get out here.\" (F3), and the driver refused and drove on, per his own written statement that he \"told her to sit down for her own safety and drove on\" (F6).  [facts: F3, F6; policy: SAFE-1]\n  C2: The driver's reply to that request — \"Sit down or I lock the doors.\" (F4) — is a threat to confine the rider in the moving car, i.e. intimidation by the driver against the passenger, which the policy states will not be tolerated; the chat record is complete with both messages timestamped (F5), so nothing in the record undercuts it.  [facts: F4, F5, F3; policy: SAFE-1]\n  C3: The driver's own post-trip statement confirms the rider was trying to open the door to exit while the car was stopped at lights and he deliberately continued the trip against her wish (F6); a passenger being carried on after asking to leave, with the driver threatening to lock the doors (F4), is a safety incident for the rider for the remainder of the ride, consistent with her complaint of feeling unsafe.  [facts: F6, F4, F3; policy: SAFE-1, SAFE-2]\n  C4: The threat/intimidation flag is not supported by an isolated hint word but by the driver's own imperative \"Sit down or I lock the doors\" addressed to the rider in response to her request to get out (F4, F3), with the record complete and timestamped (F5), so the SAFE-1 screening is triggered and the case must go to a person rather than be auto-decided.  [facts: F4, F3, F5; policy: SAFE-1]\n  C5: Nothing in the system records supports a route or fare grievance that could be decided automatically: the actual distance 15.4 km was 0.1 km shorter than the optimal 15.5 km with no off-route segment (F1), so the fare side of this case cannot produce a refund and the safety question is the whole dispute.  [facts: F1, F2; policy: RD-1]\n  C6: On the incident screening the rider's record shows 619 days of account history, rating 4.8 and no disputes in 90 days (F7), while the driver has 1038 trips in 90 days and no upheld disputes (F8) — the profiles do not determine this case but do show the rider's complaint is not a pattern of claims.  [facts: F7, F8; policy: SAFE-1]\n  weaknesses admitted: The rider's own message (F3) is a request to stop, not an allegation of anything, and the only account of the door-opening is the driver's statement (F6); there is no gps or timeline fact showing the doors were locked or that any physical act occurred. | The GPS record (F1) shows no route deviation and the trip was slightly shorter than optimal, so there is no corroborating system record of reckless or abnormal driving; the rider's \"felt unsafe for the whole ride\" is her impression, not a measured fact. | The driver's statement (F6) offers an innocent explanation — that he told her to sit down \"for her own safety\" — which the judge may read as a safety instruction rather than a threat, and the driver's profile (F8) shows 1038 trips in 90 days with no upheld dispute, which the other side will use to argue the remark was benign. | The threat reading rests on a single two-sentence chat exchange (F4) and depends on the judge's reading of tone; the fact record contains no prior or later message from the driver that reinforces the intimidating reading.\n  requested: escalate\n\nBRIEF — DRIVER ADVOCATE\n  D1: The complaint is a dangerous-driving / unsafe-conduct allegation (rider says she felt unsafe for the whole ride after asking to get out), and the driver's own message 'Sit down or I lock the doors' (F4) is on its face intimidating to the rider; under SAFE-1 and SAFE-2 the case must not be auto-adjudicated and must be escalated to a human reviewer with a fact summary.  [facts: F4, F3, F6; policy: SAFE-1, SAFE-2]\n  D2: The rider's request to stop was sent at 17:09 while the trip was already moving (F3), and the driver's reply at 17:10 (F4) is a safety direction about the moving vehicle, not a separate act of confinement; the driver's account that the rider tried to open the door at the lights (F6) explains the direction, though F6 is only the driver's statement and the chat record (F5) contains no rider message contradicting it.  [facts: F3, F4, F5, F6; policy: SAFE-1]\n  D3: The GPS record shows no route misconduct at all: actual distance 15.4 km against an optimal 15.5 km, i.e. -0.1 km (-0%), so there is no off-route segment and no unexplained deviation to answer for on this trip (F1).  [facts: F1; policy: RD-1]\n  D4: The trip ran 23.7 min against an estimated 21.8 min (+1.9 min) (F2), a delay consistent with an intermediate request to stop and the driver's stated safety intervention, not with any detour or errand, since the driven distance did not exceed the optimal route (F1).  [facts: F1, F2; policy: RD-1]\n  D5: The chat record is short but complete: 2 messages, every one timestamped (F5), so nothing is missing that would show any threat, coercion or refusal beyond the single instruction at F4, and the record contains no allegation of physical contact or assault.  [facts: F5, F3, F4; policy: SAFE-1]\n  D6: The driver has 893 days on the platform and 1038 trips in 90 days with zero disputes and zero upheld complaints (F8); this supports a human review of the account rather than any adverse finding, and equally shows there is no pattern of repeated unsafe or threatening conduct to act on.  [facts: F8; policy: SAFE-1]\n  D7: The rider has 619 days of account history, a 4.8 rating and zero disputes in 90 days (F7), so the rider's safety report is not frivolous; it should be handled by the human reviewer as a genuine safety report rather than dismissed by the automated process.  [facts: F7; policy: SAFE-1]\n  D8: The fare was the fixed RydeX quote of $32.86 with no distance-based component (no fare facts were returned for this case; F1 shows the distance did not exceed the optimal route), so no refund or fare adjustment is computable from any fare or GPS fact and the monetary charge should stand pending human review.  [facts: F1; policy: FARE-1]\n  weaknesses admitted: The driver's own message F4 ('Sit down or I lock the doors') reads as a threat on its face, and the rider's F3 'Please stop the car, I want to get out here' shows she had already asked to leave; a human reviewer may well read F4 as intimidation regardless of the driver's safety rationale. | The rider's account that she felt unsafe for the whole ride, together with F6, raises exactly the kind of dangerous-driving/unsafe-conduct allegation that SAFE-2 sends to a person, so the driver cannot expect a clean no_action; the realistic outcome is escalation, not vindication. | F6 is only the driver's written statement after the trip, not a system record, and F5 shows the chat contains nothing about a door being opened, so the driver's explanation that the rider tried to open the door is uncorroborated and cannot defeat the rider's F3/F4 version. | F2 (+1.9 min over estimate) is the only record touching the time the car kept moving after F3, and it is neutral-to-adverse: it confirms the vehicle did not stop immediately, which the rider will use to support her account that she was kept in the car.\n  requested: escalate\n\nREBUTTAL — RIDER ADVOCATE\n  → D1 (concedes): Agreed on the result but not on the framing: the rider's own words (F3) and the driver's reply (F4) are what trigger SAFE-1, and the rider's continued presence in the moving car after that instruction (F6) is the unsafe conduct the reviewer must examine; the case is escalated on the rider's complaint, which is upheld for human review, not neutralised.  [facts: F3, F4, F6; policy: SAFE-1, SAFE-2]\n  → D2: The \"safety direction\" reading does not survive the words: the driver did not say \"please don't open the door\", he said \"Sit down or I lock the doors\" (F4) in direct reply to \"Please stop the car, I want to get out here\" (F3), and F6 is only his own post-trip statement, unsupported by any system record, so it cannot convert a threat into a direction.  [facts: F3, F4, F5, F6; policy: SAFE-1]\n  → D3 (concedes): Conceded — the GPS record shows no deviation and no off-route segment (F1); the rider makes no route claim, so this point is not in dispute.  [facts: F1; policy: RD-1]\n  → D4: F2 does not help the driver: a 23.7-minute trip against a 21.8-minute estimate (F2) with a driver statement that he \"drove on\" (F6) is consistent with the car continuing to move after the rider asked to get out (F3), which is the rider's safety point, not an exculpation.  [facts: F2, F3, F6; policy: SAFE-1]\n  → D5: The record is complete and that is precisely why the threat stands on its own: two timestamped messages in which the rider asks to be let out (F3) and the driver answers with an ultimatum about locking the doors (F4); SAFE-1 requires the judge to read those words, and the absence of a further message does not soften them.  [facts: F3, F4, F5; policy: SAFE-1]\n  → D6: The driver's clean 90-day history (F8) is a profile fact and cannot decide the case either way; it does not answer the words in F4, and it is irrelevant to whether the rider's report goes to a person.  [facts: F8, F4; policy: SAFE-1]\n  → D7 (concedes): Accepted — the rider's 619-day account, 4.8 rating and zero prior disputes (F7) support treating her safety report as genuine, exactly as the rider asks, and the human reviewer should have it.  [facts: F7; policy: SAFE-1]\n  → D8 (concedes): Conceded — the rider does not seek a fare adjustment: no fare facts were returned and the distance did not exceed the optimal route (F1), so the fixed $32.86 stands and the rider's request is escalation for human review of the safety incident, not money.  [facts: F1; policy: FARE-1]\n\nREBUTTAL — DRIVER ADVOCATE\n  → C1 (concedes): Concede the sequence: the rider asked to get out at 17:09 (F3) and the driver's own statement says he told her to sit down and drove on (F6); I do not contest that she asked and he continued, only the characterisation of it as a tolerated-conduct violation rather than a safety intervention. My case therefore rests on the same escalation the rider seeks, not on a denial of the sequence.  [facts: F3, F6; policy: SAFE-1]\n  → C2: The words at F4 are on the record and I will not pretend they are neutral, but the rider's own framing of the exchange is already captured by SAFE-1 — the question of whether F4 is intimidation is for the human reviewer reading the original, and my client's position is that it was an instruction about a moving vehicle, as F6 states; nothing in F5 or F3 supplies any further threat, coercion or physical act.  [facts: F4, F5, F3, F6; policy: SAFE-1]\n  → C3: C3 goes further than the record: F6 is only the driver's written statement and is the sole source for the door-opening, while the GPS facts show the car covered 15.4 km against an optimal 15.5 km (F1) and ran only 1.9 min beyond the estimate (F2), so there is no system record of confinement or abnormal carriage; the rider's 'felt unsafe for the whole ride' remains her impression, and the case should go to a person under SAFE-1 rather than be decided on F6.  [facts: F6, F1, F2; policy: SAFE-1, SAFE-2]\n  → C4: I agree the SAFE-1 screening is triggered and the case goes to a person — that is precisely the outcome I request — but C4 should not be read as a finding that a threat is established; SAFE-1 requires the tribunal to read the original text and record the result, and the driver's 893-day, 1038-trip record with zero upheld disputes (F8) is the context the reviewer should weigh.  [facts: F4, F3, F5, F8; policy: SAFE-1]\n  → C5 (concedes): Agreed and it supports my client: with actual distance 0.1 km below optimal and no off-route segment (F1), there is no route or fare grievance to refund against FARE-1, so the monetary position — the fixed RydeX charge of $32.86 — should stand and only the safety question goes to a human.  [facts: F1, F2; policy: RD-1, FARE-1]\n  → C6: The profiles cut both ways and neither decides the case: the rider's clean 619-day, 0-dispute record (F7) shows her report deserves a human reading, while the driver's 1038 trips in 90 days with zero disputes and zero upheld complaints (F8) shows no pattern of repeated unsafe conduct for the reviewer to act on, which is why I ask for escalation and not a finding against my client.  [facts: F7, F8; policy: SAFE-1]\n\nPOLICY EXECUTION TRACE (computed by code from the fact values; ✓ pass, ✗ fail, ? you must decide)\n  ✓ SAFE-1 complaint filed as a safety incident [case] no automatic ruling; the judge writes a factual summary for the reviewer (no evidence)\n  allowed outcomes: escalate\n\nIssue your Ruling. Your outcome and amount must be consistent with the trace: ✓/✗ elements are settled; the ? elements are yours to decide (and may be undetermined), the amount follows the formula in the trace, and escalate is always open to you when the record does not let you decide."
+    "content": "CASE B-0044 — dispute type: safety, filed by: rider\nComplaint: \"The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.\"\nTrip: RydeX Clarke Quay → Bedok Mall, estimate 15.5 km / 21.8 min, pickup 17:08 drop-off 17:31; charged $32.86 (fixed)\n\nFACT INDEX (ids and sources only; read contents with the tools):\n  F1  gps\n  F2  gps\n  F3  chat\n  F4  chat\n  F5  chat\n  F6  chat\n  F7  profile\n  F8  profile\n\nBuild your brief for the client."
+   },
+   {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+     {
+      "id": "call_00_7GsoGw04gLIEi76Y6jDW1198",
+      "type": "function",
+      "function": {
+       "name": "get_chat_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     },
+     {
+      "id": "call_01_DhlCNtWyUm5FlIK0Hsbx4781",
+      "type": "function",
+      "function": {
+       "name": "get_route_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     },
+     {
+      "id": "call_02_5bviFNsJJkGAogZhjsBQ4035",
+      "type": "function",
+      "function": {
+       "name": "get_profile_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_00_7GsoGw04gLIEi76Y6jDW1198",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[{\"id\":\"F3\",\"source\":\"chat\",\"text\":\"Chat #1 17:09 rider: “Please stop the car, I want to get out here.”\"},{\"id\":\"F4\",\"source\":\"chat\",\"text\":\"Chat #2 17:10 driver: “Sit down or I lock the doors.”\"},{\"id\":\"F5\",\"source\":\"chat\",\"text\":\"Chat record: 2 message(s), every one timestamped.\"},{\"id\":\"F6\",\"source\":\"chat\",\"text\":\"Driver statement (written after the trip, not part of the chat): “The rider tried to open the door at the lights. I told her to sit down for her own safety and drove on.”\"}]}"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_01_DhlCNtWyUm5FlIK0Hsbx4781",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[{\"id\":\"F1\",\"source\":\"gps\",\"text\":\"Actual distance 15.4 km vs optimal route 15.5 km: -0.1 km (-0%).\"},{\"id\":\"F2\",\"source\":\"gps\",\"text\":\"Trip duration 23.7 min vs estimated 21.8 min (+1.9 min).\"}]}"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_02_5bviFNsJJkGAogZhjsBQ4035",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[{\"id\":\"F7\",\"source\":\"profile\",\"text\":\"Rider: account age 619 d (1.7 y), rating 4.8, 0 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\"},{\"id\":\"F8\",\"source\":\"profile\",\"text\":\"Driver: account age 893 d (2.4 y), rating 4.62, 1038 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).\"}]}"
+   },
+   {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+     {
+      "id": "call_00_K577CR52gEMBJEdpiJmo7766",
+      "type": "function",
+      "function": {
+       "name": "get_no_show_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     },
+     {
+      "id": "call_01_AGFjhZjz816yZrwtcpMW9520",
+      "type": "function",
+      "function": {
+       "name": "get_fare_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     },
+     {
+      "id": "call_02_3jGtdDcjO698t1Vl2CkL8456",
+      "type": "function",
+      "function": {
+       "name": "get_traffic_facts",
+       "arguments": "{\"case_id\": \"B-0044\"}"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_00_K577CR52gEMBJEdpiJmo7766",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[{\"id\":\"F1\",\"source\":\"gps\",\"text\":\"Actual distance 15.4 km vs optimal route 15.5 km: -0.1 km (-0%).\"},{\"id\":\"F2\",\"source\":\"gps\",\"text\":\"Trip duration 23.7 min vs estimated 21.8 min (+1.9 min).\"}]}"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_01_AGFjhZjz816yZrwtcpMW9520",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[],\"note\":\"no fare facts for this dispute type\"}"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_02_3jGtdDcjO698t1Vl2CkL8456",
+    "content": "{\"case_id\":\"B-0044\",\"facts\":[],\"note\":\"no traffic/weather facts for this dispute type\"}"
+   },
+   {
+    "role": "assistant",
+    "content": null,
+    "tool_calls": [
+     {
+      "id": "call_00_n3lGXW8lprbhRwk5wAPJ8374",
+      "type": "function",
+      "function": {
+       "name": "final_result",
+       "arguments": "{\"side\": \"driver\", \"claims\": [{\"id\": \"D1\", \"assertion\": \"The rider's complaint is a safety allegation — she says the driver 'threatened to lock me in' — and the only record of any words spoken or written is the driver's message at 17:10: 'Sit down or I lock the doors.' (F4), which the rider herself reports as her account of feeling unsafe (F3, F4). A safety allegation of this kind is not something this tribunal resolves on the papers; it must go to a person.\", \"facts\": [\"F4\", \"F3\", \"F5\"], \"policy\": [\"SAFE-1\"]}, {\"id\": \"D2\", \"assertion\": \"The chat record is complete: two messages, every one timestamped (F5), so no part of the exchange is missing; the record contains one rider request at 17:09 to stop (F3) and one driver reply at 17:10 (F4), and nothing else was said.\", \"facts\": [\"F5\", \"F3\", \"F4\"], \"policy\": [\"SAFE-1\"]}, {\"id\": \"D3\", \"assertion\": \"The driver's written statement (F6) says he told the rider to sit down 'for her own safety' and drove on after she tried to open the door at the lights; read against the 17:09 rider message (F3) this is an account of refusing to let a rider step out of a moving vehicle into traffic, not of detaining her — a reading a human reviewer, not this tribunal, should test.\", \"facts\": [\"F6\", \"F3\"], \"policy\": [\"SAFE-1\"]}, {\"id\": \"D4\", \"assertion\": \"There is no route-deviation or overcharge element in the complaint: the GPS records the actual distance as 15.4 km against an optimal route of 15.5 km, i.e. 0.1 km shorter (F1), and this is a fixed-fare RydeX trip, so the $32.86 charge is unaffected by any deviation.\", \"facts\": [\"F1\", \"F2\"], \"policy\": [\"RD-1\", \"RD-2\"]}, {\"id\": \"D5\", \"assertion\": \"The trip was completed in 23.7 minutes against a 21.8-minute estimate, only 1.9 minutes over (F2), which is inconsistent with an alleged prolonged confinement in the car; the rider was delivered to Bedok Mall (F2).\", \"facts\": [\"F2\", \"F1\"], \"policy\": [\"RD-1\"]}, {\"id\": \"D6\", \"assertion\": \"The driver has 893 days on the platform, a 4.62 rating, 1038 trips in 90 days and zero disputes and zero upheld complaints in that window (F8); the rider has 619 days, a 4.8 rating and zero disputes in 90 days (F7). The histories give no basis for a flag_account action against the driver.\", \"facts\": [\"F8\", \"F7\"], \"policy\": [\"RD-6\", \"SAFE-1\"]}], \"weaknesses\": [\"The rider's own words in the complaint — 'threatened to lock me in' — and the driver's recorded words 'Sit down or I lock the doors.' (F4) read plainly as an intimidation allegation; the driver's statement (F6) does not deny saying it, and whether 'for her own safety' excuses the phrasing is exactly the judgement this tribunal cannot make. The rider's 17:09 request to be let out (F3) shows she felt she could not leave.\", \"The 200 m / route corridor data does not cover the allegation at all: F1 only shows distance is 0.1 km shorter, so nothing in the system records clears the driver of the safety allegation on its merits, even though it does clear him on route and fare.\", \"The rider profile (F7) is unblemished — 619 days, 4.8 rating, 0 disputes in 90 days — so there is no history to argue she is a vexatious complainant.\", \"The driver's account that the rider 'tried to open the door' (F6) is a statement with no GPS or other record behind it; per the record rules, a statement alone cannot outweigh the rider's account, and there is no camera or telematics fact to support the driver's version of the incident (F3, F4).\"], \"requested_outcome\": {\"action\": \"escalate\"}, \"segment_grounds\": {}}"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_00_n3lGXW8lprbhRwk5wAPJ8374",
+    "content": "Final result processed."
+   },
+   {
+    "role": "user",
+    "content": "Here is the opposing advocate's brief (void claims already removed):\n\nside: rider\nclaims:\n  C1: The rider asked to be let out mid-trip: at 17:09 she wrote 'Please stop the car, I want to get out here' (F3). A passenger's request to end the ride and leave the car is a routing/destination instruction the driver must respect under RD-3(a).  [facts: F3; policy: RD-3]\n  C2: The driver's reply one minute later, 'Sit down or I lock the doors' (F4), is a threat to deprive the rider of her means of exit, spoken by the person who controls the door locks; on its face it is intimidation within SAFE-1 and must go to a human reviewer rather than be auto-adjudicated.  [facts: F4; policy: SAFE-1]\n  C3: The chat record is complete (2 messages, every one timestamped, F5), so the threat in F4 is not a fragment of an incomplete or unverifiable exchange — the record itself establishes what was said and when.  [facts: F5; policy: SAFE-1]\n  C4: The driver's own written statement confirms he refused to let the rider out and drove on: 'The rider tried to open the door at the lights. I told her to sit down for her own safety and drove on' (F6) — so the refusal to stop is admitted, and his safety rationale is a claim, not rider consent to stay in the car.  [facts: F6; policy: SAFE-1, RD-5]\n  C5: The record rules out any route-deviation explanation for the rider's distress: actual distance 15.4 km versus optimal 15.5 km, -0.1 km / -0% (F1), and duration 23.7 min versus 21.8 min (F2) — the ride went the direct way, so the incident was about the rider being kept in the car, not about the route.  [facts: F1, F2; policy: RD-1]\n  C6: The rider has 619 days of account history, a 4.8 rating and zero disputes or upheld complaints in 90 days (F7), so her safety complaint is not the product of a pattern of unsupported claims; the driver's clean dispute history (F8) does not neutralise an admitted threat recorded in the chat.  [facts: F7, F8; policy: SAFE-1]\nweaknesses they admitted: The complaint's framing ('threatened to lock me in') rests on a single chat line; the driver's statement (F6) puts a safety motive on it ('for her own safety'), and a judge may read F4 as a safety instruction rather than a threat. There is no allegation of physical contact, injury or dangerous driving, so SAFE-2 is not clearly engaged. | No fare or GPS fact shows any money loss tied to the incident: there is no off-route segment (F1 shows -0.1 km, F2 a 23.7 min trip), the fare is a fixed RydeX quote with no fare facts returned, and traffic facts are absent — so any refund request is unsupported and the only available outcome is escalation, not compensation. F4 is not supported beyond the chat record (F5); there is no GPS evidence of the car being stopped at traffic lights while the rider tried to open the door, so that detail in F6 is the driver's word alone.\nthey ask for: escalate\n\nAnswer it point by point. Your original brief stays on the record unchanged. Return a Rebuttal: for each opposing\nclaim you contest, a point with target_claim_id = their claim id, a one- or two-sentence response citing facts (F*)\nand clauses; for a point you must concede, set concede = true and target_claim_id to THEIR claim id (or your own\nclaim id if you withdraw one of yours). Only cite facts you have read; you may call a tool you have not called yet.\nSet revised_outcome only if you change what you ask for. side = \"driver\". segment_grounds is REQUIRED in a route case\n(a rebuttal without it is returned to you): restate the ground of every off-route segment after reading the opponent (the\nsame vocabulary and the same reading rules as in your brief); revise it where the opponent's cited facts have shown your\nfirst reading wrong, and keep it where they have not — a point you concede in a response must be conceded here too."
    }
   ],
   "tool_choice": "required",
@@ -40,190 +153,250 @@
    {
     "type": "function",
     "function": {
-     "name": "final_result",
-     "description": "The final response which ends this conversation",
+     "name": "get_route_facts",
+     "description": "Route facts from the GPS track (source gps): actual vs optimal distance and the excess ratio, stops away from pickup/drop-off with location and duration, actual vs estimated duration, off-route segments and the km each added. Use for route_deviation. Cite the returned F ids verbatim.",
      "parameters": {
+      "additionalProperties": false,
       "properties": {
-       "ruling": {
+       "case_id": {
         "type": "string"
-       },
-       "amount": {
-        "default": null,
-        "anyOf": [
-         {
-          "type": "number"
-         },
-         {
-          "type": "null"
-         }
-        ]
-       },
-       "recommended_action": {
-        "type": "string"
-       },
-       "confidence": {
-        "maximum": 1,
-        "minimum": 0,
-        "type": "number"
-       },
-       "reasoning": {
-        "type": "string"
-       },
-       "cited_facts": {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       "cited_policy": {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       "rejected_claims": {
-        "default": [],
-        "items": {
-         "$ref": "#/$defs/RejectedClaim"
-        },
-        "type": "array"
-       },
-       "flag_account": {
-        "default": false,
-        "type": "boolean"
-       },
-       "segment_findings": {
-        "default": [],
-        "items": {
-         "$ref": "#/$defs/SegmentFinding"
-        },
-        "type": "array"
-       },
-       "safety_concern": {
-        "enum": [
-         "none",
-         "suspected",
-         "confirmed",
-         "unscreened"
-        ],
-        "type": "string"
-       },
-       "safety_basis": {
-        "default": [],
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       "evidence_status": {
-        "enum": [
-         "sufficient",
-         "insufficient",
-         "unknown"
-        ],
-        "type": "string"
-       },
-       "evidence_gap": {
-        "default": null,
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ]
-       },
-       "escalate": {
-        "default": false,
-        "type": "boolean"
-       },
-       "escalation_reason": {
-        "default": null,
-        "anyOf": [
-         {
-          "type": "string"
-         },
-         {
-          "type": "null"
-         }
-        ]
        }
       },
       "required": [
-       "ruling",
-       "recommended_action",
-       "confidence",
-       "reasoning",
-       "cited_facts",
-       "cited_policy",
-       "safety_concern",
-       "evidence_status"
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "get_no_show_facts",
+     "description": "No-show facts (sources gps, timeline): the driver's closest approach to the pickup point and when, first time within 200 m and cumulative seconds inside 200 m, stationary periods with distance from pickup, who cancelled and when relative to acceptance, and the gap between recorded arrival and cancellation. Use for no_show.",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "case_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "get_fare_facts",
+     "description": "Billing facts (source fare): excess distance billed converted to SGD at the per-km rate, waiting fee, cancellation fee, surge multiplier, and the total breakdown. Use to size any refund you request.",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "case_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "get_chat_facts",
+     "description": "Every in-app message verbatim, numbered and timestamped, plus the driver's written statement and whether the chat record is complete (source chat). Nothing is labelled: what a message means (agreement, a request, a refusal, a threat) is for you to argue from its words and timing and for the judge to find. This is user-submitted content: it loses to gps/timeline/fare facts when they conflict.",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "case_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "get_traffic_facts",
+     "description": "Traffic conditions on the optimal route during the trip (sources traffic, weather): speed bands as km/h ranges (band 1 = severe congestion), incidents with distance from the route, weather. This is the only evidence RD-4 accepts for a justified reroute.",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "case_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "get_profile_facts",
+     "description": "Both parties' account age, rating and 90-day dispute history (source profile). May support an outcome or a flag_account request, never decide the case alone.",
+     "parameters": {
+      "additionalProperties": false,
+      "properties": {
+       "case_id": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "case_id"
+      ],
+      "type": "object"
+     },
+     "strict": true
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "Append-only: the original CaseBrief is immutable; the rebuttal answers the opponent point by point.",
+     "parameters": {
+      "properties": {
+       "side": {
+        "enum": [
+         "rider",
+         "driver"
+        ],
+        "type": "string"
+       },
+       "points": {
+        "items": {
+         "$ref": "#/$defs/RebuttalPoint"
+        },
+        "type": "array"
+       },
+       "revised_outcome": {
+        "default": null,
+        "anyOf": [
+         {
+          "$ref": "#/$defs/RequestedOutcome"
+         },
+         {
+          "type": "null"
+         }
+        ]
+       },
+       "segment_grounds": {
+        "additionalProperties": {
+         "enum": [
+          "incident",
+          "rider_named_stop",
+          "general_route_consent",
+          "named_road_tied",
+          "named_road_untied",
+          "named_road_elsewhere",
+          "driver_errand",
+          "scope_other",
+          "consent_after_or_none",
+          "other"
+         ],
+         "type": "string"
+        },
+        "default": {},
+        "type": "object",
+        "properties": {}
+       }
+      },
+      "required": [
+       "side",
+       "points"
       ],
       "type": "object",
       "additionalProperties": false,
       "$defs": {
-       "RejectedClaim": {
+       "RebuttalPoint": {
         "properties": {
-         "id": {
+         "target_claim_id": {
           "type": "string"
          },
-         "reason": {
-          "type": "string"
-         }
-        },
-        "required": [
-         "id",
-         "reason"
-        ],
-        "type": "object",
-        "additionalProperties": false
-       },
-       "SegmentFinding": {
-        "description": "The judge's reading of one off-route segment. Code settles what it can measure (RD-4 incident); the meaning of\nwhat was said (RD-3 / RD-5) is the judge's: the judge names the ground (which policy branch the words fall under)\nand the finding, and code checks the finding is the consequence the policy attaches to that ground.",
-        "properties": {
-         "fact_id": {
+         "response": {
           "type": "string"
          },
-         "finding": {
-          "enum": [
-           "exempt",
-           "counts",
-           "undetermined"
-          ],
-          "type": "string"
-         },
-         "ground": {
-          "default": "other",
-          "enum": [
-           "incident",
-           "rider_named_stop",
-           "general_route_consent",
-           "named_road_tied",
-           "named_road_untied",
-           "named_road_elsewhere",
-           "driver_errand",
-           "scope_other",
-           "consent_after_or_none",
-           "other"
-          ],
-          "type": "string"
-         },
-         "basis": {
+         "facts": {
           "default": [],
           "items": {
            "type": "string"
           },
           "type": "array"
          },
-         "reason": {
-          "type": "string"
+         "policy": {
+          "default": [],
+          "items": {
+           "type": "string"
+          },
+          "type": "array"
+         },
+         "concede": {
+          "default": false,
+          "type": "boolean"
+         },
+         "void": {
+          "default": false,
+          "type": "boolean"
+         },
+         "void_reason": {
+          "default": null,
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "null"
+           }
+          ]
          }
         },
         "required": [
-         "fact_id",
-         "finding",
-         "reason"
+         "target_claim_id",
+         "response"
+        ],
+        "type": "object",
+        "additionalProperties": false
+       },
+       "RequestedOutcome": {
+        "properties": {
+         "action": {
+          "type": "string"
+         },
+         "amount": {
+          "default": null,
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "null"
+           }
+          ]
+         }
+        },
+        "required": [
+         "action"
         ],
         "type": "object",
         "additionalProperties": false
@@ -235,29 +408,29 @@
   ]
  },
  "status": 200,
- "latency_s": 7.345,
- "finished_at": "2026-10-10T18:59:04.635+00:00",
+ "latency_s": 4.804,
+ "finished_at": "2026-10-11T02:39:25.393+00:00",
  "response_headers": {
   "content-type": "application/json",
   "transfer-encoding": "chunked",
   "connection": "keep-alive",
-  "date": "Sat, 10 Oct 2026 18:58:57 GMT",
+  "date": "Sun, 11 Oct 2026 02:39:20 GMT",
   "server": "elb",
   "content-encoding": "gzip",
   "vary": "origin, access-control-request-method, access-control-request-headers",
   "access-control-allow-credentials": "true",
-  "x-ds-trace-id": "98ad0489bd858ea2f0b3c0839d5affc4",
+  "x-ds-trace-id": "7a9f209ff5a842219ec9a37338484932",
   "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
   "x-content-type-options": "nosniff",
   "x-cache": "Miss from cloudfront",
-  "via": "1.1 238a028f249e948a8fac0c24a08a8c90.cloudfront.net (CloudFront)",
-  "x-amz-cf-pop": "SIN3-P2",
-  "x-amz-cf-id": "51idxNvX7C93U5NTgK-V7jQ7t2BfYVi0Rrl1iGLu3k78h1fqxjuoqQ=="
+  "via": "1.1 49236cda1dd6b9fd3248dbbd598776e8.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN3-P1",
+  "x-amz-cf-id": "1Ku-yMEJg6MeDnyk5r1FZYWCl4a1oSXFTd4RPFqnMVKXtSkMbsA7Vw=="
  },
  "response_body": {
-  "id": "9d77b8eb-cf3f-46d5-a4f2-e3dd634a0acf",
+  "id": "f164ab19-07c2-4948-894e-aa63ac569913",
   "object": "chat.completion",
-  "created": 1791658737,
+  "created": 1791686360,
   "model": "deepseek-flash",
   "choices": [
    {
@@ -268,11 +441,11 @@
      "tool_calls": [
       {
        "index": 0,
-       "id": "call_00_fS5wzlJLpronWCe1z0YC9597",
+       "id": "call_00_NEqPapn2YzXiZIoXywbC6986",
        "type": "function",
        "function": {
         "name": "final_result",
-        "arguments": "{\"ruling\": \"escalate\", \"recommended_action\": \"Send to a human reviewer: read the two-message chat (F3, F4) in the original and the driver's post-trip statement (F6); determine whether \\\"Sit down or I lock the doors\\\" was intimidation/confinement under SAFE-1; no fare adjustment (fixed RydeX $32.86 stands, no off-route segment).\", \"confidence\": 0.95, \"reasoning\": \"Sequence. At 17:09, while the car was moving, the rider wrote \\\"Please stop the car, I want to get out here.\\\" [F3]; at 17:10 the driver replied \\\"Sit down or I lock the doors.\\\" [F4]. Both messages are in a complete, fully timestamped chat record [F5], so the exchange is not in dispute and needs no gap-filling. The driver's post-trip statement says the rider tried to open the door at the lights and that he told her to sit down \\\"for her own safety and drove on\\\" [F6] — that is his account, not a system record, and it does not displace what was actually said [F4].\\n\\nSafety screen. Read in context, F4 is an ultimatum addressed to the passenger who had just asked to get out of the moving vehicle: it conditions her compliance on confinement (\\\"or I lock the doors\\\"). Aimed at the other party in this way it is hostile/abusive on its face and falls to be examined under SAFE-1, which bars \\\"abuse of any kind\\\" including threats and intimidation; it is not a mere route-argument rudeness, and the reply is not a request or a polite instruction about the door (\\\"please don't open the door\\\") but a threat of confinement [F4][F3]. The rider's complaint — that the driver threatened to lock her in and that she felt unsafe for the whole ride, with the car continuing after F6's \\\"drove on\\\" — is also an unsafe-conduct/dangerous-driving allegation reaching SAFE-2 [F2][F6]. The profiles (rider 619 days, 4.8, 0 disputes [F7]; driver 893 days, 1038 trips in 90 d, 0 upheld [F8]) do not decide anything here and cannot neutralise the words on the record.\\n\\nConsequence. Because the record raises abuse/intimidation and unsafe-conduct concerns, no automatic ruling may issue; the case goes to a person with a factual summary for review under SAFE-1 / SAFE-2 [F3][F4][F6]. The trace confirms the only permissible outcome is escalation [F1][F5].\\n\\nFare side is left untouched: the actual distance 15.4 km is 0.1 km below the optimal 15.5 km with no off-route segment [F1], the +1.9 min over estimate [F2] is not a billing parameter for a fixed RydeX quote, and no fare facts were returned, so the fixed $32.86 stands and no amount is computable from any gps/fare fact [FARE-1]. The escalation reason is the safety reading, not a monetary shortfall.\", \"cited_facts\": [\"F1\", \"F2\", \"F3\", \"F4\", \"F5\", \"F6\", \"F7\", \"F8\"], \"cited_policy\": [\"SAFE-1\", \"SAFE-2\", \"FARE-1\"], \"safety_concern\": \"confirmed\", \"safety_basis\": [\"F4\", \"F3\", \"F6\", \"F2\"], \"evidence_status\": \"sufficient\", \"evidence_gap\": null, \"escalate\": true, \"escalation_reason\": \"Safety incident screen triggered by the driver's threat of confinement and the rider's request to exit: 17:09 rider \\\"Please stop the car, I want to get out here.\\\" [F3]; 17:10 driver \\\"Sit down or I lock the doors.\\\" [F4] (complete timestamped chat [F5]); driver's statement that she tried to open the door at the lights and he drove on [F6]; trip ran 23.7 min vs 21.8 min estimate [F2]. Human reviewer to read F4/F3 in context and decide whether this is intimidation/confinement under SAFE-1 and unsafe conduct under SAFE-2; no fare or route issue (actual 15.4 km vs optimal 15.5 km, no off-route segment [F1]).\", \"flag_account\": false, \"segment_findings\": [], \"rejected_claims\": [{\"id\": \"D2\", \"reason\": \"The 'safety direction' reading does not survive the words: the driver's reply to the request to get out was 'Sit down or I lock the doors' [F4], a conditional ultimatum about confinement, not a direction to keep hands off the door; the only support for the benign reading is the driver's own untimestamped post-trip statement [F6], and a driver's statement is a claim, not consent or exculpation, against the on-record words [F4][F3][SAFE-1].\"}, {\"id\": \"D6\", \"reason\": \"The driver's clean profile (893 days, 1038 trips in 90 d, 0 disputes, 0 upheld [F8]) is a profile fact and cannot decide the case either way, and it answers nothing about whether F4 is intimidation [F8][F4][SAFE-1].\"}, {\"id\": \"D8\", \"reason\": \"The conclusion that no refund is computable and the $32.86 stands is accepted, but not because any clause vindicates the charge on the facts of a safety dispute: no fare facts exist and the distance did not exceed optimal [F1], so no amount arises; the monetary point is simply outside this escalation [FARE-1].\"}, {\"id\": \"D5\", \"reason\": \"Completeness of the chat [F5] does not soften F4; the absence of a third message cannot convert an ultimatum into a neutral instruction [F4][F3][SAFE-1].\"}]}"
+        "arguments": "{\"side\": \"driver\", \"points\": [{\"target_claim_id\": \"C1\", \"response\": \"Conceded in part: the rider did ask to get out (F3), but RD-3 governs stops and route changes ordered by the rider, and the record here (F3) is a request, not an agreed stop — the driver's 17:10 answer (F4) is a refusal, and nothing in the record shows the car stopped or the route changed anywhere. RD-3 therefore decides nothing about this safety complaint, which is why the case belongs with a human under SAFE-1 (F4, F5).\", \"facts\": [\"F3\", \"F4\", \"F5\"], \"policy\": [\"RD-3\", \"SAFE-1\"]}, {\"target_claim_id\": \"C2\", \"response\": \"Not contested as to escalation: I ask for the same outcome. On the merits, whether F4 is a threat or an instruction to stay seated in a moving car is a semantic judgement this tribunal does not make — SAFE-1 itself says a human reads the words — so the correct disposition is escalate (F4, F5).\", \"facts\": [\"F4\", \"F5\"], \"policy\": [\"SAFE-1\"], \"concede\": true}, {\"target_claim_id\": \"C3\", \"response\": \"Agreed: the chat is complete and fully timestamped (F5), which is a point in my favour too — there is no missing message before or after F4 in which the rider asked again, or in which anything further was said (F3, F4).\", \"facts\": [\"F5\", \"F3\", \"F4\"], \"policy\": [\"SAFE-1\"], \"concede\": true}, {\"target_claim_id\": \"C4\", \"response\": \"The rider's own F6 reading is right that the driver's statement admits he told her to sit down and drove on (F6); but F6 is the driver's word alone and cuts both ways: it says the door was opened at the lights because the car was stopped in traffic, which is why he told her to sit down before the lights turned rather than let her step into moving traffic — a version only a human reviewer, not this tribunal, can weigh against the rider's account (F3, F4).\", \"facts\": [\"F6\", \"F3\", \"F4\"], \"policy\": [\"SAFE-1\"]}, {\"target_claim_id\": \"C5\", \"response\": \"I rely on the same record: the car travelled 15.4 km against a 15.5 km optimal route (F1) and completed in 23.7 min against 21.8 min (F2), so the ride was the direct way and delivered the rider to Bedok Mall — this is one of only two facts in the file that is independent of both parties' words, and it shows no deviation, no detour and no prolonged confinement on the road (F1, F2).\", \"facts\": [\"F1\", \"F2\"], \"policy\": [\"RD-1\", \"RD-2\"]}, {\"target_claim_id\": \"C6\", \"response\": \"The disputed history does not help either side, so the complaint must stand on F4 alone: the rider's clean 90 days (F7) and the driver's 1038 trips with zero disputes and zero upheld (F8) are profile facts that may never decide the case, and on F8 there is no basis for any flag_account action against the driver (F8).\", \"facts\": [\"F7\", \"F8\"], \"policy\": [\"RD-6\", \"SAFE-1\"]}, {\"target_claim_id\": \"D4\", \"response\": \"Restated for completeness, not withdrawn: this is a fixed-fare RydeX trip and the GPS shows the actual distance 0.1 km shorter than the optimal route (F1), so no refund of any fare item is computable from any fare or GPS fact and neither side can ask for compensation here.\", \"facts\": [\"F1\", \"F2\"], \"policy\": [\"RD-1\", \"RD-2\"]}], \"segment_grounds\": {}, \"revised_outcome\": {\"action\": \"escalate\"}}"
        }
       }
      ]
@@ -282,16 +455,16 @@
    }
   ],
   "usage": {
-   "prompt_tokens": 14256,
-   "completion_tokens": 1519,
-   "total_tokens": 15775,
+   "prompt_tokens": 12924,
+   "completion_tokens": 968,
+   "total_tokens": 13892,
    "prompt_tokens_details": {
-    "cached_tokens": 10624
+    "cached_tokens": 9984
    },
-   "prompt_cache_hit_tokens": 10624,
-   "prompt_cache_miss_tokens": 3632
+   "prompt_cache_hit_tokens": 9984,
+   "prompt_cache_miss_tokens": 2940
   },
   "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
  },
- "response_sha256": "cbc02c54471390b7fdc5c63376c308868051b8856407a0f3a50f83b4f117d30b"
+ "response_sha256": "126431032b799c29bd9dcbebfe2be346dc30b36cd7f059c3143d2b69b360f80d"
 }

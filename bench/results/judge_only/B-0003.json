@@ -4,16 +4,18 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:39:59.687648+00:00",
+ "ts": "2026-10-11T02:27:55.943474+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Hold the $25.26 RydeTAXI fare dispute for Ryde human review: check the actual driven path for the 14:28–14:34 segment against Clementi Road (or any record placing the car on Clementi Road at that time) before deciding the ~$2.74 mileage refund; until then no refund executes.",
-  "confidence": 0.45,
-  "reasoning": "The trip is RydeTAXI and metered, so extra distance does feed the fare: the excess-distance line alone is $3.06 (2.17 km × $1.4104/km, the trip's distance fare ÷ distance km) [F4][F7][RD-2]. One off-route segment is established by the trace: 14:28–14:34, +1.94 km off the optimal route [F3][RD-1].\n\nRD-4 does not excuse it: there is no traffic incident on the replaced stretch, and the Ayer Rajah Expressway speed-band-2 record (14:10–14:28) can at most corroborate, not exempt on its own [F12][F15][RD-4].\n\nRD-5 is the live question and it is not settled. The driver proposed the route change (\"can I go round via Clementi Road?\") and the rider answered \"Sure, no problem.\"; the chat is complete and both messages are timestamped [F8][F9][F10]. Timing favours the rider's own account of a prior agreement — the agreement came at 14:31, before the segment's 14:28:45 cut-off is not satisfied (the message is at 14:31, i.e. after the segment start), so consent for the segment as measured is not established by timestamp, and the driver's post-trip statement that the rider said sure is not independent consent [F11][F8][F9][RD-5]. The agreement is SPECIFIC (a named road, Clementi Road), so under RD-5 it covers driving on Clementi Road only, and the record must tie the segment to that road. Nothing in the fact table ties the driven path to Clementi Road, and nothing places it elsewhere [F3][F8][G13]. That is exactly the scope-unreadable case: the finding is undetermined, not exempt and not automatically counts, per the trace's RD-5 rule [RD-5].\n\nBecause that undetermined finding changes the amount (it decides whether 1.94 km × $1.4104/km ≈ $2.74 is refunded, or $0), the case must go to a person [G12][G13][RD-5]. (For reference, if the segment counted the amount would be 1.94 × $1.4104 = $2.7362 ≈ $2.74.) No RD-3 stop exists in this segment, and no rider-named stop was requested [F3][RD-3]. The waiting line billed ($0.11) is a metered wait unit under RD-3(c) and stays [F5][RD-3]. RD-6 does not trigger: the driver has no previous upheld route dispute (route: 0) [F18][RD-6].",
+  "ruling": "refund_partial",
+  "amount": 2.74,
+  "recommended_action": "Refund $2.74 to the rider as a Ryde voucher for the non-exempt off-route segment (1.94 km × $1.4104/km); no account action against the driver.",
+  "confidence": 0.72,
+  "reasoning": "The trip was a metered RydeTAXI journey (F7), so extra distance reaches the fare: the record bills $14.95 distance for 10.60 km and $3.06 of \"excess distance\" at $1.4104/km [F4][F7]. Under RD-2, where a non-exempt off-route segment exists, the refund is the segment's extra_km times the trip's per-km rate (distance_fare ÷ distance_km) [RD-2].\n\nOne off-route segment is recorded: 14:28–14:34, 3.07 km driven against 1.12 km optimal, +1.94 km, straying up to 786 m from the route [F3]. The trace settles that no qualifying incident supports the driver (no RD-4(a) event, speed-band alone not enough) [F12][F13][F14][F15][RD-4] and that no rider message before 14:28:45 named a stop [RD-3].\n\nThe driver asked at 14:30 \"can I go round via Clementi Road?\" and the rider replied at 14:31 \"Sure, no problem.\" [F8][F9]. Read plainly, that is a specific named-road agreement to go via Clementi Road — a limited authorization, not a general one [RD-5]. But both messages are timestamped after the segment began at 14:28:45 (trace on F3), so RD-5's \"before you go\" requirement is not met: consent after the diversion started cannot excuse the segment [RD-5]. The driver's statement that he told the rider beforehand is a claim, not consent under G11 [F11]. The segment therefore counts [RD-2].\n\nWaiting time on a RydeTAXI is metered and not refundable here: the $0.11 is 0.4 min of metered waiting, consistent with RD-3(c)'s treatment of waiting [F5][RD-3]. No unpublished add-on appears (base $3.90 + distance $14.95 + time $4.83 + waiting $0.11 + platform $1.47 = $25.26) [F7][FARE-1].\n\nAmount: 1.94 km × $1.4104/km = $2.736 ≈ $2.74 [F3][F4][RD-2]. (The billed \"excess\" figure of $3.06 rests on 2.17 km, i.e. it also carries map-matching/corridor mileage outside the measured segment, which RD-2 leaves unrefunded.) RD-6 is not triggered: the driver has 0 prior upheld route disputes, so no flag_account [F18][RD-6].",
   "cited_facts": [
+   "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -23,6 +25,8 @@
    "F10",
    "F11",
    "F12",
+   "F13",
+   "F14",
    "F15",
    "F18"
   ],
@@ -32,21 +36,22 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1"
   ],
-  "escalate": true,
-  "escalation_reason": "segment finding undetermined for F3; evidence insufficient: The record does not tie the 14:28–14:34 off-route segment (F3) to the named road the rider agreed to (Clementi Road): the fact table carries no road name for the driven path and no message places the car on Clementi Road, so RD-5 scope cannot be settled (G13). Also, the rider is recorded as replying 'Sure, no problem' at 14:31 while the segment's consent cut-off is 14:28:45, so whether any rider agreement precedes the segment as measured is not resolved by the record.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "undetermined",
-    "ground": "named_road_untied",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9",
-     "F10"
+     "F11"
     ],
-    "reason": "Driver asked before the segment whether he could 'go round via Clementi Road' and the rider replied 'Sure, no problem'; chat is complete and timestamped, so the agreement is the rider's own [F8][F9][F10][RD-5]. It is a SPECIFIC named-road agreement, and nothing in the record ties the 14:28–14:34 driven segment to Clementi Road (no road name for the driven path, no message placing the car there), while nothing places it elsewhere either — the record does not settle whether the driven path was Clementi Road, so the segment is undetermined, not exempt and not counted [F3][G13][RD-5]. Because this decides ~$2.74 of the metered fare, the case goes to a person."
+    "reason": "The only rider agreement is the 14:31 message \"Sure, no problem.\" answering the driver's 14:30 request to go via Clementi Road [F8][F9]; both are timestamped after the segment's 14:28:45 start (trace on F3), so they are not consent obtained before the diversion, and the driver's own statement is a claim, not consent (G11) [F11]. No rider message named a stop or road before the segment [RD-3][RD-5]. The segment's extra_km is therefore non-exempt and refundable under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -57,16 +62,18 @@
    "F9",
    "F11"
   ],
-  "evidence_status": "insufficient",
-  "evidence_gap": "The record does not tie the 14:28–14:34 off-route segment (F3) to the named road the rider agreed to (Clementi Road): the fact table carries no road name for the driven path and no message places the car on Clementi Road, so RD-5 scope cannot be settled (G13). Also, the rider is recorded as replying 'Sure, no problem' at 14:31 while the segment's consent cut-off is 14:28:45, so whether any rider agreement precedes the segment as measured is not resolved by the record."
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Hold the $25.26 RydeTAXI fare dispute for Ryde human review: check the actual driven path for the 14:28–14:34 segment against Clementi Road (or any record placing the car on Clementi Road at that time) before deciding the ~$2.74 mileage refund; until then no refund executes.",
-  "confidence": 0.45,
-  "reasoning": "The trip is RydeTAXI and metered, so extra distance does feed the fare: the excess-distance line alone is $3.06 (2.17 km × $1.4104/km, the trip's distance fare ÷ distance km) [F4][F7][RD-2]. One off-route segment is established by the trace: 14:28–14:34, +1.94 km off the optimal route [F3][RD-1].\n\nRD-4 does not excuse it: there is no traffic incident on the replaced stretch, and the Ayer Rajah Expressway speed-band-2 record (14:10–14:28) can at most corroborate, not exempt on its own [F12][F15][RD-4].\n\nRD-5 is the live question and it is not settled. The driver proposed the route change (\"can I go round via Clementi Road?\") and the rider answered \"Sure, no problem.\"; the chat is complete and both messages are timestamped [F8][F9][F10]. Timing favours the rider's own account of a prior agreement — the agreement came at 14:31, before the segment's 14:28:45 cut-off is not satisfied (the message is at 14:31, i.e. after the segment start), so consent for the segment as measured is not established by timestamp, and the driver's post-trip statement that the rider said sure is not independent consent [F11][F8][F9][RD-5]. The agreement is SPECIFIC (a named road, Clementi Road), so under RD-5 it covers driving on Clementi Road only, and the record must tie the segment to that road. Nothing in the fact table ties the driven path to Clementi Road, and nothing places it elsewhere [F3][F8][G13]. That is exactly the scope-unreadable case: the finding is undetermined, not exempt and not automatically counts, per the trace's RD-5 rule [RD-5].\n\nBecause that undetermined finding changes the amount (it decides whether 1.94 km × $1.4104/km ≈ $2.74 is refunded, or $0), the case must go to a person [G12][G13][RD-5]. (For reference, if the segment counted the amount would be 1.94 × $1.4104 = $2.7362 ≈ $2.74.) No RD-3 stop exists in this segment, and no rider-named stop was requested [F3][RD-3]. The waiting line billed ($0.11) is a metered wait unit under RD-3(c) and stays [F5][RD-3]. RD-6 does not trigger: the driver has no previous upheld route dispute (route: 0) [F18][RD-6].",
+  "ruling": "refund_partial",
+  "amount": 2.74,
+  "recommended_action": "Refund $2.74 to the rider as a Ryde voucher for the non-exempt off-route segment (1.94 km × $1.4104/km); no account action against the driver.",
+  "confidence": 0.72,
+  "reasoning": "The trip was a metered RydeTAXI journey (F7), so extra distance reaches the fare: the record bills $14.95 distance for 10.60 km and $3.06 of \"excess distance\" at $1.4104/km [F4][F7]. Under RD-2, where a non-exempt off-route segment exists, the refund is the segment's extra_km times the trip's per-km rate (distance_fare ÷ distance_km) [RD-2].\n\nOne off-route segment is recorded: 14:28–14:34, 3.07 km driven against 1.12 km optimal, +1.94 km, straying up to 786 m from the route [F3]. The trace settles that no qualifying incident supports the driver (no RD-4(a) event, speed-band alone not enough) [F12][F13][F14][F15][RD-4] and that no rider message before 14:28:45 named a stop [RD-3].\n\nThe driver asked at 14:30 \"can I go round via Clementi Road?\" and the rider replied at 14:31 \"Sure, no problem.\" [F8][F9]. Read plainly, that is a specific named-road agreement to go via Clementi Road — a limited authorization, not a general one [RD-5]. But both messages are timestamped after the segment began at 14:28:45 (trace on F3), so RD-5's \"before you go\" requirement is not met: consent after the diversion started cannot excuse the segment [RD-5]. The driver's statement that he told the rider beforehand is a claim, not consent under G11 [F11]. The segment therefore counts [RD-2].\n\nWaiting time on a RydeTAXI is metered and not refundable here: the $0.11 is 0.4 min of metered waiting, consistent with RD-3(c)'s treatment of waiting [F5][RD-3]. No unpublished add-on appears (base $3.90 + distance $14.95 + time $4.83 + waiting $0.11 + platform $1.47 = $25.26) [F7][FARE-1].\n\nAmount: 1.94 km × $1.4104/km = $2.736 ≈ $2.74 [F3][F4][RD-2]. (The billed \"excess\" figure of $3.06 rests on 2.17 km, i.e. it also carries map-matching/corridor mileage outside the measured segment, which RD-2 leaves unrefunded.) RD-6 is not triggered: the driver has 0 prior upheld route disputes, so no flag_account [F18][RD-6].",
   "cited_facts": [
+   "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -76,6 +83,8 @@
    "F10",
    "F11",
    "F12",
+   "F13",
+   "F14",
    "F15",
    "F18"
   ],
@@ -85,24 +94,30 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1"
   ],
-  "escalate": true,
-  "escalation_reason": "RD-5 scope undetermined for the only off-route segment (F3): rider agreed to a specifically named road (Clementi Road) at 14:31 [F8][F9][F10] but no record ties the driven segment to that road, and the agreement timestamp is after the segment start; the finding changes the refund amount (~$2.74), so human review is required.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "undetermined",
-    "ground": "named_road_untied",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9",
-     "F10"
+     "F11"
     ],
-    "reason": "Driver asked before the segment whether he could 'go round via Clementi Road' and the rider replied 'Sure, no problem'; chat is complete and timestamped, so the agreement is the rider's own [F8][F9][F10][RD-5]. It is a SPECIFIC named-road agreement, and nothing in the record ties the 14:28–14:34 driven segment to Clementi Road (no road name for the driven path, no message placing the car there), while nothing places it elsewhere either — the record does not settle whether the driven path was Clementi Road, so the segment is undetermined, not exempt and not counted [F3][G13][RD-5]. Because this decides ~$2.74 of the metered fare, the case goes to a person."
+    "reason": "The only rider agreement is the 14:31 message \"Sure, no problem.\" answering the driver's 14:30 request to go via Clementi Road [F8][F9]; both are timestamped after the segment's 14:28:45 start (trace on F3), so they are not consent obtained before the diversion, and the driver's own statement is a claim, not consent (G11) [F11]. No rider message named a stop or road before the segment [RD-3][RD-5]. The segment's extra_km is therefore non-exempt and refundable under RD-2."
    }
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "D1",
+    "reason": "The driver-side position that the rider agreed to the Clementi Road route fails as a defence: the rider's agreement message [F9] is timestamped 14:31, after the off-route segment began at 14:28:45 [F3], and RD-5 requires consent before the departure from the optimal route; the driver's statement that he told the rider beforehand is a claim, not consent (G11) [F11][RD-5]."
+   }
+  ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [
@@ -110,19 +125,19 @@
    "F9",
    "F11"
   ],
-  "evidence_status": "insufficient",
-  "evidence_gap": "The record does not tie the 14:28–14:34 off-route segment (F3) to the named road the rider agreed to (Clementi Road): the fact table carries no road name for the driven path and no message places the car on Clementi Road, so RD-5 scope cannot be settled (G13). Also, the rider is recorded as replying 'Sure, no problem' at 14:31 while the segment's consent cut-off is 14:28:45, so whether any rider agreement precedes the segment as measured is not resolved by the record."
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "status": "escalated",
+ "status": "resolved",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: segment finding undetermined for F3; evidence insufficient: The record does not tie the 14:28–14:34 off-route segment (F3) to the named road the rider agreed to (Clementi Road): the fact table carries no road name for the driven path and no message places the car on Clementi Road, so RD-5 scope cannot be settled (G13). Also, the rider is recorded as replying 'Sure, no problem' at 14:31 while the segment's consent cut-off is 14:28:45, so whether any rider agreement precedes the segment as measured is not resolved by the record."
+  "dropped rejected_claims not in any live brief: D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0003.record.json",
- "latency_s": 6.7,
- "input_tokens": 12600,
- "output_tokens": 1455,
- "requests": 1,
- "llm_calls": 1
+ "latency_s": 7.93,
+ "input_tokens": 12937,
+ "output_tokens": 1564,
+ "requests": 2,
+ "llm_calls": 2
 }
