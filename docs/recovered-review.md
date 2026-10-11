@@ -30,3 +30,16 @@ Supported cases are C-0001 and C-0004. Modes are available/unavailable/conflict.
 Offline tests use an explicitly fake runner to test orchestration, snapshot integrity, comparisons, failure handling, persistence and API guards. These tests are **not model-quality evidence**. A default unscreened/unavailable judge, missing ruling, wrong case identity or mutated input causes review failure; partial completion is never shown as two successful hearings.
 
 The original 65-case no-op tests remain in place. A fresh-model benchmark still requires credentials. Before claiming improved accuracy or automation, run the frozen original benchmark for regression and a separate evidence-gap set for improvement, under equal model/tool access for judge-only and full court. Compare strict match, automatic-and-correct rate and the judge/court gap; do not count handoffs as automatic success. Existing benchmark metrics are not replaced by this implementation.
+
+## Paired local effect experiment
+
+The CLI now supports `--arm judge_only` and `--arm court`, with identical synthetic recovery access. Use separate output directories and the same provider/model settings. It scores the initial missing-GPS hearing against an escalation reference, and the recovered hearing against the unchanged `data/expected/<case>.json` reference. Each bundle includes strict match, automatic-and-correct, wrong-automatic, duration and model labels. Failure has no score. These two demo cases are a smoke test, not a replacement for the 65-case or held-out benchmark.
+
+```
+python scripts/review_recovery.py --case C-0004 --arm judge_only --out review_runs/experiment/judge_only
+python scripts/review_recovery.py --case C-0004 --arm court --out review_runs/experiment/court
+python scripts/review_recovery.py --case C-0001 --arm judge_only --out review_runs/experiment/judge_only
+python scripts/review_recovery.py --case C-0001 --arm court --out review_runs/experiment/court
+```
+
+Use `--dry-run` to prepare snapshots without model calls; this produces no performance scores. Without a configured provider key, an available-record experiment exits with code 2 instead of producing a fake completed experiment. Unavailable/conflict modes require no model call and can be exercised locally without a key.

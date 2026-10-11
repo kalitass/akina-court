@@ -141,3 +141,17 @@ def test_recovery_controls_do_not_claim_model_readiness_without_key(monkeypatch)
     monkeypatch.delenv('DEEPSEEK_API_KEY',raising=False)
     with TestClient(server.app) as client:
         assert not client.get('/api/demo-controls').json()['recovery_model_ready']
+
+
+def test_experiment_does_not_count_handoff_as_automatic_success():
+    from scripts.review_recovery import score_decision
+    result=score_decision({'ruling':{'ruling':'escalate','amount':None,'escalate':True},'eligibility':{'auto':False}},
+                         {'ruling':'escalate','amount':None,'escalate':True})
+    assert result['strict_match'] and not result['automatic_and_correct']
+
+
+def test_experiment_counts_incorrect_automatic_decision():
+    from scripts.review_recovery import score_decision
+    result=score_decision({'ruling':{'ruling':'refund_full','amount':6.61,'escalate':False},'eligibility':{'auto':True}},
+                         {'ruling':'no_action','amount':None,'escalate':False})
+    assert result['wrong_automatic'] and not result['automatic_and_correct']
