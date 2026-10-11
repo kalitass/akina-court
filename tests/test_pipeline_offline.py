@@ -88,7 +88,8 @@ def scripted_ruling() -> dict:
         for f, fd in findings.items():
             start = cert.segments[f]["start"]
             basis = [cid for cid, c in cert.chat_index.items() if c["from"] == "rider" and not c["statement"] and c["ts"] and c["ts"] < start]
-            sf.append({"fact_id": f, "finding": fd, "basis": basis[:1] if fd == "exempt" else [], "reason": f"[RD-5] {fd} per record [{fids[0]}]"})
+            ground = {"exempt": "general_route_consent", "counts": "consent_after_or_none", "undetermined": "named_road_untied"}[fd]
+            sf.append({"fact_id": f, "finding": fd, "ground": ground, "basis": basis[:1] if fd == "exempt" else [], "reason": f"[RD-5] {fd} per record [{fids[0]}]"})
         d["segment_findings"] = sf
         d["flag_account"] = bool(cert.flag_required) if cert.flag_required is not None else bool(cert.flag_conditional and any(v == "counts" for v in findings.values()))
     if d["flag_account"]:

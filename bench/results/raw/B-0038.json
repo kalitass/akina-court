@@ -4,17 +4,18 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:37.593261+00:00",
+ "ts": "2026-10-10T17:36:55.144369+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; record the driver's no-show cancellation as unsubstantiated (no RD-1/NS-1 abuse finding); no account flag.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver account flag warranted (tap position was within the pickup radius).",
   "confidence": 0.93,
-  "reasoning": "Safety screen: chat is two ordinary trip messages (\"I'm here, white BYD e6.\" / \"Cancelling, waited too long\"); the complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nThe driver cancelled (cancelled_by = driver) claiming rider no-show, so NS-0 routes the case to NS-1/NS-2. NS-1 requires (i) the driver pressed \"I'm Here\" / platform-confirmed arrival, (ii) at that moment the driver was within the pickup radius (m_from_pickup_at_tap ≤ 200 m), and (iii) after the tap, a continuous wait of more than 3 minutes at the pickup (≥ 3:01) until cancellation. Element (iii) fails. driver_pressed_here_at = 21:29:45 and cancelled_at = 21:31:30, i.e. 105 s ≈ 1:45 at the stop — well short of 3:01. The GPS trace corroborates this: the vehicle is stationary from 21:29:30 (0.2 km/h) through 21:31:30, and its 30 s samples (thinned from a 5 s grid) cover the stop fully with no gap, so the wait can be read directly rather than inferred between samples. Element (i) does hold (here-tap recorded at 21:29:45), and element (ii) is satisfied: at 21:29:30 the driver sits at ~1.33235/103.74124 against the pickup at 1.33218/103.74155 — roughly 35 m, inside any reasonable arrival radius. Since one NS-1 condition fails, NS-2 applies: the $6.61 cancellation fee is refunded in full (refund_full). No flag_account: the here-tap was made at the pickup, so the abuse-of-cancellation/waiting-button condition in NS-2 is not met, and no route-deviation liability is found here (no off-route segments to assess, no detour refund). The driver's statement that he waited \"at least 5 minutes\" is contradicted by the system timeline and GPS, which override statements, so that claim is rejected. The rider's \"barely two minutes\" matches the record (1:45). Nothing in the record is unfounded and the fee is a post-cancellation charge, so the de minimis/30-day question does not arise; NS-7 fixes the form of refund (voucher), not the amount.",
+  "reasoning": "Cancellation-branch check (NS-0): the trip was cancelled by the driver who claims rider no-show, so NS-1/NS-2 apply. Service is RydeX (non-taxi).\n\nNS-1 elements, computed from the trip timeline and GPS:\n(i) Arrival indication: driver_pressed_here_at = 21:29:45 (driver_tap; the record's arrival_confirmed_by is null, so I take the timeline's press timestamp at face value). Satisfied.\n(ii) At-pickup at the tap: pickup is (1.33218, 103.74155). The 21:29:30 fix (21:29:29.75 from the 5 s grid) is (1.332348, 103.741243). Δlat = 0.000168° ≈ 18.7 m, Δlon = 0.000307° ≈ 34.2 m → ≈ 39 m from the pickup point, well inside 200 m. Satisfied.\n(iii) Continuous wait > 3 minutes after the tap until cancellation: cancel is at 21:31:30, only 1 min 45 s after the 21:29:45 tap. Even counting from driver_arrived_at (21:28:35) it is 2 min 55 s, still under 3:00. The GPS shows the car stationary (~0–2 km/h) at the pickup from 21:29:30 through 21:31:30, so the driver was present but the required duration was not met. NOT satisfied.\n\nBecause (iii) fails, NS-2 applies: the $6.61 cancellation fee must be refunded in full. The driver's statement (\"waited at least 5 minutes\") is contradicted by the GPS and timeline, which are the authoritative system records (arrival 21:28:35 → cancel 21:31:30 = 2:55; tap → cancel = 1:45).\n\nNS-2's flag trigger (GPS > 200 m from pickup at the tap) does not fire — the tap fix is ~39 m from the pickup — so no account flag.\n\nSafety screen: the chat contains only a pickup identification (\"I'm here, white BYD e6\") and a cancellation notice; the complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation. Nothing to escalate on safety.\n\nNo evidence gaps: GPS covers the whole stationary window at ~30 s spacing with no gap over 2 minutes; the fare and cancellation timestamps are recorded. Evidence is sufficient.\n\nAmount: $6.61 = the cancellation fee charged, refunded in full → refund_full.",
   "cited_facts": [],
   "cited_policy": [
+   "NS-0",
    "NS-1",
    "NS-2",
    "NS-7"
@@ -24,8 +25,8 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Driver claims he waited at least 5 minutes at the pickup. System records override statements: driver_pressed_here_at 21:29:45 to cancelled_at 21:31:30 is 105 s (~1:45), and the GPS trace shows the vehicle stationary at the pickup only for that span, with no gap in sampling that would hide additional waiting. NS-1 (iii) requires > 3 minutes continuous waiting before cancellation; it fails."
+    "id": "driver_statement_wait_5min",
+    "reason": "Contradicted by system records: driver_arrived_at 21:28:35 → cancelled_at 21:31:30 is 2 min 55 s, and the 'I'm Here' press at 21:29:45 leaves only 1 min 45 s before cancellation. NS-1(iii) requires > 3 minutes continuous waiting at the pickup; the GPS confirms the car was stationary at the pickup the whole time but for under the required duration."
    }
   ],
   "flag_account": false,
@@ -34,9 +35,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.56,
- "input_tokens": 11627,
- "output_tokens": 979,
+ "latency_s": 4.89,
+ "input_tokens": 12018,
+ "output_tokens": 981,
  "requests": 1,
  "llm_calls": 1
 }

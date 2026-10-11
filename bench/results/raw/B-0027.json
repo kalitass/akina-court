@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:18.753996+00:00",
+ "ts": "2026-10-10T17:36:38.106065+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher.",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: the chat (driver's two polite messages about arrival and cancelling) and the rider's complaint contain no threat, harassment, abuse or dangerous-driving allegation — safety_concern = none.\n\nThe fee at issue is the $6.61 cancellation fee, charged on a driver-cancelled trip (cancelled_by = driver), so NS-0 routes it to NS-1/NS-2.\n\nNS-1 (i): the record shows driver_pressed_here_at = 14:14:10, so the \"I'm Here\" condition is met (arrival_confirmed_by is null, so the record does not say whether it was a driver tap or platform auto — I do not attribute it beyond what the record states).\n\nNS-1 (ii): at the moment of the tap the GPS puts the driver at 1.325166, 103.929853. The pickup (Bedok Mall) is 1.3249, 103.9296. That is ~30 m away (≈0.00027° lat ≈ 30 m; ≈0.00025° lon ≈ 28 m), well within the 200 m radius. Condition (ii) is met.\n\nNS-1 (iii): the tap was at 14:14:10 and the cancellation at 14:15:50, i.e. exactly 1 min 40 s (100 s) later. Required is continuous waiting > 3 minutes (≥ 3:01). The GPS trace confirms this: stationary samples at 14:14:00, 14:14:30, 14:15:00 and 14:15:30, sampling interval 30 s (thinned from a 5 s grid), so the trace does cover the interval to the cancellation and shows no gap; the driver remained within ~30 m of the pickup the whole time. Less than 3 minutes elapsed.\n\nBecause condition (iii) fails, NS-1 is not satisfied → NS-2: the $6.61 cancellation fee is refunded in full to the rider (refund_full, $6.61). No flag_account is warranted: NS-2's flag attaches only when the \"I'm Here\" tap was made while GPS showed the driver NOT at the pickup, which is not the case here (he was ~30 m away), and the driver's no-show profile count (no_show_disputes_upheld_90d = 1) is a profile fact that cannot decide this case or trigger a flag on its own.\n\nThe driver's statement (\"waited for the rider, then cancelled as a no-show\") and his chat claim \"3 min up\" conflict with the timestamps: the system records (timeline and GPS) override statements, and the elapsed wait was 100 s. The rider's own words (\"barely two minutes\") match the record.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and advise the driver that 'I'm Here' may only be tapped at the pickup point on GPS and that cancellation requires >3 minutes of continuous waiting there.",
+  "confidence": 0.86,
+  "reasoning": "Driver-initiated cancellation with a no-show claim, so NS-0 routes to NS-1/NS-2. Computing distance (haversine) from the pickup pin (1.3249, 103.9296) to each GPS fix: at the 14:14:00 sample (immediately before the 14:14:10 tap) the driver is at 1.325166, 103.929853 — about 45 m from the pickup point, inside the 200 m data-layer radius, so NS-1(ii) is satisfied. NS-1(iii) fails: the trace shows the vehicle essentially stationary (speed ≈ 0.6–2.7 km/h) from 14:14:00 through the cancellation at 14:15:50, i.e. about 1 min 40 s after the tap, far short of the required >3 minutes of continuous waiting at the pickup point. The driver's own chat message at 14:15:40 (\"3 min up, cancelling the trip\") is a statement, and system records (timeline + GPS) override statements; the tap was at 14:14:10, so no 3 minutes had elapsed. Per NS-2, with (iii) not met the $6.61 cancellation fee must be refunded in full. The per requirements, arrival-confirmation method is not recorded (arrival_confirmed_by is null), so I do not characterise it as a driver tap or platform auto-confirmation; since the 14:14:00 GPS fix is ~45 m from the pickup, NS-2's flag_account trigger (tap while GPS shows outside the pickup area) is not established. Evidence is sufficient: the GPS trace plus thinned-30 s samples fully cover the wait window to cancellation, so no gap is present and no escalation is needed. No safety issue appears in the chat or the driver's statement.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -24,8 +24,8 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The claim that he waited the full no-show period (and the chat message '3 min up') is contradicted by the system record: driver_pressed_here_at 14:14:10 -> cancelled_at 14:15:50 is only 100 seconds, and the GPS samples at 14:14:00–14:15:30 show him stationary at the pickup throughout. NS-1(iii) requires > 3 minutes of continuous waiting, which is not met."
+    "id": "driver_no_show",
+    "reason": "The driver's claim that the rider was a no-show is not supported by the system records: the GPS trace shows only ~1 min 40 s of stationary waiting at the pickup point after the 'I'm Here' tap (14:14:10 → 14:15:50), below the >3 minutes required by NS-1(iii); the driver's chat message asserting '3 min up' does not override the timeline."
    }
   ],
   "flag_account": false,
@@ -34,9 +34,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.6,
- "input_tokens": 12044,
- "output_tokens": 1027,
+ "latency_s": 4.0,
+ "input_tokens": 12435,
+ "output_tokens": 887,
  "requests": 1,
  "llm_calls": 1
 }

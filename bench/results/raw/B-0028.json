@@ -4,32 +4,33 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:21.575297+00:00",
+ "ts": "2026-10-10T17:36:38.962788+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Uphold the $6.61 no-show cancellation fee; no refund due. Note rider's claim that she arrived \"a minute after cancellation\" is consistent with the driver having lawfully waited out the 3 minutes before cancelling.",
-  "confidence": 0.9,
-  "reasoning": "Safety screen: the chat contains only the driver's arrival notice and his cancellation notice; the complaint is a fee grievance. No threat, harassment, abuse or dangerous-driving allegation appears anywhere, so no SAFE-1/SAFE-2 escalation.\n\nNo-show analysis under NS-0 → NS-1: cancellation was by the driver on a contended rider no-show, and no-show threshold is not given in the record, so the default (iii) of >3 minutes applies (the record's free_wait_time is not a no-show threshold; NS-1). (i) Arrival was confirmed by driver tap: trip.driver_pressed_here_at = 17:19:15, matching chat message 17:19:25 \"I'm here at the pickup point\". (ii) At that tap the GPS fix (17:19:00, thinned 30 s grid) reads lat 1.283934, lon 103.850939, which is ~70 m from the pickup point (1.2840, 103.8513) — well within the 200 m data-layer radius, and the next two fixes (17:19:30, 17:20:00, 17:20:30, 17:21:00, 17:21:30, 17:22:00, 17:22:30, 17:22:55) stay stationary at ~1.28391–1.28394, 103.850941–103.850959, i.e. continuously inside the radius. (iii) Continuous wait from the 17:19:15 tap to the 17:22:55 cancellation = 3 min 40 s, exceeding the >3 min (≥3:01) requirement. The trace is continuous on the 30 s grid with no gap (largest gap 25 s), so NS-1's anti-gap proviso (G12) is not triggered. All three NS-1 elements are satisfied → the $6.61 rider cancellation fee stands, $4.50 of it to the driver, and the ruling is no_action with no amount.\n\nRider's complaint (\"I came out a minute after the driver cancelled\") does not defeat the fee: the fee is earned by the driver completing a lawful 3-minute wait, not by the rider's absence at that instant; NS-4's 3-minute grace period applies only to rider-initiated cancellations, and NS-8 (driver-late free cancellation) is not Ryde policy and there is no ETA field in any event.\n\nNo driver-side flag: the arrival tap took place within the 200 m pickup radius, so NS-2's fraudulent-tap flag condition is not met, and RD-6 is inapplicable (no route deviation of any kind — all fixes lie on the pickup approach corridor).",
+  "ruling": "refund_full",
+  "amount": 6.61,
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and remind the driver that the \"I'm Here\" plus >3-minute wait conditions must be satisfied before a no-show cancellation is charged; note the driver's high upheld no-show dispute count for the account team's awareness (no formal flag on this record).",
+  "confidence": 0.86,
+  "reasoning": "The $6.61 cancellation fee can only stand if NS-1's conditions are all met, since the driver cancelled and relies on rider no-show (NS-0 → NS-1/NS-2).\n\n(i) Arrival indicator: driver_pressed_here_at = 17:19:15; the GPS trace confirms the car stopped at ~1.28393, 103.85094 (≈154 m from the pickup point at 1.284, 103.8513, i.e. within the 200 m arrival radius) at that time. So the \"I'm Here\" tap was at the pickup location.\n\n(ii) Continuous wait after the tap: the trace shows the driver stationary from 17:19:15 (speed 1.9 km/h) through 17:22:55 (speed 0.0), with no gaps in the 30 s thinned samples, i.e. about 3 min 40 s of presence.\n\n(iii) However, the \"I'm Here\" tap at 17:19:15 falls ≈1 min 25 s after driver_arrived_at = 17:17:50, while the driver had accepted the trip at 17:16:00. Measured per NS-1 (iii) the wait from the tap to cancellation is 3:40 > 3:00, so (iii) is on its face satisfied.\n\nThe failure is elsewhere: the structured timeline fields that record the no-show clock are null — arrival_confirmed_by = null, arrival_radius_m = null, wait_started_at = null, wait_expired_at = null, fee_applied_at = null. Under NS-1 the arrival confirmation is a driver tap (driver_tap) or a platform auto-decision (platform_auto) and the record must show which; NS-1 also requires that (i)-(iii) be verifiable from the platform's own record, and where the record does not let the judge establish the arrival confirmation mechanism or the wait window (G12), the presumption is against charging, not in favour of it. Here the only confirmation of the arrival tap is the GPS trace (an inference), not the platform's recorded event, and the record's own wait-window fields are empty, so (iii) cannot be established from the platform record as NS-1 demands.\n\nRider's own account (\"I came out a minute after the driver cancelled\") is consistent with the driver's message at 17:22:45 (\"3 min up, cancelling the trip\") and the cancellation at 17:22:55 — i.e. the rider was on the way when the fee was triggered.\n\nBecause NS-1 (i)(ii)(iii) are not all established on the record, NS-2 applies: the $6.61 cancellation fee is refunded in full (Ryde voucher per NS-7). NS-2's additional flag_account applies only where the driver tapped \"I'm Here\" while GPS placed him outside the pickup radius; here GPS places him ~154 m from pickup, inside the radius, so no flag is raised on this record, though the driver profile (no_show_disputes_upheld_90d = 2, disputes_upheld_90d = 2) is noted as context only — profile facts alone never decide a case.\n\nApplied policy branch: NS-0 → NS-1 (not satisfied) → NS-2 (refund_full).",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
-   "NS-2"
+   "NS-2",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "Rider says she came out a minute after the driver cancelled, so she should not be charged. The GPS trace shows the driver tapped 'I'm Here' at 17:19:15 inside the 200 m pickup radius and remained stationary there continuously until cancelling at 17:22:55 (3 min 40 s), satisfying NS-1 (i)(ii)(iii); the $6.61 fee is valid and NS-4's 3-minute grace period does not apply to a driver-initiated no-show cancellation."
+    "id": "driver_no_show_claim",
+    "reason": "The driver asserts he tapped 'I'm Here', waited over 3 minutes and cancelled as a no-show. The trace supports a ~3 min 40 s stationary presence, but the platform's own arrival/wait fields (arrival_confirmed_by, wait_started_at, wait_expired_at) are null, so the NS-1 (i)-(iii) chain is not established from the record; NS-1/G12 require the platform record, not inference, and the shortfall is charged against the fee, not the rider."
    },
    {
-    "id": "driver_statement_verbal_wait",
-    "reason": "Driver's statement that he 'waited over 3 minutes' is not taken on his word: it is independently corroborated by the GPS trace (stationary within the pickup radius from 17:19:00 to 17:22:55) and by his 17:22:45 cancellation message."
+    "id": "rider_charged_validly",
+    "reason": "The $6.61 cancellation fee is not chargeable where NS-1's conditions are not verifiable on the record (NS-2); the rider's account is consistent with the trace and the driver's own message."
    }
   ],
   "flag_account": false,
@@ -38,9 +39,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.16,
- "input_tokens": 12254,
- "output_tokens": 1125,
+ "latency_s": 6.09,
+ "input_tokens": 12645,
+ "output_tokens": 1275,
  "requests": 1,
  "llm_calls": 1
 }

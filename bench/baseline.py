@@ -61,6 +61,16 @@ COMMON_RULES = """RULES
   if you were given one, else "seg1", "seg2" ...), finding = "exempt" / "counts" / "undetermined", basis = the chat
   fact ids relied on (if you were given ids), reason with clause ids. Empty otherwise. An undetermined finding that
   changes the amount or the flag → escalate.
+- ground = the policy branch the words fall under, one of: "rider_named_stop" (RD-3(a): a rider message before the
+  segment named the place and the car stopped there → exempt), "general_route_consent" (RD-5: "whichever way is
+  faster" and the loop goes there → exempt), "named_road_tied" (RD-5: agreed to a named road and a record ties the
+  segment to it → exempt), "named_road_untied" (RD-5 + G13: nothing ties the segment to the named road, nothing
+  places it elsewhere → undetermined), "named_road_elsewhere" (the record places the segment somewhere else →
+  counts), "driver_errand" (a stop or loop of the driver's own that no rider message asked for → counts),
+  "scope_other" (the rider agreed to something else, e.g. a short stop → counts), "consent_after_or_none" (no rider
+  message before the segment agrees to it → counts). You read the words and name the ground; the policy fixes the
+  consequence and code checks that your finding is that consequence — a finding that contradicts its own ground is
+  sent back to you once, then goes to a person. "other" cannot execute.
 - safety_concern is required: "none" means you read everything and found nothing (never write "unscreened": code uses it when no judge ran).
 
 OUTPUT: a Ruling. English.

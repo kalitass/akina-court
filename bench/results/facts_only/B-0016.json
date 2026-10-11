@@ -4,16 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:19:38.420151+00:00",
+ "ts": "2026-10-10T17:38:39.577473+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Log the RD-1 breach (unexplained 2.36 km off-route segment 09:07–09:14) on the driver's record; no refund is payable on this fixed-quote RydeX trip, and no account flag applies.",
-  "confidence": 0.85,
-  "reasoning": "No safety issue in the material: the two chat messages [F7][F8] are pickup arrangements only, and the driver's statement [F10] contains no threat, harassment or dangerous-driving allegation (SAFE-1/SAFE-2 not triggered). Evidence is complete for the elements I need — GPS/timeline, fare, traffic and full timestamped chat [F9] — so evidence_status = sufficient.\n\nRD-1: [F3] identifies an off-route segment 09:07–09:14, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km, up to 1304 m from the optimal route. No clause exempts it. RD-4 fails: [F13] records no traffic incidents near the route, and [F11][F12] are speed band 4 (30–39 km/h) on other expressways, not band 1–2 on the substituted optimal segment, so they cannot exonerate under RD-4(a)/(b). RD-5 fails: the only chat is pickup logistics [F7][F8]; there is no rider message consenting to any route change, and the driver's post-trip \"my GPS rerouted me\" statement [F10] is not consent and is not even a traffic-based reasonable cause. The segment therefore counts as an unexplained deviation (RD-1 breach).\n\nRD-2 quantum: this is a non-metered RydeX fixed-quote trip — [F4] billed distance 16.5 km does not exceed the optimal 16.5 km, and the fare components [F5][F6] (base, distance, time, platform $1.47, no surge, no discount) contain no mileage-dependent overcharge, no ERP/toll item and no unpublished post-trip add-on. The extra 2.36 km did not enter the fare, so the refundable amount is $0 → no_action, with the RD-1 breach recorded.\n\nRD-6 flag: the driver's route disputes in the last 90 days are 0 upheld [F16], so no account flag; the rider's history [F15] is irrelevant.",
+  "recommended_action": "Record the unexempted 2.36 km off-route segment (09:07–09:14) against the driver as an RD-1 breach; no fare adjustment as the RydeX fixed quote did not change. Notify the rider that the detour is on record.",
+  "confidence": 0.86,
+  "reasoning": "Safety screen: the two chat messages [F7][F8] are a pickup arrangement only; the driver's post-trip statement [F10] is a denial, not abuse. No threat, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nRoute-deviation analysis (RD-1). The trip is RydeX, a non-metered fixed-quote service [F6], so the fare is a fixed quote unaffected by distance. The record shows one off-route segment, 09:07–09:14, 4.13 km where the optimal route covers 1.77 km, adding 2.36 km and straying up to 1304 m off route [F3] (the whole-trip excess is +2.6 km/+16% [F1]).\n\nExemption review of that segment, one segment at a time:\n- RD-3 (rider-named stop): the only rider messages are Chat #1 08:48 about standing at the Victoria Street entrance in a grey hoodie [F7]; the rider named no place along the detour and the car made no rider-requested stop. Not applicable.\n- RD-5 (consent): no rider message before 09:07 agrees to any route change; the driver's \"I followed my GPS; it rerouted me\" [F10] is a claim in his own statement, and a reroute of his own choosing that no rider message asked for falls under driver_errand/consent_after_or_none. Not exempt.\n- RD-4 (reasonable cause): no traffic incident near the route [F13]; the two speed-band-4 records (AYER RAJAH EXPRESSWAY [F11], CENTRAL EXPRESSWAY [F12]) are mid-range bands, not band 1–2, and nothing ties them to the replaced optimal sub-route. Under RD-4(b)/(c) they do not exempt the segment. Weather was fair [F14].\n\nSo the segment is an unexempted detour → RD-1 breach + RD-2. On the RD-2 non-metered branch, the refundable amount is only ERP/toll incurred on the segment plus any undisclosed post-trip add-on. The final fare is exactly the quote plus published platform fee: base $3.90 + distance $23.31 + time $5.64 + platform $1.47 = $34.32 [F6]; billed distance 16.5 km does not exceed the optimal 16.5 km [F4]; no surge [F5]; no tolls/tolls field. Refundable amount = $0 → no_action, with the driver's RD-1 breach recorded.\n\nRD-6: this case does establish an RD-1 violation, but flag_account requires route_disputes_upheld_90d ≥ 1; the driver's profile shows 2 disputes, 0 upheld (route: 0) [F16], so no flag. Profile facts are only an add-on basis and cannot decide the case either way.\n\nEvidence: GPS, fare, chat (both messages timestamped [F9]) and traffic records settle every element; nothing missing → sufficient.\n\nRejected: the rider's request to treat the detour as fare-relevant fails because RydeX is a fixed-quote service (RD-2 non-metered branch).",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
@@ -25,13 +26,16 @@
    "F11",
    "F12",
    "F13",
+   "F14",
    "F16"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
-   "RD-5"
+   "RD-5",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -39,28 +43,23 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F7",
      "F8",
-     "F9",
-     "F10",
-     "F13"
+     "F10"
     ],
-    "reason": "Off-route segment 09:07–09:14 adds 2.36 km (4.13 km driven vs 1.77 km optimal, up to 1304 m off route). No exemption: RD-5 fails (the only chat [F7][F8] is pickup logistics; the driver's post-trip GPS claim [F10] is not rider consent before the detour), and RD-4 fails (no traffic incident near the route [F13]; [F11][F12] band 4 on other expressways is not band 1–2 on the substituted optimal segment). Unrelieved detour under RD-1."
+    "reason": "One off-route segment 09:07–09:14 adding 2.36 km with up to 1304 m off route. The only rider messages are pre-pickup logistics [F7] and the driver's acknowledgement [F8]; neither names a place nor agrees to a route change before 09:07. The driver's own account 'I followed my GPS; it rerouted me' [F10] describes a reroute no rider message asked for, so RD-5 consent is absent and RD-3 does not apply. RD-4 also fails: no incident near the route [F13] and the AYE/CET band-4 records [F11][F12] are not band 1–2 and are not tied to the replaced sub-route."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F10",
-    "reason": "Driver's statement that the GPS rerouted him is a claim, not rider consent (RD-5, G11), and no traffic evidence supports a reasonable-cause exception (RD-4)."
+    "id": "rider_fare_impact",
+    "reason": "RydeX is a fixed-quote (non-metered) service; billed distance 16.5 km equals the optimal route [F4] and only published add-ons were charged [F6], so the detour produced no refundable amount under RD-2."
    },
    {
-    "id": "F11",
-    "reason": "Speed band 4 (30–39 km/h) is not band 1 or 2 and the fact does not tie the congestion to the substituted optimal route segment (RD-4(b))."
-   },
-   {
-    "id": "F12",
-    "reason": "Same as F11: band 4 on a different expressway does not corroborate a reasonable-cause detour (RD-4(b))."
+    "id": "traffic_justification",
+    "reason": "The AYE and CET speed bands are band 4 (30–39 km/h), not band 1–2, and are not tied to the replaced optimal sub-route; no incident recorded [F13]. RD-4 not satisfied."
    }
   ],
   "flag_account": false,
@@ -69,9 +68,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.81,
- "input_tokens": 9879,
- "output_tokens": 1147,
+ "latency_s": 6.48,
+ "input_tokens": 10270,
+ "output_tokens": 1411,
  "requests": 1,
  "llm_calls": 1
 }

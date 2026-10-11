@@ -1,0 +1,126 @@
+{
+ "n": 11,
+ "started_at": "2026-10-11T02:38:50.897+00:00",
+ "method": "POST",
+ "url": "https://api.deepseek.com/chat/completions",
+ "request_headers": {
+  "host": "api.deepseek.com",
+  "accept-encoding": "gzip, deflate",
+  "connection": "keep-alive",
+  "authorization": "<redacted>",
+  "accept": "application/json",
+  "content-type": "application/json",
+  "user-agent": "pydantic-ai/2.55.0",
+  "x-stainless-lang": "<redacted>",
+  "x-stainless-package-version": "<redacted>",
+  "x-stainless-os": "<redacted>",
+  "x-stainless-arch": "<redacted>",
+  "x-stainless-runtime": "<redacted>",
+  "x-stainless-runtime-version": "<redacted>",
+  "x-stainless-async": "<redacted>",
+  "x-stainless-retry-count": "<redacted>",
+  "x-stainless-read-timeout": "<redacted>",
+  "content-length": "4772"
+ },
+ "request_body": {
+  "model": "deepseek-chat",
+  "stream": false,
+  "messages": [
+   {
+    "role": "system",
+    "content": "You write the two short notices Ryde sends after a dispute ruling: one to the rider, one to the driver.\nEach ≤ 120 words, plain English, second person, no legalese: state the outcome, the one or two facts that decided it,\nthe amount and how it is paid (Ryde voucher), and what it means for the recipient (e.g. account review). Do not cite\nids like F3 or RD-2. If the case was escalated to a human reviewer, say only that and what the reviewer will look at —\ndo not state a conclusion and do not promise a timeframe (the routing notice carries the service level). Return JSON: {\"rider\": \"...\", \"driver\": \"...\"}"
+   },
+   {
+    "role": "user",
+    "content": "Case B-0026. Final outcome: refund_full, amount $6.61 as a Ryde voucher. Account flag: yes. Recommended action: Refund the $6.61 no-show cancellation fee to the rider (as a Ryde voucher per NS-7) and send the driver's account to Ryde review for a false \"I'm Here\" tap made 600 m from the pickup point..\nReasoning:\nThis is a driver-cancelled trip with a $6.61 no-show fee, so it enters the policy through NS-0: cancelled_by = driver and the driver's stated reason is rider no-show, which routes the case to NS-1/NS-2 [F3][F6][RD-0, NS-0]. Both advocates read the record the same way, and so do I.\n\nNS-1 requires three cumulative conditions. (i) an arrival confirmation exists — the driver tapped \"I'm Here\" at 12:06:15 [F5][NS-1]. (ii) at the moment of that confirmation the driver must be within the pickup radius (200 m, data-layer parameter G2) — the tap was made 600 m from the pickup, and the driver's closest approach for the whole trip was 599 m at 12:06:55 [F5][F1][NS-1]. (iii) he must then wait at the pickup continuously for more than 3 minutes — he spent 0 s inside the radius after the tap, and his only stationary period (12:05:55–12:09:25, 3 min 30 s) was spent 600 m away, followed by cancellation at 12:09:25 [F5][F2][F3][NS-1]. Conditions (ii) and (iii) both fail, so the no-show fee is not established.\n\nThe driver's written statement that he pressed \"I'm Here\" and waited more than 3 minutes at the pickup [F12] is a claim contradicted by the GPS and timeline records in F1, F2, F4 and F5 — system records outrank statements — and the platform never recorded him at the pickup point at all (driver_arrived_at null) [F4][F12][NS-1]. Nothing external excuses the stand-off: no traffic incidents on the route and fair weather, with only moderate band-3 flow (20–29 km/h) on Jalan Besar, which supports nothing under RD-4's \"reasonable cause\" branch [F13][F14][F15][NS-1].\n\nNS-2 therefore applies: since NS-1 (i)–(iii) are not all satisfied, the $6.61 cancellation fee is refunded in full [F6][F3][NS-2]. The amount is the cancellation fee actually charged, $6.61, and no other published add-on exists — no surge (1.0×) and no toll/ERP component in this dataset [F6][F7][FARE-1, NS-7].\n\nNS-2 also attaches an account consequence where the driver pressed \"I'm Here\" while GPS placed him outside the pickup radius: the tap at 600 m with 0 s inside the radius afterwards engages the false-arrival limb, an abuse of the arrival/cancellation button [F5][F1][F2][NS-2]. The driver's 90-day record (1 dispute, 1 upheld, no-show) is an additional-action consideration only and cannot itself decide the case [F17][RD-6, NS-2].\n\nSafety screen: I read all three chat messages (driver's 12:06 \"I'm here already, silver Toyota Altis, please come out\"; rider's 12:07 \"I'm at the pickup point, no car here. Where are you?\"; driver's 12:09 \"More than 3 min already, I have to cancel\"), the driver's post-trip statement and the complaint [F8][F9][F10][F12]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in any of them — the exchange is a disputed-arrival argument only — so safety_concern is \"none\" [SAFE-1, SAFE-2].\n\nEvidence: the record settles every element the ruling needs — full GPS coverage of the wait, the ticketed tap distance, the stationary window, the cancellation time and the fee, with a complete fully timestamped chat (3 messages) [F1][F2][F3][F5][F6][F11]. Nothing needed is missing, so evidence_status is sufficient and no G12 escalation is required; the rider's own presence does not need to be proved, since NS-2 places the burden of the NS-1 conditions on the driver's arrival record."
+   }
+  ],
+  "tool_choice": "required",
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "final_result",
+     "description": "The final response which ends this conversation",
+     "parameters": {
+      "properties": {
+       "rider": {
+        "type": "string"
+       },
+       "driver": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "rider",
+       "driver"
+      ],
+      "type": "object",
+      "additionalProperties": false
+     },
+     "strict": true
+    }
+   }
+  ]
+ },
+ "status": 200,
+ "latency_s": 1.797,
+ "finished_at": "2026-10-11T02:38:52.695+00:00",
+ "response_headers": {
+  "content-type": "application/json",
+  "transfer-encoding": "chunked",
+  "connection": "keep-alive",
+  "date": "Sun, 11 Oct 2026 02:38:51 GMT",
+  "server": "elb",
+  "content-encoding": "gzip",
+  "vary": "origin, access-control-request-method, access-control-request-headers",
+  "access-control-allow-credentials": "true",
+  "x-ds-trace-id": "664282e40bb44b5df0bfa06b852aec2c",
+  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+  "x-content-type-options": "nosniff",
+  "x-cache": "Miss from cloudfront",
+  "via": "1.1 28f4312ba92ebf9ced1e09522c830dde.cloudfront.net (CloudFront)",
+  "x-amz-cf-pop": "SIN3-P2",
+  "x-amz-cf-id": "wfm4wC8LCDjj4PsA1R0rs6YJSO3V24Zk-vYNxLBmGZFt0I1shlz4Tw=="
+ },
+ "response_body": {
+  "id": "f96aa546-1759-4309-a118-0ebebd943c7d",
+  "object": "chat.completion",
+  "created": 1791686330,
+  "model": "deepseek-flash",
+  "choices": [
+   {
+    "index": 0,
+    "message": {
+     "role": "assistant",
+     "content": "",
+     "tool_calls": [
+      {
+       "index": 0,
+       "id": "call_00_iV9RP2RtCn53HX9qQ7j39998",
+       "type": "function",
+       "function": {
+        "name": "final_result",
+        "arguments": "{\"rider\": \"We've reviewed your dispute and are refunding the full $6.61 no-show cancellation fee as a Ryde voucher. The decision came down to the driver's arrival record: the \\\"I'm Here\\\" tap was made about 600 m from the pickup point, and the records show no time spent at the pickup point afterwards, so the no-show conditions weren't met. The voucher will be applied to your account. No further action is needed from you, and your account is not affected.\", \"driver\": \"We've reviewed this trip and the $6.61 no-show cancellation fee has been refunded to the rider as a Ryde voucher, so it won't be paid out on this trip. The deciding facts: your \\\"I'm Here\\\" tap was recorded about 600 m from the pickup point, and the location and timeline records show no time spent within the pickup area afterwards, so the no-show conditions weren't met. Separately, your account has been flagged and sent to Ryde review for the arrival tap, which may result in action on your account.\"}"
+       }
+      }
+     ]
+    },
+    "logprobs": null,
+    "finish_reason": "tool_calls"
+   }
+  ],
+  "usage": {
+   "prompt_tokens": 1448,
+   "completion_tokens": 259,
+   "total_tokens": 1707,
+   "prompt_tokens_details": {
+    "cached_tokens": 256
+   },
+   "prompt_cache_hit_tokens": 256,
+   "prompt_cache_miss_tokens": 1192
+  },
+  "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+ },
+ "response_sha256": "b1b12e87d6a8ed84cd97390eb9459661770a9a91e60b3865a5946b6c96cb3d8e"
+}

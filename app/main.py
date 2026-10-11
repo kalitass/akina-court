@@ -118,15 +118,19 @@ def get_facts(cid: str, counterfactual: Optional[str] = None):
 
 
 BENCH_RUNS_DIR = ROOT / "bench" / "results" / "court"     # the benchmark's primary court run of every B-case (<id>.record.json)
+BLIND_RUNS_DIR = ROOT / "bench" / "results" / "blind" / "court"   # the same for the held-out X-cases
 
 
 def stored_run_path(cid: str) -> Optional[Path]:
-    """A run saved by this service (runs/<id>.json) or, for benchmark cases, the benchmark's own court record."""
+    """A run saved by this service (runs/<id>.json) or, for benchmark and held-out cases, the benchmark's own court record."""
     p = RUNS_DIR / f"{cid}.json"
     if p.exists():
         return p
-    q = BENCH_RUNS_DIR / f"{cid}.record.json"
-    return q if q.exists() else None
+    for d in (BENCH_RUNS_DIR, BLIND_RUNS_DIR):
+        q = d / f"{cid}.record.json"
+        if q.exists():
+            return q
+    return None
 
 
 @app.get("/api/runs/{cid}")

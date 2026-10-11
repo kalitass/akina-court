@@ -2,21 +2,21 @@
  "arm": "raw",
  "case_id": "B-0034",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:32:36+00:00",
+ "started_at": "2026-10-11T02:36:18+00:00",
  "fingerprint": {
   "case_sha256": "ba0f8ed8a7585e17",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:32:36+00:00"
+  "issued_at": "2026-10-11T02:36:18+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver account flag on this record.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7), and remind the driver that the \"I'm Here\" arrival indicator and the subsequent >3-minute wait must be consistent with GPS at the pickup point.",
   "confidence": 0.82,
-  "reasoning": "Safety screen: the chat (two driver messages about waiting and cancelling) and the rider's complaint contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation; nothing to escalate on safety grounds. Safety concern: none.\n\nNo-show analysis (NS-0 → NS-1/NS-2). cancelled_by = driver and the driver's stated reason is rider no-show, so NS-1 governs. Requirement (i): driver pressed \"I'm Here\" at 13:02:35 — satisfied. Requirement (ii): the pressed-here GPS sample at 13:02:30 is lat 1.352366, lon 103.944349, which is ~18 m from the pickup 1.3525, 103.9447 — well inside the 200 m radius, so (ii) is satisfied (no flag_account under NS-2). Requirement (iii): the driver must then wait continuously > 3 minutes at the pickup. The GPS trace is continuous on the 30 s grid from 13:02:30 through the 13:05:30 cancel with speeds of ~0–2 km/h and no gap, so the driver did remain on scene. But the wait window is only 13:02:35 → 13:05:30 = 175 seconds, which is below 3:01 / 180 s; even measuring from the 13:02:30 sample it is 180 s at most, not \"more than 3 minutes\" (the driver's own chat at 13:05:20 claimed \"more than 3 min already\", which the timeline contradicts). NS-1 (iii) therefore fails → NS-2: the $6.61 cancellation fee is refunded in full, refund_full, amount = $6.61.\n\nThe driver's statement (\"waited more than 3 minutes\") is a statement, and the trip timeline shows 2 min 55 s, so the system record governs. The rider's own admission that she came out a minute after cancellation is not relevant: the fee fails because the driver's threshold was not met, not because of promptness. Profile facts (driver's 1 upheld no-show dispute in 90 days) are not used to decide this case; NS-2's flag condition (GPS outside 200 m at tap) is not met, so no account flag.\n\nEvidence check: ticket, timeline (all arrival/here/cancel timestamps), 30 s GPS grid covering the approach, the wait and the cancellation moment, and complete chat are present. evidence_status = sufficient.",
+  "reasoning": "Safety screen: chat contains only pickup-arrangement and cancellation messages; driver statement and complaint contain no threat, harassment, abuse or dangerous-driving allegation. safety_concern = none.\n\nNo-show analysis (NS-0 → NS-1 / NS-2). cancelled_by = driver and the driver claims the rider no-showed, so NS-1 governs. NS-1 requires (i) an \"I'm Here\" tap or platform arrival confirmation, (ii) GPS showing the driver at the pickup point at that moment, and (iii) a continuous >3-minute wait within 200 m of the pickup afterwards.\n\n(i) The timeline shows driver_pressed_here_at = 13:02:35; the driver's statement confirms he pressed \"I'm Here\". (ii) GPS at 13:02:30 places the driver at (1.352366, 103.944349) — about 62 m from the pickup (1.3525, 103.9447). That is within the 200 m arrival radius, so this element holds; the driver's stay there (13:02:30–13:05:30) further corroborates it. (iii) The driver cancelled at 13:05:30, only 2 min 55 s (175 s) after the 13:02:35 tap — measured from the tap, the wait does not exceed 3 minutes (NS-1(iii) requires >180 s). Even measured generously from the first stationary sample at 13:02:30, the elapsed time to cancellation is 180 s, i.e. exactly 3:00, which still fails the \">3 min / ≥3:01\" requirement. The driver's chat message \"More than 3 min already, I have to cancel\" at 13:05:20 and his statement that he \"waited more than 3 minutes\" are contradicted by the system timeline (system records override statements), and the preceding mobile period (12:58–13:02) is driving, not waiting at the pickup, so it does not count under NS-1(iii).\n\nBecause element (iii) fails, NS-2 applies: the $6.61 cancellation fee is refunded in full. No flag_account is warranted — the driver was genuinely at the pickup at the tap, so the NS-2 fraud trigger (tapping \"I'm Here\" while not at the pickup) is not met, and RD-6 is not engaged (no route deviation in this case). Refund to be issued as a voucher per NS-7.\n\nEvidence status: sufficient — the timeline, GPS trace and cancellation timestamps settle every element needed; the GPS 30 s sampling even at the disputed 180 s boundary is corroborated by the 5 s thinned grid and no gap >2 min exists.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -29,12 +29,16 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement_wait_over_3min",
-    "reason": "The driver states he waited more than 3 minutes after pressing I'm Here, but the trip timeline (pressed here 13:02:35, cancelled 13:05:30 = 175 s) and the continuous 30 s GPS trace (stationary until 13:05:30) show the wait fell short of the >3-minute (≥180 s) threshold in NS-1 (iii)."
+    "id": "driver_statement",
+    "reason": "Driver claims he waited more than 3 minutes after pressing I'm Here; the timeline shows the tap at 13:02:35 and cancellation at 13:05:30 = 175 s, and even counting from the first stationary GPS sample at 13:02:30 only 180 s (3:00), which does not exceed the >3-minute threshold in NS-1(iii)."
    },
    {
-    "id": "rider_came_out_late",
-    "reason": "The rider says she came out a minute after cancellation; this does not create the fee — the fee fails on the driver's own unmet NS-1 (iii) wait requirement, so no need to weigh the rider's timing."
+    "id": "driver_chat_13:05:20",
+    "reason": "\"More than 3 min already\" is contradicted by the system timeline; the wait in range was under (or at most exactly) 3 minutes."
+   },
+   {
+    "id": "rider_complaint_partial",
+    "reason": "Rider's framing that the driver cancelled before the 3-minute wait matured is accepted on the timeline, but no additional compensation beyond the $6.61 fee arises under any cited clause."
    }
   ],
   "flag_account": false,
@@ -43,13 +47,13 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.59,
+ "latency_s": 5.43,
  "model_calls": 1,
  "provider_trace_ids": [
-  "8fd735476bcc732980f59605c59823bd"
+  "246802c25e62482370d9b6cd3e27b054"
  ],
  "provider_response_ids": [
-  "e221a5a5-218c-42cf-b364-48f33b74746c"
+  "4bd42d7f-03db-4c51-b8c7-536e5b29a0d0"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -62,15 +66,15 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 12375,
-   "completion_tokens": 1035,
-   "total_tokens": 13410,
+   "prompt_tokens": 12766,
+   "completion_tokens": 1105,
+   "total_tokens": 13871,
    "prompt_tokens_details": {
-    "cached_tokens": 12160
+    "cached_tokens": 12544
    },
-   "prompt_cache_hit_tokens": 12160,
-   "prompt_cache_miss_tokens": 215
+   "prompt_cache_hit_tokens": 12544,
+   "prompt_cache_miss_tokens": 222
   }
  ],
- "finished_at": "2026-10-10T13:32:40+00:00"
+ "finished_at": "2026-10-11T02:36:23+00:00"
 }

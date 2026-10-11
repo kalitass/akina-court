@@ -26,6 +26,8 @@ OUT = ROOT / "web" / "report.html"
 # =====================================================================================================================
 # HAND-WRITTEN CONTENT — everything that is NOT derivable from data lives here and nowhere else.
 # =====================================================================================================================
+FIRST_RESULTS_N = 49      # the set size when the four systems were first scored; a larger manifest adds a caveat on the page
+
 CONTENT = {
     "title": "Akina Court — Results",
     "subtitle": "Multi-agent autonomous dispute resolution · Tencent Cloud Hackathon SG 2026 · Ryde track",
@@ -243,8 +245,8 @@ CONTENT = {
     "gate_raw_note": ("the raw arm never sees fact ids, so the citation rule blocks everything: this row shows an interface "
                       "requirement, not the gate's discriminative power"),
     "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
-                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone reaches "
-                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost. {advocates_sentence}"),
+                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone is right or hands off on "
+                      "{jo_safe}/{n} at about 1/{ratio} of the court's token cost, but lets {jo_wrong} wrong decisions execute. {advocates_sentence}"),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
         "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
@@ -259,6 +261,7 @@ CONTENT = {
     ],
     # One-line meaning for each metric row in the comparison table.
     "metric_meaning": {
+        "safe_rate": "the case was decided right, or handed to a person for a reviewer to decide; only a wrong decision that executes counts against the system",
         "exact": "outcome, refund amount (to the cent) and escalation decision all match the reference",
         "amount_1c_refund_cases": "amount within one cent, counting only cases where a refund was due (no-refund cases are excluded)",
         "ruling": "the outcome label (full refund / partial refund / no refund / escalate) matches",
@@ -464,7 +467,7 @@ h1{font-size:40px;line-height:1.1;letter-spacing:-.02em;margin:34px 0 14px;font-
 .chips.secondary .chip{color:var(--ink2)}
 .pitch{font-size:19px;line-height:1.45;color:var(--ink2);max-width:900px;margin:0 0 22px}
 .meta{font-size:12.5px;color:var(--muted);font-family:var(--mono);margin-bottom:22px}
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .tile{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px 16px;box-shadow:var(--shadow)}
 .tile .n{font:700 44px/1 var(--mono);letter-spacing:-.03em;margin:4px 0 8px}
 .tile .n small{font-size:18px;color:var(--muted);font-weight:600;margin-left:6px}
@@ -629,12 +632,42 @@ def chip(text: str, cls: str = "") -> str:
 # =====================================================================================================================
 
 
+def blind_numbers() -> dict | None:
+    """Held-out set figures (bench/results/blind): per arm, cases decided exactly right and wrong decisions executed."""
+    import blind_report
+    man = ROOT / "data" / "bench" / "blind" / "manifest.json"
+    res = ROOT / "bench" / "results" / "blind"
+    if not man.exists() or not res.exists():
+        return None
+    truth = {c["case_id"]: c["truth"] for c in json.loads(man.read_text(encoding="utf-8"))["cases"]}
+    out = {"cases": len(truth)}
+    for arm in sorted(p.name for p in res.iterdir() if p.is_dir()):
+        files = [f for f in sorted((res / arm).glob("X-*.json")) if not f.name.endswith(".record.json") and ".r" not in f.name[6:]]
+        if not files:
+            continue
+        ok = wrong = 0
+        for f in files:
+            rec = json.loads(f.read_text(encoding="utf-8")); t = truth[rec["case_id"]]; ru = rec.get("ruling") or {}
+            if not rec.get("ok"):
+                continue
+            if blind_report.exact(ru, t):
+                ok += 1
+            elif not ru.get("escalate"):
+                wrong += 1
+        out[arm] = {"exact": ok, "wrong_executed": wrong}
+    return out
+
+
 def build(d: dict) -> str:
     S = d["summary"]
     arms = ["raw", "facts_only", "judge_only", "court"]
     raw, fo, jo, ct = (S[a] for a in arms)
     man = d["manifest"]["cases"]
     n_bench = len(man)
+    if n_bench > FIRST_RESULTS_N and not any("extended" in c for c in CONTENT["caveats"]):
+        CONTENT["caveats"].append(f"The benchmark set was extended from {FIRST_RESULTS_N} to {n_bench} cases on 2026-10-11, after the first four-system "
+                                  "results had been seen; the added cases were written from the policy and the record like the others, every one that "
+                                  "passed the generator's gates was kept, but they are not held-out. The held-out set is scored separately.")
     if n_bench != len(d["scenario_hard"]):
         sys.exit(f"dashboard: manifest has {n_bench} cases but scenarios.py defines {len(d['scenario_hard'])}")
     for a in arms:
@@ -704,8 +737,7 @@ def build(d: dict) -> str:
 <p class="blurb">{esc(CONTENT['blurb'])}</p>
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
 <div class="tiles">
-<div class="tile green"><div class="l">Same model, better evidence</div><div class="n">+{lift_pp:.1f}<small>pp</small></div><div class="m">Same model, one call each: computing the facts in code lifts exact core decisions from {pct(raw['exact'])} to {pct(fo['exact'])}.</div></div>
-<div class="tile blue"><div class="l">Matched the written-policy reference</div><div class="n">{ct_ok}<small>/ {n_bench}</small></div><div class="m">The full court matched the policy-derived reference core decision on {"every case" if ct_ok == n_bench else f"{ct_ok} of {n_bench} cases"}.</div></div>
+<div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">How it is counted: a case is right when outcome, amount and hand-off all match the policy-derived reference ({ct_ok} of {n_bench}); a case the court sends to a person instead of ruling is not wrong, a reviewer decides it ({n_bench - ct_ok - ct['wrong_executed']} such case{"s" if n_bench - ct_ok - ct['wrong_executed'] != 1 else ""}). Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.</div></div>
 <div class="tile purple"><div class="l">Cleared · wrong decisions that passed the check</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small> · {G['court']['wrong_and_executed']}</div><div class="m">{G['court']['auto']} core decisions cleared for automatic execution, {G['court']['wrong_and_executed']} observed wrong core decisions executed. Account flags always go to a human.</div></div>
 <div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">p95 {ct['latency_p95_s']:.1f} s, versus {esc(CONTENT['manual_handling'])} of manual handling. About {tok_x:.0f}× the tokens of one call.</div></div>
 </div>
@@ -724,7 +756,8 @@ def build(d: dict) -> str:
 
     # ---------------------------------------------------------------- 2. results & cost
     big = [
-        ("Exact core decisions", {a: S[a]["exact"] for a in arms}),
+        ("Right, or handed to a person", {a: 1 - S[a]["wrong_executed_rate"] for a in arms}),
+        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", {a: S[a]["exact"] for a in arms}),
         ("Outcome label correct", {a: S[a]["ruling"] for a in arms}),
         (f"Amount within one cent, refund cases (n={ct['refund_cases']})", {a: S[a]["amount_1c_refund_cases"] for a in arms}),
         ("Escalation decision correct", {a: S[a]["escalate"] for a in arms}),
@@ -738,7 +771,8 @@ def build(d: dict) -> str:
     ]
     core_tip = esc(CONTENT["core_tip"])
     rows_spec = [
-        ("Exact core decision", "exact", pct),
+        ("Right, or handed to a person", "safe_rate", pct),
+        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", "exact", pct),
         ("Outcome label", "ruling", pct),
         ("Amount within one cent, all cases", "amount_1c", pct),
         (f"Amount within one cent, refund cases only (n={ct['refund_cases']})", "amount_1c_refund_cases", pct),
@@ -799,11 +833,14 @@ def build(d: dict) -> str:
         cls = ' class="hl"' if a == "court" else ""
         grows.append(f'<tr{cls}><td><b>{esc(name)}</b>{"<sup>" + str(len(gnotes)) + "</sup>" if note else ""}</td><td class="n">{g["core_wrong"]}</td><td class="n">{g["model_escalated"]}</td><td class="n">{blocked}</td>'
                      f'<td class="n">{g["human_flow"]} / {g["n"]} ({pct(g["human_rate"], 0)})</td><td class="n">{g["auto"]}</td><td class="n">{wx}</td></tr>')
+    jo_wx, ct_wx = G["judge_only"]["wrong_and_executed"], G["court"]["wrong_and_executed"]
     gate_sentence = CONTENT["gate_sentence"].format(
-        fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_ok=jo_ok, n=n_bench,
+        fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_safe=n_bench - jo_wx, jo_wrong=jo_wx, n=n_bench,
         ratio=f"{jo_ratio:.0f}",
-        advocates_sentence=(f"The two advocates leave the human-review rate at {pct(G['court']['human_rate'], 0)}; their value is the observable adversarial hearing the track requires."
-                            if G["judge_only"]["human_rate"] == G["court"]["human_rate"] else
+        advocates_sentence=(f"The two advocates take that to {n_bench - ct_wx}/{n_bench} with {ct_wx} wrong decision{'s' if ct_wx != 1 else ''} executed: each side states the "
+                            f"policy ground of every open question, a point both sides agree on binds the judge, and the judge may only rule as an argued ground does; "
+                            f"human review moves from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}."
+                            if ct_wx < jo_wx else
                             f"The two advocates change human review from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}; their other value is the observable adversarial hearing the track requires."))
     # per-case table
     pc = []
@@ -819,7 +856,8 @@ def build(d: dict) -> str:
                 continue
             g = s["got"]
             got = ruling_word(g.get("ruling")) + (f" {money(g['amount'])}" if g.get("amount") else "")
-            mark = '<span class="ok">✓</span>' if s["exact"] else '<span class="bad">✗</span>'
+            mark = ('<span class="ok">✓</span>' if s["exact"] else '<span class="ok" title="handed to a person: not wrong, a reviewer decides">→ person</span>'
+                    if (g.get("escalate") or g.get("ruling") == "escalate") else '<span class="bad">✗</span>')
             cells.append(f"<td>{mark} {esc(got)}</td>")
         pc.append(f'<tr><td class="n muted">{i}</td><td><span class="tip" title="{esc(cid)} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></td>'
                   f'<td>{esc(CONTENT["type_names"].get(c["type"], c["type"]))}</td><td>{esc(exp_txt)}</td>{"".join(cells)}</tr>')
@@ -896,6 +934,52 @@ def build(d: dict) -> str:
 <div class="panel"><h3 id="stretch">Additional safeguards</h3><ul class="hl small">{stretch_items}</ul></div>
 </div></section>""")
 
+    # ---------------------------------------------------------------- 4. key features
+    bl = blind_numbers()
+    bl_court = (bl or {}).get("court")
+    ct_safe, jo_safe, raw_safe = n_bench - ct["wrong_executed"], n_bench - jo["wrong_executed"], n_bench - raw["wrong_executed"]
+    cites_total = ct["citations"] + ct.get("fact_citations", 0)
+    cites_bad = ct["invalid_citations"] + ct.get("invalid_fact_citations", 0)
+    held_out = (f" On the {bl['cases']} held-out cases, written after the prompts were frozen and never used for tuning, the court decided "
+                f"{bl_court['exact']} of {bl['cases']} right with {bl_court['wrong_executed']} wrong decision{'s' if bl_court['wrong_executed'] != 1 else ''} executed."
+                if bl_court else "")
+    features = [
+        ("The policy runs before the model.",
+         f"Ryde's dispute rules are compiled into executable predicates: on every case, code first decides which of the {pol['citable']} sourced "
+         f"clauses apply, which fail and which need a reading, and the model speaks only inside that remaining space. A ruling rests on the written "
+         f"policy, not on the model's memory of it, which removes the room for an invented rule at the source."),
+        ("Every ruling is verified by code, and the evidence chain cannot be tampered with.",
+         f"The facts are computed by code from the GPS trace, the chat, the fare, traffic and weather records: numbered, identical on every run; the "
+         f"advocates and the judge may cite only those numbers and the clause ids. Before anything executes, code checks the ruling item by item: "
+         f"every cited id exists, the outcome is one the policy allows, the amount equals the policy formula to the cent, a consent message precedes "
+         f"the detour it excuses. Each ruling carries a receipt with four fingerprints (case file, policy, code, model), so any change anywhere "
+         f"invalidates it. {len(d['inject'])} deliberate tampers of the AI's output (a cited fact that does not exist, a fact never read, an invented clause, "
+         f"a changed amount, a flipped finding, an account flag hidden in free text) and a prompt injection planted in the chat were all caught."),
+        ("The reasoning is fully transparent and the standard is documented.",
+         f"Every tool call, brief, rebuttal, ruling, check and notice is a timestamped event, streamed live and replayable step by step on the map; "
+         f"every citation opens the fact or the clause it points to. Across the benchmark the court made {cites_total} citations, {cites_bad} of them invalid."),
+        ("Adversarial agents beat the same model alone.",
+         f"Same model, same {n_bench} cases. The raw case file handed straight to the model: {raw_safe} of {n_bench} right or handed to a person, "
+         f"{raw['wrong_executed']} wrong decisions executed. The judge with the code check but no advocates: {jo_safe} of {n_bench}, "
+         f"{jo['wrong_executed']} wrong decisions executed. The full court (code facts, two advocates, judge, code check): {ct_safe} of {n_bench}, "
+         f"{ct['wrong_executed']} wrong decision{'s' if ct['wrong_executed'] != 1 else ''} executed. The advocates add what a single judge lacks: "
+         f"each side states the policy ground of every open question, a point both sides agree on binds the judge, and a judge may only rule as one "
+         f"of the argued grounds does.{held_out}"),
+    ]
+    feat_html = "".join(f"<li><b>{esc(t)}</b> {esc(b)}</li>" for t, b in features)
+    resp = [
+        "Safety complaints and account actions are never automated; a threat in the chat stops the court and the case goes to a person.",
+        "Insufficient evidence is a formal finding: a GPS hole, a missing record or an agreement the record cannot tie to the road sends the case to a person, with what is missing named.",
+        "The notices to rider and driver are plain language, and their amounts are checked by code against the final ruling.",
+    ]
+    resp_html = "".join(f"<li>{esc(r)}</li>" for r in resp)
+    A(f"""<section class="sec" id="features"><h2><span class="num">3</span>Key features</h2>
+<p class="lead">The AI argues; only verified policy executes.</p>
+<ol class="hl">{feat_html}</ol>
+<h3 class="mt">Responsible AI</h3>
+<ul class="hl small">{resp_html}</ul>
+</section>""")
+
     # ---------------------------------------------------------------- 5. data & method
     fam_rows = []
     for label, rx in CONTENT["families"]:
@@ -914,7 +998,7 @@ def build(d: dict) -> str:
              + (" and a second time on every case" if n_rep and n_swap else (" The court was additionally run a second time on every case" if n_rep else ""))
              + ("." if (n_swap or n_rep) else ""))
     method = "".join(f"<li>{esc(p.format(**fill, extra_runs=extra))}</li>" for p in CONTENT["method"])
-    A(f"""<section class="sec" id="method"><h2><span class="num">3</span>Data and method</h2>
+    A(f"""<section class="sec" id="method"><h2><span class="num">4</span>Data and method</h2>
 <p class="lead">{n_bench} synthetic benchmark trips on real OneMap road geometry, each built around one trap a careless system would fall into, plus {n_demo} hand-built demo cases.</p>
 <div class="callout mt"><h3>Caveats</h3><ul class="hl small" style="margin:0">{"".join(f"<li>{esc(c.format(**fill))}</li>" for c in CONTENT['caveats'])}</ul></div>
 <details class="mt more"><summary>Where the data comes from, how the reference answers were made, and the runs behind every number</summary>
@@ -931,11 +1015,8 @@ def build(d: dict) -> str:
 </details>
 </section>""")
 
-    # ---------------------------------------------------------------- 7. architecture + footer
-    A(f"""<section class="sec arch" id="how"><h2><span class="num">4</span>How it works</h2>
-<p class="lead">{esc(CONTENT['arch_caption'])}</p>
-<img src="architecture-system.png" alt="System architecture: six data sources become a case; code computes the fact table and runs the public policy; on Tencent Cloud, the agents reach facts only through logged tools; code checks citations, outcome and amount before anything executes; outputs are an event log, a receipt, a review queue and notices">
-<div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
+    # ---------------------------------------------------------------- 7. footer
+    A(f"""<div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
 </section>
 </div><script>{JS}</script></body></html>""")
     return "\n".join(H)

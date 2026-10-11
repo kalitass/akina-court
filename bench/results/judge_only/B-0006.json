@@ -4,25 +4,26 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:21:03.136868+00:00",
+ "ts": "2026-10-11T02:28:03.871330+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 3.33,
-  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider (RD-2 metered-mileage overcharge on the 2.36 non-exempt extra km of the off-route segment) and note the RD-1 breach on the driver's record.",
-  "confidence": 0.85,
-  "reasoning": "The trip is a metered RydeTAXI journey: optimal route 16.5 km, 19.1 km driven, +2.6 km (+16%) [F1], with one measured off-route segment 21:57–22:04 driving 4.13 km where the optimal route covers 1.77 km, adding 2.36 km and reaching up to 1304 m off the optimal route [F3]. That segment is an off-route segment under RD-1, and none of the exemptions excuses it, so RD-2 applies and the extra metered kilometres on it are refundable [F3][RD-1][RD-2].\n\nRD-5 fails: the case has no in-app chat at all [F8], so no rider message sent before 21:57:35 agrees to the route. The only proffered agreement is the driver's post-trip statement \"I went round it\" [F9]; a driver's claim of agreement appearing only in his statement is not consent, and a message after the segment began cannot establish consent [F9][F8][RD-5]. RD-3 gives no relief either — no rider-named stop was measured in this segment, so nothing is exempt on that basis [F3][RD-3].\n\nRD-4 does not exempt the segment: the Ayer Rajah Expressway accident was reported at 22:07, 0 m from the optimal route but after the off-route segment had already begun at 21:57 and near trip end, so it cannot be the reasonable cause for the stretch already driven [F3][F12]; the speed-band records (band 4, 30–39 km/h, not band 1 or 2) are only corroborative and speed band alone never exempts [F10][F11][RD-4]. The driver's \"accident … unavoidable\" claim is therefore not corroborated for the replaced stretch [F9][RD-4].\n\nAmount, per the trace formula: this trip's per-km rate = fare distance fare ÷ distance km = $26.93 ÷ 19.10 km = $1.4099/km [F7]; the non-exempt segment's extra 2.36 km × $1.4099/km = $3.33 [F3][F7][RD-2]. The 0.1 min meter waiting ($0.02) is RydeTAXI meter waiting time on a stop and is not refunded [F5][RD-3]. RD-6 is not triggered — 0 upheld route disputes in 90 days — so no account flag is added [F15][RD-6].",
+  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider for the unexcused off-route segment (RD-2); no account flag (RD-6 not met).",
+  "confidence": 0.88,
+  "reasoning": "The trip is RydeTAXI, so the fare is meter-based and detour km feed directly into the fare [F4][F7][RD-2][RD-1]. One off-route segment is on record: 21:57–22:04, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km [F3].\n\nNo exemption applies. The rider-requested-stop branch fails: there is no rider message naming any place, and in fact no in-app chat at all [F8][RD-3]. The consent branch fails: the only source of an alleged agreement is the driver's post-trip statement, which is a claim, not rider consent, and it is written after the segment [F9][RD-5][G11]. The reasonable-cause branch fails: the only traffic item is an accident reported 22:07 along the optimal route, later than the segment's 21:57 start, and the speed bands on AYE and CTE are band 4 (30–39 km/h), which at most corroborates and cannot exempt on its own [F3][F4][F10][F11][F12][RD-4].\n\nAmount: the segment's extra 2.36 km × this trip's per-km rate = $26.93 ÷ 19.10 km = $1.4099/km; 2.36 km × $1.4099/km = $3.3274 → $3.33 [F4][F7][RD-2][RD-1]. The billed excess of $3.62 covers 2.57 km, which includes residual corridor/matching km that RD-2 does not refund, so only the segment's own extra km are refunded [F4].\n\nRD-6 does not apply: the driver profile shows 4 disputes but 0 upheld route disputes in 90 days, so this is not a repeated breach and no account flag is warranted [F15][RD-6]. The rider's profile facts are not used to decide anything [F14].",
   "cited_facts": [
    "F1",
    "F3",
-   "F5",
+   "F4",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -39,11 +40,12 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "Complete chat record shows no in-app messages and no rider agreement before 21:57:35 [F8]; the only claimed consent is the driver's post-trip statement 'I went round it' [F9], which is not consent (G11) and postdates the segment. No rider-named stop covers this stretch [F3]. The 2.36 extra km are refundable at the trip's metered rate under RD-2 [RD-1][RD-2][RD-3][RD-5]."
+    "reason": "No rider message agrees to this route before the segment began at 21:57 — there is no in-app chat at all [F8], and the driver's statement that the extra distance was unavoidable is a post-trip claim, not rider consent [F9][RD-5][G11]. No place was named by the rider, so RD-3 does not excuse it, and the only traffic record (accident at 22:07) postdates the segment's start [F3][F12][RD-4]. The 2.36 extra km are refundable under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -59,19 +61,20 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 3.33,
-  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider (RD-2 metered-mileage overcharge on the 2.36 non-exempt extra km of the off-route segment) and note the RD-1 breach on the driver's record.",
-  "confidence": 0.85,
-  "reasoning": "The trip is a metered RydeTAXI journey: optimal route 16.5 km, 19.1 km driven, +2.6 km (+16%) [F1], with one measured off-route segment 21:57–22:04 driving 4.13 km where the optimal route covers 1.77 km, adding 2.36 km and reaching up to 1304 m off the optimal route [F3]. That segment is an off-route segment under RD-1, and none of the exemptions excuses it, so RD-2 applies and the extra metered kilometres on it are refundable [F3][RD-1][RD-2].\n\nRD-5 fails: the case has no in-app chat at all [F8], so no rider message sent before 21:57:35 agrees to the route. The only proffered agreement is the driver's post-trip statement \"I went round it\" [F9]; a driver's claim of agreement appearing only in his statement is not consent, and a message after the segment began cannot establish consent [F9][F8][RD-5]. RD-3 gives no relief either — no rider-named stop was measured in this segment, so nothing is exempt on that basis [F3][RD-3].\n\nRD-4 does not exempt the segment: the Ayer Rajah Expressway accident was reported at 22:07, 0 m from the optimal route but after the off-route segment had already begun at 21:57 and near trip end, so it cannot be the reasonable cause for the stretch already driven [F3][F12]; the speed-band records (band 4, 30–39 km/h, not band 1 or 2) are only corroborative and speed band alone never exempts [F10][F11][RD-4]. The driver's \"accident … unavoidable\" claim is therefore not corroborated for the replaced stretch [F9][RD-4].\n\nAmount, per the trace formula: this trip's per-km rate = fare distance fare ÷ distance km = $26.93 ÷ 19.10 km = $1.4099/km [F7]; the non-exempt segment's extra 2.36 km × $1.4099/km = $3.33 [F3][F7][RD-2]. The 0.1 min meter waiting ($0.02) is RydeTAXI meter waiting time on a stop and is not refunded [F5][RD-3]. RD-6 is not triggered — 0 upheld route disputes in 90 days — so no account flag is added [F15][RD-6].",
+  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider for the unexcused off-route segment (RD-2); no account flag (RD-6 not met).",
+  "confidence": 0.88,
+  "reasoning": "The trip is RydeTAXI, so the fare is meter-based and detour km feed directly into the fare [F4][F7][RD-2][RD-1]. One off-route segment is on record: 21:57–22:04, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km [F3].\n\nNo exemption applies. The rider-requested-stop branch fails: there is no rider message naming any place, and in fact no in-app chat at all [F8][RD-3]. The consent branch fails: the only source of an alleged agreement is the driver's post-trip statement, which is a claim, not rider consent, and it is written after the segment [F9][RD-5][G11]. The reasonable-cause branch fails: the only traffic item is an accident reported 22:07 along the optimal route, later than the segment's 21:57 start, and the speed bands on AYE and CTE are band 4 (30–39 km/h), which at most corroborates and cannot exempt on its own [F3][F4][F10][F11][F12][RD-4].\n\nAmount: the segment's extra 2.36 km × this trip's per-km rate = $26.93 ÷ 19.10 km = $1.4099/km; 2.36 km × $1.4099/km = $3.3274 → $3.33 [F4][F7][RD-2][RD-1]. The billed excess of $3.62 covers 2.57 km, which includes residual corridor/matching km that RD-2 does not refund, so only the segment's own extra km are refunded [F4].\n\nRD-6 does not apply: the driver profile shows 4 disputes but 0 upheld route disputes in 90 days, so this is not a repeated breach and no account flag is warranted [F15][RD-6]. The rider's profile facts are not used to decide anything [F14].",
   "cited_facts": [
    "F1",
    "F3",
-   "F5",
+   "F4",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -88,11 +91,12 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "Complete chat record shows no in-app messages and no rider agreement before 21:57:35 [F8]; the only claimed consent is the driver's post-trip statement 'I went round it' [F9], which is not consent (G11) and postdates the segment. No rider-named stop covers this stretch [F3]. The 2.36 extra km are refundable at the trip's metered rate under RD-2 [RD-1][RD-2][RD-3][RD-5]."
+    "reason": "No rider message agrees to this route before the segment began at 21:57 — there is no in-app chat at all [F8], and the driver's statement that the extra distance was unavoidable is a post-trip claim, not rider consent [F9][RD-5][G11]. No place was named by the rider, so RD-3 does not excuse it, and the only traffic record (accident at 22:07) postdates the segment's start [F3][F12][RD-4]. The 2.36 extra km are refundable under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -106,15 +110,15 @@
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 9,
+ "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.88 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0006.record.json",
- "latency_s": 11.88,
- "input_tokens": 26821,
- "output_tokens": 2667,
- "requests": 3,
- "llm_calls": 3
+ "latency_s": 6.4,
+ "input_tokens": 12695,
+ "output_tokens": 1222,
+ "requests": 2,
+ "llm_calls": 2
 }

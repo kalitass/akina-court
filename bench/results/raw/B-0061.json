@@ -1,0 +1,76 @@
+{
+ "arm": "raw",
+ "case_id": "B-0061",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:37:54.700654+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "refund_partial",
+  "amount": 7.78,
+  "recommended_action": "Refund S$7.78 to the rider (issued as a Ryde voucher per NS-7) representing the metered distance overcharge from the second, unexempted detour (extra_km 5.52 × S$1.41/km); no account flag (driver's 90-day route_disputes_upheld_90d = 0, RD-6 not met) — record the RD-1 shortest-route violation on the driver file.",
+  "confidence": 0.72,
+  "reasoning": "RydeTAXI metered trip (fare.distance_km 19.52 vs quoted route 14.226 km; rate = 27.52 / 19.52 = S$1.41/km).\n\nSafety screen: read the complaint, chat and driver statement in full — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is route_deviation, so no SAFE escalation.\n\nSegment 1 (start, ~18:07:20–18:12:20; driver track follows the quoted route down AYE to the 1.28412,103.80183 tie-in, i.e. the AYE jam bypass). Timing is clean: chat 18:12:50 driver offers \"go round via Lower Delta Road\", rider 18:13:30 \"Sure, no problem.\" This is a specific named-road agreement, but the driven bypass was the AYE (furthermore the quoted route already runs down the AYE), and no record (stop, positioning message, road-name fact) ties segment 1 to Lower Delta Road. Under RD-5 + G13 a named-road agreement whose segment cannot be tied is \"undetermined\", and per the segment rules an undetermined finding that changes the amount or the flag goes to a human reviewer.\n\nSegment 2 (second off-route: 18:16:50–18:25:20, up realigned Central Expressway to ~1.28734,103.840281 then a U-turn back; and again 18:27:20–18:28:20 off-route near 1.3014,103.8371). The only rider consent on record is the 18:13:30 message, whose scope is \"via Lower Delta Road\"; a general route choice does not cover the driver's own later reroute/errand, and the driver's statement (\"the second turn-off was my GPS rerouting\") admits no prior rider agreement. RD-5 not satisfied → this segment counts (driver_errand / consent_after_or_none), with no RD-4 traffic incident to exempt it (traffic.incidents empty; the speed-band records — AYE band 5, CTE band 4 — are only corroborative, never standalone, and the CTE band actually contradicts the reroute rationale). RD-1 violation recorded.\n\nBecause the first segment is undetermined and it determines whether the refund is the full ~S$7.78 or partial (about S$5.39 if only the CTE deviation is counted), and because no pre-computed detour facts were supplied to settle the km exactly, the amount cannot be fixed on this record; evidence_status = insufficient (evidence_gap: driver's consent to a general-loop reading; mapping of the extra km to each off-route segment; no gps-detour facts given), so the case must be escalated for human confirmation. Recommended amount on today's reading: refund_partial S$7.78 (5.52 extra km × S$1.41), rider claims rejected except the unasked second detour.",
+  "cited_facts": [],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-3",
+   "RD-4",
+   "RD-5",
+   "RD-6",
+   "NS-7",
+   "SAFE-1",
+   "SAFE-2",
+   "G12",
+   "G13"
+  ],
+  "escalate": true,
+  "escalation_reason": "Undetermined segment 1 (rider's named-road consent 'Lower Delta Road' is not tied by the record to the segment actually driven) changes the refund amount (full ~S$7.78 if exempt vs partial ~S$5.39 if not), and no per-segment detour facts were given to settle the km; a human reviewer must confirm the extra_km split before the refund executes.",
+  "segment_findings": [
+   {
+    "fact_id": "seg1",
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "chat-2026-10-01T18:12:50+08:00",
+     "chat-2026-10-01T18:13:30+08:00"
+    ],
+    "reason": "Start detour along AYER RAJAH EXPRESSWAY (track 18:07:20–18:12:20 matches the quoted route's AYE leg to the 1.28412,103.80183 tie-in). The only consent in the chat is a reply given at 18:13:30, after the deviation began (the driver asked at 18:12:50), and its words name 'Lower Delta Road'; nothing in the record (no stop, no positioning message, no road-name fact) ties the driven segment to Lower Delta Road — the quoted route itself already runs down the AYE. RD-5 + G13: named road not tied to the segment → undetermined; per the segment rules an undetermined finding that changes the amount → escalate rather than auto-execute."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "ground": "driver_errand",
+    "basis": [
+     "chat-2026-10-01T18:12:50+08:00",
+     "chat-2026-10-01T18:13:30+08:00",
+     "driver_statement"
+    ],
+    "reason": "Second deviation: up the realigned CENTRAL EXPRESSWAY to ~1.28734,103.840281 and back (18:16:50–18:25:20), plus the short off-route near 1.3014,103.8371 (18:27:20–18:28:20). No rider message consented to this leg; the 18:13:30 consent covers only 'via Lower Delta Road' and a general route choice never covers the driver's own later reroute, and the driver's own statement says 'the second turn-off was my GPS rerouting'. RD-5 unsatisfied → counts; no RD-4 exemption as traffic.incidents is empty and the LTA speed bands (AYE band 5, CTE band 4) are corroborative only (RD-4(b), not standalone). RD-2: extra_km × S$1.41/km."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_gps_reroute_justification",
+    "reason": "RD-4 requires a traffic incident fact (traffic.incidents is empty) located on the replaced optimal-route leg; the driver's bare 'GPS rerouting' claim has no corroboration and RD-4(b) speed bands alone do not exempt."
+   },
+   {
+    "id": "rider_blanket_consent_to_second_detour",
+    "reason": "RD-5: the only pre-deviation consent (18:13:30) names 'Lower Delta Road'; a specific named-road agreement and a general loop authorisation do not cover the driver's later CTE detour, which RD-5 expressly excludes from route-choice consent."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No pre-computed off-route segment facts (gps-detour metric + extra_km per segment) were supplied, so the km attributable to each deviation must be derived from a thinned GPS trace (73 of 431 points); the consent-message scope ('Sure, no problem.' to 'go round via Lower Delta Road') cannot be tied to the segment actually driven (RD-5/G13), and the record therefore does not settle whether segment 1 is exempt, which changes the refund amount."
+ },
+ "latency_s": 9.03,
+ "input_tokens": 16938,
+ "output_tokens": 1948,
+ "requests": 1,
+ "llm_calls": 1
+}

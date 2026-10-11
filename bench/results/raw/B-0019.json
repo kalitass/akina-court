@@ -4,24 +4,22 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:55.901102+00:00",
+ "ts": "2026-10-10T17:36:16.337144+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Record the RD-1 finding on the driver's file (deviated from the shortest/most direct route with no rider consent), take no fare action because the RydeX fare is a fixed quote, and advise the rider that the detour is on record; refer the file to account review given the driver's repeated upheld route disputes.",
-  "confidence": 0.72,
-  "reasoning": "Safety screen: the chat log is empty, and neither the rider's complaint nor the driver's statement contains any threat, abuse, harassment or dangerous-driving allegation. Safety concern: none.\n\nRoute analysis (off-route segments): The quoted route runs Orchard Road -> Paterson/Orange Grove -> Grange Rd -> Napier Rd -> AYE -> Clementi Rd -> Kent Ridge to NUS. The GPS trace matches the quote closely from 14:13 to about 14:18 (Johor/CTE-side approach, Orchard, Paterson, Grange, Napier). From ~14:18 the trace leaves the quoted corridor: it heads NE on the CTE (1.279791,103.829900 -> 1.281478,103.824648), reaches a north-eastern apex around 1.294776,103.827883 (≈2.0 km off the quoted AYE corridor), then returns south onto the AYE (1.290308,103.823075) and rejoins the quote at ~1.284892,103.820801. Two off-route deviations are visible on the trace: seg1 ≈1.3 km extra (CTE loop, ~14:18–14:21) and seg2 ≈1.5 km extra (second CTE-loop up to 1.2948 and back, ~14:22–14:26), total ≈2.8 km of avoidable mileage.\n\nSegment findings: seg1 = counts (no rider-detour request, no consent in chat). seg2 = undetermined: on the thinned 30 s trace the geometry (north-east to 1.2948/103.8279 then back) is consistent with a genuine waypoint errand, and its exemption depends on a stop/waypoint fact that the record does not contain (no stop events, no chat). Missing evidence never favours either party. Because the case is RydeX (fixed quote), this undetermined segment cannot change the amount or the account flag — the ruling stays no_action in either reading — so it does not force escalation.\n\nConsent (RD-5): chat is empty; the driver's \"GPS rerouted me\" is a claim, and any verbal consent claim is not consent (G11). There is no rider message of any kind before either deviation. RD-3 does not apply (no rider-named stop). RD-4 does not apply: the only traffic records are AYER RAJAH EXPRESSWAY and CENTRAL EXPRESSWAY speed bands at band 4 (no congestion), and both lie on the quoted route corridor the driver LEFT, not on the segment he substituted; there are no LTA incidents.\n\nAmount: service type is RydeX — a fixed-quote, non-metered service (pricing \"fixed\", quote 10.679 km / 17.3 min, total $24.93). Under RD-2 the metered refund formula (extra_km × rate) does not apply; mileage changes do not change a fixed fare. No unpublished surcharge was added (waiting_fee 0, edit_destination_fee 0, tolls 0, cancellation_fee 0; ERP actual = $0). Refundable amount = 0 -> no_action, but the driver's RD-1 breach is recorded.\n\nFlag: RD-6 is satisfied on the record — the driver's profile shows route_disputes_upheld_90d = 2, so this case makes the route-deviation conduct repeated -> flag_account = true (account-review action only; the profile was not used to decide the route finding).",
+  "recommended_action": "Record the RD-1 breach on the driver's file (unexplained off-route loop) but maintain the fixed fare with no refund; send the driver account to Ryde for review as a repeat route-deviation offender; reply to the rider explaining that a RydeX fare is a fixed quote and the deviation has been noted.",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: chat is empty, the complaint is fee- and route-focused, and the driver's statement is neutral (\"the GPS rerouted me\"). No threat, harassment, sexual remark or dangerous-driving allegation anywhere in the record → safety_concern = none; no SAFE escalation.\n\nFare model: the trip is RydeX, a non-metered service with a fixed quote (fare.pricing = \"fixed\", base 3.90 + distance 15.06 + time 4.50 + platform 1.47 = 24.93). Per §0 / RD-2 (non-metered branch) a fixed quote does not vary with mileage, so no part of the fare can be refunded on a route-deviation theory. The fare breakdown shows no unmentioned add-ons (no tolls, no waiting fee, no edit-destination fee, no cancellation fee), so FARE-1 / FARE-2 produce nothing.\n\nRoute: quoted route 10.679 km @ 17.3 min. The GPS trace (30 s thinned grid) shows the driven path leaving the quoted corridor after ~14:22: at 14:22:15 the trace is at ~1.2943, 103.8243 while the quoted polyline at that longitude runs ~1.2780–1.2790 lat (≈1.8 km north). The vehicle continues east along the lat ≈1.284–1.294 line to ~103.8274–103.8279 (14:23:15, 14:23:45), then loops back west on the lat ≈1.2903–1.2926 line (14:24:15–14:24:45) before rejoining near 1.2783, 103.8285 (>1 km off the correct corridor for roughly 3 min — longer than any plausible map-matching or junction-artifact excursion), and continues west. Nothing in the record (no chat at all, no rider message) explains this loop; the driver's \"the GPS rerouted me\" is not a rider consent (RD-5 requires the rider's own pre-detour message; a driver's claim is not consent, G11). Ground: driver_errand / consent_after_or_none → counts (RD-1 / RD-5). One off-route segment only; the remaining 9+ km of trace samples sit within ~150–250 m of the quoted polyline and are treated as in-corridor.\n\nApplicable consequence: RD-2 non-metered branch → no distance refund (refundable amount 0 → no_action), but the RD-1 breach is recorded. RD-6: this case is \"成立\" (RD-1 violation recorded) AND driver.route_disputes_upheld_90d = 2 (≥ 1) → flag_account = true for Ryde account review.\n\nTraffic: LTA records show AYE and CTE at speed band 4 (≈40–50 km/h) over the trip window and no incidents; band 4 is not band 1 or 2, so RD-4 gives no reasonable-cause exemption (and RD-4(b) alone is only corroborative anyway). Evidence: the GPS trace is complete with no gaps > 2 min, so evidence_status = sufficient.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-4",
    "RD-5",
    "RD-6",
-   "G11",
-   "G12"
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -29,39 +27,30 @@
    {
     "fact_id": "seg1",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "Trace leaves the quoted corridor at ~14:18 onto the CTE (1.279791,103.829900 -> 1.281478,103.824648) and rejoins near AYE at ~1.284892,103.820801, adding ≈1.3 km. No rider message, no named stop, no traffic incident on the substituted segment (AYER RAJAH EXPRESSWAY and CENTRAL EXPRESSWAY bands are band 4 and lie on the quoted route, not on the substituted segment). RD-1: unexplained deviation; RD-4 not met; RD-5 not met (no consent)."
-   },
-   {
-    "fact_id": "seg2",
-    "finding": "undetermined",
-    "basis": [],
-    "reason": "Trace loops NE to ~1.294776,103.827883 (≈2.0 km off the quoted AYE corridor) and back, adding ≈1.5 km, ~14:22–14:26. Whether this was a rider-requested waypoint/errand (exempt under RD-3(a)/RD-5) or an unexplained detour (counts under RD-1) cannot be read from the thinned GPS trace alone — no stop events and no chat exist. Record is not positive enough to find consent (G11/G12). Immaterial to the outcome: RydeX fixed fare means no amount changes and no flag turns on it, so no escalation is required."
+    "reason": "The driven trace leaves the quoted corridor and runs >1 km north-east of it for roughly 3 minutes (14:22:15–14:24:45; sampled points ~1.290–1.294 N vs quoted ~1.279 N at the same longitudes) before looping back and rejoining. No rider message exists in the chat (empty record) and the driver's 'GPS rerouted me' statement is not rider consent, so no RD-5 consent covers the segment; it is an unexplained deviation under RD-1 and is not exempted by RD-3 or RD-4 (traffic bands 4, no incidents). Consequence: counts as an off-route segment; under RD-2 (non-metered) the refundable amount is 0, so no fare is returned but the RD-1 breach is recorded."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver-statement-GPS-rerouted",
-    "reason": "Rejected: the GPS trace shows two active deviations (NE onto the CTE, and a loop up to 1.2948/103.8279) beyond the quoted corridor and off the AYE, which is the shortest/direct route (RD-1). A GPS 'rerouting' is not a reasonable cause under RD-4 — no incident and no band ≤ 2 congestion on the substituted segment."
+    "id": "rider_refund_request",
+    "reason": "The rider paid a fixed RydeX quote (fare.pricing = 'fixed'); under §0 and RD-2 (non-metered branch) mileage changes do not change the fare, and no unmentioned add-on was charged, so there is nothing to refund — RD-2 yields 0 → no_action. The deviation is nevertheless recorded as an RD-1 breach."
    },
    {
-    "id": "implicit-consent-claim",
-    "reason": "Rejected: no rider message exists in the chat log, and any verbally-agreed route change recounted by the driver is a claim, not consent (G11, RD-5)."
-   },
-   {
-    "id": "rider-route-choice-claim",
-    "reason": "Not applicable: the rider filed the complaint; nothing in the record authorises the driver's route choice, so the deviations are not covered by any general route authorisation (RD-5)."
+    "id": "driver_gps_excuse",
+    "reason": "Claimed 'the GPS rerouted me' without any rider message; a driver's own account is not rider consent (RD-5, G11) and no LTA band-1/2 congestion or incident supports a reasonable-cause exemption under RD-4, so the segment stays unexplained."
    }
   ],
   "flag_account": true,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": ""
+  "evidence_gap": null
  },
- "latency_s": 8.92,
- "input_tokens": 14967,
- "output_tokens": 1640,
+ "latency_s": 7.2,
+ "input_tokens": 15358,
+ "output_tokens": 1446,
  "requests": 1,
  "llm_calls": 1
 }

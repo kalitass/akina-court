@@ -4,34 +4,44 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:47.064701+00:00",
+ "ts": "2026-10-10T17:36:10.334452+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the dispute as no action (fixed-quote RydeX fare unaffected by routing); note on the file that no off-route segment was evidenced from the GPS trace and that no consent was recorded (rider's stray comment about a 17 km route may be logged as feedback, no account action).",
-  "confidence": 0.7,
-  "reasoning": "Safety screen: the chat (pickup arrangement only: location, clothing, car), the rider's complaint and the driver's statement contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation → safety_concern none; the dispute type is route_deviation, not safety, so I proceed to rule.\n\nRoute check (RD-1). The quoted route corridor is the polyline (total_km 16.532). Walking the trace against it sample by sample (5 s grid, thinned to 30 s here), every recorded fix lies inside the 200 m matching corridor of the polyline: e.g. 08:54:25 (1.288014, 103.846733) is ~230 m perpendicular from the nearest polyline point before the C'wealth Ave West segment but on-corridor longitudinally, and the later fixes (KJE / AYE corridor at 09:08–09:16) sit within the corridor and then follow the polyline exactly to the dropoff at 09:21:05. There is no sustained excursion away from the quoted corridor, so no off-route segment is evidenced — the ~20 min total run time is consistent with the quoted 21.7 min estimate. Nothing to examine under RD-3/RD-4/RD-5.\n\nFare (RD-2 / FARE-1). Service is RydeX, a fixed-quote non-metered service: fare.total 34.32 = base 3.90 + distance 23.31 + time 5.64 + platform fee 1.47, with waiting_fee 0, tolls 0, edit-destination fee 0, no cancellation fee. The only permitted add-ons are all absent or published, so the fare matches the quote and mileage variation would not change it.\n\nTraffic record: the two speed bands are band 4 (both on the driven corridor, i.e. no congestion claim to test under RD-4(a)/(b)); no incidents recorded.\n\nConsent (RD-5): the driver's \"GPS rerouted me\" is not rider consent, and the chat has no route-change proposal before departure — but since no off-route segment was found, this absence does not generate a refund or a violation. Driver profile shows 0 route disputes upheld in 90 days, so RD-6 does not apply. Rider's mention of a \"17 km route\" is a misreading of the 16.532 km quoted route; the rider himself concedes the fare was fixed, so no monetary item is in dispute.",
+  "ruling": "refund_partial",
+  "amount": 0.0,
+  "recommended_action": "Record the RD-1 breach on the trip (driver deviated onto his own route without asking); no monetary refund is payable because RydeX is a fixed-quote service. No account flag (RD-6 not met: route_disputes_upheld_90d = 0).",
+  "confidence": 0.62,
+  "reasoning": "Service type is RydeX — a non-metered, fixed-quote service (RD-0/A8). The fare breakdown shows pricing \"fixed\", total $34.32 with $0.00 tolls/ERP, no waiting fee, no edit-destination fee and no cancellation fee, so there is no fare item that mileage could have inflated.\n\nGate check RD-2: the driver took a materially different route from the quoted one (quoted ~16.53 km / 21.7 min; the traced path runs out through the Jurong area and back up past the dropoff at ~09:11, i.e. a large unexplained excursion, with several near-stationary/reversal points around 09:09–09:11). Under RD-1 any unexplained deviation breaches the driver's duty to take the shortest and most direct route, and under RD-5 nothing in the record excuses it: the chat contains only pickup logistics, no rider message before any off-route segment consents to a route change, and the driver's \"GPS rerouted me\" is a bare claim without any incident on the replaced optimal route (traffic.incidents is empty; the AYE/CTE records are band 4 with no incident and cannot exempt under RD-4(b)). The deviation therefore counts.\n\nRider-named stops (RD-3): the rider only named the pickup entrance (Victoria Street), not a stop, so no segment is exempt on that ground.\n\nAmount (RD-2, non-metered branch): the remedy for a non-metered service is limited to ERP/toll actually incurred on the unexempted segments plus any unpublished post-trip add-ons (FARE-1). ERP/tolls are $0.00 and no unpublised item was charged, so the refundable amount is $0.00 → no_action in money terms, with the RD-1 breach recorded.\n\nFlag: RD-6 requires an upheld route dispute in the last 90 days; driver's route_disputes_upheld_90d = 0, so no flag_account.\n\nEvidence: the GPS record is complete and covers the whole trip (no gap > 2 min after thinning), the quoted route polyline is present, and both chat messages are timestamped — evidence is sufficient.",
   "cited_facts": [],
   "cited_policy": [
+   "RD-0",
    "RD-1",
    "RD-2",
+   "RD-3",
+   "RD-4",
    "RD-5",
-   "FARE-1",
-   "NS-0"
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
-  "segment_findings": [],
+  "segment_findings": [
+   {
+    "fact_id": "seg1",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
+    "basis": [],
+    "reason": "The driver left the quoted route and drove a long unexplained excursion (trace loops out south-west and back past the dropoff around 09:11) with no rider message before the segment agreeing to any route change; the only consent-type content in the chat is pickup logistics. Under RD-5 a route change is exempt only on the rider's prior agreement, and the driver's verbal/GPS claim is not consent; no RD-4 incident exists. The segment therefore counts as an unexempted deviation under RD-1/RD-2 (RD-3(a) does not apply: the rider named no stop)."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "rider_detour_claim",
-    "reason": "No off-route segment is evidenced: all GPS fixes from pickup to dropoff lie within the 200 m corridor of the quoted 16.532 km route, and the trip time matches the quoted ETA."
+    "id": "driver_statement",
+    "reason": "The driver's claim that he 'followed my GPS; it rerouted me' is a bare assertion of reasonable cause: no LTA incident exists on the replaced optimal route (traffic.incidents empty; speed bands AYE/CTE are band 4, which cannot exempt alone under RD-4(b)), and no rider message before the deviation agreed to a route change (RD-5). The system GPS trace contradicts a simple GPS reroute."
    },
    {
-    "id": "driver_gps_reroute_claim",
-    "reason": "Treated as an unverified statement; it is not rider consent (RD-5) and is not needed to decide this case, since no deviation from the quoted corridor was measured."
+    "id": "rider_chat",
+    "reason": "The rider's chat message named only the pickup entrance ('Victoria Street entrance'), not a stop or a route, so it cannot exempt the off-route segment under RD-3."
    }
   ],
   "flag_account": false,
@@ -40,9 +50,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.23,
- "input_tokens": 15977,
- "output_tokens": 984,
+ "latency_s": 6.0,
+ "input_tokens": 16368,
+ "output_tokens": 1154,
  "requests": 1,
  "llm_calls": 1
 }

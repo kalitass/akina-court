@@ -4,17 +4,18 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:19:29.922335+00:00",
+ "ts": "2026-10-10T17:38:33.133759+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 6.74,
-  "recommended_action": "Refund S$6.74 (seg2 extra_km 4.78 × S$1.4100/km) to the rider as a Ryde voucher; record the RD-1 breach on the driver's file for the 19:03–19:12 unexplained deviation.",
-  "confidence": 0.79,
-  "reasoning": "Safety screen: the two chat messages [F9][F10] concern a route proposal only; the driver's post-trip statement [F12] and the complaint contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. Nothing to escalate on SAFE-1/SAFE-2.\n\nService type: RydeTAXI (metered), so a route deviation that adds distance adds fare (policy §0; RD-2 RydeTAXI branch, unit rate S$1.4100/km from F5). Two off-route segments are on the table and each is reviewed separately under RD-1.\n\nSegment A [F3] 18:46–18:56, +5.66 km: the driver proposed before leaving the optimal route to go round the jam via Rifle Range Road [F9, 18:42], the rider agreed 18:43 [F10] and that agreement precedes the segment start (18:46) → RD-5 satisfied. The rider's complaint itself concedes this leg (\"I agreed to go round the jam near the start\"). The stated reason is a jam on the BKE, and the traffic fact shows BKE at speed band 4 (30–39 km/h) in the trip window [F13], but band 4 is not band 1–2 and there is no incident record [F15], so RD-4 does not exempt it — the consent under RD-5 does. Finding: exempt.\n\nSegment B [F4] 19:03–19:12, +4.78 km: no chat message covers it (the record has exactly two messages, both about the first reroute) [F11], so there is no rider consent for this segment. The driver's statement calls it \"my GPS rerouting\" [F12]; a driver's own account cannot convert an unreserved segment into an exempt one and he named no alternative road, so the reading is that the segment counts (RD-1). RD-4 fails as well: no traffic incident on the optimal route [F15], and the only band facts are band 4 [F13][F14], which cannot exempt a segment on their own (RD-4(b)). Finding: counts.\n\nAmount [RD-2]: refund = Σ(unexempt segment extra_km) × this trip's per-km rate = 4.78 km × S$1.4100/km = S$6.7398 → S$6.74. Only the metered distance unit is refunded; the trip's other excess mileage (the unattributed remainder between the billed 10.38 km and the segment sums, F1/F5) is not refundable, and the waiting charge F6 (S$0.11, 0.4 min of meter waiting, and the segment's stop time) is not refunded under RD-2/RD-3(c). Rider is not the party at fault, so no account flag on the rider; the driver's profile shows 0 upheld route disputes in 90 d [F18], so RD-6's \"repeated\" condition is not met and flag_account is not applied.\n\nEvidence status: sufficient — GPS segments are timed, the chat record is complete and fully timestamped [F11], and the fare breakdown gives the per-km rate [F5].",
+  "recommended_action": "Issue a Ryde voucher of $6.74 to the rider for the unexempted second detour (19:03–19:12); record the driver's RD-1 shortest-route breach for account monitoring.",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: chat is a two-message routing exchange ([F9][F10][F11]); the driver statement [F12] is a route explanation only; the complaint is about the second detour. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation — safety_concern = none.\n\nRoute deviation (RydeTAXI, so detour km feed the meter — [F5][F8]). Two off-route segments.\n\nSegment 1 (18:46–18:56, +5.66 km, [F3]): before it began, the driver proposed going round the jam via Rifle Range Road ([F9], 18:42) and the rider replied \"Sure, your call.\" ([F10], 18:43). The rider's own message precedes the segment, so RD-5 consent exists; read in scope, this is a general route choice to avoid the jam (\"your call\" on a route round a named jam), which RD-5 covers for the route chosen to reach the destination → exempt. The rider's complaint concedes this part. (Traffic facts do not independently exempt it: the alternatives sat at speed band 4 and [F13]/[F14] are not band 1–2; RD-4(b) does not exempt on its own, and [F15] shows no incident. Exemption rests on RD-5 consent, not RD-4.)\n\nSegment 2 (19:03–19:12, +4.78 km, [F4]): no rider message before this segment asks for or agrees to it — the only pre-segment consent ([F10]) covers the first route change. The driver's statement that \"the second turn-off was my GPS rerouting\" ([F12]) is a claim made after the trip and cannot extend the earlier consent; a general route choice covers the route to the destination, not a later unexplained second detour. Ground: consent_after_or_none → counts (RD-5, RD-1).\n\nRefund (RD-2, metered RydeTAXI): only the unexempted segment's extra km × this trip's per-km rate = 4.78 km × $1.4100/km ([F5], distance fare ÷ distance km) = $6.74. Segment 1 is exempt; the remaining excess (10.38 − 4.78 = 5.60 km) and the waiting amount ([F6], legitimately metered) are not refunded.\n\nRD-6: the driver profile shows 1 route dispute upheld in 90 d ([F18]), but this case's route dispute — no. RD-6 requires THIS case to establish a route violation AND route_disputes_upheld_90d ≥ 1; the upheld dispute here is a no-show (route: 0), so no flag_account.\n\nEvidence status sufficient: GPS [F3][F4], itemised fare [F5][F8] and fully timestamped chat [F11] settle every element.",
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
@@ -32,68 +33,52 @@
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
-   "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-4"
   ],
   "escalate": false,
-  "escalation_reason": "null",
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "general_route_consent",
     "basis": [
      "F9",
      "F10"
     ],
-    "reason": "RD-5 / RD-3(a): the driver proposed routing around the BKE jam via Rifle Range Road at 18:42 before leaving the optimal route, and the rider's own timestamped message agreed at 18:43, i.e. before the segment start 18:46; the rider's complaint concedes this leg. The chat is complete and every message is timestamped [F11]."
+    "reason": "The driver proposed a route round the jam (\"ok if I go round via Rifle Range Road?\", 18:42) and the rider's own timestamped reply \"Sure, your call.\" (18:43) precedes this segment's start (18:46). Under RD-5 this general route choice, made to reach the destination, covers the first detour; the rider's complaint also concedes it."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
-     "F11",
+     "F10",
      "F12"
     ],
-    "reason": "RD-1 / RD-5: no chat message covers this 19:03–19:12 segment — the record holds only the two messages about the first reroute; the driver's post-trip claim of GPS rerouting is a statement only and names no road, so nothing ties an agreement to this segment; RD-4 gives no cover either (band 4 traffic only [F13][F14], no incident [F15]). The S$14.64 (10.38 km) excess billed [F5] is 5.66 + 4.78 km, plus 0.06 km matching noise; the 0.06 km and the noise-tolerance mileage are not refundable, only the 4.78 km segment, giving 4.78 × S$1.4100 = S$6.74."
-   },
-   {
-    "fact_id": "F3",
-    "finding": "exempt",
-    "basis": [
-     "F13"
-    ],
-    "reason": "Reconsidered under RD-4 as an alternative basis: the stated cause was congestion on the BKE, and the traffic fact confirms BKE at speed band 4 in the trip window. Band 4 is not band 1–2 and there is no incident record [F15], so RD-4 does not by itself exempt the segment — the exemption rests on RD-5 consent. The amount is unaffected; the only change would be the grounds."
+    "reason": "No rider message before 19:03 covers a second detour; the only prior consent ([F10]) is spent on segment 1. The driver's post-trip claim of \"GPS rerouting\" ([F12]) is not rider consent (RD-5), so this 4.78 km detour is an unexempted route deviation under RD-1/RD-2."
    }
   ],
   "rejected_claims": [
    {
     "id": "F12",
-    "reason": "The driver's statement that 'the rider agreed' and that the second turn-off was GPS rerouting: a verbal/claimed agreement not present in the chat is not consent under RD-5 (G11), and the chat record [F11] shows only the first reroute was discussed. The driver also names no road for the second segment, so no record ties it to any agreed route (RD-5, G13)."
+    "reason": "Driver statement that the second turn-off was GPS rerouting / that the rider agreed — made after the trip, not a rider message before the segment; per G11/RD-5 a driver's claim of verbal agreement is not consent, and it does not extend the earlier general route consent to the later detour."
    },
    {
-    "id": "F13",
-    "reason": "BKE speed band 4 (30–39 km/h) used as a stand-alone excuse: RD-4 requires band 1–2 and/or an incident on the replaced optimal-route segment within the window; band 4 is congestion, not a 'reasonable cause' strong enough to exempt a deviation on its own (RD-4(b))."
-   },
-   {
-    "id": "F14",
-    "reason": "PIE speed band 4: unrelated to either off-route segment and not tied to the replaced optimal-route stretch; no exemption follows."
-   },
-   {
-    "id": "F6",
-    "reason": "Rider's implicit request for the whole excess: an RD-2 refund covers only unexempt segment extra_km; the 0.06 km unattributed difference and the 0.4 min meter waiting charge stay with the rider."
+    "id": "RD-4",
+    "reason": "Traffic facts do not exempt either segment: [F15] records no incidents on the optimal route, and [F13]/[F14] show speed band 4, not the band 1–2 required by RD-4(b), which in any case does not exempt on its own."
    }
   ],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": "null"
+  "evidence_gap": null
  },
- "latency_s": 8.5,
- "input_tokens": 9975,
- "output_tokens": 1870,
+ "latency_s": 6.44,
+ "input_tokens": 10366,
+ "output_tokens": 1409,
  "requests": 1,
  "llm_calls": 1
 }

@@ -1,0 +1,88 @@
+{
+ "arm": "facts_only",
+ "case_id": "B-0061",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:40:14.158216+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "refund_partial",
+  "amount": 2.4,
+  "recommended_action": "Refund SGD 2.40 (voucher) for the 1.70 km unexempted detour in segment 18:26–18:31; no account flag (driver has no upheld route disputes in 90 d).",
+  "confidence": 0.82,
+  "reasoning": "RydeTAXI trip, so detour kilometres feed the meter (policy §0, RD-2).\n\nSegment A (F3, 18:17–18:23, +2.98 km): rider chat before the segment — driver asked at 18:12 to \"go round via Lower Delta Road\", rider agreed at 18:13 [F9][F10][F11]. The consent names a road and is tied to the driven segment by the driver's own account [F12] and the chat, so no rider message is contradicted. Counts as agreed route change → exempt (RD-5 named-road agreement). The traffic band on AYE/Central Expressway [F13][F14] corroborates the jam the driver described, and no incident was recorded [F15].\n\nSegment B (F4, 18:26–18:31, +1.70 km): no rider message covers it — the only agreement was to the Lower Delta Road loop; the driver admits the second turn-off was his own GPS rerouting [F12]. That is a driver-chosen off-route segment with no prior rider consent → counts (RD-1, RD-5). No traffic incident on the optimal route in the trip window [F15], and band 5 on AYE is nowhere near the \"severe congestion\" band 1–2 required by RD-4(b), so no reasonable-cause exemption applies.\n\nAmount (RD-2, RydeTAXI): only the unexempted segment's extra km are refundable. Rate = fare.distance_fare ÷ fare.distance_km = $27.52 ÷ 19.52 km = $1.4098/km [F8]. 1.70 km × $1.4098 = $2.3967 → $2.40. Nothing else is refundable: the $0.11 waiting charge is a metered waiting unit [F6] (RD-3(c), RydeTAXI waiting is chargeable), and the remaining mileage difference ($7.46 excess [F5] minus the two segments) is not attributable to any identified off-route segment.\n\nNo RD-6 flag: the case is upheld against the driver (refund > 0), but the rider's own profile shows 0 upheld route disputes in 90 days [F18], so no `flag_account`.",
+  "cited_facts": [
+   "F1",
+   "F3",
+   "F4",
+   "F5",
+   "F6",
+   "F8",
+   "F9",
+   "F10",
+   "F11",
+   "F12",
+   "F13",
+   "F14",
+   "F15",
+   "F18"
+  ],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-3",
+   "RD-4",
+   "RD-5"
+  ],
+  "escalate": false,
+  "escalation_reason": null,
+  "segment_findings": [
+   {
+    "fact_id": "F3",
+    "finding": "exempt",
+    "ground": "named_road_tied",
+    "basis": [
+     "F9",
+     "F10",
+     "F11",
+     "F12"
+    ],
+    "reason": "Driver asked at 18:12 whether he could go round via Lower Delta Road and the rider agreed at 18:13, both before the 18:17 segment started; the driver's own account ties the first diversion to that request, so the segment falls within the agreed named-road route change (RD-5)."
+   },
+   {
+    "fact_id": "F4",
+    "finding": "counts",
+    "ground": "driver_errand",
+    "basis": [
+     "F9",
+     "F10",
+     "F12",
+     "F15"
+    ],
+    "reason": "The rider's only consent covered the Lower Delta Road loop; the driver states the second turn-off was his own GPS rerouting with no fresh rider message before 18:26, and no traffic incident justified it (RD-1, RD-5, RD-4)."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement_verbal_consent",
+    "reason": "The driver's post-trip statement is a claim, not consent; only the rider's own prior message can authorise a detour (G11 / RD-5). It covers Segment A by the chat [F10], but not Segment B."
+   },
+   {
+    "id": "weather_mitigation",
+    "reason": "Weather was Fair with 0.0 mm rain [F16]; it does not excuse the second off-route segment under RD-4."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
+ },
+ "latency_s": 5.21,
+ "input_tokens": 10363,
+ "output_tokens": 1262,
+ "requests": 1,
+ "llm_calls": 1
+}

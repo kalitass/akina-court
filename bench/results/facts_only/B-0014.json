@@ -4,24 +4,28 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:19:33.047755+00:00",
+ "ts": "2026-10-10T17:38:36.947707+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 5.82,
-  "recommended_action": "Refund S$5.82 to the rider as a Ryde voucher (unexempted detour mileage on the 22:02–22:09 segment); no account flag needed.",
-  "confidence": 0.78,
-  "reasoning": "Safety screen: F8 shows no in-app chat; F9 is a factual explanation (accident/road diversion), complaint contains no threat, harassment or dangerous-driving allegation. safety_concern = none.\n\nThis is a RydeTAXI metered trip (F7 shows distance and time units), so extra distance enters the fare (RD-2 taxi branch). Two off-route segments: F3 (21:42–21:49, +2.69 km) and F4 (22:02–22:09, +3.13 km). No chat consent exists at all (F8), and the driver's \"unavoidable\" claim in F9 is a post-trip statement, not rider consent (RD-5/G11), so no segment is exempted by agreement.\n\nRD-4 traffic justification: F12 logs a real LTA accident at 21:26, 0 m from the optimal route on the Kallang Paya Lebar Expressway (towards TPE), reported before the trip and inside the trip window; F11 shows that same expressway at speed band 4. The complaint's optimal route Marina Bay Sands → Tampines Mall plausibly uses KPE towards TPE, and the first detour (21:42–21:49) turns off shortly after the accident location — so segment F3 is exempt as a reasonable cause to avoid an incident on the replaced optimal stretch (RD-4(a), with (b) as corroboration). Segment F4 (22:02–22:09, 997 m off route, near the end of the trip) is not tied to the KPE accident point recorded 0 m from the route, and only PIE band 5 / KPE band 4 (not band 1–2) appear; RD-4(b) cannot exempt on its own, so F4 counts under RD-1/RD-2.\n\nArithmetic: per-km rate = distance fare ÷ distance km = $31.84 ÷ 22.58 = $1.41010/km [F5, F7]. Refund = unexempted extra_km × rate = 3.13 km × $1.41010 = $4.41. The $9.45 excess-distance line also contains unattributed mileage (6.70 km total vs 3.13 + 2.69 = 5.82 km in identified segments, i.e. 0.88 km of corridor/matching variance) which is not refundable under RD-2. If the rider's route was intended to avoid KPE entirely, the F3 exemption would not apply and the amount would rise to (2.69 + 3.13) × $1.41010 = $8.21; that is a route-identification question for Ryde. RD-6 flag not applied: driver profile shows route disputes upheld in 90 d = 0 [F15], so the \"repeated\" condition is not met (this case is his first upheld route finding).",
+  "amount": 9.45,
+  "recommended_action": "Refund $9.45 (voucher) for the two unexempted detour segments (6.70 km × $1.4101/km); no account flag warranted (driver profile shows 0 upheld route disputes in 90 d).",
+  "confidence": 0.8,
+  "reasoning": "Safety screen: no chat messages [F8]; the driver's post-trip statement [F9] recounts a traffic obstruction — no threat, abuse, harassment or dangerous-driving allegation. Nothing else in the complaint or statement is safety-relevant. safety_concern = none.\n\nRoute deviation (RydeTAXI — metered, so extra distance flows into the fare): two off-route segments, [F3] 21:42–21:49 (+2.69 km) and [F4] 22:02–22:09 (+3.13 km); total +6.7 km / +42% [F1]. The driver invokes \"reasonable cause\" (RD-4) [F9]. RD-4 requires traffic evidence targeted at the replaced portion of the optimal route. Here the only incident is [F12] — an accident at 21:26 on Kallang Paya Lebar Expressway (towards TPE) after Sheares Avenue Exit, 0 m from the optimal route, i.e. reported before both segments and inside the trip window (21:38–22:12). The detail \"Avoid lane 2\" indicates a single lane restriction, not a road block, and the corroborating bands [F10] PIE band 5 (40–49 km/h) and [F11] KPH band 4 (30–39 km/h) are both moderate, not band 1–2 (RD-4(b) is corroborating only and cannot exempt on its own). Neither segment is placed by any record on KPH; the first detour reaches 1084 m from the optimal route and the driver's own account gives no named alternative tying the driven road to KPH. Nothing places either segment elsewhere either, so no exemption can be established and no consent exists at all: no chat at all [F8], and the driver's claimed verbal justification is a statement, not rider consent (RD-5, G11). Both segments therefore count as unexempted under RD-1/RD-2.\n\nArithmetic (RD-2, RydeTAXI): unexempted extra km = 2.69 + 3.13 = 5.82 km by segment, but the fare's excess-distance figure uses the integrity-checked total of 6.70 km [F5], billed at this trip's own per-km rate $31.84 ÷ 22.58 km = $1.4101/km → 6.70 × 1.4101 = $9.45. Refund that amount; the residual route-corridor/jitter distance that is not attributed to any segment is not refunded. Waiting fee $0.00 [F7] and platform fee $1.47 are published items, nothing extra to waive; ERP/toll field absent, so FARE-2 untriggered.\n\nAccount flag: RD-6 requires refund > 0 (met) AND route_disputes_upheld_90d ≥ 1. Driver profile [F15] shows 1 dispute, 1 upheld, of which route: 0 — so no upheld route dispute. flag_account not applied.\n\nEvidence status: sufficient — GPS segments with times, complete fare data, and a traffic incident tied to the optimal route; no missing record changes the outcome.",
   "cited_facts": [
+   "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
    "F7",
    "F8",
    "F9",
+   "F10",
    "F11",
    "F12",
+   "F14",
    "F15"
   ],
   "cited_policy": [
@@ -36,45 +40,37 @@
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
+    "finding": "counts",
+    "ground": "driver_errand",
     "basis": [
-     "F12",
-     "F11"
+     "F8",
+     "F9",
+     "F12"
     ],
-    "reason": "RD-4(a): an LTA-recorded accident (21:26, 0 m from the optimal route, Kallang Paya Lebar Expressway towards TPE) reported before the segment began and still listed in the trip window gives reasonable cause for the early detour onto an alternative expressway; KPE at band 4 [F11] corroborates (RD-4(b), not relied on alone). No rider consent was required."
+    "reason": "RD-4 not satisfied: the only incident [F12] is on KPH, a motorway where an 'avoid lane 2' restriction is not a block, and no record ties the 21:42–21:49 segment (up to 1084 m off the optimal route) to any road; bands [F10][F11] are moderate (band 5 / band 4) and cannot exempt alone. No rider consent: no chat messages at all [F8]; the driver's claimed rationale is a post-trip statement, not consent (RD-5, G11). Segment counts under RD-1/RD-2."
    },
    {
     "fact_id": "F4",
     "finding": "counts",
+    "ground": "driver_errand",
     "basis": [
+     "F8",
+     "F9",
      "F12"
     ],
-    "reason": "RD-4 not satisfied for this segment: the 22:02–22:09 detour (997 m off the optimal route, near the final approach) is not tied to the incident point recorded 0 m from the route on KPE, and the only speed records are PIE band 5 / KPE band 4 [F10, F11], which RD-4(b) cannot use to exempt on its own. With no chat record of consent [F8] and the driver's post-trip statement not counting as consent (RD-5/G11), this is an unexempted detour under RD-1 and the extra 3.13 km is refundable under RD-2."
+    "reason": "Second off-route loop 22:02–22:09 (up to 997 m off route, +3.13 km). Same analysis: the RD-4 incident occurred at 21:26 with only a lane-2 advisory, and nothing in the record places this segment on KPH or on any route the rider agreed to. No consent appears in the chat [F8]. Segment counts under RD-1/RD-2."
    }
   ],
-  "rejected_claims": [
-   {
-    "id": "driver-statement-F9",
-    "reason": "F9 states the extra distance was 'unavoidable' due to the KPE accident. The traffic record [F12] supports only the early detour (F3), which is already exempted; it does not cover the second detour near Tampines (F4), so the claim of full unavoidability is rejected for RD-4 purposes. The statement is also a post-trip assertion, not rider consent under RD-5/G11."
-   },
-   {
-    "id": "rider-no-consent",
-    "reason": "The rider's claim that no change was agreed is accepted and is consistent with the record: there are no in-app messages [F8]. This does not, however, defeat the statutory'reasonable cause' exemption under RD-4 for the accident-linked segment F3."
-   },
-   {
-    "id": "flag-account-RD-6",
-    "reason": "RD-6 requires route disputes upheld in the last 90 days >= 1; F15 shows driver route disputes upheld = 0, so no account flag arises from this case."
-   }
-  ],
+  "rejected_claims": [],
   "flag_account": false,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.9,
- "input_tokens": 9933,
- "output_tokens": 1582,
+ "latency_s": 6.18,
+ "input_tokens": 10324,
+ "output_tokens": 1347,
  "requests": 1,
  "llm_calls": 1
 }

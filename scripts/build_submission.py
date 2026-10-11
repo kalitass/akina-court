@@ -156,6 +156,8 @@ def build() -> dict:
         "numbers": {
             "cases": n,
             "arms": {arm: {"exact": cnt(arm), "wrong_executed_single_call": S[arm].get("wrong_executed", 0), "core_wrong": G[arm]["core_wrong"],
+                           # right, or handed to a person: only a wrong decision that executes counts against a system
+                           "safe": n - S[arm].get("wrong_executed", 0),
                            "wrong_and_executed_with_gate": G[arm]["wrong_and_executed"], "auto": G[arm]["auto"], "human": G[arm]["human_flow"],
                            "blocked_by_gate": G[arm]["blocked_by_gate"]} for arm in ("raw", "facts_only", "judge_only", "court")},
             "court": {"auto": G["court"]["auto"], "human": G["court"]["human_flow"], "flags": flags,
@@ -174,6 +176,11 @@ def build() -> dict:
                        "tokens_x": round(ct["input_tokens_mean"] / raw["input_tokens_mean"]) if raw["input_tokens_mean"] else None,
                        "judge_only_token_share": round(ct["input_tokens_mean"] / jo["input_tokens_mean"]) if jo["input_tokens_mean"] else None},
             "types": {t: sum(1 for c in d["manifest"]["cases"] if c["type"] == t) for t in ("route_deviation", "no_show", "safety")},
+            # how varied the set is: every case is one scenario line in data/synth/scenarios.py; its conditions are the
+            # labels the generator injected (consent wording, stops, incidents, bands, weather, fare type, priors, waits ...)
+            "scenarios": {"distinct": len({c["name"] for c in d["manifest"]["cases"]}),
+                          "dimensions": len({k for c in d["manifest"]["cases"] for k in c["conditions"]}),
+                          "condition_sets": len({json.dumps(c["conditions"], sort_keys=True) for c in d["manifest"]["cases"]})},
             "human_reasons": human_reasons(court_base),
             "provenance": {"runs": len(rows), "calls": sum(r.get("llm_calls", 0) for r in rows), "input_tokens_m": round(sum(r.get("input_tokens", 0) for r in rows) / 1e6, 1),
                            "window": window, "window_date": ts[0][:10], "http_calls": (au or {}).get("http_calls"), "audit_runs": (au or {}).get("runs"),

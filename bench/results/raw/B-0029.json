@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:23.359011+00:00",
+ "ts": "2026-10-10T17:36:40.991136+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a $6.61 Ryde voucher (fee was charged although the rider cancelled within the 3-minute free window); no driver-side action.",
-  "confidence": 0.92,
-  "reasoning": "Service type is RydeX (non-metered, fixed quote), so the only disputed item is the $6.61 cancellation fee. cancelled_by = rider, so NS-0 routes the case to NS-4 (on-demand ride, rider cancellation).\n\nTiming (system records, which override statements): requested_at 18:22:30, accepted_at 18:23:00, cancelled_at 18:25:30 → elapsed since matching = exactly 2 min 30 s, i.e. ≤ 3:00. Under NS-4, cancellations within 3 minutes of matching are not chargeable; the rider's claim that she cancelled under 3 minutes is corroborated by the timeline. Despite this, fare.cancellation_fee = 6.61 was charged → full refund of $6.61 (refund_full).\n\nNS-1/NS-2 (driver-side no-show) are not engaged: the driver never pressed \"I'm Here\" (driver_pressed_here_at = null, driver_arrived_at = null, arrival_confirmed_by = null), and the cancellation was by the rider, not the driver. NS-6 (waiting fee) does not apply — no $5.00 waiting fee was charged and the trip was never completed. The rider was in fact never picked up: no pickup_at and no completed leg appear in the timeline, only the driver approaching (GPS ends ~1.6 km from Jurong East MRT at 18:25:30). The driver's ETA of \"5 min more\" and the fair-weather/traffic-band-4 record are consistent with the driver still being en route, which is why a fee should not have been applied. The 30-day dispute window (NS-7) is satisfied (trip 2026-09-15, dispute filed same day), and the refund is issued as a voucher.\n\nSafety screening (SAFE-1/SAFE-2): chat is two neutral messages (\"How long will you be?\", \"5 min more, traffic is slow\"); no threats, harassment, sexual remarks, dangerous-driving or injury allegation anywhere in the complaint or driver statement → no safety escalation.\n\nProfile facts (driver disputes_90d = 0, no prior upheld route/no-show disputes) are noted for context only and do not affect the outcome; no grounds for RD-6 or NS-2 account flagging.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver-account flag — the driver did not press \"I'm Here\" or claim a no-show, so NS-2's fraud flag does not attach.",
+  "confidence": 0.93,
+  "reasoning": "Safety screen: chat is a neutral ETA exchange (\"How long will you be?\" / \"5 min more, traffic is slow\"), the driver's statement is factual; no threat, harassment, sexual remark, or dangerous-driving allegation. safety_concern = none.\n\nRouting the case: this is a rider cancellation on an instant (on-demand) RydeX booking, so NS-0 sends it to NS-4. There is no no-show claim to evaluate: driver_arrived_at, driver_pressed_here_at, wait_started_at and fee_applied_at are all null and cancelled_by = \"rider\", so NS-1/NS-2 (driver-side no-show) are not engaged, and NS-3 does not apply.\n\nNS-4 arithmetic: accepted_at 18:23:00, cancelled_at 18:25:30 → 2 min 30 s = 150 s after matching, which is ≤ 3:00. Ryde's rule is that all cancellations within 3 minutes of matching are not chargeable. The rider's claim of \"less than 3 minutes\" is therefore corroborated by the system timeline. The $6.61 cancellation fee in the fare breakdown therefore fails its condition and must be returned in full → refund_full $6.61.\n\nThe rider's reason (\"driver was nowhere near\") is not itself the basis of the ruling — driver lateness is not a ground under NS-4/NS-8 (G7: Ryde publishes no ETA-based free-cancellation rule), and GPS puts the driver about 2.5 km from the pickup at 18:25:30, still approaching. The refund rests solely on the ≤3-minute window. NS-7: dispute filed 2026-09-15, same day as the trip, well within 30 days; refund to be issued as a voucher. No flag_account: RD-6 is not in play (no route deviation, no upheld route dispute), and NS-2's fraud flag requires a false \"I'm Here\" tap, which did not occur.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -20,16 +20,16 @@
    "NS-7"
   ],
   "escalate": false,
-  "escalation_reason": null,
+  "escalation_reason": "null",
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Driver says only that he was on his way when the rider cancelled; the system timeline (cancelled_by = rider at 18:25:30, 2 min 30 s after matching) shows the rider was never picked up and that no no-show fee basis exists under NS-1 (driver never pressed 'I'm Here', never within 200 m of pickup)."
+    "id": "rider_lateness_reason",
+    "reason": "The rider's stated reason (driver nowhere near) is not a ground for a refund under NS-4; there is no ETA-based free-cancellation rule in Ryde's policy (G7/NS-8 non-citable). The refund is granted only because the cancellation fell inside the ≤3-minute free window."
    },
    {
-    "id": "rider_complaint_implication",
-    "reason": "Rider's assertion that the driver 'was nowhere near' is directionally corroborated by GPS (driver still ~1.6 km from pickup at cancellation), but it is not needed for the outcome: the fee fails solely on the 3-minute NS-4 window. Stated only as context, not as a basis for the refund amount."
+    "id": "driver_no_show_claim",
+    "reason": "No 'I'm Here' tap, no arrival timestamp and no wait period exist in the record, and the cancellation is recorded against the rider; the driver's no-show branch (NS-1/NS-2) is not engaged and no $4.50 driver compensation arises."
    }
   ],
   "flag_account": false,
@@ -38,9 +38,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.88,
- "input_tokens": 11736,
- "output_tokens": 1018,
+ "latency_s": 4.19,
+ "input_tokens": 12127,
+ "output_tokens": 942,
  "requests": 1,
  "llm_calls": 1
 }

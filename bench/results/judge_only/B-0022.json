@@ -4,25 +4,23 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:21:52.558731+00:00",
+ "ts": "2026-10-10T18:41:01.895735+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
   "amount": 6.43,
-  "recommended_action": "Refund $6.43 to the rider as a Ryde voucher, and note on the driver's file that this off-route segment was not covered by the rider's agreement (no account flag — RD-6 threshold not met).",
-  "confidence": 0.82,
-  "reasoning": "RydeTAXI, metered: the fare moves with distance, so an unexempt off-route segment is refundable mileage [F1][F7][RD-2]. The trace shows one off-route segment, F3 (21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km, +4.56 km) [F3][RD-1].\n\nRD-4 fails: no traffic incident on the replaced stretch, only speed band 5 on the expressway and Kampong Bahru Road, which never exempts on its own [F12][F13][F14][RD-4].\n\nRD-5: the only candidate consent is the chat. The driver asked at 21:35 only to \"pull in at the petrol station just ahead for one minute\"; the rider's 21:36 \"Sure, no problem.\" agrees to a one-minute stop, not to a route change [F8][F9]. Even under RD-3 the rider never named the place — the driver chose the location and the record describes no stop at all; the trip ran 28.8 min against a 20.5 min estimate [F2][RD-3(b)]. The driver's statement that the rider agreed to \"a small change of route\" is a post-trip claim, not rider consent (G11) [F11][RD-5]. So the segment counts.\n\nAmount: distance fare $26.31 ÷ 18.66 km = $1.4100/km (as stated in the fare record) [F7]; 4.56 km × $1.4100/km = $6.4296 → $6.43 refundable [F3][F4][RD-2]. The billed excess of $6.77 is not the refund base — RD-2 refunds only the unexempt segment's extra km, and the remainder is corridor/matching mileage that is not refunded [F4][RD-2]. Waiting $0.11 (0.4 min) is metered waiting under RD-3(c) and is not refunded [F5][RD-3].\n\nRD-6 not triggered: no prior upheld route dispute in 90 days (route: 0), so no account flag despite this being an upheld deviation [F17][RD-6].",
+  "recommended_action": "Issue a $6.43 Ryde voucher to the rider for the unexempted off-route segment (RD-2, paid as voucher per NS-7); record the RD-1 breach on the driver's file — no account flag as the RD-6 threshold is not met.",
+  "confidence": 0.78,
+  "reasoning": "RydeTAXI is metered, so extra kilometres on an unexempted off-route segment flow straight into the fare under RD-1 and RD-2; the trip drove 18.7 km against a 13.9 km optimal route and billed $6.77 of excess distance [F1][F4][F16-RD-2]. The only measured deviation is one off-route segment, 21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km (+4.56 km) [F3].\n\nRD-4 does not excuse it: the trace shows no qualifying traffic incident on the replaced stretch, and the only traffic facts are central-expressway and Kampong Bahru Road speed band 5 (40–49 km/h), which on their own do not exempt a segment [F12][F13][F14][RD-4(a)][RD-4(b)].\n\nRD-5 / RD-3 turn on what the chat actually says. The driver asked \"Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty.\" [F8] and the rider replied \"Sure, no problem.\" [F9] — that is agreement to a stop the driver proposed, not a route authorisation. The rider never chose the place: the driver named the station and named its location (\"just ahead\"), so this is not RD-3(a) — the rider did not name a place, and the record still shows no measured stop [F8][F9][F3][RD-3(a)]. The driver's own statement confirms the scope was a short stop and that he extended it himself into \"a small change of route\" [F11]; a scope-creep justification in a post-trip statement is a claim, not rider consent [RD-5][G11]. Under RD-5 the agreement covers a short stop, not a 6.27 km loop; no rider message before 21:39:55 authorises the route driven, so the segment counts and the extra km are refundable under RD-2 [F3][F5-F6][RD-5][RD-2].\n\nAmount: rate = $26.31 ÷ 18.66 km = $1.40997.../km (as the fare record states); 4.56 km × $1.40997/km = $6.4295 → $6.43 [F3][F4][F7][RD-2]. The waiting charge $0.11 for 0.4 min is a metered waiting unit and is not refundable [F5][RD-3(c)]. The $1.25/$1.47 platform fee is a published fee [F7][FARE-1]. RD-6 does not attach: the driver's profile shows route_disputes_upheld_90d = 0, so no flag_account [F17][RD-6].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
    "F7",
    "F8",
    "F9",
-   "F10",
    "F11",
    "F12",
    "F13",
@@ -35,7 +33,9 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -43,12 +43,13 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "scope_other",
     "basis": [
      "F8",
      "F9",
      "F11"
     ],
-    "reason": "The rider's 21:36 \"Sure, no problem.\" answers only the driver's 21:35 request to pull in at a petrol station \"just ahead for one minute\" [F8][F9]: that is consent to a short stop, not to a 6.27 km / ~10-minute loop, and the driver never asked before leaving the optimal route [RD-5]. The rider named no place and the driver chose the location (RD-3(b)); no stop is even recorded, and the trip ran 28.8 min against a 20.5 min estimate [F2][F3][RD-3]. The driver's post-trip statement that the rider agreed to a route change is a claim, not rider consent (G11) [F11][RD-5]. No incident supports the deviation [F14][RD-4]. Segment not exempt; extra km refundable under RD-2."
+    "reason": "The rider's pre-segment message \"Sure, no problem\" [F9] answers the driver's request to pull in at the petrol station \"just ahead\" for one minute [F8] — consent to a short stop, not to a 6.27 km loop covering 4.56 km more than the optimal route [F3]. The rider named no place, so RD-3(a) does not apply (no stop measured either) [F8][F9][RD-3]; and the driver's own statement that he \"thought a small change of route was fine\" is post-trip scope creep, not consent [F11][RD-5][G11]. Nothing in the chat authorises this route before 21:39:55, so the segment counts and its extra km are refunded at $1.40997/km under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -65,19 +66,17 @@
  "pre_verify_ruling": {
   "ruling": "refund_partial",
   "amount": 6.43,
-  "recommended_action": "Refund $6.43 to the rider as a Ryde voucher, and note on the driver's file that this off-route segment was not covered by the rider's agreement (no account flag — RD-6 threshold not met).",
-  "confidence": 0.82,
-  "reasoning": "RydeTAXI, metered: the fare moves with distance, so an unexempt off-route segment is refundable mileage [F1][F7][RD-2]. The trace shows one off-route segment, F3 (21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km, +4.56 km) [F3][RD-1].\n\nRD-4 fails: no traffic incident on the replaced stretch, only speed band 5 on the expressway and Kampong Bahru Road, which never exempts on its own [F12][F13][F14][RD-4].\n\nRD-5: the only candidate consent is the chat. The driver asked at 21:35 only to \"pull in at the petrol station just ahead for one minute\"; the rider's 21:36 \"Sure, no problem.\" agrees to a one-minute stop, not to a route change [F8][F9]. Even under RD-3 the rider never named the place — the driver chose the location and the record describes no stop at all; the trip ran 28.8 min against a 20.5 min estimate [F2][RD-3(b)]. The driver's statement that the rider agreed to \"a small change of route\" is a post-trip claim, not rider consent (G11) [F11][RD-5]. So the segment counts.\n\nAmount: distance fare $26.31 ÷ 18.66 km = $1.4100/km (as stated in the fare record) [F7]; 4.56 km × $1.4100/km = $6.4296 → $6.43 refundable [F3][F4][RD-2]. The billed excess of $6.77 is not the refund base — RD-2 refunds only the unexempt segment's extra km, and the remainder is corridor/matching mileage that is not refunded [F4][RD-2]. Waiting $0.11 (0.4 min) is metered waiting under RD-3(c) and is not refunded [F5][RD-3].\n\nRD-6 not triggered: no prior upheld route dispute in 90 days (route: 0), so no account flag despite this being an upheld deviation [F17][RD-6].",
+  "recommended_action": "Issue a $6.43 Ryde voucher to the rider for the unexempted off-route segment (RD-2, paid as voucher per NS-7); record the RD-1 breach on the driver's file — no account flag as the RD-6 threshold is not met.",
+  "confidence": 0.78,
+  "reasoning": "RydeTAXI is metered, so extra kilometres on an unexempted off-route segment flow straight into the fare under RD-1 and RD-2; the trip drove 18.7 km against a 13.9 km optimal route and billed $6.77 of excess distance [F1][F4][F16-RD-2]. The only measured deviation is one off-route segment, 21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km (+4.56 km) [F3].\n\nRD-4 does not excuse it: the trace shows no qualifying traffic incident on the replaced stretch, and the only traffic facts are central-expressway and Kampong Bahru Road speed band 5 (40–49 km/h), which on their own do not exempt a segment [F12][F13][F14][RD-4(a)][RD-4(b)].\n\nRD-5 / RD-3 turn on what the chat actually says. The driver asked \"Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty.\" [F8] and the rider replied \"Sure, no problem.\" [F9] — that is agreement to a stop the driver proposed, not a route authorisation. The rider never chose the place: the driver named the station and named its location (\"just ahead\"), so this is not RD-3(a) — the rider did not name a place, and the record still shows no measured stop [F8][F9][F3][RD-3(a)]. The driver's own statement confirms the scope was a short stop and that he extended it himself into \"a small change of route\" [F11]; a scope-creep justification in a post-trip statement is a claim, not rider consent [RD-5][G11]. Under RD-5 the agreement covers a short stop, not a 6.27 km loop; no rider message before 21:39:55 authorises the route driven, so the segment counts and the extra km are refundable under RD-2 [F3][F5-F6][RD-5][RD-2].\n\nAmount: rate = $26.31 ÷ 18.66 km = $1.40997.../km (as the fare record states); 4.56 km × $1.40997/km = $6.4295 → $6.43 [F3][F4][F7][RD-2]. The waiting charge $0.11 for 0.4 min is a metered waiting unit and is not refundable [F5][RD-3(c)]. The $1.25/$1.47 platform fee is a published fee [F7][FARE-1]. RD-6 does not attach: the driver's profile shows route_disputes_upheld_90d = 0, so no flag_account [F17][RD-6].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
    "F7",
    "F8",
    "F9",
-   "F10",
    "F11",
    "F12",
    "F13",
@@ -90,7 +89,9 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "FARE-1",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -98,12 +99,13 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "scope_other",
     "basis": [
      "F8",
      "F9",
      "F11"
     ],
-    "reason": "The rider's 21:36 \"Sure, no problem.\" answers only the driver's 21:35 request to pull in at a petrol station \"just ahead for one minute\" [F8][F9]: that is consent to a short stop, not to a 6.27 km / ~10-minute loop, and the driver never asked before leaving the optimal route [RD-5]. The rider named no place and the driver chose the location (RD-3(b)); no stop is even recorded, and the trip ran 28.8 min against a 20.5 min estimate [F2][F3][RD-3]. The driver's post-trip statement that the rider agreed to a route change is a claim, not rider consent (G11) [F11][RD-5]. No incident supports the deviation [F14][RD-4]. Segment not exempt; extra km refundable under RD-2."
+    "reason": "The rider's pre-segment message \"Sure, no problem\" [F9] answers the driver's request to pull in at the petrol station \"just ahead\" for one minute [F8] — consent to a short stop, not to a 6.27 km loop covering 4.56 km more than the optimal route [F3]. The rider named no place, so RD-3(a) does not apply (no stop measured either) [F8][F9][RD-3]; and the driver's own statement that he \"thought a small change of route was fine\" is post-trip scope creep, not consent [F11][RD-5][G11]. Nothing in the chat authorises this route before 21:39:55, so the segment counts and its extra km are refunded at $1.40997/km under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -121,12 +123,12 @@
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.78 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/judge_only/B-0022.record.json",
- "latency_s": 7.47,
- "input_tokens": 13284,
- "output_tokens": 1461,
+ "latency_s": 7.77,
+ "input_tokens": 13813,
+ "output_tokens": 1643,
  "requests": 2,
  "llm_calls": 2
 }

@@ -4,39 +4,33 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:27:14.211368+00:00",
+ "ts": "2026-10-11T02:32:12.598529+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver.",
-  "confidence": 0.9,
-  "reasoning": "The fee in dispute is a driver-side no-show cancellation fee of $6.61, so it can only stand if NS-0 routes it into NS-1 and every element of NS-1 is met: the case is `cancelled_by = driver` with the driver asserting a rider no-show [F4][F7][F12][NS-0]. NS-1 requires (i) an arrival confirmation — a driver \"I'm Here\" tap or a platform auto-confirmation — (ii) GPS at the pickup at that moment, and (iii) more than three continuous minutes at the pickup after that confirmation. The trace settles all three as fails, which I accept: no arrival confirmation exists on the record at all, and the driver's own statement concedes he \"forgot to press the I'm Here button\" [F6][F12][NS-1].\n\nElement (i) is the decisive one. The record states in terms that the driver never tapped \"I'm Here\" and that the platform recorded no automatic arrival — the arrival field is null [F6]. The 22:41:30 entry is only the moment the driver first came within 200 m of the pickup, not an arrival confirmation [F2][F5]. NS-1 permits the confirmation to be either a driver tap or a platform auto-confirmation, and expressly does not allow an automatic arrival to be written into the record where none was registered, so neither branch of (i) is satisfied [F5][F6][NS-1]. Because (i) fails, (ii) cannot be evaluated \"at the moment of the arrival confirmation\" and (iii) cannot run from a confirmation that never happened — the trace records 0 s continuously inside the radius after the (empty) tap against a 180 s threshold [F6][NS-1].\n\nNS-2 then applies directly: where any of NS-1 (i)(ii)(iii) is not established, the $6.61 is refunded in full and the rider bears no cancellation fee [F6][F12][F7][NS-2]. The amount is the recorded cancellation fee, $6.61 [F7]; no computation from a per-km rate is required because the disputed item is a fixed published cancellation fee under NS-0/NS-1/NS-2, not a metered-distance item [F4][F7][NS-0].\n\nThe trace also settles that NS-2's flag branch is not triggered: the failed element is a missing confirmation, not a false one — the driver never tapped \"I'm Here\" while away from the pickup, so there is no fake confirmation to flag [F6][F1][NS-2]. The driver's profile (4.7-year account, 4.87 rating, 0 disputes upheld in 90 days) cannot change this outcome; profile facts never decide a case, and no clause here requires an account action on these facts [F17][RD-6].\n\nOn safety: I read every message and statement. The driver's chat messages are informational (\"At the pickup point, silver Toyota Altis\"; \"Waited 4 min, cancelling\") [F9][F10] and his written statement is a factual explanation of the cancellation [F12]. The rider's complaint says only that she was on her way down. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so the screen is \"none\" and does not force an escalation [F9][F10][F12][SAFE-1].\n\nEvidence is sufficient: the record carries a complete, fully timestamped chat, the driver's closest approach and 200 m occupancy times, the stationary period, the arrival-confirmation field, the cancellation timeline and the fee record — enough to settle every element NS-0/NS-1/NS-2 requires [F1][F2][F3][F6][F7][F11]. The only gap candidates (traffic, weather) are irrelevant, since the driver never claimed road conditions as his reason [F10][F12][F13][F14][F15][NS-1].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver (no fake arrival confirmation was recorded — F6), and remind the driver that a valid no-show fee requires the \"I'm Here\" tap or a platform-recorded arrival.",
+  "confidence": 0.93,
+  "reasoning": "The driver cancelled (F4), so the $6.61 cancellation fee can only be charged through the no-show branch: cancelled_by = driver with a no-show claim routes to NS-1 [F4][NS-0]. The trace settles the three NS-1 elements as failed: no arrival confirmation was recorded (driver_pressed_here_at null; neither tap nor platform auto-arrival) [F6][NS-1], and because that confirmation never occurred, the \"within 200 m at the moment of confirmation\" element and the \"more than 3 minutes at the pickup after confirmation until cancelling\" element have no anchor at all — the measurement is 0 s [F6][NS-1]. The driver's own post-trip statement confirms the omission (\"I forgot to press the I'm Here button but I was there\"), but a statement made after the event cannot manufacture the missing system record, and the button is not a formality the GPS can cure: the button press is what starts both the arrival and the waiting clock [F12][F6][NS-1].\n\nBecause NS-1 (i)(ii)(iii) do not all hold, NS-2 applies and the fee must be refunded in full [F6][F7][NS-2]. The amount follows from the fare record's cancellation fee of $6.61 with no surge (1.0×), and the trace fixes the recoverable sum as the cancellation fee itself: $6.61 [F7][F8][NS-0]. I note that the driver's physical conduct was not blameworthy — he was 34 m away at closest approach, spent 5 min 20 s inside 200 m, and stood stationary 4 min 0 s at 40 m until cancelling [F1][F2][F3] — but on the policy text the delay or unreached pickup does not rescue a fee whose first condition is unrecorded [F3][NS-1]. The trace also marks NS-2's flag_account limb as not triggered: there was no fake confirmation (the record shows no confirmation at all), so no account action against this driver [F6][NS-2].\n\nProfiles are not used to decide the fee: the long, clean histories on both sides (rider 4.9 / 0 upheld; driver 4.87 with 951 trips / 0 upheld) bear only on account action, which is not warranted here [F16][F17][NS-2]. The record is complete on the elements this ruling needs — full timestamped chat, GPS coverage through the cancellation moment, and a fare record — so no escalation for missing evidence is required [F11][F3][F7].",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
-   "F5",
    "F6",
    "F7",
-   "F9",
-   "F10",
+   "F8",
    "F11",
    "F12",
-   "F13",
-   "F14",
-   "F15",
+   "F16",
    "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -44,27 +38,39 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "The 5 min 20 s cumulative time inside 200 m [F2] only speaks to NS-1(iii); NS-1 requires (i) AND (ii) AND (iii), and (i) is not met because there is no driver tap and no platform auto-arrival on record [F6][NS-1]."
+    "reason": "Physical presence does not satisfy NS-1(i): the arrival confirmation is a system record, and F6 records neither a driver tap nor a platform auto-arrival, so the 34 m closest approach and 5 min 20 s in radius [F1][F2] are irrelevant to that element [NS-1]."
    },
    {
     "id": "D2",
-    "reason": "The 34 m closest approach and 4 min 0 s stationary at 40 m [F1][F3] establish physical presence only; they do not supply the arrival confirmation NS-1 requires [F6]. The 22:43 chat message is a driver statement, not a system arrival record [F9][NS-1]."
+    "reason": "The 4 min 0 s stationary period at 40 m [F3] cannot satisfy NS-1(iii), because that clock runs only after the arrival confirmation, which never occurred (0 s measured) [F6][NS-1]."
    },
    {
     "id": "D3",
-    "reason": "F5 is the timestamp the platform first registered the driver within 200 m, not an arrival confirmation; the record states expressly that the platform recorded no automatic arrival and the arrival field is null [F5][F6][NS-1]. NS-1 forbids writing a platform auto-confirmation into the record where none exists."
+    "reason": "Elapsed time from acceptance to cancellation (9 min 50 s) [F4] is not an NS-1 element; NS-1 conditions on the recorded arrival confirmation, and the rider's complaint wording ('on my way down') is not contradicted by any system record of her position [F6][NS-1]."
    },
    {
     "id": "D4",
-    "reason": "Transparency and complete timestamped chat [F9][F10][F11] go to whether the driver was uncontactable (an NS-2 abuse scenario), not to NS-1(i); NS-2 grants the refund on the failure of any single NS-1 condition regardless of the driver's communication [F6][NS-2]."
-   },
-   {
-    "id": "D5",
-    "reason": "The driver's clean profile [F17] and the absence of surge [F8] are not elements of NS-1, and profile facts never decide a case; they also cannot cure the missing arrival confirmation [F6][NS-1][RD-6]."
+    "reason": "Non-confrontational chat and a complete timestamped record [F9][F10][F11] cure no missing record; the fee turns on the arrival confirmation absent in F6, not on the driver's tone [NS-1]."
    },
    {
     "id": "D6",
-    "reason": "No clause lets physical presence substitute for the required confirmation: NS-1(i) is an express condition and NS-2 makes any single failed condition sufficient for a full refund, with the driver's own statement confirming he did not press the button [F6][F12][NS-1][NS-2]."
+    "reason": "The GPS/timeline records do settle presence but not NS-1(i); a post-hoc statement admitting a forgotten button [F12] cannot create the missing system record, and NS-2 applies once any NS-1 condition fails [F6][NS-1][NS-2]."
+   },
+   {
+    "id": "D7",
+    "reason": "Clean account histories [F16][F17] do not bear on the fee question; profile facts cannot decide a case alone and cannot cure the failed NS-1(i) record [F6][NS-2]."
+   },
+   {
+    "id": "D8",
+    "reason": "No safety issue is alleged, but the absence of one does not defeat the fee refund: the case turns on NS-1/NS-2, not on SAFE-1 [F9][F10][NS-1][NS-2]."
+   },
+   {
+    "id": "C5",
+    "reason": "The rider's assertion that she was not a no-show in substance is not established by any rider-side record, and in any event does not drive the outcome: the refund rests on the missing NS-1(i) record [F6][F2][NS-1]."
+   },
+   {
+    "id": "C7",
+    "reason": "The rider's and driver's profile histories [F16][F17] are not a ground for the refund; profile facts cannot decide the case, and no account action is warranted here [NS-2]."
    }
   ],
   "flag_account": false,
@@ -72,6 +78,7 @@
   "safety_basis": [
    "F9",
    "F10",
+   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -80,33 +87,27 @@
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver.",
-  "confidence": 0.9,
-  "reasoning": "The fee in dispute is a driver-side no-show cancellation fee of $6.61, so it can only stand if NS-0 routes it into NS-1 and every element of NS-1 is met: the case is `cancelled_by = driver` with the driver asserting a rider no-show [F4][F7][F12][NS-0]. NS-1 requires (i) an arrival confirmation — a driver \"I'm Here\" tap or a platform auto-confirmation — (ii) GPS at the pickup at that moment, and (iii) more than three continuous minutes at the pickup after that confirmation. The trace settles all three as fails, which I accept: no arrival confirmation exists on the record at all, and the driver's own statement concedes he \"forgot to press the I'm Here button\" [F6][F12][NS-1].\n\nElement (i) is the decisive one. The record states in terms that the driver never tapped \"I'm Here\" and that the platform recorded no automatic arrival — the arrival field is null [F6]. The 22:41:30 entry is only the moment the driver first came within 200 m of the pickup, not an arrival confirmation [F2][F5]. NS-1 permits the confirmation to be either a driver tap or a platform auto-confirmation, and expressly does not allow an automatic arrival to be written into the record where none was registered, so neither branch of (i) is satisfied [F5][F6][NS-1]. Because (i) fails, (ii) cannot be evaluated \"at the moment of the arrival confirmation\" and (iii) cannot run from a confirmation that never happened — the trace records 0 s continuously inside the radius after the (empty) tap against a 180 s threshold [F6][NS-1].\n\nNS-2 then applies directly: where any of NS-1 (i)(ii)(iii) is not established, the $6.61 is refunded in full and the rider bears no cancellation fee [F6][F12][F7][NS-2]. The amount is the recorded cancellation fee, $6.61 [F7]; no computation from a per-km rate is required because the disputed item is a fixed published cancellation fee under NS-0/NS-1/NS-2, not a metered-distance item [F4][F7][NS-0].\n\nThe trace also settles that NS-2's flag branch is not triggered: the failed element is a missing confirmation, not a false one — the driver never tapped \"I'm Here\" while away from the pickup, so there is no fake confirmation to flag [F6][F1][NS-2]. The driver's profile (4.7-year account, 4.87 rating, 0 disputes upheld in 90 days) cannot change this outcome; profile facts never decide a case, and no clause here requires an account action on these facts [F17][RD-6].\n\nOn safety: I read every message and statement. The driver's chat messages are informational (\"At the pickup point, silver Toyota Altis\"; \"Waited 4 min, cancelling\") [F9][F10] and his written statement is a factual explanation of the cancellation [F12]. The rider's complaint says only that she was on her way down. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so the screen is \"none\" and does not force an escalation [F9][F10][F12][SAFE-1].\n\nEvidence is sufficient: the record carries a complete, fully timestamped chat, the driver's closest approach and 200 m occupancy times, the stationary period, the arrival-confirmation field, the cancellation timeline and the fee record — enough to settle every element NS-0/NS-1/NS-2 requires [F1][F2][F3][F6][F7][F11]. The only gap candidates (traffic, weather) are irrelevant, since the driver never claimed road conditions as his reason [F10][F12][F13][F14][F15][NS-1].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against the driver (no fake arrival confirmation was recorded — F6), and remind the driver that a valid no-show fee requires the \"I'm Here\" tap or a platform-recorded arrival.",
+  "confidence": 0.93,
+  "reasoning": "The driver cancelled (F4), so the $6.61 cancellation fee can only be charged through the no-show branch: cancelled_by = driver with a no-show claim routes to NS-1 [F4][NS-0]. The trace settles the three NS-1 elements as failed: no arrival confirmation was recorded (driver_pressed_here_at null; neither tap nor platform auto-arrival) [F6][NS-1], and because that confirmation never occurred, the \"within 200 m at the moment of confirmation\" element and the \"more than 3 minutes at the pickup after confirmation until cancelling\" element have no anchor at all — the measurement is 0 s [F6][NS-1]. The driver's own post-trip statement confirms the omission (\"I forgot to press the I'm Here button but I was there\"), but a statement made after the event cannot manufacture the missing system record, and the button is not a formality the GPS can cure: the button press is what starts both the arrival and the waiting clock [F12][F6][NS-1].\n\nBecause NS-1 (i)(ii)(iii) do not all hold, NS-2 applies and the fee must be refunded in full [F6][F7][NS-2]. The amount follows from the fare record's cancellation fee of $6.61 with no surge (1.0×), and the trace fixes the recoverable sum as the cancellation fee itself: $6.61 [F7][F8][NS-0]. I note that the driver's physical conduct was not blameworthy — he was 34 m away at closest approach, spent 5 min 20 s inside 200 m, and stood stationary 4 min 0 s at 40 m until cancelling [F1][F2][F3] — but on the policy text the delay or unreached pickup does not rescue a fee whose first condition is unrecorded [F3][NS-1]. The trace also marks NS-2's flag_account limb as not triggered: there was no fake confirmation (the record shows no confirmation at all), so no account action against this driver [F6][NS-2].\n\nProfiles are not used to decide the fee: the long, clean histories on both sides (rider 4.9 / 0 upheld; driver 4.87 with 951 trips / 0 upheld) bear only on account action, which is not warranted here [F16][F17][NS-2]. The record is complete on the elements this ruling needs — full timestamped chat, GPS coverage through the cancellation moment, and a fare record — so no escalation for missing evidence is required [F11][F3][F7].",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
-   "F5",
    "F6",
    "F7",
-   "F9",
-   "F10",
+   "F8",
    "F11",
    "F12",
-   "F13",
-   "F14",
-   "F15",
+   "F16",
    "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -114,27 +115,39 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "The 5 min 20 s cumulative time inside 200 m [F2] only speaks to NS-1(iii); NS-1 requires (i) AND (ii) AND (iii), and (i) is not met because there is no driver tap and no platform auto-arrival on record [F6][NS-1]."
+    "reason": "Physical presence does not satisfy NS-1(i): the arrival confirmation is a system record, and F6 records neither a driver tap nor a platform auto-arrival, so the 34 m closest approach and 5 min 20 s in radius [F1][F2] are irrelevant to that element [NS-1]."
    },
    {
     "id": "D2",
-    "reason": "The 34 m closest approach and 4 min 0 s stationary at 40 m [F1][F3] establish physical presence only; they do not supply the arrival confirmation NS-1 requires [F6]. The 22:43 chat message is a driver statement, not a system arrival record [F9][NS-1]."
+    "reason": "The 4 min 0 s stationary period at 40 m [F3] cannot satisfy NS-1(iii), because that clock runs only after the arrival confirmation, which never occurred (0 s measured) [F6][NS-1]."
    },
    {
     "id": "D3",
-    "reason": "F5 is the timestamp the platform first registered the driver within 200 m, not an arrival confirmation; the record states expressly that the platform recorded no automatic arrival and the arrival field is null [F5][F6][NS-1]. NS-1 forbids writing a platform auto-confirmation into the record where none exists."
+    "reason": "Elapsed time from acceptance to cancellation (9 min 50 s) [F4] is not an NS-1 element; NS-1 conditions on the recorded arrival confirmation, and the rider's complaint wording ('on my way down') is not contradicted by any system record of her position [F6][NS-1]."
    },
    {
     "id": "D4",
-    "reason": "Transparency and complete timestamped chat [F9][F10][F11] go to whether the driver was uncontactable (an NS-2 abuse scenario), not to NS-1(i); NS-2 grants the refund on the failure of any single NS-1 condition regardless of the driver's communication [F6][NS-2]."
-   },
-   {
-    "id": "D5",
-    "reason": "The driver's clean profile [F17] and the absence of surge [F8] are not elements of NS-1, and profile facts never decide a case; they also cannot cure the missing arrival confirmation [F6][NS-1][RD-6]."
+    "reason": "Non-confrontational chat and a complete timestamped record [F9][F10][F11] cure no missing record; the fee turns on the arrival confirmation absent in F6, not on the driver's tone [NS-1]."
    },
    {
     "id": "D6",
-    "reason": "No clause lets physical presence substitute for the required confirmation: NS-1(i) is an express condition and NS-2 makes any single failed condition sufficient for a full refund, with the driver's own statement confirming he did not press the button [F6][F12][NS-1][NS-2]."
+    "reason": "The GPS/timeline records do settle presence but not NS-1(i); a post-hoc statement admitting a forgotten button [F12] cannot create the missing system record, and NS-2 applies once any NS-1 condition fails [F6][NS-1][NS-2]."
+   },
+   {
+    "id": "D7",
+    "reason": "Clean account histories [F16][F17] do not bear on the fee question; profile facts cannot decide a case alone and cannot cure the failed NS-1(i) record [F6][NS-2]."
+   },
+   {
+    "id": "D8",
+    "reason": "No safety issue is alleged, but the absence of one does not defeat the fee refund: the case turns on NS-1/NS-2, not on SAFE-1 [F9][F10][NS-1][NS-2]."
+   },
+   {
+    "id": "C5",
+    "reason": "The rider's assertion that she was not a no-show in substance is not established by any rider-side record, and in any event does not drive the outcome: the refund rests on the missing NS-1(i) record [F6][F2][NS-1]."
+   },
+   {
+    "id": "C7",
+    "reason": "The rider's and driver's profile histories [F16][F17] are not a ground for the refund; profile facts cannot decide the case, and no account action is warranted here [NS-2]."
    }
   ],
   "flag_account": false,
@@ -142,6 +155,7 @@
   "safety_basis": [
    "F9",
    "F10",
+   "F11",
    "F12"
   ],
   "evidence_status": "sufficient",
@@ -151,12 +165,12 @@
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0031.record.json",
- "latency_s": 20.56,
- "input_tokens": 100805,
- "output_tokens": 5865,
+ "latency_s": 22.99,
+ "input_tokens": 108184,
+ "output_tokens": 6548,
  "requests": 10,
  "llm_calls": 6
 }

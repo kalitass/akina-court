@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:27:37.711685+00:00",
+ "ts": "2026-10-11T02:32:40.523010+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-  "confidence": 0.97,
-  "reasoning": "The booking was an instant on-demand RydeX trip cancelled by the rider: F2 records acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 175 s (2 min 55 s) after matching. Under NS-0 the rider-cancellation branch of an instant booking is governed by NS-4, which makes all cancellations made within 3 minutes of matching non-chargeable [F2][NS-0][NS-4]. The 175 s interval is inside that 3:00 window, so the $6.61 cancellation fee recorded in F5 was not chargeable and must be returned in full [F2][F5][NS-4].\n\nThe alternative driver no-show route to charging the fee also fails on the record. The driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (F4), and no arrival at the pickup was ever recorded at all (F3), so NS-1(i) is not met [F3][F4][NS-1]. GPS places the driver 2189 m from the pickup at the moment of cancellation and never within 200 m (F1), so NS-1(ii) is not met either [F1][NS-1]. And the entire span from acceptance to cancellation was only 2 min 55 s (F2), less than the continuous waiting period NS-1(iii) requires, so no waiting clock ever started [F2][NS-1]. Any of these failures is sufficient to require full refund under NS-2 [F1][F3][F4][NS-2].\n\nThe driver's chat message at 14:06 (\"5 min more, traffic is slow\") confirms he was still en route about a minute before the cancellation, and the chat record is complete with two timestamped messages, so the timeline and GPS records are reliable and no G12 evidence gap arises [F7][F8][F9][NS-1]. The only congestion evidence is a category-2 band 4 (30–39 km/h) record on Stevens Road with no incidents near the route and fair weather, which does not meet the RD-4 traffic-evidence requirement and is not needed here in any event [F11][F12][F13][RD-4]. The driver's written statement that he was \"on my way\" (F10) is a statement only and cannot outweigh the system records [F10][F1][NS-2].\n\nSafety screen: I read the two chat messages, the complaint and the driver's statement. They contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — the messages are a timing enquiry and an ETA update — so the screen is \"none\" [F7][F8][F10][SAFE-1]. Amount under the trace: the contested cancellation fee is a fixed $6.61 (surge 1.0×, F6), so the full refund is $6.61 [F5][F6][NS-7]. No RD-6 flag applies: this case is a fee-refund matter, the fee did not stand, and no route-deviation breach was recorded (F15) [F15][RD-6].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account action against the driver.",
+  "confidence": 0.94,
+  "reasoning": "This is a rider-side cancellation: cancelled_by = rider, so the fee can only stand through NS-0's rider branch, which sends an on-demand booking to NS-4 [F2][NS-0]. NS-4 makes a cancellation within 3:00 of matching non-chargeable, and after 3:00 chargeable [F2][NS-4]. The timeline is settled: acceptance 14:05:00, rider cancellation 14:07:55, i.e. 2 min 55 s = 175 s, inside the 3-minute window [F2][NS-4]. The $6.61 on record therefore has no basis and is refundable in full [F2][F5][NS-4].\n\nThe driver's no-show route cannot rescue the fee either. NS-1 requires the driver to have pressed \"I'm Here\" (or platform auto-arrival) with GPS inside the pickup radius, then to wait continuously beyond 3 minutes [F3][F4][NS-1]. No arrival of any kind is recorded: driver_arrived_at is null and driver_pressed_here_at is null [F3][F4][NS-1]. The closest GPS approach was 2189 m at the moment of cancellation, i.e. never within the 200 m arrival radius [F1][NS-1]. Both NS-1 (i) and (ii) fail, so under NS-2 the $6.61 is refunded in full to the rider [F1][NS-1][NS-2].\n\nThe driver's statements do not change this: his 14:06 chat \"5 min more, traffic is slow\" and his later \"I was on my way when the rider cancelled\" are consistent with being en route only, and system records (GPS) override statements where they conflict [F8][F10][F1][NS-1]. Traffic and weather records are immaterial, since no exemption is being claimed and none is needed [F11][F12][F13][NS-4].\n\nAmount: the disputed item is the cancellation fee $6.61 recorded in the fare fact, refunded in full under NS-4/NS-2 [F5][NS-4][NS-2]; no distance fare computation applies because RydeX is a fixed-quote service and the whole item is returned [F5][F6][NS-0]. No flag_account: the NS-2 flag is triggered only where an \"I'm Here\" tap was made while GPS showed the driver away from pickup, and no tap was ever recorded here [F4][NS-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -20,24 +20,19 @@
    "F4",
    "F5",
    "F6",
-   "F7",
    "F8",
-   "F9",
    "F10",
    "F11",
    "F12",
    "F13",
-   "F15"
+   "F9"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
    "NS-4",
-   "NS-7",
-   "RD-4",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -45,31 +40,35 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "Misreads NS-4: the exemption covers cancellations made within 3 minutes of matching, and F2 fixes the cancellation at 2 min 55 s (175 s) after the 14:05:00 acceptance, so the cancellation falls inside the free window, not outside it [F2][NS-4]."
+    "reason": "The claim concedes the timing but argues the fee outcome; on the facts it actually supports the refund: F2 shows 175 s after acceptance, inside NS-4's 3:00 no-charge window, and F5 records the $6.61 [F2][F5][NS-4]."
    },
    {
     "id": "D2",
-    "reason": "F5 and F6 establish only the amount charged ($6.61, no surge); they confer no entitlement. Chargeability is governed by NS-4/NS-2, and on F1–F4 the fee is not chargeable, so the 'published amount' argument fails [F5][F6][F1][NS-4][NS-2]."
+    "reason": "Correct as far as it goes (F3, F4 show no arrival record), but it cannot support retaining the fee; NS-1 is not established and NS-2 requires full refund [F3][F4][NS-1][NS-2]."
    },
    {
     "id": "D3",
-    "reason": "Self-defeating: the driver's own concession that NS-1(i)–(iii) are unmet on F3 and F4 confirms the no-show branch cannot sustain the fee, and NS-2 then requires full refund [F3][F4][NS-1][NS-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "Self-defeating: the driver's statement F10 cannot outweigh the GPS record; F1 places him 2189 m away and never within 200 m, so NS-1(ii) fails and the fee cannot stand [F1][F10][NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Self-defeating: the 2 min 55 s span in F2 shows the NS-1(iii) waiting condition could never have been satisfied, which defeats rather than supports any charge [F2][NS-1]."
-   },
-   {
-    "id": "D6",
-    "reason": "Self-defeating: the driver's own message F8 places him still en route at 14:06 and the complete, timestamped chat record F9 forecloses any claim that he had arrived or begun waiting [F8][F9][NS-1]."
+    "reason": "The claim itself concedes NS-1 (ii) fails on F1 and that the fee is refundable under NS-2; the driver's admission supports refund_full rather than any reduction [F1][NS-1][NS-2]."
    },
    {
     "id": "D7",
-    "reason": "Self-defeating: F11–F13 show no qualifying congestion or incident, so RD-4 provides no reasonable cause and the driver abandons the only possible justification; the rider's refund claim is unaffected [F11][F12][F13][RD-4]"
+    "reason": "No adverse account action follows from profile facts, but the claim's request to keep the fee fails: the fee falls on F1/F2/F3/F4 under NS-1 and NS-2, and F15 (profile) cannot decide the case [F15][NS-1][NS-2]."
+   },
+   {
+    "id": "D8",
+    "reason": "Correct that NS-3's cancellation-rate mechanism is Ryde's own and not a remedy here, but it does not save the fee; NS-4/NS-2 still require the refund [F2][F5][NS-4][NS-2]."
+   },
+   {
+    "id": "D6",
+    "reason": "The traffic point (F11 band 4, F12 no incidents, F13 fair) is accepted but immaterial: no exemption is claimed and the fee already fails NS-1 (i) and (ii) on F1/F3/F4 [F11][F12][F13][F1][NS-1]."
+   },
+   {
+    "id": "D5",
+    "reason": "The completeness point is accepted (F9), but completeness of the chat does not create a chargeable fee; the outcome follows F2 under NS-4 [F9][F2][NS-4]."
+   },
+   {
+    "id": "D4",
+    "reason": "Accepted as far as it goes (F8, F10 are statements contradicted by F1), which leaves nothing in the driver's favour and confirms the full refund under NS-2 [F8][F10][F1][NS-2]."
    }
   ],
   "flag_account": false,
@@ -85,9 +84,9 @@
  "pre_verify_ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account action against either party.",
-  "confidence": 0.97,
-  "reasoning": "The booking was an instant on-demand RydeX trip cancelled by the rider: F2 records acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 175 s (2 min 55 s) after matching. Under NS-0 the rider-cancellation branch of an instant booking is governed by NS-4, which makes all cancellations made within 3 minutes of matching non-chargeable [F2][NS-0][NS-4]. The 175 s interval is inside that 3:00 window, so the $6.61 cancellation fee recorded in F5 was not chargeable and must be returned in full [F2][F5][NS-4].\n\nThe alternative driver no-show route to charging the fee also fails on the record. The driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (F4), and no arrival at the pickup was ever recorded at all (F3), so NS-1(i) is not met [F3][F4][NS-1]. GPS places the driver 2189 m from the pickup at the moment of cancellation and never within 200 m (F1), so NS-1(ii) is not met either [F1][NS-1]. And the entire span from acceptance to cancellation was only 2 min 55 s (F2), less than the continuous waiting period NS-1(iii) requires, so no waiting clock ever started [F2][NS-1]. Any of these failures is sufficient to require full refund under NS-2 [F1][F3][F4][NS-2].\n\nThe driver's chat message at 14:06 (\"5 min more, traffic is slow\") confirms he was still en route about a minute before the cancellation, and the chat record is complete with two timestamped messages, so the timeline and GPS records are reliable and no G12 evidence gap arises [F7][F8][F9][NS-1]. The only congestion evidence is a category-2 band 4 (30–39 km/h) record on Stevens Road with no incidents near the route and fair weather, which does not meet the RD-4 traffic-evidence requirement and is not needed here in any event [F11][F12][F13][RD-4]. The driver's written statement that he was \"on my way\" (F10) is a statement only and cannot outweigh the system records [F10][F1][NS-2].\n\nSafety screen: I read the two chat messages, the complaint and the driver's statement. They contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — the messages are a timing enquiry and an ETA update — so the screen is \"none\" [F7][F8][F10][SAFE-1]. Amount under the trace: the contested cancellation fee is a fixed $6.61 (surge 1.0×, F6), so the full refund is $6.61 [F5][F6][NS-7]. No RD-6 flag applies: this case is a fee-refund matter, the fee did not stand, and no route-deviation breach was recorded (F15) [F15][RD-6].",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher under NS-7; no account action against the driver.",
+  "confidence": 0.94,
+  "reasoning": "This is a rider-side cancellation: cancelled_by = rider, so the fee can only stand through NS-0's rider branch, which sends an on-demand booking to NS-4 [F2][NS-0]. NS-4 makes a cancellation within 3:00 of matching non-chargeable, and after 3:00 chargeable [F2][NS-4]. The timeline is settled: acceptance 14:05:00, rider cancellation 14:07:55, i.e. 2 min 55 s = 175 s, inside the 3-minute window [F2][NS-4]. The $6.61 on record therefore has no basis and is refundable in full [F2][F5][NS-4].\n\nThe driver's no-show route cannot rescue the fee either. NS-1 requires the driver to have pressed \"I'm Here\" (or platform auto-arrival) with GPS inside the pickup radius, then to wait continuously beyond 3 minutes [F3][F4][NS-1]. No arrival of any kind is recorded: driver_arrived_at is null and driver_pressed_here_at is null [F3][F4][NS-1]. The closest GPS approach was 2189 m at the moment of cancellation, i.e. never within the 200 m arrival radius [F1][NS-1]. Both NS-1 (i) and (ii) fail, so under NS-2 the $6.61 is refunded in full to the rider [F1][NS-1][NS-2].\n\nThe driver's statements do not change this: his 14:06 chat \"5 min more, traffic is slow\" and his later \"I was on my way when the rider cancelled\" are consistent with being en route only, and system records (GPS) override statements where they conflict [F8][F10][F1][NS-1]. Traffic and weather records are immaterial, since no exemption is being claimed and none is needed [F11][F12][F13][NS-4].\n\nAmount: the disputed item is the cancellation fee $6.61 recorded in the fare fact, refunded in full under NS-4/NS-2 [F5][NS-4][NS-2]; no distance fare computation applies because RydeX is a fixed-quote service and the whole item is returned [F5][F6][NS-0]. No flag_account: the NS-2 flag is triggered only where an \"I'm Here\" tap was made while GPS showed the driver away from pickup, and no tap was ever recorded here [F4][NS-2].",
   "cited_facts": [
    "F1",
    "F2",
@@ -95,24 +94,19 @@
    "F4",
    "F5",
    "F6",
-   "F7",
    "F8",
-   "F9",
    "F10",
    "F11",
    "F12",
    "F13",
-   "F15"
+   "F9"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
    "NS-4",
-   "NS-7",
-   "RD-4",
-   "RD-6",
-   "SAFE-1"
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -120,31 +114,35 @@
   "rejected_claims": [
    {
     "id": "D1",
-    "reason": "Misreads NS-4: the exemption covers cancellations made within 3 minutes of matching, and F2 fixes the cancellation at 2 min 55 s (175 s) after the 14:05:00 acceptance, so the cancellation falls inside the free window, not outside it [F2][NS-4]."
+    "reason": "The claim concedes the timing but argues the fee outcome; on the facts it actually supports the refund: F2 shows 175 s after acceptance, inside NS-4's 3:00 no-charge window, and F5 records the $6.61 [F2][F5][NS-4]."
    },
    {
     "id": "D2",
-    "reason": "F5 and F6 establish only the amount charged ($6.61, no surge); they confer no entitlement. Chargeability is governed by NS-4/NS-2, and on F1–F4 the fee is not chargeable, so the 'published amount' argument fails [F5][F6][F1][NS-4][NS-2]."
+    "reason": "Correct as far as it goes (F3, F4 show no arrival record), but it cannot support retaining the fee; NS-1 is not established and NS-2 requires full refund [F3][F4][NS-1][NS-2]."
    },
    {
     "id": "D3",
-    "reason": "Self-defeating: the driver's own concession that NS-1(i)–(iii) are unmet on F3 and F4 confirms the no-show branch cannot sustain the fee, and NS-2 then requires full refund [F3][F4][NS-1][NS-2]."
-   },
-   {
-    "id": "D4",
-    "reason": "Self-defeating: the driver's statement F10 cannot outweigh the GPS record; F1 places him 2189 m away and never within 200 m, so NS-1(ii) fails and the fee cannot stand [F1][F10][NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Self-defeating: the 2 min 55 s span in F2 shows the NS-1(iii) waiting condition could never have been satisfied, which defeats rather than supports any charge [F2][NS-1]."
-   },
-   {
-    "id": "D6",
-    "reason": "Self-defeating: the driver's own message F8 places him still en route at 14:06 and the complete, timestamped chat record F9 forecloses any claim that he had arrived or begun waiting [F8][F9][NS-1]."
+    "reason": "The claim itself concedes NS-1 (ii) fails on F1 and that the fee is refundable under NS-2; the driver's admission supports refund_full rather than any reduction [F1][NS-1][NS-2]."
    },
    {
     "id": "D7",
-    "reason": "Self-defeating: F11–F13 show no qualifying congestion or incident, so RD-4 provides no reasonable cause and the driver abandons the only possible justification; the rider's refund claim is unaffected [F11][F12][F13][RD-4]"
+    "reason": "No adverse account action follows from profile facts, but the claim's request to keep the fee fails: the fee falls on F1/F2/F3/F4 under NS-1 and NS-2, and F15 (profile) cannot decide the case [F15][NS-1][NS-2]."
+   },
+   {
+    "id": "D8",
+    "reason": "Correct that NS-3's cancellation-rate mechanism is Ryde's own and not a remedy here, but it does not save the fee; NS-4/NS-2 still require the refund [F2][F5][NS-4][NS-2]."
+   },
+   {
+    "id": "D6",
+    "reason": "The traffic point (F11 band 4, F12 no incidents, F13 fair) is accepted but immaterial: no exemption is claimed and the fee already fails NS-1 (i) and (ii) on F1/F3/F4 [F11][F12][F13][F1][NS-1]."
+   },
+   {
+    "id": "D5",
+    "reason": "The completeness point is accepted (F9), but completeness of the chat does not create a chargeable fee; the outcome follows F2 under NS-4 [F9][F2][NS-4]."
+   },
+   {
+    "id": "D4",
+    "reason": "Accepted as far as it goes (F8, F10 are statements contradicted by F1), which leaves nothing in the driver's favour and confirms the full refund under NS-2 [F8][F10][F1][NS-2]."
    }
   ],
   "flag_account": false,
@@ -158,15 +156,15 @@
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 27,
- "void_claims": 1,
+ "events": 26,
+ "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.97 (diagnostic only; automation is decided by the certificate)"
+  "✓ ruling consistent with the policy certificate\nmodel confidence 0.94 (diagnostic only; automation is decided by the certificate)"
  ],
  "record_path": "bench/results/court/B-0035.record.json",
- "latency_s": 21.67,
- "input_tokens": 120035,
- "output_tokens": 6231,
- "requests": 12,
+ "latency_s": 25.96,
+ "input_tokens": 109042,
+ "output_tokens": 7621,
+ "requests": 10,
  "llm_calls": 6
 }

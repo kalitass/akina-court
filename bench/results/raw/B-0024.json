@@ -4,56 +4,60 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:09.701877+00:00",
+ "ts": "2026-10-10T17:36:29.510023+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Refer to a human reviewer: route-deviation refund cannot be auto-computed while the SAFE-1 abuse finding stands. Route the abuse finding against the driver to Ryde's conduct/account team for review, keep the metered-fare overcharge claim open for manual fare review, and note that the rider described feeling unsafe.",
-  "confidence": 0.62,
-  "reasoning": "Safety screen: the driver's chat reply \"Shut up and let me drive.\" at 09:05:45, sent in answer to the rider's (civil) query \"Why are we going this way? This is not the route on the app.\", is hostile/abusive language aimed at the other party. Ryde's code of conduct bars abuse of any kind, so this is at least a suspected SAFE-1 violation and the case must go to a human rather than receive an automatic refund. The rider's \"felt unsafe\" is read as consequent to that exchange; there is no collision, injury or dangerous-driving allegation (SAFE-2 not engaged).\n\nRoute: requested pick-up at Marina Bay Sands, drop-off Tampines Mall, quoted route 15.88 km / 21.4 min. Trace (30 s thinning): the driver followed the quoted corridor up the northbound ECP/KPE stretch until the vicinity of 1.3233/103.8946 (~08:59:30), then doubled back on the same stretch (~09:00:00-09:02:00) and wandered between 09:02:00 and 09:10:00 before resuming eastward, reaching Tampines Mall at 09:21:00. Sampled GPS ground distance is ~27.5 km (dense 5 s grid would be slightly longer), against the 15.88 km quotation — a materially longer actual path, so the RD-1 picture is a large detour rather than matched noise. The fare record itself shows the meter charging 21.43 km at $1.41/km = $30.22, i.e. ~5.55 km beyond the quote; at the metered distance rate that is ~$7.83, so any RD-2 refund would be substantial, not nominal.\n\nExemptions do not resolve it: the driver's statement (\"I went where the GPS sent me; it rerouted\") is uncorroborated — no reroute log or navigation record — and no `traffic-incident-*` fact exists (incidents list empty). The KPE speed band in the record is band 4 (not band 1/2), and the PIE band-5 link's geometry matches the route the driver did partly take, not any part of the optimal route he left, so RD-4(a)/(b) give no exemption to any off-route portion. There is no rider message consenting to any route change before the deviation began, so RD-5 is not satisfied.\n\nBecause the classification of the segments (and therefore the refund amount and any account flag under RD-6) cannot be settled by an automatic ruling while the abuse finding stands, the whole case is escalated; the factual summary above is the input for the human reviewer. Confidence 0.62 reflects the clear abuse finding but an approximate segment accounting derived from a thinned trace.",
+  "recommended_action": "Escalate to Ryde trust & safety for review of the driver's abusive chat message; human reviewer to complete the route-deviation assessment (rider only raised the route query at 09:04:50, after the deviation, so RD-5 consent does not apply; quantify excess metered km) and decide the fare adjustment; warn/action the driver account for abuse of a rider per code of conduct.",
+  "confidence": 0.78,
+  "reasoning": "Safety screen first: the chat record contains a rider query at 09:04:50 (\"Why are we going this way? This is not the route on the app.\") answered by the driver at 09:05:45 with \"Shut up and let me drive.\" That is hostile, abusive language directed at the other party, which Ryde's code of conduct explicitly bars (\"assault, harassment, or abuse of any kind\"). No threat of violence, sexual remark or dangerous-driving allegation appears, and the rider's \"felt unsafe\" is not attached to any specific dangerous act, so the finding is suspected (SAFE-1), not confirmed, and not SAFE-2. Per policy, a safety finding means no automatic ruling: escalate = true, ruling = escalate.\n\nFor the human reviewer, the route picture from the record: RydeTAXI metered trip, quoted route 15.88 km / 21.4 min; the driver's trace from about 08:59:30 to 09:10 shows a loop off the quoted alignment (north via 1.3233,103.8946 → 1.3309,103.8980 → 1.3384,103.9012 → back south-west through 1.3234,103.9081) before rejoining the corridor; the metered distance billed is 21.43 km (distance_fare 30.22 = 21.43 km × ~$1.41/km) against a 15.88 km estimate, roughly 5.5 km above the quoted line. Because RydeTAXI is fare-by-meter (policy §0), any unexcused excess km enters the fare under RD-2 (refund_partial = Σ unexcused extra_km × fare.distance_fare ÷ fare.distance_km = 30.22/21.43 = $1.4102/km). The driver's explanation (\"the GPS rerouted\") has no LTA traffic-incident support (traffic.incidents is empty) and the only speed-band records covering the window are PIE band 5 and KALLANG PAYA LEBAR EXPRESSWAY band 4 — neither is band 1 or 2, so RD-4 gives no exemption and band records alone could not exempt in any event. RD-5 consent fails on timing: the only rider message (09:04:50) is a question/protest sent long after the deviation began (~08:59:30), so it is not prior agreement, and the driver's assertion of rerouting is a claim, not consent. The chat also contains no rider request for any stop or named road, so RD-3/RD-5 exemptions are unavailable on this record; segment treatment is therefore left to the reviewer, and the rider's overcharge claim is quantified but not executed here.\n\nEvidence status: sufficient for the safety escalation (chat is complete and timestamped, GPS trace present, fare and route available); the money question is deliberately not decided because the case escalates on SAFE-1. No account flag is added: RD-6 requires the case to be established against the driver (refund > 0 or a recorded RD-1 breach) and driver route_disputes_upheld_90d ≥ 1 (here 0), and NS-2 does not apply. No clause marked 不可引用 is cited.",
   "cited_facts": [],
   "cited_policy": [
    "SAFE-1",
-   "RD-1",
    "RD-2",
    "RD-4",
    "RD-5",
    "RD-6"
   ],
   "escalate": true,
-  "escalation_reason": "SAFE-1 suspected: abuse aimed at the rider in the in-app chat (\"Shut up and let me drive.\"). Per policy no automatic ruling is issued on a safety-flagged case; the route-deviation/overcharge computation (materially longer metered path: 21.43 km charged vs 15.88 km quoted, ~$7.83 meter excess at $1.41/km, no RD-4/RD-5 exemption) is supplied for the human reviewer to finalise together with the conduct finding.",
+  "escalation_reason": "SAFE-1: the driver answered the rider's route query with \"Shut up and let me drive.\" (09:05:45), hostile/abusive language aimed at the rider, which Ryde's code of conduct bars (\"abuse of any kind\"). Safety screening therefore replaces an automatic ruling and the case (including the route-deviation money question) goes to a human reviewer.",
   "segment_findings": [
    {
     "fact_id": "seg1",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "The backward turn and local wandering (approx. 08:59:00-09:10:00) deviate from the quoted optimal route and add materially to the metered distance. RD-1: no reasonable cause shown — the driver's uncorroborated 'GPS rerouted' claim is not a record; RD-4(a) fails (no traffic-incident fact), RD-4(b) fails (KPE band 4, not 1/2; the PIE band-5 link matches the route actually driven, not the optimal route); RD-5 fails (no rider consent before the deviation). Given the safety escalation the exact segment boundaries and extra_km are for the human reviewer to finalise."
+    "reason": "Off-route loop on the GPS trace (~08:59:30–09:10) where the car runs north via 1.3233,103.8946 → 1.3309,103.8980 → 1.3384,103.9012 and loops south-west to 1.3234,103.9081 before rejoining the quoted corridor, whereas the quoted polyline keeps to ~1.3225,103.8916 / 1.3257,103.9039 on the corridor. The only rider chat message (09:04:50) is a question sent after this segment began, so it is not prior consent (RD-5); the driver's claim of a GPS reroute is not consent (G11) and no LTA incident supports it (traffic.incidents empty; bands on PIE/KPE are 5/4, not band ≤2, so RD-4 gives no exemption). Segment is unexcused; RD-2 quantum (Σ extra_km × $30.22/21.43 km) to be computed by the human reviewer as the escalation interrupts the ruling."
    }
   ],
   "rejected_claims": [
    {
     "id": "driver_statement_gps_reroute",
-    "reason": "The driver's account that the GPS rerouted him is uncorroborated: no navigation/reroute record, no traffic incident on the optimal route, and the only speed-band facts concern the route actually driven or show band 4. System records (GPS trace, fare) override statements."
+    "reason": "The driver says the GPS rerouted him, but the LTA traffic feed contains no incident (traffic.incidents = []) and the only speed bands listed on the corridor are PIE band 5 and KPE band 4 — neither qualifies as congestion evidence under RD-4(b) (band 1/2 only, and alone never exempts). Traffic records override the statement."
    },
    {
-    "id": "overcharge_as_stated",
-    "reason": "The rider's 'I was overcharged' is directionally supported (metered 21.43 km vs 15.88 km quoted; ~$7.83 of meter excess at $1.41/km), but the exact RD-2 amount cannot be finalised automatically from a 30 s thinned trace, and the case is escalated for the safety finding before any refund executes."
+    "id": "driver_statement_meter_fare",
+    "reason": "\"The fare is what the meter showed\" does not answer RD-2: on RydeTAXI unexcused extra kilometres are themselves the overcharge, because the meter accumulates per distance unit (policy §0, RD-2)."
+   },
+   {
+    "id": "rider_overcharge_amount_44_17",
+    "reason": "The rider's overall overcharge claim is not decided here: the case escalates on SAFE-1, and the excess-metric quantum (≈5.5 km above the 15.88 km quoted route) is left to the human reviewer."
    }
   ],
   "flag_account": false,
   "safety_concern": "suspected",
   "safety_basis": [
-   "Driver chat at 09:05:45 in reply to the rider's route question: \"Shut up and let me drive.\" — hostile/abusive language aimed at the rider (SAFE-1, Ryde code of conduct barring abuse of any kind).",
-   "Rider complaint: \"...when I asked he told me to shut up. I was overcharged and felt unsafe.\""
+   "Driver chat message 2026-09-13T09:05:45+08:00: \"Shut up and let me drive.\" — hostile and abusive language aimed at the rider after she queried the route; Ryde's code of conduct bars abuse of any kind (SAFE-1).",
+   "Rider's complaint wording \"felt unsafe\" is noted in context of the driver telling her to shut up; no threat of violence, sexual remark or dangerous-driving allegation is present, so the concern is suspected abuse rather than a confirmed safety incident."
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.46,
- "input_tokens": 15850,
- "output_tokens": 1541,
+ "latency_s": 8.59,
+ "input_tokens": 16241,
+ "output_tokens": 1822,
  "requests": 1,
  "llm_calls": 1
 }

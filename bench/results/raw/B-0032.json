@@ -4,21 +4,20 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:28.242615+00:00",
+ "ts": "2026-10-10T17:36:45.181384+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher (NS-7), and feed the driver's \"I'm Here\" press at 08:47:20 — made ~740 m from the pickup point — into Ryde's abuse-of-cancellation/waiting-button review (+ flag_account).",
-  "confidence": 0.95,
-  "reasoning": "NS-0: cancelled_by = driver and the driver claims rider no-show, so NS-1/NS-2 govern.\n\nNS-1 (i): the driver pressed \"I'm Here\" at 08:47:20 (tl-here). (ii) Fails. The GPS at 08:47:20 (nearest sample 08:47:30) shows the car at 1.406875, 103.898794. The pickup is Punggol Waterway Point at 1.40561, 103.90168. Difference: dlat = 0.001265° = 140.7 m; dlon = 0.002886° × cos(1.406°) ≈ 0.002886 × 111,320 × 0.99970 ≈ 321.2 m. Distance = √(140.7² + 321.2²) ≈ 350.6 m. The car sat stationary at that same point from 08:47:30 through 08:51:00 (all samples 1.4068x, 103.8988), so it was ~350 m from the pickup point at the moment of the tap — far outside the 200 m arrival radius. (iii) also fails in the sense that any waiting happened at the wrong place: the rider's 08:48:20 message (\"I'm at the pickup point, no car here\") is consistent with the driver never being at the pickup.\n\nNS-2: since (ii) is not satisfied, the $6.61 no-show cancellation fee is refunded in full → refund_full of $6.61. Additionally, because the driver pressed \"I'm Here\" while GPS placed him >200 m from the pickup point, the clause calls for flag_account (abuse of the cancellation/waiting button). The rider's account shows no_show_disputes_upheld_90d = 0, so this is the driver's first flag here; the flag rests on NS-2's GPS criterion, not on the profile.\n\nDriver statement (\"waited more than 3 minutes at the pickup\") is contradicted by the GPS trace, which is the overriding system record. No route-deviation issue arises: the trip was cancelled before pickup, so there is no off-route segment to assess (no gps-detour facts, fare distance_km = 0).\n\nSafety screen: chat is a routine pickup exchange (\"come out please\", \"where are you?\", \"cancelling\"); no threat, harassment, sexual remark or dangerous-driving allegation → safety_concern none. Evidence is sufficient (complete GPS at 30 s grid covering the whole window, timestamps on all chat messages).",
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and flag the driver's account for review of the abused \"I'm Here\" arrival confirmation.",
+  "confidence": 0.9,
+  "reasoning": "The driver cancelled as a rider no-show and $6.61 was charged, so the case enters via NS-0 (cancelled_by = driver, driver alleges no-show) and is tested against NS-1.\n\nNS-1 requires (i) the driver to have pressed \"I'm Here\" (satisfied: driver_pressed_here_at 08:47:20; no platform-auto arrival is recorded), (ii) the driver to be at the pickup point at that moment, and (iii) more than 3 continuous minutes waiting at the pickup point after the tap.\n\n(ii) fails. At the tap (08:47:20) the nearest GPS samples are 08:47:00 at 1.406863, 103.898788 and 08:47:30 at 1.406875, 103.898794. The pickup is 1.40561, 103.90168. Both samples are ~375 m from the pickup (Δlat 0.00125° ≈ 139 m, Δlon 0.00289° ≈ 321 m; √(139²+321²) ≈ 350–375 m), well beyond the 200 m arrival radius. The driver's own first chat message (\"Reached already … come out please\") at 08:47:25 is sent from the same spot. The trace shows the driver stationary there from 08:46:30 to 08:51:00 — never within 200 m of the pickup — and the rider at the pickup confirms \"no car here\" at 08:48:20. The rider's complaint that the driver marked arrived but was never at the pickup is therefore corroborated by the GPS, which overrides the driver's statement under the system-records rule.\n\n(iii) is met in duration (tap 08:47:20 → cancel 08:51:00 ≈ 3:40, samples every 30 s with no gap), but since (ii) fails the no-show fee is not valid. Under NS-2 the $6.61 must be refunded in full, and because the driver pressed \"I'm Here\" while GPS placed him ~375 m away — abuse of the arrival/waiting button — NS-2 additionally attaches flag_account. Cited profiles (driver's zero prior disputes) do not affect this case.\n\nAmount: full cancellation fee = $6.61.\n\nSafety screen: chat, complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation — safety_concern \"none\". Evidence is sufficient: the GPS trace covers the whole window from acceptance to cancellation with no gaps, and no other element is missing.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
-   "NS-2",
-   "NS-7"
+   "NS-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -26,11 +25,7 @@
   "rejected_claims": [
    {
     "id": "driver_statement",
-    "reason": "The driver's claim to have waited at the pickup is contradicted by the GPS trace: from 08:47:30 to 08:51:00 the car was stationary at 1.4069, 103.8988, ~350 m from the pickup point at Punggol Waterway Point (1.4056, 103.9017). System records (GPS) override statements."
-   },
-   {
-    "id": "driver_here_claim",
-    "reason": "The 'I'm Here' tap at 08:47:20 fails NS-1(ii): GPS at that moment places the driver ~350 m from the pickup, exceeding the 200 m arrival radius."
+    "reason": "Claim that he pressed 'I'm Here' at the pickup and waited there is contradicted by the GPS trace: at 08:47:20 he was ~375 m from the pickup and remained at 1.40687, 103.89879 until cancellation — never inside the 200 m arrival radius. System records override the statement."
    }
   ],
   "flag_account": true,
@@ -39,9 +34,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.92,
- "input_tokens": 12076,
- "output_tokens": 1095,
+ "latency_s": 4.26,
+ "input_tokens": 12467,
+ "output_tokens": 939,
  "requests": 1,
  "llm_calls": 1
 }

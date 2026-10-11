@@ -2,21 +2,21 @@
  "arm": "judge_only",
  "case_id": "B-0001",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:33:19+00:00",
+ "started_at": "2026-10-11T02:36:58+00:00",
  "fingerprint": {
   "case_sha256": "ccb902d41402fdce",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:33:19+00:00"
+  "issued_at": "2026-10-11T02:36:58+00:00"
  },
  "ruling": {
   "ruling": "refund_partial",
   "amount": 4.33,
-  "recommended_action": "Issue a $4.33 Ryde voucher to the rider (RydeTAXI metered overcharge, RD-2/NS-7) and record the RD-1 breach on the driver's file; no account flag (RD-6 not met).",
-  "confidence": 0.82,
-  "reasoning": "The trip is RydeTAXI, so the fare is metered and extra kilometres enter the fare directly [F6][RD-2]; the app quote (21.2 km) is not binding but the driver's RD-1 duty to take the shortest and most direct route is [F1][RD-1]. One off-route segment exists: 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, adding 3.07 km [F3], and the trace settles that no RD-4 incident excuses it [F13][RD-4].\n\nThe remaining questions are RD-3 and RD-5. The chat record is complete and every message is timestamped [F9]; it contains only a pickup greeting and the driver's car description [F7][F8]. No rider message before 09:24:50 asks for a stop or names any place or road, so there is no rider-agreed route the segment could fall under [F7][F8][RD-5], and no rider-named stop for RD-3(a) to exempt [RD-3]. The driver's post-trip statement that \"the GPS sent me; it rerouted\" is a claim in his own statement, not rider consent, and does not excuse the deviation [F10][RD-5]. The segment therefore counts in full under RD-2 [F3][RD-2].\n\nAmount: the fare record gives this trip's rate as distance fare ÷ distance km = $34.42 ÷ 24.41 km = $1.4101/km [F4][F6][RD-2]. The segment's extra distance is 3.07 km [F3]; 3.07 km × $1.4101/km = $4.3290, so $4.33. The trace note of $3.20 km × $1.4101 = $4.51 [F4] is the whole-trip excess, which includes non-segment mileage (corridor return trips, map-matching jitter) that RD-2 does not refund; only the measured off-route segment is refundable.\n\nOn the driver's profile: 1 upheld dispute in 90 days, but it is a no-show case and route disputes upheld = 0 [F16], so the \"repeated\" condition of RD-6 is not met and no account flag is raised [RD-6]. The rider's profile (0 upheld disputes) is not used to decide the case [F15]. Refund is via Ryde voucher per NS-7 [NS-7].\n\nSafety screen: I read the complaint, both chat messages and the driver's statement in context — no threat, intimidation, harassment or dangerous-driving allegation appears [F7][F8][F10]; the complaint alleges only silent rerouting and extra distance [F1][F3]. Safety_concern: none [SAFE-1].",
+  "recommended_action": "Issue a $4.33 Ryde voucher to the rider for the unexcused detour distance on the 09:24–09:30 segment; record the driver's RD-1 breach (no account flag).",
+  "confidence": 0.86,
+  "reasoning": "This is a RydeTAXI metered trip, so the fare varies with distance and the deviation rule bites on kilometres [F6][RD-2]. The trace settles that one off-route segment exists (09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km) [F3][RD-1], and that no traffic incident on the replaced stretch was reported before the detour — only speed bands 5 (40–49 km/h) on the ECP and Airport Boulevard, which do not exempt anything [F11][F12][F13][RD-4].\n\nThe RD-5 question turns on the chat. The only two messages are the rider's 09:04 greeting at the Raffles Place taxi stand and the driver's 09:05 \"2 min away\" [F7][F8]; the record is complete and both are timestamped [F9]. Neither message gives any route authorisation, general or specific, before the segment began at 09:24. The driver's post-trip statement that \"I went where the GPS sent me; it rerouted\" is his own claim, written after the trip [F10], and a driver's statement alone is not rider consent [RD-5]. Nothing in the record ties the segment to any rider-named place either, so RD-3(a) cannot exempt it [F7][F8][RD-3]. The segment therefore counts as an unexcused deviation.\n\nAmount: the trip's per-kilometre rate is the distance fare divided by the distance billed, $34.42 ÷ 24.41 km = $1.41008/km [F4][F6]. Applying that rate to the unexcused segment's extra km: 3.07 km × $1.41008/km = $4.329, rounded to cents = $4.33 [F3][F4][RD-2]. Only the mile-unit excess is refunded; the remaining +0.13 km of distance excess (3.20 km total vs the segment's 3.07 km) is not attributed to any segment and is not refunded [F1][F3][F4][RD-2]. The driver-profile field route_disputes_upheld_90d = 0, so no account flag arises [F16][RD-6].\n\nSafety screen (SAFE-1): I read every chat message, the driver's statement and the complaint. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the driver's statement is a factual dispute about routing [F7][F8][F10], so safety_concern is none [SAFE-1].",
   "cited_facts": [
    "F1",
    "F3",
@@ -26,8 +26,9 @@
    "F8",
    "F9",
    "F10",
+   "F11",
+   "F12",
    "F13",
-   "F15",
    "F16"
   ],
   "cited_policy": [
@@ -37,7 +38,6 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "NS-7",
    "SAFE-1"
   ],
   "escalate": false,
@@ -46,13 +46,14 @@
    {
     "fact_id": "F3",
     "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
      "F7",
      "F8",
      "F9",
      "F10"
     ],
-    "reason": "Complete, fully timestamped chat [F9] shows no rider message before 09:24:50 requesting a stop or agreeing to a route change — only a pickup greeting [F7] and the driver's car description [F8]. No place or road is named by the rider, so RD-3(a) cannot exempt the segment [RD-3] and no rider consent under RD-5 exists; the driver's post-trip statement that the GPS rerouted him is not rider consent [F10][RD-5]. The segment's 3.07 km extra is refundable under RD-2 [F3][RD-2]."
+    "reason": "The complete, fully timestamped chat contains no rider message before the segment start (09:24) agreeing to any route change: the only rider message, 09:04, merely announces her presence at the Raffles Place taxi stand [F7][F9]. The driver's after-the-fact statement that the GPS rerouted him is not rider consent and does not cover this segment [F10][RD-5]. No rider-named stop appears anywhere in the record, so RD-3(a) does not apply either [F7][F8][RD-3]. The segment's extra_km is therefore refundable under RD-2."
    }
   ],
   "rejected_claims": [],
@@ -82,15 +83,15 @@
    "Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag."
   ]
  },
- "latency_s": 7.69,
+ "latency_s": 8.04,
  "model_calls": 2,
  "provider_trace_ids": [
-  "27132c5966903b158cc46b2ec27860ad",
-  "9d68042d7518bdba46d762a5ef64fe2d"
+  "b5645539e806936c75d535043c758daf",
+  "c66e8badfd5c6c194a7d4e3b2aee14f9"
  ],
  "provider_response_ids": [
-  "f360ac17-4d7b-44c3-a08b-ac259777d5d6",
-  "439ee81b-8ff6-4ac8-ae2e-7fb62134cb92"
+  "00747c68-3c9f-4a2c-bad7-37d5f5e39f8f",
+  "dd3c258d-13cd-4707-95ba-3ced8cc6512d"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -103,25 +104,25 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 12253,
-   "completion_tokens": 1429,
-   "total_tokens": 13682,
+   "prompt_tokens": 12644,
+   "completion_tokens": 1373,
+   "total_tokens": 14017,
    "prompt_tokens_details": {
-    "cached_tokens": 12032
+    "cached_tokens": 12416
    },
-   "prompt_cache_hit_tokens": 12032,
-   "prompt_cache_miss_tokens": 221
+   "prompt_cache_hit_tokens": 12416,
+   "prompt_cache_miss_tokens": 228
   },
   {
-   "prompt_tokens": 1142,
-   "completion_tokens": 221,
-   "total_tokens": 1363,
+   "prompt_tokens": 1083,
+   "completion_tokens": 304,
+   "total_tokens": 1387,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 886
+   "prompt_cache_miss_tokens": 827
   }
  ],
- "finished_at": "2026-10-10T13:33:26+00:00"
+ "finished_at": "2026-10-11T02:37:06+00:00"
 }

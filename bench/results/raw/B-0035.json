@@ -4,27 +4,28 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:33.160039+00:00",
+ "ts": "2026-10-10T17:36:50.201901+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher within 30 days; no account action against the driver.",
+  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a Ryde voucher for $6.61 (NS-7); no driver account flag warranted.",
   "confidence": 0.9,
-  "reasoning": "Rider-side cancellation on an on-demand RydeX trip, so NS-0 routes to NS-4. Timing: accepted_at 14:05:00 → cancelled_at 14:07:55 = 2 min 55 s, i.e. within the 3-minute free-cancellation window (NS-4: \"All cancellations made within 3 minutes of matching are not chargeable\"). The $6.61 cancellation fee therefore does not stand and must be refunded in full. The driver had not arrived and was still ~2 km away at cancellation (GPS 14:05:00 at 1.32093,103.82274, heading away from the Orchard Road pickup, last sample 14:07:55 at 1.31853,103.82569), which is consistent with the rider's account, though NS-4 does not require driver delay for the waiver. The driver's cancellation/no-show branch (NS-1/NS-2) does not apply: cancelled_by = rider and the driver never pressed \"I'm Here\" and made no no-show claim; his statement only says he was en route. No route-deviation or fare-detail component exists (no trip performed, no detour facts, no extras), and no safety concern appears in the chat, driver statement or complaint — the exchange is an ordinary ETA query.",
+  "reasoning": "Cancellation branch (NS-0): cancelled_by = rider on an on-demand RydeX booking, so NS-4 governs. accepted_at 14:05:00, cancelled_at 14:07:55 → elapsed 2 min 55 s, i.e. ≤ 3:00 from matching (\"all cancellations made within 3 minutes of matching are not chargeable\"). The $6.61 cancellation fee was therefore not chargeable; refund_full of $6.61 (voucher form per NS-7).\n\nThe rider's stated ground (\"driver was nowhere near\") is not itself the basis: Ryde has no ETA-based free-cancellation rule (NS-8 informational), and the GPS trace in fact shows the driver moving toward the pickup, ~2 km away (1.3157,103.8260 area at 14:07:55) when the rider cancelled. The fee fails purely on the 3-minute rule, which is independent of driver proximity.\n\nNo-show elements (NS-1) never arise: no driver_pressed_here_at, no arrival confirmation, and the driver did not cancel. Evidence (timestamps, GPS, fare record) is complete for the elements needed — no gaps — so evidence_status = sufficient. Safety screen: chat is a neutral ETA exchange, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation → safety_concern = none. Driver profile shows no prior upheld disputes, so RD-6 does not apply and no account flag is raised by this case.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4"
+   "NS-4",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "Driver says he was on his way, which is true, but NS-4 does not condition the rider's free-cancellation window on the driver's progress — the waiver applies purely because the rider cancelled within 3 minutes of matching."
+    "id": "rider_eta_claim",
+    "reason": "Rider's assertion that the driver was 'nowhere near' is factually contradicted by the GPS trace (driver en route, ~2 km from pickup) and is legally irrelevant: Ryde publishes no ETA-based free-cancellation rule (NS-8 is informational only). The fee is refunded on the 3-minute rule, not on proximity."
    }
   ],
   "flag_account": false,
@@ -33,9 +34,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 3.11,
- "input_tokens": 11469,
- "output_tokens": 689,
+ "latency_s": 3.78,
+ "input_tokens": 11860,
+ "output_tokens": 760,
  "requests": 1,
  "llm_calls": 1
 }

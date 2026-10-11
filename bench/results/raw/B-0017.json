@@ -4,22 +4,23 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:50.168843+00:00",
+ "ts": "2026-10-10T17:36:12.490419+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the dispute: the fare was a fixed RydeX quote and the only off-route movement was covered by the rider's prior in-app consent; no fare adjustment and no account flag.",
-  "confidence": 0.6,
-  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is route_deviation, not safety. safety_concern = none.\n\nFare model (RD-0/RD-2): RydeX is a fixed-quote service — total charged $23.18 (base 3.90 + distance 13.88 + time 3.93 + platform 1.47). Distance changes do not change the fare. There are no tolls/ERP, no waiting fee, no edit-destination fee and no manual add-ons in the breakdown, so even on the route-deviation branch there is nothing monetary to refund; RD-2 non-metered branch would yield $0.00 → no_action.\n\nRoute: GPS (5 s samples, thinned to 30 s) shows the vehicle leaving the quoted corridor after ~10:02 (quoted polyline runs Punggol Rd → TPE; trace instead goes via Pasir Ris Industrial Drive area, ~1.3945/103.9069 at 10:02:50, before rejoining the TPE corridor near 1.3931/103.9132 at 10:06:20). That is one off-route segment (seg1, ~0.8–1.0 km extra).\n\nRD-5 consent: at 10:01:10, i.e. before the vehicle left the corridor, the driver asked \"Jam on Tampines Expressway is building up ahead, can I go round via Pasir Ris Industrial Drive 1?\" and the rider replied \"Sure, no problem.\" at 10:01:50. This is a rider-authored message, sent before the deviation began, agreeing to a specific named route. I tried to falsify it and cannot: (i) the location of the diversion at 10:02:50 (1.3945, 103.9069) is exactly the Pasir Ris Industrial Drive 1 area, i.e. the record does tie the driven segment to the named road, satisfying G13's correspondence requirement; there is no later stop or message naming a different road or place. Consent is therefore established and covers this segment. RD-4 is not relied on for the exemption (no LTA incident on the route; the TPE band-2 record can only corroborate, and RD-4(b) does not exempt alone), and the driver's statement is not used as proof of the rider's verbal agreement — the chat alone suffices.\n\nBecause the only off-route segment is covered by prior consent, there is no unexempted segment under RD-1, so RD-2 produces no refund. RD-6 is not triggered (refund not > 0 and no RD-1 violation recorded; driver's 90-day route_disputes_upheld_90d = 0 anyway). Profile facts did not decide anything.\n\nEvidence status: sufficient for the elements relied on (timed chat, complete GPS trace, fare breakdown). The deviation magnitude (extra_km) is not precisely derivable from the thinned 30 s trace and the route is a synthetic loop in the polyline data, so confidence is set at 0.6; the outcome is insensitive to it because the fare is fixed and consent covers the segment.",
+  "recommended_action": "No fare adjustment — the off-route stretch was covered by the rider's own prior consent (RD-5); close the dispute and note no driver breach.",
+  "confidence": 0.62,
+  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation — safety_concern \"none\". The dispute is a route/fare dispute, not a safety case.\n\nFare model: RydeX is a non-metered, fixed-quote service (fare.pricing = \"fixed\", total $23.18 = base 3.90 + distance 13.88 + time 3.93 + platform 1.47). Detour kilometres do not change the quoted fare (RD-2, non-metered branch), so the only recoverable items would be ERP/toll or unpublished add-ons — fare.tolls = 0.00, edit_destination_fee = 0.00, waiting_fee = 0.00. There is nothing to refund on the fare.\n\nRoute: the quoted route runs Punggol → TPE → Tampines (9.841 km, 15.1 min). The GPS trace after 10:02 (thinned to 30 s samples) goes south-east via Pasir Ris Industrial Drive 1 (≈1.394–1.395, 103.910–103.918), joins the TPE corridor briefly near 10:05–10:08, and rejoins the quoted corridor by 10:08:50 — an off-route stretch of roughly 2–2.5 km not on the quoted polyline.\n\nConsent (RD-5): at 10:01:10 the driver asked a specific route question — \"Jam on Tampines Expressway is building up ahead, can I go round via Pasir Ris Industrial Drive 1?\" — i.e. a request to turn off the TPE via a named road. The rider replied at 10:01:50 \"Sure, no problem.\" That message is the rider's own, sent before the deviation began (GPS still on the quoted corridor at 10:01:20/10:01:50), and the GPS trace ties the actually-driven off-route stretch to that very named road (Pasir Ris Industrial Drive 1, in Pasir Ris Industrial area) at the right time. The record thus corresponds to the agreed named road — it does not place the segment elsewhere — so this is \"named_road_tied\" (RD-5), not the untied G13 case and not a driver's own errand: the detour served the trip to Tampines, not a private stop. The segment is exempt; no unexempted deviation remains under RD-1, so RD-2 produces no refund.\n\nAlternative ground checked: even reading the request as a general congestion-management route choice, LTA bands support the premise (TAMPINES EXPRESSWAY band 2 ≈ 10–19 km/h, window covering 09:48:50–10:04:50, geometry on the quoted route), and the rider agreed before the turn-off; RD-4(a) is not available (traffic.incidents is empty), but RD-4 is not needed because the rider's message, not the driver's unilateral claim, is the basis.\n\nRD-6: no upheld refund and no recorded RD-1 breach, so no account flag. Driver's \"rider agreed\" statement is corroborated by the chat itself and is not relied on alone. Confidence is moderate (0.62) because the GPS is thinned to 30 s and one short stretch (≈10:04:20–10:05:50) cannot be snapped to a named road, but the traced segment's location and timing match the agreed road within the segment as a whole.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-5",
-   "RD-6"
+   "RD-4",
+   "RD-6",
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -27,18 +28,22 @@
    {
     "fact_id": "seg1",
     "finding": "exempt",
-    "basis": [],
-    "reason": "Off-route movement from ~10:02 to ~10:06 via Pasir Ris Industrial Drive 1 before rejoining the TPE corridor. The driver asked before turning off (10:01:10) and the rider expressly agreed (10:01:50), a rider-authored message sent before the segment began; the agreed named road matches where the trace actually went (1.3945, 103.9069 at 10:02:50), satisfying RD-5's correspondence requirement and G13. Exempt under RD-5; the fixed RydeX quote is unaffected in any event (RD-2)."
+    "ground": "named_road_tied",
+    "basis": [
+     "chat-2026-09-09T10:01:10+08:00",
+     "chat-2026-09-09T10:01:50+08:00"
+    ],
+    "reason": "Driver asked before turning off: 'Jam on Tampines Expressway is building up ahead, can I go round via Pasir Ris Industrial Drive 1?' and the rider's own message, sent 40 s later and before the deviation began (GPS still on the quoted corridor at 10:01:20/10:01:50), replied 'Sure, no problem.' The GPS trace ties the driven off-route stretch (≈1.394–1.395, 103.910–103.918, passing through the Pasir Ris Industrial area before rejoining the TPE corridor) to that named road at the matching time, so the record corresponds to the agreed route and does not place it elsewhere → exempt under RD-5 (named_road_tied). RD-1/RD-2 therefore yield nothing to refund; RydeX is a fixed quote and tolls/add-ons are 0."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_detour_complaint",
-    "reason": "There was one off-route segment, but it was expressly agreed by the rider in-app before it began (RD-5), and the RydeX fare is a fixed quote unaffected by distance (RD-2 non-metered branch), so no refund is due."
+    "id": "rider_complaint",
+    "reason": "The rider's claim of an unexplained longer way round fails on the chat record: he himself approved the driver's named-road detour at 10:01:50, before the deviation, and the GPS trace matches Pasir Ris Industrial Drive 1 (RD-5). With a fixed RydeX quote there is in any case no metered overcharge to refund (RD-2)."
    },
    {
-    "id": "driver_traffic_justification",
-    "reason": "No traffic-incident fact on the replaced optimal route and the TPE band-2 record alone cannot exempt (RD-4(a)/(b)); the exemption rests on the rider's consent, not on traffic."
+    "id": "driver_statement_verbal_agreement",
+    "reason": "The driver's general assertion is not relied upon as 'verbal consent' (G11); the exemption rests on the rider's own timestamped chat message plus the GPS correspondence to the named road. RD-4(a) traffic-incident support is unavailable (traffic.incidents empty) and was not needed."
    }
   ],
   "flag_account": false,
@@ -47,9 +52,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.57,
- "input_tokens": 14429,
- "output_tokens": 1301,
+ "latency_s": 7.21,
+ "input_tokens": 14820,
+ "output_tokens": 1557,
  "requests": 1,
  "llm_calls": 1
 }

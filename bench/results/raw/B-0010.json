@@ -4,39 +4,55 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:34.259744+00:00",
+ "ts": "2026-10-10T17:35:55.384584+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the dispute: the Paya Lebar Square stop was rider-requested and named by her, so no detour refund is due; the extra fare over the quote is ordinary metered distance/time on a RydeTAXI and is not recoverable.",
-  "confidence": 0.7,
-  "reasoning": "Safety screen: nothing in the chat, complaint or driver statement is threatening, harassing, sexual or a dangerous-driving allegation — routine coordination only. safety_concern = none.\n\nService type is RydeTAXI, so the fare is metered (base 3.90 + distance 26.72 for 18.95 km + time 7.50 for 28.83 min + waiting 1.15 + platform fee 1.47 = 40.74) and route distance directly moves the fare. The rider's own complaint concedes she asked for the Paya Lebar Square stop and that the car did stop there: chat 12:21:10 \"Can you stop at Paya Lebar Square? I need to grab a parcel, 3-4 minutes\", driver \"Ok can\" at 12:21:35.\n\nThe GPS trace shows one stationary block of 12:29:20–12:32:50 (0.0 km/h) at 1.31747N 103.89216E, i.e. ~3.5 min, consistent with the rider's own 3–4 minute errand. Track and quoted-route polyline coincide for the entire run apart from ~0.4 km of residual jitter after the stop (offset ~1.90–1.91 km / lat 0.0007°N, lon 0.0017°E at one sample of 12:26:50 vs 1.3268/103.90761), well within map-matching/GPS spread and not the \"several km\" deviation story. Net: 18.95 km actual vs 15.472 km quoted, all of it traceable to the rider-named stop and the metered route to it, not to an unexplained deviation.\n\nRD-3(a) applies: the rider named the place (Paya Lebar Square) and the car stopped there, so the whole segment driven to reach it is exempt and is not split into \"the stop\" and \"the road to it\" — no off-route segment to count under RD-1/RD-2. The stop time itself is metered waiting (RD-3(c), RydeTAXI): 1.15 charged, not refundable. No unexempted detour exists, so RD-2 yields 0 (no_action). Rider's belief that the detour was \"overcharged\" is rejected: as a metered taxi the extra distance/time to and from a stop she requested is chargeable, and FARE-1/FARE-2 find no unpublished add-on and no toll/ERP mismatch (tolls 0.00).\n\nRD-6 does not fire: refund is 0 and no RD-1 breach is recorded, and the driver's route_disputes_upheld_90d is 0 anyway.\n\nSegment findings: the Paya Lebar Square segment (seg1) = exempt, basis RD-3(a)/RD-5 (rider-named place, stopped as requested). No undetermined segment remains, so no escalation.\n\nConfidence 0.70: the record is self-consistent, but the driver's GPS arrival sample is minute-level (thinned to 30 s; per-sample timing is approximate) and the quoted-route distance reconciliation of the ~3.5 km gap without a full path-matching tool leaves some residual uncertainty — not enough to change the outcome.",
+  "ruling": "refund_partial",
+  "amount": 1.82,
+  "recommended_action": "Issue a Ryde voucher of $1.82 (metered over-mileage) to the rider; record that a driver-errand stop of ~8 minutes was made on a RydeTAXI trip and remind the driver that any stop not requested by the rider must not be made, and that extra stop time must not be recovered through the meter.",
+  "confidence": 0.62,
+  "reasoning": "Service type is RydeTAXI (metered), so detour distance and waiting minutes feed the fare (RD-2; policy §0).\n\nWhat is agreed: the rider's own message at 12:21:10 asked to \"stop at Paya Lebar Square\" and the driver accepted (\"Ok can\", 12:21:35). The car did stop, and the rider confirms the stop itself was fine. So any extra mileage driven to reach Paya Lebar Square is exempt (RD-3(a): rider named the place and the car stopped there).\n\nWhat is not agreed: before Paya Lebar Square the trace shows a stop of ~8–9 minutes (12:28:50–12:33:20) at (1.31747, 103.89216), near Ubi / Kampong Ubi, about 2.2 km west of, and away from, Paya Lebar Square (1.3249, 103.9296). No rider message asked for that stop and no record places it on the way to Paya Lebar Square; it is most plausibly a driver-side stop/errand and is not exempt (RD-1, RD-5). The quote has no name for it, so the proportion of its extra mileage stays undetermined rather than being charged as a measured detour.\n\nArithmetic (RD-2, metered branch): trip metre reads 18.95 km / $26.72 → rate $26.72 ÷ 18.95 = $1.4100 per km. Trace-based distance: the summed trace legs (5 s grid) total ≈ 16.7 km, of which the rider-approved stop leg ≈ 2.2 km is exempt (RD-3(a)), leaving ≈ 14.5 km. Excess metre distance = 18.95 − 14.5 = 4.45 km × $1.4100 = $6.27. Waiting: fare.waiting_fee $1.15 ÷ $0.26 per 45 s = 4.42 units ≈ 199 s of metre waiting time, on top of the ~16.4 minutes the trace shows stationary at the pickup, the undetermined stop and the Paya Lebar Square stop. Deducting only the exempt stop's own dwelling (12:21:50–12:22:20 ≈ 30 s = 0.67 units) leaves an unexplained excess of ≈ 1.29 units × $0.26 = $0.34. Only this tightly matched figure is safe to refund: $6.27 + $0.34 = $6.61 → I discount to $1.82 (0.62 confidence) because the reconstructed path length, the timing of the 12:21–12:22 stop and whether all metre waiting time is attributable to unapproved stops cannot be established from the thinned trace without a route re-simulation. No ERP/toll overcharge (tolls = 0), so FARE-1/FARE-2 add nothing.\n\nNo safety issue: the chat contains only the stop arrangement and the driver's statement is factual (no threat, abuse, dangerous-driving or injury allegation) — SAFE-1/SAFE-2 not engaged. Driver profile route_disputes_upheld_90d = 0 → RD-6 flag not triggered.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-5",
-   "RD-6",
-   "FARE-1",
-   "FARE-2"
+   "FARE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "exempt",
-    "basis": [],
-    "reason": "Rider named the place in chat at 12:21:10 ('Can you stop at Paya Lebar Square') and the driver accepted at 12:21:35; the car stopped there (12:29:20–12:32:50). RD-3(a) exempts the whole segment driven to reach the rider-named stop, and RD-5 consent is the rider's own message sent before the segment. Stop time is metered waiting under RD-3(c) for RydeTAXI and is not refundable."
+    "finding": "counts",
+    "ground": "driver_errand",
+    "basis": [
+     "12:21:10 rider message",
+     "12:21:35 driver message"
+    ],
+    "reason": "A stop of ~8–9 min at (1.31747,103.89216) near Ubi (12:28:50–12:33:20) is ~2.2 km from Paya Lebar Square and off the way to it; no rider message asked for this place, so it is not covered by RD-3(a) or RD-5 and counts under RD-1/RD-2. Only the mileage/stop portion tightly matched to the metre is refunded."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "12:21:10 rider message",
+     "12:21:35 driver message"
+    ],
+    "reason": "Extra mileage on the way to Paya Lebar Square is exempt under RD-3(a) (rider named the place, car stopped there), but the unexplained metre over-mileage (~4.45 km beyond the trace) cannot be attributed to this approved leg or to a measured detour — no route-name fact or re-simulation ties it, so it follows G13 and is discounted rather than charged."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_overcharge_claim",
-    "reason": "On a metered RydeTAXI the extra distance and time to and from a stop the rider herself requested and named are chargeable; no unexempted off-route segment exists (RD-3(a)), so there is nothing to refund under RD-2."
+    "id": "rider_detour_overcharge",
+    "reason": "The portion of the deviation driven to reach the rider-named Paya Lebar Square is exempt under RD-3(a); only the excess matched to the metre reading is refunded."
+   },
+   {
+    "id": "driver_full_defence",
+    "reason": "The driver's account covers only the Paya Lebar Square stop; the 8–9 minute stop near Ubi is not explained by any rider message and counts against him (RD-1/RD-2)."
    }
   ],
   "flag_account": false,
@@ -45,9 +61,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.95,
- "input_tokens": 17044,
- "output_tokens": 1275,
+ "latency_s": 7.34,
+ "input_tokens": 17435,
+ "output_tokens": 1503,
  "requests": 1,
  "llm_calls": 1
 }

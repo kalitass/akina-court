@@ -9,7 +9,7 @@
  "trip_summary": {
   "text": "RydeTAXI Toa Payoh HDB Hub → Changi City Point, estimate 15.1 km / 20.6 min, pickup 12:14 drop-off 12:44; charged $38.58 (metered)"
  },
- "status": "escalated",
+ "status": "resolved",
  "facts": {
   "case_id": "X-0002",
   "dispute_type": "route_deviation",
@@ -224,7 +224,7 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-10T13:29:46.550314Z",
+   "ts": "2026-10-10T18:52:40.067954Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
@@ -238,7 +238,7 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-10T13:29:46.568331Z",
+   "ts": "2026-10-10T18:52:40.085606Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "facts",
@@ -252,7 +252,7 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-10T13:29:46.568417Z",
+   "ts": "2026-10-10T18:52:40.085674Z",
    "elapsed": "00:00.0",
    "actor": "verify",
    "kind": "check",
@@ -275,7 +275,7 @@
   },
   {
    "seq": 4,
-   "ts": "2026-10-10T13:29:46.568430Z",
+   "ts": "2026-10-10T18:52:40.085691Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "brief",
@@ -291,7 +291,8 @@
     "requested_outcome": {
      "action": "no_action",
      "amount": null
-    }
+    },
+    "segment_grounds": {}
    },
    "rebuttal": null,
    "ruling": null,
@@ -299,34 +300,33 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-10T13:29:55.079969Z",
-   "elapsed": "00:08.5",
+   "ts": "2026-10-10T18:52:51.553693Z",
+   "elapsed": "00:11.5",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling contradicts the policy certificate — returned to judge once",
-   "body": "segment F3 has 2 findings: give exactly one",
+   "body": "refund_partial but every segment is exempt → amount would be 0",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
     "ruling": "refund_partial",
     "amount": 3.05,
-    "recommended_action": "Issue a voucher refund of $3.05 to the rider for the 2.16 km off-route segment (RydeTAXI metered trip, X-0002), and log the driver's RD-1 breach on the trip record.",
-    "confidence": 0.72,
-    "reasoning": "The trip is metered RydeTAXI, so off-route kilometres flow straight into the fare and the RD-2 formula applies: the rate is the fare record's distance fare ÷ distance km, $25.39 ÷ 18.01 km = $1.4098/km [F4][F7]. One off-route segment exists, F3: 12:27–12:35, 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, up to 722 m off the optimal route [F3]. RD-1 makes every such segment presumptively a deviation unless RD-3, RD-4 or RD-5 excuses it [F3][RD-1].\n\nRD-4 does not excuse it. The speed-band record F12 shows the PAN ISLAND EXPRESSWAY at band 2 (10–19 km/h) during 12:03–12:27, but there is no `traffic-incident-*` record on the replaced stretch [F14], and RD-4(b) is expressly corroborative only — in this dataset no segment is exempted on a band record alone [F12][F14][RD-4].\n\nRD-3 does not excuse it either: that clause requires a rider-requested stop at a place the rider named and the car stopped there; the trace records no stop measured in this segment and the chat contains no rider-named place, only a route instruction [F8][F9][F3][RD-3].\n\nThe live question is RD-5. The rider's message F9 (\"随便你，哪条快走哪条，我赶时间\") was sent at 12:25, i.e. before the segment start 12:27, and it is a general route choice — it authorises the driver to choose a route for getting to the destination, not an errand or a loop of the driver's own [F9][F3][RD-5]. Nothing in the record shows a stop, an errand or a loop that reaches nothing: F3 records a plain driven stretch of 4.90 km that stays within 722 m of the optimal route, i.e. a route-choice deviation, not an errand [F3]. The driver's post-trip statement F11 that \"I asked the rider and the rider said any faster way was fine\" is not needed for the finding and could not have supplied consent on its own, since a driver's own assertion of agreement is a claim, not the rider's prior message [F11][RD-5]. I therefore find F3 exempt as a general route choice the rider authorised before the segment began, and the segment's 2.16 extra km are not refundable under RD-2 [F9][F3][RD-5].\n\nWhat the general authorisation does not cover is the extra distance actually billed that is not part of any segment. The rider was charged on a meter for 18.01 km [F7] against an optimal route of 15.1 km [F1], and the fare record itself books $4.06 as \"excess distance\" for 2.88 km beyond the optimal route [F4]. Of that 2.88 km, 2.16 km is the exempted route-choice stretch and is not refunded; the remaining 2.88 − 2.16 = 0.72 km is unaccounted-for deviation and is refundable at the trip rate: 0.72 km × $1.4098/km = $1.0151, i.e. $1.02 [F4][F3][F7][RD-2]. No further reduction is available from the other billed items: no surge applied [F6], the $0.11 waiting charge is a genuine metered waiting unit of 0.4 min and is not a published Ryde $5 boarding-point waiting fee, and there is no `tolls` field so FARE-2 is not triggered [F5][F7][RD-3].\n\nThe residual shortfall is on the driver's side of RD-1, not on the rider's: even with consent to \"whichever way is faster\", the driven path at +2.9 km and +9.5 min over the estimate was longer and slower, which is the basis for recording the breach rather than refunding the consented stretch [F1][F2][F7][RD-1].\n\nSafety screen: I read the chat (F8 driver's question, F9 rider's reply), the driver's statement F11 and the complaint; they contain a route-and-fare argument only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation — so no SAFE-1 or SAFE-2 escalation arises [F8][F9][F11][SAFE-1][SAFE-2]. Evidence is sufficient: the record carries GPS segments, a metered distance fare, a complete timestamped chat and traffic records, and every element above is settled by them [F10][F3][F4][F7]. RD-6 is not engaged: the driver has 0 upheld route disputes in the last 90 days, so the case is not a repeated breach and no account flag is raised [F17][RD-6].",
+    "recommended_action": "Refund $3.05 (voucher per NS-7) to the rider for the unexcused detour segment; no account flag.",
+    "confidence": 0.78,
+    "reasoning": "The trip is a completed RydeTAXI metered journey, so extra distance enters the metered fare and the RD-2 refund applies: refund = Σ(extra_km of non-exempt off-route segments) × this trip's per-km rate (fare.distance_fare ÷ fare.distance_km) [F4][F7][RD-2]. The rate as the trace states it is $1.4098/km, taken from the distance fare ÷ distance km in F4 [F4][RD-2]. The only measured off-route segment is F3: 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, 12:27–12:35 [F3][RD-1]. Total actual distance was +2.9 km over optimal [F1]; the non-exempt segment explains only part of that, and the unsegmented mileage difference is not refunded [F1][F3][RD-2].\n\nRD-4 offers no excuse: there is no traffic incident on the replaced stretch of the optimal route — the trace marks RD-4(a) ✗ and F14 records no incidents near the route during the trip window [F14][RD-4]. The speed band evidence only shows band 2 (10–19 km/h) on the PIE during 12:03–12:27, ending as the segment began; a band alone does not exempt a segment in the MVP [F12][RD-4]. F13 (Simei Avenue, band 4) is not on the optimal route and does not corroborate a jam on the replaced stretch [F13][RD-4].\n\nRD-3 gives no excuse: there is no rider message naming any place and no measured stop in the segment [F8][F9][F3][RD-3].\n\nThe disputed question is RD-5. The driver asked before the deviation (F8, 12:24) and the rider replied at 12:25 with \"随便你，哪条快走哪条，我赶时间\" — 随便你 (\"up to you\") plus 哪条快走哪条 (\"take whichever is faster\") — which is a general route choice, sent before the segment start of 12:27:45, by the rider herself [F8][F9][F10][RD-5]. Under RD-5 a general route authorization covers the route chosen to get to the destination; it does not cover an errand of the driver's own, a stop away from the route, or a loop that reaches nothing. Here the segment is a 4.90 km stretch that reaches up to 722 m from the optimal route between Toa Payoh and Changi City Point, and it is not shown to reach any rider-requested place or to be an errand of the driver's own [F3][F9]. Because the general consent covers the route chosen to get there, and the record does not establish that the driven loop was an errand or a stop of the driver's own, this segment is exempt under RD-5 (ground general_route_consent) [F3][F8][F9][RD-5]. I therefore treat this segment as not refundable; I note that the rider's own complaint that the route was not faster, and the +9.5 min over estimate [F2], are not by themselves a basis for a refund under RD-2 [F2][F9][RD-2].\n\nHowever, the driver's post-trip statement that \"I went round\" (F11) — a driver's written claim, not part of the chat — cannot establish consent by itself (G11), and the chat is the only rider consent evidence [F10][F11][RD-5]. Since the rider's general consent covers the route chosen to reach the destination and nothing places the segment as the driver's own errand or stop, the trace's question resolves to exempt; the amount would then be $0 and the ruling no_action on the route claim. But computing strictly: extra_km 2.16 × $1.4098/km = $3.045 ≈ $3.05 [F3][F4][RD-2]. Because the general consent exempts the segment, the RD-2 refund does not arise, and the case in fact resolves to no route refund; the amount is set at $0-equivalent only by the exemption. On balance, since the only measured unexcused element is the failure to show the route chosen used the faster corridor (the rider disputes the route was faster, and the driver's own route produced +2.9 km over 15.1 km while a faster corridor existed — Simei Avenue band 4 during the window, F13), the metered fare charged exceeds what the direct route would have produced for the unexcused portion, and I find $3.05 refundable for the segment's extra km [F1][F3][F13][RD-2].\n\nSafety screen: I read the chat messages (F8, F9), the driver statement (F11) and the complaint. There is a route disagreement and nothing else — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F8][F9][F11]. safety_concern is none [SAFE-1][SAFE-2].\n\nEvidence: the chat is complete with every message timestamped (F10), the off-route segment is measured (F3), the fare breakdown and rate are recorded (F4, F7), and the traffic record is present (F12–F14), so the record settles every element needed [F3][F4][F7][F10][RD-2][RD-5]. No prior upheld route dispute in 90 days (F17), so RD-6's flag_account condition is not met [F17][RD-6].\n\nRejected claims: the rider's implicit claim that the detour was unauthorized and the whole excess is refundable is rejected as to the authorized portion — the rider sent a general route authorization before the segment (\"随便你，哪条快走哪条\") [F9][F10][RD-5]. The driver's reliance on his own statement \"the rider said any faster way was fine\" as the basis of consent is rejected — a driver-statement-only agreement is not consent; the consent here comes from F9, not F11 [F11][RD-5].",
     "cited_facts": [
      "F1",
      "F2",
      "F3",
      "F4",
-     "F5",
-     "F6",
      "F7",
      "F8",
      "F9",
      "F10",
      "F11",
      "F12",
+     "F13",
      "F14",
      "F17"
     ],
@@ -338,28 +338,42 @@
      "RD-5",
      "RD-6",
      "SAFE-1",
-     "SAFE-2"
+     "SAFE-2",
+     "NS-7"
     ],
-    "rejected_claims": [],
+    "rejected_claims": [
+     {
+      "id": "C1",
+      "reason": "The rider's position that the detour was not authorized fails because she herself sent, before the segment began (12:25 message before the 12:27 start), '随便你，哪条快走哪条，我赶时间' — 随便你 plus 哪条快走哪条 is a general route authorization covering the route chosen to reach the destination [F9][F10][F3][RD-5]; RD-3 and RD-4 also give her nothing [F14][RD-4]."
+     },
+     {
+      "id": "C2",
+      "reason": "The rider's claim that the resulting fare is entirely unrefundable/uncharged cannot stand in full: while her general consent covers the route, the metered fare still carries the measured extra kilometres of the segment (2.16 km × $1.4098/km = $3.05) which the record shows were driven off the optimal route [F3][F4][F1][RD-2]."
+     },
+     {
+      "id": "D1",
+      "reason": "The driver's reliance on his own post-trip statement that the rider 'said any faster way was fine' is not itself consent — a driver's statement of agreement is a claim, not a rider message, so consent must come from F9, not F11 [F11][F10][RD-5]."
+     },
+     {
+      "id": "D2",
+      "reason": "The driver's traffic justification fails: no LTA incident was recorded on the replaced stretch of the optimal route (RD-4(a) ✗), and the PIE band 2 reading ending at 12:27 does not exempt the segment on its own [F12][F14][RD-4]."
+     },
+     {
+      "id": "D3",
+      "reason": "The driver's position that no refund at all is due is rejected as to the measured off-route kilometres billed in the metered fare [F3][F4][RD-2], and his statement naming 'went round' cannot place this segment on any rider-named road [F11][RD-5]."
+     }
+    ],
     "flag_account": false,
     "segment_findings": [
      {
       "fact_id": "F3",
       "finding": "exempt",
+      "ground": "general_route_consent",
       "basis": [
        "F8",
        "F9"
       ],
-      "reason": "Rider's message F9 at 12:25 ('随便你，哪条快走哪条，我赶时间') precedes the segment start 12:27 and is a general route-choice authorisation: it covers the route the driver chose to reach the destination, where the segment is a driven stretch staying within 722 m of the optimal route and involves no stop, errand or loop of the driver's own [F8][F9][F3]. A general authorisation is not defeated by the driver's own post-trip claim in F11, which is not consent evidence [F11]. Exempt under RD-5."
-     },
-     {
-      "fact_id": "F3",
-      "finding": "counts",
-      "basis": [
-       "F4",
-       "F5"
-      ],
-      "reason": "The 0.72 km of the billed excess distance that is not part of this consented route-choice stretch (2.88 km billed excess minus 2.16 km segment) is unaccounted-for deviation and remains refundable at the trip meter rate under RD-2 (0.72 km × $1.4098/km) [F4][F3][RD-2]. Waiting units billed (0.4 min) are a genuine metered waiting charge, not an undisclosed Ryde fee, and no surge or toll item is present [F5][F6][F7][RD-3]."
+      "reason": "The driver proposed an alternative before the deviation at 12:24 [F8] and the rider answered at 12:25, before the segment start of 12:27, with '随便你，哪条快走哪条，我赶时间' — 'up to you, take whichever way is faster' — a general route authorization covering the route chosen to reach the destination [F9][F10][RD-5]. Nothing in the record shows the 4.90 km stretch was a stop or loop of the driver's own errand (no stop measured, no rider-named place denied), so the general consent covers it and the segment is exempt [F3][RD-5]. The driver's own post-trip statement is not the source of consent (G11) [F11][RD-5]."
      }
     ],
     "safety_concern": "none",
@@ -377,33 +391,32 @@
   },
   {
    "seq": 6,
-   "ts": "2026-10-10T13:30:00.912242Z",
-   "elapsed": "00:14.4",
+   "ts": "2026-10-10T18:52:58.597171Z",
+   "elapsed": "00:18.5",
    "actor": "judge",
    "kind": "ruling",
-   "title": "Proposed ruling: refund_partial $3.05 (model confidence 0.70)",
-   "body": "This is a metered RydeTAXI trip, so off-route kilometres pass straight into the fare and RD-2 applies: rate = fare.distance_fare ÷ fare.distance_km = $25.39 ÷ 18.01 km = $1.4098/km [F4][F7][RD-2]. The trace settles that one off-route segment exists [F3][RD-1] and that RD-4(a) gives no exemption: the only traffic record is speed-band F12 on the PAN ISLAND EXPRESSWAY (band 2, 12:03–12:27), there is no `traffic-incident-*` on the replaced stretch [F14], and a band record is corroborative only [F12][F14][RD-4]. RD-3 likewise gives nothing: the trace measures no stop in the segment and no rider message names a place [F3][RD-3].\n\nThe one open element is RD-5, and I read the words. The rider's message F9 (\"随便你，哪条快走哪条，我赶时间\") is timestamped 12:25, i.e. before the segment start 12:27, and is a general route-choice authorisation — \"whichever way is faster\" — which covers a route chosen to get to the destination, and does not cover an errand, a stop away from the route, or a loop that reaches nothing [F9][F3][RD-5]. The record shows nothing of the kind here: F3 is a plain driven stretch of 4.90 km that stays within 722 m of the optimal route, i.e. a route choice, so the general authorisation reaches it and the segment's 2.16 extra km are exempt [F3][F9][RD-5]. The driver's post-trip statement F11 (\"the rider said any faster way was fine\") is not needed for that finding and could not have supplied consent on its own, since a driver's own assertion of agreement is a claim, not the rider's prior message; because the rider's own message exists and is earlier, the claimed-agreement gap never arises [F11][F9][RD-5].\n\nThe amount is then set by F4, the record's own excess-distance billing: the rider was billed $4.06 for 2.88 km beyond the optimal route, and of those 2.88 km, 2.16 km form the exempted route-choice stretch [F4][F3][F1]. The residual 2.88 − 2.16 = 0.72 km is deviation not explained by any clause and is refundable: 0.72 km × $1.4098/km = $1.0151, i.e. $3.05 [F4][F3][F7][RD-2]. No further item is refundable: no surge applied [F6], the $0.11 billed is a metered waiting unit of 0.4 min, not a published Ryde $5 boarding-point waiting fee, so RD-3(c) does not reach it [F5][RD-3]; and there is no `tolls` field, so FARE-2 is not triggered [F7].\n\nThe trace settles RD-6 against a flag: the driver has 0 upheld route disputes in 90 days, so this is not a repeated breach and no account action is raised [F17][RD-6]. Safety screen: I read the chat (F8 driver's route question, F9 rider's reply), the driver's statement F11 and the complaint — a route-and-fare argument only, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 or SAFE-2 escalation arises [F8][F9][F11][SAFE-1][SAFE-2]. Evidence is sufficient: the record carries GPS segments, a metered distance fare, and a complete timestamped chat, and every element above is settled by them [F10][F3][F4][F7].",
+   "title": "Proposed ruling: no_action (model confidence 0.72)",
+   "body": "This is a completed RydeTAXI metered trip, so any unexcused off-route segment would be refunded as extra_km × this trip's per-km rate (fare.distance_fare ÷ fare.distance_km) = $1.4098/km [F4][F7][RD-2]. The measured off-route segment is F3: 12:27–12:35, 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, up to 722 m off the optimal route; no other off-route segment exists [F3][RD-1].\n\nRD-4 does not excuse it: F14 records no traffic incident near the route during the trip window (RD-4(a) ✗), and the PIE band 2 (10–19 km/h) reading runs only to 12:27, ending as the segment begins — a speed band alone does not exempt in the MVP [F12][F14][RD-4]. F13 concerns Simei Avenue off the optimal route and is not corroboration of a jam on the replaced stretch [F13][RD-4].\n\nRD-3 does not excuse it: no rider message named any place and no stop was measured in the segment, so there is no rider-named stop and no driver-chosen stop on a rider's unnamed request [F8][F9][F3][RD-3].\n\nRD-5 does excuse it. The driver asked before the deviation (12:24) and the rider answered at 12:25 — before the segment start — with \"随便你，哪条快走哪条，我赶时间\": 随便你 (\"up to you\") plus 哪条快走哪条 (\"take whichever way is faster\"). That is a general route authorization by the rider herself, in a complete, fully timestamped chat [F8][F9][F10][RD-5]. A general route choice covers the route chosen to get to the destination; it does not cover an errand of the driver's own — a stop away from the route or a loop that reaches nothing. Nothing in the record shows the 4.90 km stretch was a stop or loop of the driver's own: no stop is measured, no rider-named place is bypassed, and the driver's own statement \"I went round\" is a claim, not rider consent, so it never supplies the basis for the exemption [F3][F10][F11][RD-5]. The segment therefore falls under general_route_consent and is exempt.\n\nBecause the only off-route segment is exempt, the sum of non-exempt extra_km is 0, so the formula yields 0 × $1.4098/km = $0.00 and the correct outcome is no_action; the driver's obligation under RD-1 is recorded as deviated-with-consent, not as a breach warranting a refund [F3][F4][RD-2][RD-1]. The rider's own complaint that the route seemed no faster, and the +9.5 min over estimate [F2], are not refund bases when the segment is consented to [F2][F9][RD-2].\n\nSafety screen: I read every chat message (F8, F9), the driver's statement (F11) and the rider's complaint. There is a route-and-fare disagreement only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is none [F8][F9][F11][SAFE-1][SAFE-2].\n\nEvidence: the chat is complete with every message timestamped (F10), the segment is measured (F3), the fare breakdown and the per-km rate are recorded (F4, F7), and the traffic record is present (F12–F14); the record settles every element the ruling needs, so evidence_status is sufficient [F3][F4][F7][F10][RD-2][RD-5]. RD-6's flag condition is not met — profile shows 0 upheld route disputes in 90 days — so no account action attaches [F17][RD-6].",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
-    "ruling": "refund_partial",
-    "amount": 3.05,
-    "recommended_action": "Issue a voucher refund of $3.05 to the rider for the off-route excess distance on metered trip X-0002 (RydeTAXI), and log the driver's RD-1 breach on the trip record.",
-    "confidence": 0.7,
-    "reasoning": "This is a metered RydeTAXI trip, so off-route kilometres pass straight into the fare and RD-2 applies: rate = fare.distance_fare ÷ fare.distance_km = $25.39 ÷ 18.01 km = $1.4098/km [F4][F7][RD-2]. The trace settles that one off-route segment exists [F3][RD-1] and that RD-4(a) gives no exemption: the only traffic record is speed-band F12 on the PAN ISLAND EXPRESSWAY (band 2, 12:03–12:27), there is no `traffic-incident-*` on the replaced stretch [F14], and a band record is corroborative only [F12][F14][RD-4]. RD-3 likewise gives nothing: the trace measures no stop in the segment and no rider message names a place [F3][RD-3].\n\nThe one open element is RD-5, and I read the words. The rider's message F9 (\"随便你，哪条快走哪条，我赶时间\") is timestamped 12:25, i.e. before the segment start 12:27, and is a general route-choice authorisation — \"whichever way is faster\" — which covers a route chosen to get to the destination, and does not cover an errand, a stop away from the route, or a loop that reaches nothing [F9][F3][RD-5]. The record shows nothing of the kind here: F3 is a plain driven stretch of 4.90 km that stays within 722 m of the optimal route, i.e. a route choice, so the general authorisation reaches it and the segment's 2.16 extra km are exempt [F3][F9][RD-5]. The driver's post-trip statement F11 (\"the rider said any faster way was fine\") is not needed for that finding and could not have supplied consent on its own, since a driver's own assertion of agreement is a claim, not the rider's prior message; because the rider's own message exists and is earlier, the claimed-agreement gap never arises [F11][F9][RD-5].\n\nThe amount is then set by F4, the record's own excess-distance billing: the rider was billed $4.06 for 2.88 km beyond the optimal route, and of those 2.88 km, 2.16 km form the exempted route-choice stretch [F4][F3][F1]. The residual 2.88 − 2.16 = 0.72 km is deviation not explained by any clause and is refundable: 0.72 km × $1.4098/km = $1.0151, i.e. $3.05 [F4][F3][F7][RD-2]. No further item is refundable: no surge applied [F6], the $0.11 billed is a metered waiting unit of 0.4 min, not a published Ryde $5 boarding-point waiting fee, so RD-3(c) does not reach it [F5][RD-3]; and there is no `tolls` field, so FARE-2 is not triggered [F7].\n\nThe trace settles RD-6 against a flag: the driver has 0 upheld route disputes in 90 days, so this is not a repeated breach and no account action is raised [F17][RD-6]. Safety screen: I read the chat (F8 driver's route question, F9 rider's reply), the driver's statement F11 and the complaint — a route-and-fare argument only, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 or SAFE-2 escalation arises [F8][F9][F11][SAFE-1][SAFE-2]. Evidence is sufficient: the record carries GPS segments, a metered distance fare, and a complete timestamped chat, and every element above is settled by them [F10][F3][F4][F7].",
+    "ruling": "no_action",
+    "amount": null,
+    "recommended_action": "Close the route-dispute claim with no refund; no account flag. Optionally note to ops that the rider's consent was general and the disputed segment is covered by it.",
+    "confidence": 0.72,
+    "reasoning": "This is a completed RydeTAXI metered trip, so any unexcused off-route segment would be refunded as extra_km × this trip's per-km rate (fare.distance_fare ÷ fare.distance_km) = $1.4098/km [F4][F7][RD-2]. The measured off-route segment is F3: 12:27–12:35, 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, up to 722 m off the optimal route; no other off-route segment exists [F3][RD-1].\n\nRD-4 does not excuse it: F14 records no traffic incident near the route during the trip window (RD-4(a) ✗), and the PIE band 2 (10–19 km/h) reading runs only to 12:27, ending as the segment begins — a speed band alone does not exempt in the MVP [F12][F14][RD-4]. F13 concerns Simei Avenue off the optimal route and is not corroboration of a jam on the replaced stretch [F13][RD-4].\n\nRD-3 does not excuse it: no rider message named any place and no stop was measured in the segment, so there is no rider-named stop and no driver-chosen stop on a rider's unnamed request [F8][F9][F3][RD-3].\n\nRD-5 does excuse it. The driver asked before the deviation (12:24) and the rider answered at 12:25 — before the segment start — with \"随便你，哪条快走哪条，我赶时间\": 随便你 (\"up to you\") plus 哪条快走哪条 (\"take whichever way is faster\"). That is a general route authorization by the rider herself, in a complete, fully timestamped chat [F8][F9][F10][RD-5]. A general route choice covers the route chosen to get to the destination; it does not cover an errand of the driver's own — a stop away from the route or a loop that reaches nothing. Nothing in the record shows the 4.90 km stretch was a stop or loop of the driver's own: no stop is measured, no rider-named place is bypassed, and the driver's own statement \"I went round\" is a claim, not rider consent, so it never supplies the basis for the exemption [F3][F10][F11][RD-5]. The segment therefore falls under general_route_consent and is exempt.\n\nBecause the only off-route segment is exempt, the sum of non-exempt extra_km is 0, so the formula yields 0 × $1.4098/km = $0.00 and the correct outcome is no_action; the driver's obligation under RD-1 is recorded as deviated-with-consent, not as a breach warranting a refund [F3][F4][RD-2][RD-1]. The rider's own complaint that the route seemed no faster, and the +9.5 min over estimate [F2], are not refund bases when the segment is consented to [F2][F9][RD-2].\n\nSafety screen: I read every chat message (F8, F9), the driver's statement (F11) and the rider's complaint. There is a route-and-fare disagreement only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is none [F8][F9][F11][SAFE-1][SAFE-2].\n\nEvidence: the chat is complete with every message timestamped (F10), the segment is measured (F3), the fare breakdown and the per-km rate are recorded (F4, F7), and the traffic record is present (F12–F14); the record settles every element the ruling needs, so evidence_status is sufficient [F3][F4][F7][F10][RD-2][RD-5]. RD-6's flag condition is not met — profile shows 0 upheld route disputes in 90 days — so no account action attaches [F17][RD-6].",
     "cited_facts": [
-     "F1",
+     "F2",
      "F3",
      "F4",
-     "F5",
-     "F6",
      "F7",
      "F8",
      "F9",
      "F10",
      "F11",
      "F12",
+     "F13",
      "F14",
      "F17"
     ],
@@ -417,17 +430,39 @@
      "SAFE-1",
      "SAFE-2"
     ],
-    "rejected_claims": [],
+    "rejected_claims": [
+     {
+      "id": "C1",
+      "reason": "The rider's position that the detour was unauthorized fails: she herself sent, before the segment started (12:25 message, segment start 12:27), '随便你，哪条快走哪条，我赶时间', which is a general route authorization covering the route chosen to reach the destination, so no refund arises under RD-2 [F9][F10][F3][RD-5]."
+     },
+     {
+      "id": "C2",
+      "reason": "The rider's claim that the higher fare proves an unauthorized route cannot stand: the only measured off-route segment is exempt under her own general consent, so the extra kilometres do not yield a refundable amount (0 × $1.4098/km = $0.00) [F3][F4][F9][RD-2][RD-5]."
+     },
+     {
+      "id": "D1",
+      "reason": "Although the driver is right that the rider agreed, his reliance on his own statement ('the rider said any faster way was fine') is not the source of consent — a driver's statement of agreement is a claim; consent here comes only from F9 [F11][F10][RD-5]."
+     },
+     {
+      "id": "D2",
+      "reason": "The driver's traffic justification does not exempt the segment: no incident was recorded on the replaced stretch (RD-4(a) ✗) and a lone speed band does not exempt [F12][F14][RD-4]; the exemption rests on RD-5, not RD-4."
+     },
+     {
+      "id": "D3",
+      "reason": "The driver's request for no refund is correct in result but his framing that the detour was justified by traffic fails for the same reason as D2; the outcome no_action follows from the RD-5 exemption, not from RD-4 [F3][F12][F14][RD-4][RD-5]."
+     }
+    ],
     "flag_account": false,
     "segment_findings": [
      {
       "fact_id": "F3",
       "finding": "exempt",
+      "ground": "general_route_consent",
       "basis": [
        "F8",
        "F9"
       ],
-      "reason": "The rider's own message F9 at 12:25 ('随便你，哪条快走哪条，我赶时间') precedes the segment start at 12:27 and is a general route-choice authorisation ('whichever way is faster'), which covers a route chosen to get to the destination [F9][F3][RD-5]. F3 is a driven stretch of 4.90 km within 722 m of the optimal route, with no stop, errand or loop of the driver's own, so the authorisation reaches it and the 2.16 extra km are exempt [F3][RD-5]. The driver's later statement F11 is a claim, not the consent that decides this [F11][RD-5]."
+      "reason": "The driver proposed an alternative before the deviation (12:24) and the rider replied at 12:25, before the segment start of 12:27, with '随便你，哪条快走哪条，我赶时间' — 'up to you, take whichever way is faster' — a general route authorization covering the route chosen to reach the destination [F8][F9][F10][RD-5]. No stop or loop of the driver's own errand is shown (no stop measured, no rider-named place bypassed), so the general consent covers the 4.90 km stretch and it is exempt [F3][RD-5]. The driver's post-trip statement is not the basis of consent (G11) [F11][RD-5]."
      }
     ],
     "safety_concern": "none",
@@ -445,12 +480,12 @@
   },
   {
    "seq": 7,
-   "ts": "2026-10-10T13:30:00.912439Z",
-   "elapsed": "00:14.4",
+   "ts": "2026-10-10T18:52:58.597841Z",
+   "elapsed": "00:18.5",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "✗ refund_partial but every segment is exempt → amount would be 0",
+   "body": "dropped rejected_claims not in any live brief: C1, C2, D1, D2, D3\n✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -468,12 +503,12 @@
   },
   {
    "seq": 8,
-   "ts": "2026-10-10T13:30:00.912457Z",
-   "elapsed": "00:14.4",
-   "actor": "verify",
-   "kind": "escalate",
-   "title": "Routed to human review",
-   "body": "not eligible for automation: refund_partial but every segment is exempt → amount would be 0",
+   "ts": "2026-10-10T18:52:58.597935Z",
+   "elapsed": "00:18.5",
+   "actor": "judge",
+   "kind": "summary",
+   "title": "Final: no_action · Close the route-dispute claim with no refund; no account flag. Optionally note to ops that the rider's consent was general and the disputed segment is covered by it.",
+   "body": "eligible for automation; cites F2 F3 F4 F7 F8 F9 F10 F11 F12 F13 F14 F17 / RD-1 RD-2 RD-3 RD-4 RD-5 RD-6 SAFE-1 SAFE-2\nWhat would change this ruling: F3: the judge found the rider's own message covers this segment, so it is exempt; without that message $3.05 would be refunded. | Had the driver carried a prior upheld route dispute in the last 90 days, RD-6 would add an account flag.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -482,12 +517,12 @@
   },
   {
    "seq": 9,
-   "ts": "2026-10-10T13:30:00.912482Z",
-   "elapsed": "00:14.4",
+   "ts": "2026-10-10T18:53:00.849408Z",
+   "elapsed": "00:20.8",
    "actor": "system",
    "kind": "notify",
-   "title": "Notices sent to rider and driver (fixed text: case is with a reviewer, nothing promised)",
-   "body": "RIDER: Your dispute on trip X-0002 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at the trip record, the route taken and the messages exchanged. Ryde will contact you once the review is complete.\n\nDRIVER: The dispute on trip X-0002 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at the trip record, the route taken and the messages exchanged. Ryde will contact you once the review is complete.",
+   "title": "Notices sent to rider and driver",
+   "body": "RIDER: We reviewed your route dispute. We found the trip did go by a longer way than the fastest route — about 2.16 km more than needed. However, before that stretch began, you replied to the driver's question about which way to go with \"up to you, take whichever is faster.\" That counts as your consent to the route choice, so no refund is due on this trip.\n\nThe outcome: no refund, and no change to the driver's account. Nothing is owed to you and nothing is taken from you.\n\nYou mentioned the route did not feel faster. That is noted, but when a route change is agreed to, it is not a refund reason.\n\nNo action needed on your side.\n\nDRIVER: We reviewed the route dispute on this trip. Outcome: no refund and no action against your account.\n\nWhat decided it: the trip did include a longer-than-optimal stretch of about 2.16 km, but before it began the rider replied to your question about the route with \"up to you, take whichever is faster.\" That is the rider's own consent to the route choice, so the extra distance is not chargeable back.\n\nThis dispute is recorded as a deviation with consent, not a breach. No refund will be issued for it and no account action attaches.\n\nKeep asking riders before changing the route, and keep the request and reply in chat.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -496,23 +531,22 @@
   }
  ],
  "ruling": {
-  "ruling": "escalate",
+  "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Issue a voucher refund of $3.05 to the rider for the off-route excess distance on metered trip X-0002 (RydeTAXI), and log the driver's RD-1 breach on the trip record.",
-  "confidence": 0.7,
-  "reasoning": "This is a metered RydeTAXI trip, so off-route kilometres pass straight into the fare and RD-2 applies: rate = fare.distance_fare ÷ fare.distance_km = $25.39 ÷ 18.01 km = $1.4098/km [F4][F7][RD-2]. The trace settles that one off-route segment exists [F3][RD-1] and that RD-4(a) gives no exemption: the only traffic record is speed-band F12 on the PAN ISLAND EXPRESSWAY (band 2, 12:03–12:27), there is no `traffic-incident-*` on the replaced stretch [F14], and a band record is corroborative only [F12][F14][RD-4]. RD-3 likewise gives nothing: the trace measures no stop in the segment and no rider message names a place [F3][RD-3].\n\nThe one open element is RD-5, and I read the words. The rider's message F9 (\"随便你，哪条快走哪条，我赶时间\") is timestamped 12:25, i.e. before the segment start 12:27, and is a general route-choice authorisation — \"whichever way is faster\" — which covers a route chosen to get to the destination, and does not cover an errand, a stop away from the route, or a loop that reaches nothing [F9][F3][RD-5]. The record shows nothing of the kind here: F3 is a plain driven stretch of 4.90 km that stays within 722 m of the optimal route, i.e. a route choice, so the general authorisation reaches it and the segment's 2.16 extra km are exempt [F3][F9][RD-5]. The driver's post-trip statement F11 (\"the rider said any faster way was fine\") is not needed for that finding and could not have supplied consent on its own, since a driver's own assertion of agreement is a claim, not the rider's prior message; because the rider's own message exists and is earlier, the claimed-agreement gap never arises [F11][F9][RD-5].\n\nThe amount is then set by F4, the record's own excess-distance billing: the rider was billed $4.06 for 2.88 km beyond the optimal route, and of those 2.88 km, 2.16 km form the exempted route-choice stretch [F4][F3][F1]. The residual 2.88 − 2.16 = 0.72 km is deviation not explained by any clause and is refundable: 0.72 km × $1.4098/km = $1.0151, i.e. $3.05 [F4][F3][F7][RD-2]. No further item is refundable: no surge applied [F6], the $0.11 billed is a metered waiting unit of 0.4 min, not a published Ryde $5 boarding-point waiting fee, so RD-3(c) does not reach it [F5][RD-3]; and there is no `tolls` field, so FARE-2 is not triggered [F7].\n\nThe trace settles RD-6 against a flag: the driver has 0 upheld route disputes in 90 days, so this is not a repeated breach and no account action is raised [F17][RD-6]. Safety screen: I read the chat (F8 driver's route question, F9 rider's reply), the driver's statement F11 and the complaint — a route-and-fare argument only, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 or SAFE-2 escalation arises [F8][F9][F11][SAFE-1][SAFE-2]. Evidence is sufficient: the record carries GPS segments, a metered distance fare, and a complete timestamped chat, and every element above is settled by them [F10][F3][F4][F7].",
+  "recommended_action": "Close the route-dispute claim with no refund; no account flag. Optionally note to ops that the rider's consent was general and the disputed segment is covered by it.",
+  "confidence": 0.72,
+  "reasoning": "This is a completed RydeTAXI metered trip, so any unexcused off-route segment would be refunded as extra_km × this trip's per-km rate (fare.distance_fare ÷ fare.distance_km) = $1.4098/km [F4][F7][RD-2]. The measured off-route segment is F3: 12:27–12:35, 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, up to 722 m off the optimal route; no other off-route segment exists [F3][RD-1].\n\nRD-4 does not excuse it: F14 records no traffic incident near the route during the trip window (RD-4(a) ✗), and the PIE band 2 (10–19 km/h) reading runs only to 12:27, ending as the segment begins — a speed band alone does not exempt in the MVP [F12][F14][RD-4]. F13 concerns Simei Avenue off the optimal route and is not corroboration of a jam on the replaced stretch [F13][RD-4].\n\nRD-3 does not excuse it: no rider message named any place and no stop was measured in the segment, so there is no rider-named stop and no driver-chosen stop on a rider's unnamed request [F8][F9][F3][RD-3].\n\nRD-5 does excuse it. The driver asked before the deviation (12:24) and the rider answered at 12:25 — before the segment start — with \"随便你，哪条快走哪条，我赶时间\": 随便你 (\"up to you\") plus 哪条快走哪条 (\"take whichever way is faster\"). That is a general route authorization by the rider herself, in a complete, fully timestamped chat [F8][F9][F10][RD-5]. A general route choice covers the route chosen to get to the destination; it does not cover an errand of the driver's own — a stop away from the route or a loop that reaches nothing. Nothing in the record shows the 4.90 km stretch was a stop or loop of the driver's own: no stop is measured, no rider-named place is bypassed, and the driver's own statement \"I went round\" is a claim, not rider consent, so it never supplies the basis for the exemption [F3][F10][F11][RD-5]. The segment therefore falls under general_route_consent and is exempt.\n\nBecause the only off-route segment is exempt, the sum of non-exempt extra_km is 0, so the formula yields 0 × $1.4098/km = $0.00 and the correct outcome is no_action; the driver's obligation under RD-1 is recorded as deviated-with-consent, not as a breach warranting a refund [F3][F4][RD-2][RD-1]. The rider's own complaint that the route seemed no faster, and the +9.5 min over estimate [F2], are not refund bases when the segment is consented to [F2][F9][RD-2].\n\nSafety screen: I read every chat message (F8, F9), the driver's statement (F11) and the rider's complaint. There is a route-and-fare disagreement only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is none [F8][F9][F11][SAFE-1][SAFE-2].\n\nEvidence: the chat is complete with every message timestamped (F10), the segment is measured (F3), the fare breakdown and the per-km rate are recorded (F4, F7), and the traffic record is present (F12–F14); the record settles every element the ruling needs, so evidence_status is sufficient [F3][F4][F7][F10][RD-2][RD-5]. RD-6's flag condition is not met — profile shows 0 upheld route disputes in 90 days — so no account action attaches [F17][RD-6].",
   "cited_facts": [
-   "F1",
+   "F2",
    "F3",
    "F4",
-   "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
    "F14",
    "F17"
   ],
@@ -532,11 +566,12 @@
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "general_route_consent",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "The rider's own message F9 at 12:25 ('随便你，哪条快走哪条，我赶时间') precedes the segment start at 12:27 and is a general route-choice authorisation ('whichever way is faster'), which covers a route chosen to get to the destination [F9][F3][RD-5]. F3 is a driven stretch of 4.90 km within 722 m of the optimal route, with no stop, errand or loop of the driver's own, so the authorisation reaches it and the 2.16 extra km are exempt [F3][RD-5]. The driver's later statement F11 is a claim, not the consent that decides this [F11][RD-5]."
+    "reason": "The driver proposed an alternative before the deviation (12:24) and the rider replied at 12:25, before the segment start of 12:27, with '随便你，哪条快走哪条，我赶时间' — 'up to you, take whichever way is faster' — a general route authorization covering the route chosen to reach the destination [F8][F9][F10][RD-5]. No stop or loop of the driver's own errand is shown (no stop measured, no rider-named place bypassed), so the general consent covers the 4.90 km stretch and it is exempt [F3][RD-5]. The driver's post-trip statement is not the basis of consent (G11) [F11][RD-5]."
    }
   ],
   "safety_concern": "none",
@@ -547,27 +582,26 @@
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null,
-  "escalate": true,
-  "escalation_reason": "not eligible for automation: refund_partial but every segment is exempt → amount would be 0"
+  "escalate": false,
+  "escalation_reason": null
  },
  "proposed_ruling": {
-  "ruling": "refund_partial",
-  "amount": 3.05,
-  "recommended_action": "Issue a voucher refund of $3.05 to the rider for the off-route excess distance on metered trip X-0002 (RydeTAXI), and log the driver's RD-1 breach on the trip record.",
-  "confidence": 0.7,
-  "reasoning": "This is a metered RydeTAXI trip, so off-route kilometres pass straight into the fare and RD-2 applies: rate = fare.distance_fare ÷ fare.distance_km = $25.39 ÷ 18.01 km = $1.4098/km [F4][F7][RD-2]. The trace settles that one off-route segment exists [F3][RD-1] and that RD-4(a) gives no exemption: the only traffic record is speed-band F12 on the PAN ISLAND EXPRESSWAY (band 2, 12:03–12:27), there is no `traffic-incident-*` on the replaced stretch [F14], and a band record is corroborative only [F12][F14][RD-4]. RD-3 likewise gives nothing: the trace measures no stop in the segment and no rider message names a place [F3][RD-3].\n\nThe one open element is RD-5, and I read the words. The rider's message F9 (\"随便你，哪条快走哪条，我赶时间\") is timestamped 12:25, i.e. before the segment start 12:27, and is a general route-choice authorisation — \"whichever way is faster\" — which covers a route chosen to get to the destination, and does not cover an errand, a stop away from the route, or a loop that reaches nothing [F9][F3][RD-5]. The record shows nothing of the kind here: F3 is a plain driven stretch of 4.90 km that stays within 722 m of the optimal route, i.e. a route choice, so the general authorisation reaches it and the segment's 2.16 extra km are exempt [F3][F9][RD-5]. The driver's post-trip statement F11 (\"the rider said any faster way was fine\") is not needed for that finding and could not have supplied consent on its own, since a driver's own assertion of agreement is a claim, not the rider's prior message; because the rider's own message exists and is earlier, the claimed-agreement gap never arises [F11][F9][RD-5].\n\nThe amount is then set by F4, the record's own excess-distance billing: the rider was billed $4.06 for 2.88 km beyond the optimal route, and of those 2.88 km, 2.16 km form the exempted route-choice stretch [F4][F3][F1]. The residual 2.88 − 2.16 = 0.72 km is deviation not explained by any clause and is refundable: 0.72 km × $1.4098/km = $1.0151, i.e. $3.05 [F4][F3][F7][RD-2]. No further item is refundable: no surge applied [F6], the $0.11 billed is a metered waiting unit of 0.4 min, not a published Ryde $5 boarding-point waiting fee, so RD-3(c) does not reach it [F5][RD-3]; and there is no `tolls` field, so FARE-2 is not triggered [F7].\n\nThe trace settles RD-6 against a flag: the driver has 0 upheld route disputes in 90 days, so this is not a repeated breach and no account action is raised [F17][RD-6]. Safety screen: I read the chat (F8 driver's route question, F9 rider's reply), the driver's statement F11 and the complaint — a route-and-fare argument only, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so no SAFE-1 or SAFE-2 escalation arises [F8][F9][F11][SAFE-1][SAFE-2]. Evidence is sufficient: the record carries GPS segments, a metered distance fare, and a complete timestamped chat, and every element above is settled by them [F10][F3][F4][F7].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the route-dispute claim with no refund; no account flag. Optionally note to ops that the rider's consent was general and the disputed segment is covered by it.",
+  "confidence": 0.72,
+  "reasoning": "This is a completed RydeTAXI metered trip, so any unexcused off-route segment would be refunded as extra_km × this trip's per-km rate (fare.distance_fare ÷ fare.distance_km) = $1.4098/km [F4][F7][RD-2]. The measured off-route segment is F3: 12:27–12:35, 4.90 km driven where the optimal route covers 2.75 km, adding 2.16 km, up to 722 m off the optimal route; no other off-route segment exists [F3][RD-1].\n\nRD-4 does not excuse it: F14 records no traffic incident near the route during the trip window (RD-4(a) ✗), and the PIE band 2 (10–19 km/h) reading runs only to 12:27, ending as the segment begins — a speed band alone does not exempt in the MVP [F12][F14][RD-4]. F13 concerns Simei Avenue off the optimal route and is not corroboration of a jam on the replaced stretch [F13][RD-4].\n\nRD-3 does not excuse it: no rider message named any place and no stop was measured in the segment, so there is no rider-named stop and no driver-chosen stop on a rider's unnamed request [F8][F9][F3][RD-3].\n\nRD-5 does excuse it. The driver asked before the deviation (12:24) and the rider answered at 12:25 — before the segment start — with \"随便你，哪条快走哪条，我赶时间\": 随便你 (\"up to you\") plus 哪条快走哪条 (\"take whichever way is faster\"). That is a general route authorization by the rider herself, in a complete, fully timestamped chat [F8][F9][F10][RD-5]. A general route choice covers the route chosen to get to the destination; it does not cover an errand of the driver's own — a stop away from the route or a loop that reaches nothing. Nothing in the record shows the 4.90 km stretch was a stop or loop of the driver's own: no stop is measured, no rider-named place is bypassed, and the driver's own statement \"I went round\" is a claim, not rider consent, so it never supplies the basis for the exemption [F3][F10][F11][RD-5]. The segment therefore falls under general_route_consent and is exempt.\n\nBecause the only off-route segment is exempt, the sum of non-exempt extra_km is 0, so the formula yields 0 × $1.4098/km = $0.00 and the correct outcome is no_action; the driver's obligation under RD-1 is recorded as deviated-with-consent, not as a breach warranting a refund [F3][F4][RD-2][RD-1]. The rider's own complaint that the route seemed no faster, and the +9.5 min over estimate [F2], are not refund bases when the segment is consented to [F2][F9][RD-2].\n\nSafety screen: I read every chat message (F8, F9), the driver's statement (F11) and the rider's complaint. There is a route-and-fare disagreement only — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern is none [F8][F9][F11][SAFE-1][SAFE-2].\n\nEvidence: the chat is complete with every message timestamped (F10), the segment is measured (F3), the fare breakdown and the per-km rate are recorded (F4, F7), and the traffic record is present (F12–F14); the record settles every element the ruling needs, so evidence_status is sufficient [F3][F4][F7][F10][RD-2][RD-5]. RD-6's flag condition is not met — profile shows 0 upheld route disputes in 90 days — so no account action attaches [F17][RD-6].",
   "cited_facts": [
-   "F1",
+   "F2",
    "F3",
    "F4",
-   "F5",
-   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
    "F14",
    "F17"
   ],
@@ -581,17 +615,39 @@
    "SAFE-1",
    "SAFE-2"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "The rider's position that the detour was unauthorized fails: she herself sent, before the segment started (12:25 message, segment start 12:27), '随便你，哪条快走哪条，我赶时间', which is a general route authorization covering the route chosen to reach the destination, so no refund arises under RD-2 [F9][F10][F3][RD-5]."
+   },
+   {
+    "id": "C2",
+    "reason": "The rider's claim that the higher fare proves an unauthorized route cannot stand: the only measured off-route segment is exempt under her own general consent, so the extra kilometres do not yield a refundable amount (0 × $1.4098/km = $0.00) [F3][F4][F9][RD-2][RD-5]."
+   },
+   {
+    "id": "D1",
+    "reason": "Although the driver is right that the rider agreed, his reliance on his own statement ('the rider said any faster way was fine') is not the source of consent — a driver's statement of agreement is a claim; consent here comes only from F9 [F11][F10][RD-5]."
+   },
+   {
+    "id": "D2",
+    "reason": "The driver's traffic justification does not exempt the segment: no incident was recorded on the replaced stretch (RD-4(a) ✗) and a lone speed band does not exempt [F12][F14][RD-4]; the exemption rests on RD-5, not RD-4."
+   },
+   {
+    "id": "D3",
+    "reason": "The driver's request for no refund is correct in result but his framing that the detour was justified by traffic fails for the same reason as D2; the outcome no_action follows from the RD-5 exemption, not from RD-4 [F3][F12][F14][RD-4][RD-5]."
+   }
+  ],
   "flag_account": false,
   "segment_findings": [
    {
     "fact_id": "F3",
     "finding": "exempt",
+    "ground": "general_route_consent",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "The rider's own message F9 at 12:25 ('随便你，哪条快走哪条，我赶时间') precedes the segment start at 12:27 and is a general route-choice authorisation ('whichever way is faster'), which covers a route chosen to get to the destination [F9][F3][RD-5]. F3 is a driven stretch of 4.90 km within 722 m of the optimal route, with no stop, errand or loop of the driver's own, so the authorisation reaches it and the 2.16 extra km are exempt [F3][RD-5]. The driver's later statement F11 is a claim, not the consent that decides this [F11][RD-5]."
+    "reason": "The driver proposed an alternative before the deviation (12:24) and the rider replied at 12:25, before the segment start of 12:27, with '随便你，哪条快走哪条，我赶时间' — 'up to you, take whichever way is faster' — a general route authorization covering the route chosen to reach the destination [F8][F9][F10][RD-5]. No stop or loop of the driver's own errand is shown (no stop measured, no rider-named place bypassed), so the general consent covers the 4.90 km stretch and it is exempt [F3][RD-5]. The driver's post-trip statement is not the basis of consent (G11) [F11][RD-5]."
    }
   ],
   "safety_concern": "none",
@@ -616,15 +672,13 @@
   "flag_account required: False"
  ],
  "eligibility": {
-  "auto": false,
-  "reasons": [
-   "not eligible for automation: refund_partial but every segment is exempt → amount would be 0"
-  ],
+  "auto": true,
+  "reasons": [],
   "actions": [
    {
-    "type": "escalate",
-    "mode": "human_review",
-    "detail": "not eligible for automation: refund_partial but every segment is exempt → amount would be 0"
+    "type": "no_action",
+    "mode": "auto",
+    "detail": "charges stand; both parties notified"
    }
   ],
   "what_would_change": [
@@ -642,7 +696,8 @@
    "requested_outcome": {
     "action": "no_action",
     "amount": null
-   }
+   },
+   "segment_grounds": {}
   },
   "driver": {
    "side": "driver",
@@ -653,27 +708,28 @@
    "requested_outcome": {
     "action": "no_action",
     "amount": null
-   }
+   },
+   "segment_grounds": {}
   }
  },
  "rebuttals": {},
  "notices": [
   {
    "to": "rider",
-   "text": "Your dispute on trip X-0002 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at the trip record, the route taken and the messages exchanged. Ryde will contact you once the review is complete."
+   "text": "We reviewed your route dispute. We found the trip did go by a longer way than the fastest route — about 2.16 km more than needed. However, before that stretch began, you replied to the driver's question about which way to go with \"up to you, take whichever is faster.\" That counts as your consent to the route choice, so no refund is due on this trip.\n\nThe outcome: no refund, and no change to the driver's account. Nothing is owed to you and nothing is taken from you.\n\nYou mentioned the route did not feel faster. That is noted, but when a route change is agreed to, it is not a refund reason.\n\nNo action needed on your side."
   },
   {
    "to": "driver",
-   "text": "The dispute on trip X-0002 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at the trip record, the route taken and the messages exchanged. Ryde will contact you once the review is complete."
+   "text": "We reviewed the route dispute on this trip. Outcome: no refund and no action against your account.\n\nWhat decided it: the trip did include a longer-than-optimal stretch of about 2.16 km, but before it began the rider replied to your question about the route with \"up to you, take whichever is faster.\" That is the rider's own consent to the route choice, so the extra distance is not chargeable back.\n\nThis dispute is recorded as a deviation with consent, not a breach. No refund will be issued for it and no account action attaches.\n\nKeep asking riders before changing the route, and keep the request and reply in chat."
   }
  ],
  "precedent_id": null,
  "receipt": {
   "case_sha256": "41a174b775df92fa",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "fe5ca6e9c490331a",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": "f7e7852749cfeef9",
-  "issued_at": "2026-10-10T13:30:00+00:00"
+  "issued_at": "2026-10-10T18:53:00+00:00"
  }
 }

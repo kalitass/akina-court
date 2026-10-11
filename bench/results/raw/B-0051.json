@@ -1,0 +1,68 @@
+{
+ "arm": "raw",
+ "case_id": "B-0051",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:37:19.707134+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "refund_partial",
+  "amount": 6.34,
+  "recommended_action": "Issue a Ryde voucher of $6.34 to the rider for the extra metered distance on the unexempted deviation and advise the driver that the Pan Island Expressway diversion was not covered by the rider's general \"any faster way\" consent.",
+  "confidence": 0.62,
+  "reasoning": "Service type is RydeTAXI (metered), so the quoted/estimated 24.951 km does not cap the fare; extra distance enters the fare through the meter (policy §0). Fare: 29.12 km billed, distance fare $41.06 → unit rate 41.06 / 29.12 = $1.4100/km.\n\nTwo off-route segments are visible in the trace against the quoted corridor (polyline km 40–110 and km 130–185 box the PIE + Temasek Blvd + Nicoll Highway stretch; polyline km 185–190 is the Nicoll Highway/Sungei Rd rejoin):\n(1) ~15:17–15:20 — trace runs 1.34751/103.79847 → 1.34536/103.80049 (stationary) → 1.34045/103.80612, i.e. off the PIE corridor at ~15 km/h for ≈2.9 km before rejoining the PIE at 1.3396/103.8063.\n(2) ~15:20:35–15:27:35 — trace leaves the corridor again (1.33874/103.80616 → 1.33826/103.80306 → 1.33754/103.80025 → 1.33554/103.79856 → 1.33231/103.79824 → 1.32962/103.80212 → … → 1.32284/103.81219 → 1.32146/103.81037 → 1.32134/103.81243 → 1.3239/103.81349), an ≈4.4 km detour on Nicoll Highway/Beach Rd, rejoining at the 1.3239/103.8135 corridor point at ≈15:28.\nTotal ≈7.3 km, 29.12 − 24.951 = 4.17 km, consistent with thinned-sample error.\n\nConsent (RD-5): the driver's pre-deviation question at 15:17:30 concerns the PIE and offers an alternative; the rider's 15:18:10 reply \"just take whichever way is faster lah\" is a general route authorisation — it covers a route chosen to reach the destination, not a choice made after traffic at the same location was already slow (the driver was at 15.0 km/h at the time he asked). The reversal of the GPS into higher speed confirms the PIE remained the faster route, so the deviation the rider authorised was not in fact used: the extra km are unexempted (RD-5, general-authorisation scope, RD-1, RD-2).\nRD-4: `incidents` is empty, so the driver's \"traffic building up\" claim is unproven; the only speed band is band 2 on PAN ISLAND EXPRESSWAY (not band 1) from 14:46:35 to 15:21:15, which cannot exempt on its own (RD-4(b), G3).\nThe rider named no stop and agreed to no named road, so RD-3 does not apply.\n\nAmount (RD-2 metered branch): unexempted extra_km ≈ 4.5 km × $1.4100/km = $6.34 (using ≈7.3 km measured detour less ≈2.8 km of rejoin/AYE overlap not attributable). Only distance units are refunded; the $0.11 waiting fee is metered time and is not refunded (RD-3(c)); no unattributed `fare-excess` is refunded. Payable as a Ryde voucher (NS-7). No flag: driver's 90-day route_disputes_upheld_90d = 0, so RD-6 is not triggered; the profile alone never decides (rule of procedure).",
+  "cited_facts": [],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-3",
+   "RD-4",
+   "RD-5",
+   "NS-7"
+  ],
+  "escalate": false,
+  "escalation_reason": null,
+  "segment_findings": [
+   {
+    "fact_id": "seg1",
+    "finding": "counts",
+    "ground": "general_route_consent",
+    "basis": [],
+    "reason": "15:17–15:20: driver left the PIE corridor (1.34751/103.79847 → 1.34536/103.80049, stopped, then 1.34045/103.80612) covering ≈2.9 km in ≈3 min at ~15 km/h. The rider's consent (\"just take whichever way is faster lah\", 15:18:10) is a general route authorisation under RD-5 and covers only a route chosen to reach the destination; the trace shows actual speed on the authorised corridor (36–44 km/h) remained faster than the chosen deviation, so the extra km are not covered and stand as unexempted under RD-1/RD-2. No LTA incident on the corridor (traffic.incidents empty); the band-2 record on the PIE cannot exempt on its own (RD-4(b))."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "ground": "general_route_consent",
+    "basis": [],
+    "reason": "15:20:35–15:27:35: after rejoining the PIE corridor (1.33874/103.80616) the trace again left it for ≈4.4 km via Nicoll Highway/Beach Rd (1.33826/103.80306 → 1.33554/103.79856 → 1.33231/103.79824 → 1.32962/103.80212 → … → 1.32284/103.81219 → 1.32146/103.81037 → 1.32134/103.81243) before rejoining at 1.3239/103.81349 (~15:28). No rider message before this segment asked for it and the general authorisation in RD-5 does not reach it since it was not the faster route (corridor matched at 36–44 km/h throughout); unexempted under RD-1/RD-2."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_traffic_excuse",
+    "reason": "Driver claims traffic was building up on the PIE; the LTA incident list is empty and the only relevant speed band (PAN ISLAND EXPRESSWAY, band 2, 14:46:35–15:21:15) is not band ≤1 and cannot exempt a segment on its own (RD-4(b), G3). The trace shows the authorised corridor still moving at 36–44 km/h while the driver sat at 15 km/h and stopped off-route."
+   },
+   {
+    "id": "rider_general_consent",
+    "reason": "The rider's \"just take whichever way is faster lah\" is genuine pre-detour consent, but a general route authorisation under RD-5 only covers a route chosen to reach the destination; the record (GPS speeds, empty incident list) shows the deviation was not the faster route, so it does not cover the extra km driven."
+   },
+   {
+    "id": "rider_estimate_complaint",
+    "reason": "The rider's premise that the meter should not exceed the estimate is not itself a policy ground — RydeTAXI is metered and a quoted/estimated km does not cap the fare (policy §0); relief is limited to the unexempted extra distance under RD-2."
+   }
+  ],
+  "flag_account": false,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "sufficient",
+  "evidence_gap": null
+ },
+ "latency_s": 9.04,
+ "input_tokens": 19261,
+ "output_tokens": 1955,
+ "requests": 1,
+ "llm_calls": 1
+}

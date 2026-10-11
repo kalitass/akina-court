@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:26.736299+00:00",
+ "ts": "2026-10-10T17:36:45.051330+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; remind the driver that the \"I'm Here\" tap and an in-radius continuous 3-minute wait are mandatory before a no-show cancellation, and that unrecorded presence cannot support the fee.",
-  "confidence": 0.92,
-  "reasoning": "Route NS-0: cancelled_by = driver and the driver asserts rider no-show, so the case is decided under NS-1/NS-2. Non-taxi (RydeX), so no metered issues arise; the only disputed item is the $6.61 cancellation fee. NS-1 requires (i) the driver pressed \"I'm Here\" (or platform auto-confirmed arrival) AND (ii) at that moment GPS showed him at the pickup (≤200 m) AND (iii) continuous in-radius waiting >3 min after the tap. The record shows driver_pressed_here_at = null, arrival_confirmed_by = null, wait_started_at = null, fee_applied_at = null; the driver himself admits \"I forgot to press the I'm Here button.\" Element (i) therefore fails, which alone is decisive under NS-2. For completeness: his vehicle (GPS at 1.43603, 103.78614 from 22:43:00 to 22:46:50) is ~230–240 m from the stated pickup point (1.436, 103.7865), i.e. outside the 200 m arrival radius used for element (ii), and the closest approach during his loop (1.43436,103.78600 at 22:41:30) is ~60 m from a different point of the polyline — not the named pickup. Also, the GPS trace is thinned (5 s grid → every 6th sample, 30 s spacing), so it cannot corroborate any \"I'm Here\" event; it neither fills nor creates the missing claim. Timeline check: accepted 22:37:00, driver_arrived_at 22:41:30, cancelled 22:46:50 — 9 min 50 s after acceptance, of which only the final 3 min 50 s was stationary near the pickup, but no legal start-of-wait marker exists. Since NS-1 (i) (and (ii)) are not met, the $6.61 cancellation fee did not validly arise → full refund of $6.61 (voucher form, NS-7). No RD/flag conditions: no route deviation, and route_disputes_upheld_90d = 0 rules out RD-6; the driver's failure is a button/timing issue, not usage of the button with false GPS (he never used it at all), so NS-2's fraud add-on is not triggered. Safety screen: chat contains only a plain pickup identification and a wait/cancel notice; nothing threatening, abusive, sexual or dangerous — safety_concern = none.",
+  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher; no account flag (the driver was stationary at the pickup, so no abuse-of-button finding) — record the procedural lapse that no \"I'm Here\" tap was made.",
+  "confidence": 0.9,
+  "reasoning": "Cancellation entry: NS-0, driver-cancelled with a claimed no-show → NS-1/NS-2. NS-1 requires (i) the driver to have pressed \"I'm Here\" (or platform auto-arrival), (ii) GPS at the pickup point at that moment, and (iii) a continuous wait of >3 minutes within 200 m after the tap. The record shows driver_pressed_here_at = null, arrival_confirmed_by = null, arrival_radius_m = null, wait_started_at = null, wait_expired_at = null — requirement (i) is not met. The driver's own statement confirms this: \"I forgot to press the I'm Here button.\" Under NS-2, failure of any of (i)(ii)(iii) → the $6.61 cancellation fee is refunded in full (refund_full).\n\nIndependent GPS arithmetic corroborates: at the driver's message \"At the pickup point\" (22:43:20) the trace is at (1.436022, 103.78615), ~33 m from the pickup (1.436, 103.7865) — he was physically at the pickup, and he then stayed essentially stationary through the 22:46:50 cancel timestamp (~4 min 20 s), so I do not treat the wait-length element as contrived. But NS-1 is conjunctive: a tap (or a platform auto-arrival confirmation) is required and none is recorded. Note the rider's complaint (\"on my way down\") is not a defence the driver can invoke; it is simply the explanation the platform is meant to test via the button protocol, which was not followed.\n\nNo evidence gap: the GPS trace is dense (5 s grid, thinned to 30 s) and covers the whole window, arrival to cancellation, so nothing needs to be presumed either way (contrast NS-1's断档/coverage rule). No account flag: the flag in NS-2 attaches only when the driver pressed \"I'm Here\" while GPS showed him outside the pickup radius (>200 m); here no tap occurred and the GPS shows him at the pickup, so no abuse of the cancellation/waiting button. Profile facts (driver no_show_disputes_upheld_90d = 0) are not used to decide anything.\n\nSafety screen: the chat is a pickup arrangement plus a cancellation notice; the complaint and driver statement contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nNon-metered (RydeX) fixed fare, so the only disputed item is the cancellation fee; amount = $6.61, paid as a Ryde voucher per NS-7.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
@@ -25,12 +25,12 @@
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The driver claims he waited 4 minutes at the pickup, but he concedes he never pressed \"I'm Here\" and the record has driver_pressed_here_at = null with no platform auto-confirmation. NS-1(i) therefore fails, and at the times he was stationary (22:43:00–22:46:50, 1.43603/103.78614) GPS places him ~230–240 m from the pickup point — outside the 200 m arrival radius for NS-1(ii). Unrecorded presence does not satisfy the no-show conditions."
+    "id": "driver_statement_verbal_wait",
+    "reason": "The driver's claim that he waited 4 minutes at the pickup is not disputed on the GPS (he was stationary there from ~22:43 to the 22:46:50 cancellation), but NS-1 is conjunctive: without an 'I'm Here' tap or platform auto-arrival confirmation the no-show fee cannot stand, and he admits he did not press the button."
    },
    {
-    "id": "rider_complaint",
-    "reason": "The rider's factual account (driver cancelled, $6.61 charged) is accepted; his reason for the refund differs from the clause actually applied (NS-1/NS-2 failure, not his being en route), so the rider's justification is not relied on but the outcome is."
+    "id": "rider_late_complaint",
+    "reason": "The rider's 'I was on my way down' does not by itself excuse lateness, but it is irrelevant here — the fee fails on the driver-side NS-1 requirements, not on the rider's timing."
    }
   ],
   "flag_account": false,
@@ -39,9 +39,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.21,
- "input_tokens": 13192,
- "output_tokens": 1141,
+ "latency_s": 5.15,
+ "input_tokens": 13583,
+ "output_tokens": 1064,
  "requests": 1,
  "llm_calls": 1
 }

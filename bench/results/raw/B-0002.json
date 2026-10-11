@@ -4,48 +4,61 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:11.939692+00:00",
+ "ts": "2026-10-10T17:35:32.365843+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 0.92,
-  "recommended_action": "Refund S$0.92 (Ryde voucher) for the unexempted 0.65 km detour via Sims Avenue/generic turn-off; note the RD-1 breach.",
-  "confidence": 0.6,
-  "reasoning": "Service type RydeTAXI → metered, so extra distance directly enters the fare (RD-2). Quoted route 15.472 km / 21.8 min vs metered 19.4 km / 31.75 min; per-km rate = distance_fare ÷ distance_km = 27.35 ÷ 19.4 = 1.4098 S$/km.\n\nTrace vs quoted route: from pickup (12:14:20) the car follows the quoted corridor along the CTE up to ~12:25:50 (1.32431,103.872327). The only off-route place is the 12:26:20–12:30:20 stretch: the car turns off at Jalan Eunos (1.32245,103.873718), stops (speed 0) at 12:26:50 on Sims Avenue East (1.32171,103.87427), then doubles back west via 1.318841,103.875336 and 1.31776,103.875035 and rejoins the corridor at ~12:30:50 (1.314746,103.874873). Off-corridor length ≈ 0.90 km, on-corridor overlap ≈ 1.30 km → net excess ≈ 0.65 km.\n\nThe chat shows the rider consented before the turn-off (12:27:30 rider \"Sure, go ahead.\" vs turn-off at ~12:26:20–12:26:50 and stop at 12:26:50; the driver's 12:26:50 message precedes). But the consent is to a named road, Sims Avenue: under RD-5, a named-road consent covers driving on that road only and the record must tie the driven segment to that road; the SIMS AVE EAST stop over the 200 m corridor (m_from_route > 200 for 12:26:50–12:28:20) is exempt, while the post-stop westward backtrack to rejoin is not tied to Sims Avenue and is even partly under the PIE (band 2 = moderate, not the band 1–2 severe-congestion requirement) → counts (RD-4(b) cannot exempt alone).\n\nAmount: 0.65 km × 1.4098 = S$0.92 (rounded). The metered waiting component ($0.11 = 26¢ per 45 s unit, wait standing during the Sims stop) is retained per RD-3(c) (RydeTAXI waiting is chargeable), so no separate waiver. The rider's expectation of fixed-quote pricing does not apply to RydeTAXI (policy §0).",
+  "amount": 5.64,
+  "recommended_action": "Refund S$5.64 (voucher) to the rider for the unexempted detour mileage; note the driver's RD-1 breach on record. No account flag.",
+  "confidence": 0.62,
+  "reasoning": "RydeTAXI, metered fare (RD-2 distance branch). Quoted direct route 15.472 km; metered fare distance_km 19.40, distance_fare S$27.35 → unit rate 27.35 / 19.40 = S$1.4098/km. Trip: 12:14→12:46:10, 31.75 metered minutes, waiting_fee 0.11 (0.42 min).\n\nDetour: driver asked at 12:26:50 (GPS then at 1.32171,103.87427 on the PIE corridor) \"ok if I go round via Sims Avenue?\"; rider replied \"Sure, go ahead.\" at 12:27:30, i.e. BEFORE the detour began — consent timeline satisfied (RD-5). On the merits the request was premised on \"traffic building up ahead on PIE\", but the only PIE band (SYN-0009, band 2) ends 12:29:55 and the road the driver actually used, Sims Avenue, carries no band at all; band 1/2 alone never exempts a segment (RD-4(b)) and speed alone is not a \"reasonable cause\" event. The rider's \"sure, go ahead\" therefore covers only the road the driver named, Sims Avenue — general authorisation of the driver's stated route, not of the driver's own destination-less stop (RD-5; contrast \"whichever way is faster\").\n\nSegment location: the GPS loop runs 12:27:50 (1.320457,103.875643) → 12:29:50 (1.318841,103.875336), off Sims Avenue; the PIE-matched polyline v141→v160 (1.32065,103.87534 → 1.32158,103.88308, ≈0.856 km) is never travelled. Because no record ties the off-route stretch to Sims Avenue (no stop there, no position message there, no road-name fact), the finding is \"undetermined\" (RD-5 + G13) rather than \"counts\" (G13: no presumption).\n\nAmount: alternative-route excess = metered 19.40 − quoted 15.472 = 3.928 km. Exempt = on-PIE portion not re-driven (0.856 km, inside the 300 m corridor). Contested/undetermined = 3.928 − 0.856 = 3.072 km. Since the rider named a road and the driver's stated purpose (traffic) failed, granting full mileage exemption would endorse a route change supported by nothing; the doubt is resolved against the exemption only for the contested stretch. Refund = 3.072 × 1.4098 ≈ 4.33 km-rate plus the unabsorbed extra-metered-minute time units (0.83 min × 0.26 ≈ 0.22) ≈ S$4.65; plus the driver's own errand loop of ≈0.70 km (GPS 12:28:20–12:30:20 ≈ 12:31:45 → ≈0.716 km; driver position, no rider message asked for it) ≈ S$0.99 → total S$5.64 of S$27.35 distance fare. Rider's \"I paid more than the estimate\" complaint upheld to that extent (RD-2: only the unexempted extra mileage is refunded; the corridor-scope excess v45–v66 is not).\n\nNo flag: driver's route_disputes_upheld_90d = 0, so RD-6 is not triggered. No safety issue in chat, statement or complaint (SAFE screen: none).",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "FARE-1"
+   "RD-6",
+   "SAFE-1",
+   "G13"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "counts",
-    "basis": [],
-    "reason": "Take off at Jalan Eunos (12:26:20, 1.32245,103.873718) and the westward backtrack along Sims Avenue East after the stop (12:28:20–12:30:20, 1.320077,103.876669 → 1.31776,103.875035) are off the quoted corridor. The rider's 12:27:30 consent to 'via Sims Avenue' is a named-road consent: the stop over Sims Ave East is covered, but the backtrack to rejoin is not tied to Sims Avenue (RD-5, G13). PIE band 2 at 12:20:50 is at a different time/base point and is only corroborative, cannot alone exempt (RD-4(b), G3). Net excess ≈ 0.65 km."
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [
+     "chat-1",
+     "chat-2"
+    ],
+    "reason": "Rider consented before the detour (12:27:30 < segment start) but only to the driver's named road, Sims Avenue (RD-5). The GPS loop at 12:27:50–12:29:50 sits away from Sims Avenue and no record (stop, located message, road-name fact) ties the driven stretch to it; nothing places it elsewhere either → undetermined per RD-5 + G13. Alternative-route km 3.928 minus the exempt on-PIE corridor 0.856 = 3.072 km contested ≈ S$4.33 + time ≈ S$0.22."
    },
    {
     "fact_id": "seg2",
-    "finding": "exempt",
-    "basis": [],
-    "reason": "The rider's own message 'Sure, go ahead.' at 12:27:30, sent before the car's own movement into the stop, consents to the driver's proposed route via Sims Avenue (RD-5). The stop at 1.32171,103.87427 (12:26:50) lies on Sims Avenue East (m_from_route > 200 m, the only 'off-route' sample) and is covered by the named-road consent (RD-3(a)/RD-5), and its standing time is chargeable on RydeTAXI (RD-3(c)); the exit from the stop back to Sims Avenue East is on Sims Avenue (RD-5)."
+    "finding": "counts",
+    "ground": "driver_errand",
+    "basis": [
+     "chat-1",
+     "chat-2"
+    ],
+    "reason": "GPS 12:28:20 (1.320077,103.876669) → 12:30:20 (1.31776,103.875035) ≈ 0.716 km loop back to the PIE corridor with no rider message asking for it and no destination served; the rider's general go-ahead does not cover the driver's own destination-less loop (RD-5) → counts, extra_km ≈ 0.716 × S$1.4098 ≈ S$1.01."
    }
   ],
   "rejected_claims": [
    {
     "id": "driver_statement",
-    "reason": "The driver's claim of a verbal pre-trip agreement adds nothing beyond the chat; the chat itself (12:26:50 driver / 12:27:30 rider) is the recorded consent, and it covers the named road only, not the whole detour (RD-5, G11)."
+    "reason": "\"Rider agreed\" to Sims Avenue is accepted only as to the named road; no record ties the driven off-route loop to Sims Avenue (GPS places it off that road), and the stated traffic cause is unsupported: PIE band 2 ends 12:29:55 and Sims Avenue carries no speed band, so band ≤2 alone cannot exempt (RD-4(b), RD-5, G13)."
    },
    {
-    "id": "rider_complaint_paid_more",
-    "reason": "The rider's claim that the fare should equal the app estimate is rejected: RydeTAXI is metered, not quoted (policy §0, RD-2), so the difference between the 15.472 km quoted route and the 19.4 km driven route is not in itself refundable; only the unexempted off-route excess is."
+    "id": "rider_complaint_full",
+    "reason": "Rider's claim that the whole longer way should be refunded fails in part: consent to the named route was given before the detour, and the app-quoted 15.472 km was on the PIE where a band-2 record exists; only the unexempted extra mileage (S$5.64 of S$27.35) is refundable under RD-2."
+   },
+   {
+    "id": "rd6_flag",
+    "reason": "No flag_account: driver's route_disputes_upheld_90d = 0, so the repeated-violation condition of RD-6 is not met (profile cannot decide the case anyway)."
    }
   ],
   "flag_account": false,
@@ -54,9 +67,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.22,
- "input_tokens": 16381,
- "output_tokens": 1457,
+ "latency_s": 8.76,
+ "input_tokens": 16772,
+ "output_tokens": 1729,
  "requests": 1,
  "llm_calls": 1
 }

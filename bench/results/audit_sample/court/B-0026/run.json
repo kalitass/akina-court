@@ -2,21 +2,21 @@
  "arm": "court",
  "case_id": "B-0026",
  "model": "deepseek:deepseek-chat",
- "started_at": "2026-10-10T13:34:47+00:00",
+ "started_at": "2026-10-11T02:38:28+00:00",
  "fingerprint": {
   "case_sha256": "7e8ed3e599eb10cd",
   "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "f89f0d73edae9782",
+  "code_sha256": "aff787edf0b9b629",
   "model": "deepseek:deepseek-chat",
   "judge_prompt_sha256": null,
-  "issued_at": "2026-10-10T13:34:47+00:00"
+  "issued_at": "2026-10-11T02:38:28+00:00"
  },
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and send the driver's account to Ryde for review of the arrival-button tap made outside the pickup radius + flag_account",
-  "confidence": 0.95,
-  "reasoning": "NS-0 routes this dispute: the driver cancelled a completed-booking trip and claimed a rider no-show, so NS-1/NS-2 govern whether the $6.61 shown on the fare record [F6] stands [F3]. The trace settles the elements: NS-1 (i) is met by the driver_tap at 12:06:15 [F5], but NS-1 (ii) fails because at the moment of that tap the driver was 600 m from the pickup point and never came closer than 599 m [F5][F1], and NS-1 (iii) fails because he spent 0 s inside the 200 m radius after tapping [F5]. Under NS-1 all three conditions must hold together, and a wait served 600 m away [F2] is not a wait at the pickup point, so NS-1 is not satisfied and NS-2 requires the fee to be refunded in full.",
+  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider (as a Ryde voucher per NS-7) and send the driver's account to Ryde review for a false \"I'm Here\" tap made 600 m from the pickup point.",
+  "confidence": 0.96,
+  "reasoning": "This is a driver-cancelled trip with a $6.61 no-show fee, so it enters the policy through NS-0: cancelled_by = driver and the driver's stated reason is rider no-show, which routes the case to NS-1/NS-2 [F3][F6][RD-0, NS-0]. Both advocates read the record the same way, and so do I.\n\nNS-1 requires three cumulative conditions. (i) an arrival confirmation exists — the driver tapped \"I'm Here\" at 12:06:15 [F5][NS-1]. (ii) at the moment of that confirmation the driver must be within the pickup radius (200 m, data-layer parameter G2) — the tap was made 600 m from the pickup, and the driver's closest approach for the whole trip was 599 m at 12:06:55 [F5][F1][NS-1]. (iii) he must then wait at the pickup continuously for more than 3 minutes — he spent 0 s inside the radius after the tap, and his only stationary period (12:05:55–12:09:25, 3 min 30 s) was spent 600 m away, followed by cancellation at 12:09:25 [F5][F2][F3][NS-1]. Conditions (ii) and (iii) both fail, so the no-show fee is not established.\n\nThe driver's written statement that he pressed \"I'm Here\" and waited more than 3 minutes at the pickup [F12] is a claim contradicted by the GPS and timeline records in F1, F2, F4 and F5 — system records outrank statements — and the platform never recorded him at the pickup point at all (driver_arrived_at null) [F4][F12][NS-1]. Nothing external excuses the stand-off: no traffic incidents on the route and fair weather, with only moderate band-3 flow (20–29 km/h) on Jalan Besar, which supports nothing under RD-4's \"reasonable cause\" branch [F13][F14][F15][NS-1].\n\nNS-2 therefore applies: since NS-1 (i)–(iii) are not all satisfied, the $6.61 cancellation fee is refunded in full [F6][F3][NS-2]. The amount is the cancellation fee actually charged, $6.61, and no other published add-on exists — no surge (1.0×) and no toll/ERP component in this dataset [F6][F7][FARE-1, NS-7].\n\nNS-2 also attaches an account consequence where the driver pressed \"I'm Here\" while GPS placed him outside the pickup radius: the tap at 600 m with 0 s inside the radius afterwards engages the false-arrival limb, an abuse of the arrival/cancellation button [F5][F1][F2][NS-2]. The driver's 90-day record (1 dispute, 1 upheld, no-show) is an additional-action consideration only and cannot itself decide the case [F17][RD-6, NS-2].\n\nSafety screen: I read all three chat messages (driver's 12:06 \"I'm here already, silver Toyota Altis, please come out\"; rider's 12:07 \"I'm at the pickup point, no car here. Where are you?\"; driver's 12:09 \"More than 3 min already, I have to cancel\"), the driver's post-trip statement and the complaint [F8][F9][F10][F12]. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in any of them — the exchange is a disputed-arrival argument only — so safety_concern is \"none\" [SAFE-1, SAFE-2].\n\nEvidence: the record settles every element the ruling needs — full GPS coverage of the wait, the ticketed tap distance, the stationary window, the cancellation time and the fee, with a complete fully timestamped chat (3 messages) [F1][F2][F3][F5][F6][F11]. Nothing needed is missing, so evidence_status is sufficient and no G12 escalation is required; the rider's own presence does not need to be proved, since NS-2 places the burden of the NS-1 conditions on the driver's arrival record.",
   "cited_facts": [
    "F1",
    "F2",
@@ -24,40 +24,49 @@
    "F4",
    "F5",
    "F6",
+   "F7",
+   "F8",
    "F9",
+   "F10",
+   "F11",
    "F12",
-   "F16",
+   "F13",
+   "F14",
+   "F15",
    "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-7",
+   "FARE-1",
+   "SAFE-1",
+   "SAFE-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "C6",
-    "reason": "The finding does not rest on the rider's chat message or profile: the driver's statement at 12:06 that he was already at the pickup point [F8] and the rider's reply that no car was there [F9] are statements, and profile facts may never decide a case [F16]; the refund rests solely on the GPS and timeline records [F1][F4][F5] under NS-2."
+    "id": "D9",
+    "reason": "The submission that the profile facts (F17: 2295 days' tenure, 4.67 rating, 464 trips in 90 days, 1 upheld no-show dispute) should be weighed so as to neutralise the outcome is rejected: profile facts never decide a case, and the finding already stands on the system records F1, F2, F4 and F5 under NS-1/NS-2 [F17][F5]."
    },
    {
-    "id": "C7",
-    "reason": "The account flag is correct but on NS-2's own trigger (the tap made while outside the pickup radius, [F5][F1]) which is settled by the trace; RD-6 does not apply here, because it requires an upheld route-deviation finding under RD-1/RD-2 and the profile shows route: 0, no-show: 1 [F17]."
+    "id": "D10",
+    "reason": "The submission that the tap 600 m out and the 600 m stationary period (F5, F2) do not fall within the abuse-of-arrival-button limb is rejected: NS-2 attaches flag_account precisely where the driver pressed 'I'm Here' while GPS placed him outside the pickup radius, which is what F5 and F1 show [F5][F1][NS-2]."
    },
    {
-    "id": "D2",
-    "reason": "The 3 min 30 s stationary period from 12:05:55 to 12:09:25 [F2] cannot satisfy NS-1 (iii), which requires the continuous wait to be served at the pickup point; the whole period was spent 600 m away [F2] and the driver was never inside 200 m after the tap [F5]."
+    "id": "C5",
+    "reason": "The driver-side gloss that the 12:06 announcement of a silver Toyota Altis (F8) means the rider could have located the car is rejected as a reading of the words: F8 asserts 'I'm here already' while F1, F2 and F5 put the car 599–600 m from the pickup, so the message is contradicted by the system records and cannot evidence a valid arrival [F8][F1][F5][NS-1]."
    },
    {
-    "id": "D5",
-    "reason": "The driver's post-trip statement that he waited at the pickup [F12] is contradicted by the GPS (closest approach 599 m [F1]) and the timeline (tap 600 m out, 0 s inside the radius afterwards [F5]), and system records override statements under NS-1/NS-2."
+    "id": "D3",
+    "reason": "Even taking the driver advocate's own concession, the claim that the 3 min 30 s stationary period (F2) shows a compliant wait is rejected: that period was spent 600 m from the pickup with 0 s inside the radius, so NS-1 (iii) fails [F2][F5][NS-1]."
    },
    {
-    "id": "D8",
-    "reason": "The driver's long tenure and rating [F17] cannot decide or mitigate the NS-1 conditions, which fail on the measured records [F1][F2][F5] under NS-2, and the rider's profile [F16] is likewise never evidence of a no-show."
+    "id": "C8",
+    "reason": "The claim that the driver's 90-day profile (F17, 1 upheld no-show dispute) supports the account flag is rejected in that form: the flag rests on the failed arrival conditions in F5/F1, and F17 is only an additional-action consideration that cannot itself establish the case [F17][F5][NS-2, RD-6]."
    }
   ],
   "flag_account": true,
@@ -91,31 +100,33 @@
    "Had NS-1 (ii) and (iii) both held ((ii) within 200 m of pickup AT THE MOMENT of the arrival confirmation; (iii) stayed at the pickup more than 3 min after the arrival confirmation, until cancelling (NS-1 default: more than 3 min)), the fee would stand and no refund would be due."
   ]
  },
- "latency_s": 16.95,
- "model_calls": 10,
+ "latency_s": 23.84,
+ "model_calls": 11,
  "provider_trace_ids": [
-  "4ddbe16858641b32f20f85bb1995fb31",
-  "77e3eec9ee45a4c0dfba8d60df7a4a72",
-  "2d78471af6935752164bff4272630a24",
-  "4f00640eafe2dc489848e7f6acc77ecc",
-  "612ca1015c57cc5e8cfb73b19710177a",
-  "7ad9835a76ff4cdd7db8c2376aa9acc9",
-  "d2cfbb03979db0b274f08083a244cc24",
-  "804b77eadd2b54b1ca6ae08233f0192b",
-  "82579b65ff970c07e3d8c66459b1cc4f",
-  "6bc099d879a7c1e8eb4fb8933ffbb493"
+  "38e105dcab873704775bdf3d164b2e35",
+  "b51cc4e3957f4a697d415a90789bef8d",
+  "1c8829c2173d0cfb00ce703b838763fc",
+  "29b1e764314994d32b7eb5ad72522d35",
+  "9be490c7b9e3a986cc76925e1d227895",
+  "d72852586249486a8f7363a67d661aa2",
+  "5a31add00e533dacc8b74ccd37696ca3",
+  "1ac4cf7ea5bbb4682d9695af9520d29d",
+  "6022d0f828417d7ee2c0fd36912194a8",
+  "7b4bd1318075792c39c9f59b80e2205b",
+  "664282e40bb44b5df0bfa06b852aec2c"
  ],
  "provider_response_ids": [
-  "56087bb3-7491-470c-9b38-32bee5dcd3c8",
-  "8f41b9b9-0319-4058-aab3-49871e8d171a",
-  "ebf7bf75-1858-4609-afed-9653655fac70",
-  "9c755a8c-add5-475c-9336-b4855eb3546d",
-  "9ccc44a2-9b33-4e96-aca4-39bf54210b17",
-  "9a292b03-e843-4013-ae07-bdee63d35e4b",
-  "6c9fe7f1-8194-4da2-b155-a43538b398e9",
-  "772f14fa-137c-4151-9ed0-13de28f1f82e",
-  "ac9bb2f5-739a-4d51-a6c8-6094d96b79b9",
-  "498667c1-848d-43cc-9d1d-e4f4d783630a"
+  "8aa6c346-22fa-4131-a06d-cc0402667ca6",
+  "4e7b38d2-f9e9-4f69-98a1-c46547c56e65",
+  "be922aa6-4c56-429f-b674-f93bfe07d843",
+  "aaeb703a-d65b-4146-88d6-45119051df53",
+  "d9913d6a-632b-4cdf-9463-da59f540a9aa",
+  "7f47dae5-99a8-4049-8d61-79fd813264b7",
+  "48661995-9162-4351-8bec-9bc5c8f8c828",
+  "d0b1e3e3-3506-4953-a7f9-63e62ede7397",
+  "941000a0-2dfc-4d3e-9c67-00143bf3f509",
+  "9d319b01-a2b0-45e0-bd9e-c62d0ac303dd",
+  "f96aa546-1759-4309-a118-0ebebd943c7d"
  ],
  "provider_model_reported": [
   "deepseek-flash"
@@ -128,105 +139,115 @@
  ],
  "usage": [
   {
-   "prompt_tokens": 9446,
+   "prompt_tokens": 10112,
    "completion_tokens": 144,
-   "total_tokens": 9590,
+   "total_tokens": 10256,
    "prompt_tokens_details": {
-    "cached_tokens": 9216
+    "cached_tokens": 9856
    },
-   "prompt_cache_hit_tokens": 9216,
-   "prompt_cache_miss_tokens": 230
+   "prompt_cache_hit_tokens": 9856,
+   "prompt_cache_miss_tokens": 256
   },
   {
-   "prompt_tokens": 9442,
-   "completion_tokens": 145,
-   "total_tokens": 9587,
+   "prompt_tokens": 10116,
+   "completion_tokens": 144,
+   "total_tokens": 10260,
    "prompt_tokens_details": {
-    "cached_tokens": 9216
+    "cached_tokens": 9982
    },
-   "prompt_cache_hit_tokens": 9216,
-   "prompt_cache_miss_tokens": 226
+   "prompt_cache_hit_tokens": 9982,
+   "prompt_cache_miss_tokens": 134
   },
   {
-   "prompt_tokens": 10262,
+   "prompt_tokens": 10932,
+   "completion_tokens": 39,
+   "total_tokens": 10971,
+   "prompt_tokens_details": {
+    "cached_tokens": 10752
+   },
+   "prompt_cache_hit_tokens": 10752,
+   "prompt_cache_miss_tokens": 180
+  },
+  {
+   "prompt_tokens": 10928,
    "completion_tokens": 75,
-   "total_tokens": 10337,
+   "total_tokens": 11003,
    "prompt_tokens_details": {
-    "cached_tokens": 9472
+    "cached_tokens": 10752
    },
-   "prompt_cache_hit_tokens": 9472,
-   "prompt_cache_miss_tokens": 790
+   "prompt_cache_hit_tokens": 10752,
+   "prompt_cache_miss_tokens": 176
   },
   {
-   "prompt_tokens": 10235,
-   "completion_tokens": 74,
-   "total_tokens": 10309,
+   "prompt_tokens": 11092,
+   "completion_tokens": 40,
+   "total_tokens": 11132,
    "prompt_tokens_details": {
-    "cached_tokens": 9472
+    "cached_tokens": 10880
    },
-   "prompt_cache_hit_tokens": 9472,
-   "prompt_cache_miss_tokens": 763
+   "prompt_cache_hit_tokens": 10880,
+   "prompt_cache_miss_tokens": 212
   },
   {
-   "prompt_tokens": 10571,
-   "completion_tokens": 950,
-   "total_tokens": 11521,
+   "prompt_tokens": 11254,
+   "completion_tokens": 1237,
+   "total_tokens": 12491,
    "prompt_tokens_details": {
-    "cached_tokens": 10240
+    "cached_tokens": 11008
    },
-   "prompt_cache_hit_tokens": 10240,
-   "prompt_cache_miss_tokens": 331
+   "prompt_cache_hit_tokens": 11008,
+   "prompt_cache_miss_tokens": 246
   },
   {
-   "prompt_tokens": 10567,
-   "completion_tokens": 1170,
-   "total_tokens": 11737,
+   "prompt_tokens": 11237,
+   "completion_tokens": 1452,
+   "total_tokens": 12689,
    "prompt_tokens_details": {
-    "cached_tokens": 10240
+    "cached_tokens": 11008
    },
-   "prompt_cache_hit_tokens": 10240,
-   "prompt_cache_miss_tokens": 327
+   "prompt_cache_hit_tokens": 11008,
+   "prompt_cache_miss_tokens": 229
   },
   {
-   "prompt_tokens": 12705,
-   "completion_tokens": 795,
-   "total_tokens": 13500,
+   "prompt_tokens": 13990,
+   "completion_tokens": 1050,
+   "total_tokens": 15040,
    "prompt_tokens_details": {
-    "cached_tokens": 9472
+    "cached_tokens": 10752
    },
-   "prompt_cache_hit_tokens": 9472,
-   "prompt_cache_miss_tokens": 3233
+   "prompt_cache_hit_tokens": 10752,
+   "prompt_cache_miss_tokens": 3238
   },
   {
-   "prompt_tokens": 12696,
-   "completion_tokens": 852,
-   "total_tokens": 13548,
+   "prompt_tokens": 14000,
+   "completion_tokens": 1242,
+   "total_tokens": 15242,
    "prompt_tokens_details": {
-    "cached_tokens": 9344
+    "cached_tokens": 11136
    },
-   "prompt_cache_hit_tokens": 9344,
-   "prompt_cache_miss_tokens": 3352
+   "prompt_cache_hit_tokens": 11136,
+   "prompt_cache_miss_tokens": 2864
   },
   {
-   "prompt_tokens": 14408,
-   "completion_tokens": 1024,
-   "total_tokens": 15432,
+   "prompt_tokens": 15777,
+   "completion_tokens": 1862,
+   "total_tokens": 17639,
    "prompt_tokens_details": {
-    "cached_tokens": 10624
+    "cached_tokens": 11008
    },
-   "prompt_cache_hit_tokens": 10624,
-   "prompt_cache_miss_tokens": 3784
+   "prompt_cache_hit_tokens": 11008,
+   "prompt_cache_miss_tokens": 4769
   },
   {
-   "prompt_tokens": 717,
-   "completion_tokens": 217,
-   "total_tokens": 934,
+   "prompt_tokens": 1448,
+   "completion_tokens": 259,
+   "total_tokens": 1707,
    "prompt_tokens_details": {
     "cached_tokens": 256
    },
    "prompt_cache_hit_tokens": 256,
-   "prompt_cache_miss_tokens": 461
+   "prompt_cache_miss_tokens": 1192
   }
  ],
- "finished_at": "2026-10-10T13:35:04+00:00"
+ "finished_at": "2026-10-11T02:38:52+00:00"
 }

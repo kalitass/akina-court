@@ -4,31 +4,32 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:18:24.937429+00:00",
+ "ts": "2026-10-10T17:36:42.108280+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Explain to the rider that $6.61 applies because the cancellation came 3 min 20 s after matching; note Ryde has no \"driver late vs ETA\" free-cancellation rule. No refund due.",
+  "recommended_action": "Uphold the $6.61 cancellation fee; advise the rider that cancellations are only free within 3 minutes of matching and that driver ETA/distance is not a waiver ground under Ryde's published policy.",
   "confidence": 0.88,
-  "reasoning": "Safety screen: chat is a two-message ETA exchange (\"How long will you be?\" / \"About 5 min, traffic\"), the rider's complaint is a fare objection, and the driver's statement (\"I was on my way when the rider cancelled\") contains no threat, abuse, harassment, sexual remark, or dangerous-driving allegation. safety_concern = none.\n\nClassification: cancelled_by = rider, so NS-0 routes the case to NS-4 (immediate booking, no scheduled-time field). Matching at 21:30:00, cancelled at 21:33:20 → elapsed 200 s = 3 min 20 s, which is beyond the 3-minute grace window. NS-4: cancellations made more than 3 minutes after matching → the $6.61 cancellation fee stands; cancellations within 3:00 are not chargeable, so the rider misses the free window by 20 seconds. Ryde publishes no \"driver later than ETA → free cancellation\" rule (NS-8, informational only, not citable), and NS-4 expressly says the driver's not having arrived is not a ground for free cancellation; the rider's remedy is a discretionary human appeal under NS-7.\n\nThe driver-side no-show mechanism (NS-1/NS-2) is not engaged: the driver never pressed \"I'm Here\" (driver_pressed_here_at = null), no arrival was confirmed, and the trip was cancelled by the rider, so there is nothing to refund under those clauses. The rider's \"driver was still far away\" claim is supported by the GPS trace (at 21:33:20 the driver was still ~4 km from the NUS pickup on Pasir Panjang, and the incident-free band 6 speed record corroborates slow going), but it is legally irrelevant under NS-4 for this service/fare type.\n\nRider profile shows disputes_90d = 0; the driver's single prior upheld no-show dispute does not trigger RD-6 (no route-deviation finding here, no refund > 0), so no account flag.\n\nEvidence status: sufficient — the timeline is complete (match, cancellation time, cancelling party) and the GPS trace covers the whole window on a 30 s grid with no gap; the only missing items (arrival taps, waiting-fee basis) are irrelevant because the rider cancelled before any arrival confirmation. Amount: null, the $6.61 stays as charged.",
+  "reasoning": "Safety screen: chat consists only of a rider ETA query and the driver's \"About 5 min, traffic\" reply; no threat, harassment, sexual remark, abuse, or dangerous-driving allegation in chat, complaint or driver statement. safety_concern = none.\n\nDispute is a post-trip cancellation-fee dispute on an on-demand (immediate) RydeX booking. cancelled_by = rider, so NS-0 routes this to NS-4, not NS-1/NS-2 (no driver no-show claim is made; the driver simply says \"I was on my way when the rider cancelled\").\n\nNS-4 arithmetic: matched at 21:30:00 (accepted_at); cancelled at 21:33:20. Elapsed = 3 min 20 s = 200 s > 180 s (3:00). The free-cancellation window had expired, so the $6.61 cancellation fee is valid and no_action is the result. The rider's stated reason (driver still far away) is not a ground for waiver: under NS-4 the driver's not-yet-arrived status does not entitle the rider to free cancellation, and Ryde has no published \"driver later than ETA\" waiver (NS-8 is informational and not citable, and no ETA field exists in the record). The rider's remedy would be a discretionary RydeHELP voucher request (NS-7), which does not by itself void the fee.\n\nRecord consistency check: no \"I'm Here\" tap, no arrival confirmation and no waiting fee appear in the timeline (driver_arrived_at / driver_pressed_here_at / fee_applied_at all null), and the fare breakdown shows only cancellation_fee 6.61 — so the only charge in dispute is the cancellation fee and no cancelled-by-driver branch (NS-1/NS-2/NS-3) applies. GPS shows the driver ~2.8 km from the NUS pickup at 21:33:20, consistent with \"on my way\"; irrelevant to NS-4 but confirms no no-show mechanics were triggered. Rates/route deviation are not in dispute (trip never started) and no refund component exists.\n\nDriver profile (no_show_disputes_upheld_90d = 1, disputes_upheld_90d = 1) is not a basis for any action here: RD-6 applies only where a route-deviation refund > 0 or an RD-1 violation is recorded, neither of which exists in this cancelled-trip case. No flag_account. All elements needed (match time, cancel time, cancel initiator, charge amount) are present and timed, so evidence_status = sufficient.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4"
+   "NS-4",
+   "NS-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
   "rejected_claims": [
    {
-    "id": "rider_late_driver",
-    "reason": "The driver was indeed still en route (GPS at 21:33:20 ≈ 4 km from pickup), but Ryde has no rule granting free cancellation because the driver is beyond the ETA (NS-8 is informational and not citable), and NS-4 does not treat the driver's absence as a ground to waive the fee."
+    "id": "rider_free_cancellation",
+    "reason": "Cancellation occurred 3 min 20 s after matching (21:30:00 -> 21:33:20), outside the 3-minute free window; NS-4 makes the $6.61 fee payable. The driver's distance/ETA is not a statutory or published waiver ground (NS-8 informational only)."
    },
    {
-    "id": "driver_no_show_counter",
-    "reason": "The driver did not press 'I'm Here' and no arrival was confirmed, but NS-1/NS-2 apply to a driver-initiated no-show cancellation; here cancelled_by = rider, so that branch is not engaged."
+    "id": "driver_no_show",
+    "reason": "No 'I'm Here' tap, no arrival confirmation and no waiting-fee entry in the timeline; the driver never claimed the rider was a no-show (statement: was on his way), so NS-1/NS-2 are not engaged."
    }
   ],
   "flag_account": false,
@@ -37,9 +38,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.6,
- "input_tokens": 12083,
- "output_tokens": 958,
+ "latency_s": 4.57,
+ "input_tokens": 12474,
+ "output_tokens": 1013,
  "requests": 1,
  "llm_calls": 1
 }

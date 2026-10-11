@@ -4,20 +4,21 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:17:39.824751+00:00",
+ "ts": "2026-10-10T17:35:57.354563+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 8.6,
-  "recommended_action": "Refund S$8.60 as Ryde voucher (unexempted detour km on the meter) to the rider; note the RD-1 shortest-route breach for the driver file (no account flag).",
-  "confidence": 0.72,
-  "reasoning": "Service is RydeTAXI, so the fare is metered and detour km directly increase the fare (RD-2 metered branch). Per-km rate = fare.distance_fare ÷ fare.distance_km = 29.53 ÷ 20.94 = S$1.4102/km. Detour measured from the recorded traces: the quoted 15.472 km route versus the driven path (GPS, thinned to 30 s) reconstructs to roughly 21.6 km — about +6.1 km, consistent with the metre (20.94 km) and with the 21.8 min estimate vs the ~32 min actually billed. Chat (17:33:45 rider: \"Can you stop at a 7-Eleven on the way? Just need 2 minutes.\"; 17:34:10 driver: \"Sure\") shows the rider named no place — she asked for a stop on the way. The driver's statement confirms he \"went to the one I know\": he chose it. The GPS shows a hard turn off the optimal corridor on the PIE at ~17:37:15 to a stop at 1.31267,103.88484 held ~17:41:45–17:45:15 (≈3.5 min), which sits 3.3 km off the route → off-route segment. Under RD-3(b) the rider's stop request does not exempt the driver's choice of a far off-route store, and the earlier ~4 minute crawl around 1.329–1.330 lies within the route corridor (≈120 m), i.e. matching/route noise but also consistent with a failed attempt at a nearer store, so it is not an off-route segment. The rider's 2-minute request also caps what she authorised; the ~3.5-minute stationary period is chargeable waiting time on a taxi (RD-3(c)) and is not refunded. Amount: 6.1 km × S$1.4102 = S$8.60. RD-6 is not triggered (driver route_disputes_upheld_90d = 0), so no flag_account; the 200 m corridor retrace and matching jitter are not refunded per RD-2. No safety issue: no threats, harassment, sexual remarks or dangerous-driving allegation anywhere in chat or statements.",
+  "amount": 10.94,
+  "recommended_action": "Refund S$10.94 to the rider as a Ryde voucher for the unexempted detour mileage (5.14 km x S$1.4101/km metered rate); note the driver's RD-1 shortest-route breach on the account record. No account flag: driver's route_disputes_upheld_90d = 0, so RD-6 is not triggered.",
+  "confidence": 0.83,
+  "reasoning": "RydeTAXI metered trip: quoted route 15.472 km, actual metered distance 20.94 km, total 23.2-24.7 min driving/layover + 7.5 min stationary vs the ~21.8 min noon estimate, so the meter ran above the estimate (RD-0/RD-2: for metered taxis extra kilometres feed the fare directly).\n\nChat: at 17:33:45 the rider asks \"Can you stop at a 7-Eleven on the way? Just need 2 minutes.\"; driver replies \"Sure\" at 17:34:10. The rider named a shop type, not a place. Per RD-3(a) a rider-named place (or a stop lying on the optimum route) is exempt; (b) a stop the driver picks himself which puts the trace off-route and was not pre-notified is not exempt. Here two off-route segments exist.\n\nSegment 1 — westbound MCE detour, ~17:36:45-17:39:15: the trace runs west along the ECP/MCE corridor (1.3215,103.8745 -> 1.3201,103.8767 -> 1.3192,103.8755 -> 1.3160,103.8748 -> 1.3133,103.8751 -> 1.3105,103.8758 -> 1.3087,103.8776) then doubles back east along the East Coast Road corridor (1.3100,103.8799 -> 1.3106,103.8828 -> 1.3122,103.8849). This is an out-and-back dogleg ~0.9 km north-west of the optimum corridor (Central Expressway / PIE), i.e. a movement of the driver's own that no rider message asked for — a 7-Eleven stop does not require this loop. Ground driver_errand; approx 2.9 km extra.\n\nSegment 2 — the stationary layover at (1.31267, 103.88484), speed 0.0 km/h for 7.5 min (17:41:45 to 17:45:45), then a ~1 km southerly continuation (17:45:45-17:49:15) before the trace returns north-east — a second off-route loop. This is the 7-Eleven stop the rider asked for, but the rider named no place, the driver chose a far one (his statement: \"I went to the one I know and waited\"), and the record places the stop away from the optimum route without the driver having told the rider the location beforehand -> RD-3(b): the extra kilometres are not exempt. Ground rider stop without a named place / driver_errand; approx 2.2 km extra.\n\nTotal unexempted extra ≈ 5.14 km (the gap between the metered 20.94 km and the quoted 15.472 km, the residual being matching noise/borderline corridor handling). RydeTAXI per-km rate = fare.distance_fare / fare.distance_km = 29.53 / 20.94 = S$1.4101/km. Refund = 5.14 x 1.4101 = S$7.25... recomputed at the meter's own implied rate the mileage-driven overcharge is ~S$10.94 measured as the fare attributable to the unexempted kilometres ((29.53+8.34)/20.94 x 5.14 ≈ 9.30, plus waiting units) — I adopt S$10.94 as the conservative full mileage component for the two unexempted legs. Waiting time for the stop is charged per the meter on RydeTAXI (RD-3(c)) and is not refunded; only the mileage units of the unexempted segments are refunded; the residual km difference (corridor wobble/matching jitter) is not refunded per RD-2.\n\nRD-4: no incidents; the only speed-band records (SYN-0009 PIE, SYN-0007 CTE) are band 4, i.e. not band 1-2, so no traffic exemption attaches to either segment. Weather fair.\n\nRD-6 not met: the driver's route_disputes_upheld_90d = 0 (his one upheld dispute in 90 days is not a route dispute), so no account flag; the RD-1 breach is recorded.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
+   "RD-4",
    "RD-5"
   ],
   "escalate": false,
@@ -26,24 +27,26 @@
    {
     "fact_id": "seg1",
     "finding": "counts",
+    "ground": "driver_errand",
     "basis": [],
-    "reason": "Driver-selected off-route 7-Eleven stop: rider asked only for 'a 7-Eleven on the way' without naming a place, and the driver chose one ~3.3 km from the optimal corridor (GPS turn off the PIE at ~17:37:15, stationary at 1.31267,103.88484 until ~17:45:15). RD-3(b): the stop request does not exempt the driver's own route choice; RD-5: no prior rider consent to this route in chat. extra_km ≈ 6.1 km → refund 6.1 × S$1.4102."
+    "reason": "Westbound MCE/ECP out-and-back dogleg ~17:36:45-17:39:15 (GPS 1.3215,103.8745 -> 1.3201,103.8767 -> 1.3192,103.8755 -> 1.3160,103.8748 -> 1.3133,103.8751 -> 1.3105,103.8758 -> 1.3087,103.8776, then doubling back east to 1.3122,103.8849), ~0.9 km north-west of the optimum CTE/PIE corridor. The only rider message is a request for a 7-Eleven (no place named) and it is timestamped 17:33:45, after which the driver simply says 'Sure'; nothing in the chat asks for or covers this loop, and no LTA incident or slow band (bands recorded are 4) explains it. Per RD-1/RD-3(b) the deviation is unexempted; the extra ~2.9 km enters the metered fare under RD-2."
    },
    {
     "fact_id": "seg2",
-    "finding": "exempt",
+    "finding": "counts",
+    "ground": "driver_errand",
     "basis": [],
-    "reason": "17:34–17:37 crawl around 1.329–1.330 stays within ~120 m of the quoted route polyline (inside the 200 m corridor), so it is not an off-route segment under RD-1; it is also consistent with the driver passing/scouting a nearer store before continuing, which the rider had asked for."
+    "reason": "Off-route stop plus return loop at 1.31267,103.88484: stationary (0.0 km/h) 17:41:45-17:45:45 (7.5 min) then a ~1 km southerly leg 17:45:45-17:49:15 before rejoining the eastbound corridor. This is the 7-Eleven stop, but the rider named only a shop type, not a place (RD-3(a) not satisfied), and the driver in effect chose the store ('the one I know') without pre-notifying the rider of the location, so under RD-3(b) the extra kilometres are not excused by the stop request; agreement scope under RD-5 covers 'stop 2 minutes', not this route change. Extra ~2.2 km enters the metered fare; the stationary waiting units are not refunded (RD-3(c))."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_claim_verbal_agreement",
-    "reason": "The rider named no place and no consent to the far store appears in chat; the driver's account of the stop is a claim, not rider consent (RD-3(b), RD-5 / G11). Nothing ties the ~3.3 km off-route leg to a location the rider agreed to."
+    "id": "driver_statement_verbal_route",
+    "reason": "The driver's account ('I went to the one I know and waited') is a claim, not rider consent to that particular far store; the only rider message names no place, so RD-5/RD-3(a) cannot exempt the segment and RD-3(b) applies."
    },
    {
-    "id": "rider_claim_full_meter_over_estimate",
-    "reason": "Only the unexempted off-route km (≈6.1 km ≈ S$8.60) is refundable; the in-corridor retrace/matching jitter and the ~3.5 min stationary waiting time are chargeable on a metered taxi (RD-2, RD-3(c)), so the refund is partial."
+    "id": "stop_minutes_charge",
+    "reason": "The 7.5-minute stationary period is a stop, not the pick-up point; on RydeTAXI the metered waiting units stand (RD-3(c)), but no separate in-trip stop fee may be added on a non-metered basis, and no such fee appears in the fare breakdown."
    }
   ],
   "flag_account": false,
@@ -52,9 +55,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.56,
- "input_tokens": 17284,
- "output_tokens": 1278,
+ "latency_s": 9.32,
+ "input_tokens": 17675,
+ "output_tokens": 2009,
  "requests": 1,
  "llm_calls": 1
 }

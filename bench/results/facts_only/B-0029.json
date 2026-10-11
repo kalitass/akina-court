@@ -4,29 +4,33 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T13:20:09.226236+00:00",
+ "ts": "2026-10-10T17:39:13.492411+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
   "amount": 6.61,
-  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a voucher refund; no driver account action — driver never tapped \"I'm Here\", so this is not a mis-tap case.",
-  "confidence": 0.97,
-  "reasoning": "Safety screen: the only chat is a pickup-timing exchange (F7, F8) and a bland driver statement (F10); nothing threatening, abusive, sexual or dangerous-driving related → safety_concern = none, no escalation.\n\nRoute under NS-0: cancelled_by = rider, so this is an immediate (non-advanced) booking and NS-4 governs. F2 shows the rider cancelled 2 min 30 s after matching at 18:23:00 — within the 3-minute grace window (≤ 3:00). Under NS-4, \"All cancellations made within 3 minutes of matching are not chargeable\", so the $6.61 in F2/F5 is not chargeable. The driver's non-arrival (F1: closest approach 1816 m, never within 200 m; F3 driver_arrived_at null; F4 no \"I'm Here\" tap and no platform auto-arrival) reinforces that no wait-based fee could arise; NS-1 is therefore not available to justify the fee, and the driver's written claim that he \"was on his way\" (F10) does not create a chargeable event. NS-6 is inapplicable (no trip completed, no waiting-fee button). Slow traffic (F11) is a driver-side condition and does not extend the rider's free window; Ryde publishes no ETA-lateness waiver (NS-8, non-citable).\n\nAmount: full refund of the fee actually charged, $6.61 (F5). Evidence is complete for every element (matching time, cancel time, cancel side, fee charged; F9 confirms a full timestamped chat record) → evidence_status = sufficient.\n\nRD-6 / NS-2 account flags are not triggered: no RD-2 refund or RD-1 violation, and no \"I'm Here\" tap placed the driver outside the pickup radius (F4), so no abuse-of-button flag. Profiles (F14/F15) show no prior upheld disputes and are not used to decide anything.",
+  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a Ryde voucher of $6.61 (NS-7); no driver account flag warranted (NS-2 flag condition not met — the driver never tapped \"I'm Here\").",
+  "confidence": 0.95,
+  "reasoning": "Safety screen: chat is two ordinary arrival/ETA messages (F7, F8), the driver statement is neutral (F10), the complaint contains no threat, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nMerits: this is a rider-side cancellation, so NS-0 routes the case to NS-4 (on-demand booking). NS-4: cancellations made within 3 minutes of matching are not chargeable. Timeline shows acceptance at 18:23:00 and rider cancellation at 18:25:30 (F2) — 2 min 30 s ≤ 3:00, so under NS-4 no cancellation fee is chargeable. The $6.61 charged (F5) is therefore not owed and must be refunded in full.\n\nThe driver's no-show claim does not change this: NS-1 requires (i) an \"I'm Here\" tap or platform auto-arrival, (ii) the driver within 200 m of the pickup at that moment, and (iii) >3 min continuous waiting. The record shows the driver never tapped and the platform recorded no arrival (F4), and the closest approach was 1816 m (F1, F3), so NS-1 fails outright and cannot support a fee. Because the driver never pressed \"I'm Here\", the NS-2 account-flag trigger (tap while GPS shows him outside 200 m) is not met, so no flag. Traffic facts (F11, F12) and weather (F13) are irrelevant to a within-3-minute rider cancellation; NS-8's ETA-based relief is informative only and not needed.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F9",
+   "F7",
+   "F8",
+   "F10",
    "F11",
-   "F14",
-   "F15"
+   "F12",
+   "F13"
   ],
   "cited_policy": [
    "NS-0",
    "NS-4",
+   "NS-1",
+   "NS-2",
    "NS-7"
   ],
   "escalate": false,
@@ -35,11 +39,7 @@
   "rejected_claims": [
    {
     "id": "F10",
-    "reason": "Driver's post-hoc statement that he was on his way is a claim, not a chargeable event; NS-1 requires a recorded arrival within 200 m plus continuous 3-minute wait, and F1/F3/F4 show neither. It also cannot override the system timeline (F2) on when the rider cancelled."
-   },
-   {
-    "id": "F11",
-    "reason": "Slow traffic is a driver-side condition (speed band 4, 30-39 km/h, no incident per F12) and does not create a chargeable cancellation fee or extend the rider's free-cancellation window under NS-4."
+    "reason": "Driver's statement 'I was on my way when the rider cancelled' is a claim, and it is contradicted by system records: GPS puts him 1816 m away and no arrival was ever recorded [F1][F3][F4]. In any event it does not make the cancellation fee chargeable — NS-4 waives it within 3 minutes of matching [F2]."
    }
   ],
   "flag_account": false,
@@ -48,9 +48,9 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.27,
- "input_tokens": 9767,
- "output_tokens": 904,
+ "latency_s": 3.94,
+ "input_tokens": 10158,
+ "output_tokens": 822,
  "requests": 1,
  "llm_calls": 1
 }

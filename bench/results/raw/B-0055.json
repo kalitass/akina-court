@@ -1,0 +1,54 @@
+{
+ "arm": "raw",
+ "case_id": "B-0055",
+ "repeat": 0,
+ "swap": false,
+ "model": "deepseek:deepseek-chat",
+ "ts": "2026-10-10T17:37:36.465313+00:00",
+ "ok": true,
+ "ruling_schema": 2,
+ "ruling": {
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send to a human reviewer: verify with the taxi meter / ERP record and the GPS trace whether the driven road was actually Bukit Timah Road before deciding any refund — file is insufficient to determine whether the segment the rider consented to was the segment driven. + flag_account",
+  "confidence": 0.5,
+  "reasoning": "Safety screen: the rider's message \"Can lah, go ahead.\" is agreement, not abuse; the driver's statement is neutral; no threat, harassment, sexual remark or dangerous-driving allegation appears in the chat, the complaint or the statement — safety_concern = none.\n\nThe dispute is a route deviation on a RydeTAXI trip (metered: fare.distance_fare 34.35 / distance_km 24.36 ⇒ $1.41/km; metered distance 24.36 km against an estimated 19.64 km). Under RD-2 the refund would be Σ(unexempt extra_km) × $1.41, so the amount turns entirely on whether the driver's actual off-route segment is exempt under RD-5.\n\nReading the record: at 22:35:35 the driver asked to \"go round via Bukit Timah Road\"; at 22:36:15 the rider replied \"Can lah, go ahead.\" That is a rider-authored message sent before the deviation, so it is consent to a named road under RD-5 (the driver's statement alone would not have been — G11). The scope of a named-road consent covers driving on that named road only, and the record must tie the driven segment to it; timing alone is not enough (G13).\n\nHere the record contradicts rather than ties: the driver's own account and the chat both name Bukit Timah Road, but from 22:39 to 22:53 the GPS trace runs south-east through the Paya Lebar / Eunos / Kallang area and back north-west, i.e. the east-side loop that matches the traffic-band geometry (SYN-0009) of the quoted Pan Island Expressway corridor (trace 22:38:05 (1.3265,103.8284) → 22:47:05 (1.3299,103.7998) → 22:53:35 (1.3495,103.7936), return to the pick-up corridor ≈22:54). No point on that segment is near Bukit Timah Road, and Bukit Timah Road cannot produce a PIE-band match at those coordinates. So the record places the driven segment somewhere other than the road the rider agreed to, which is not the \"nothing ties it\" case (that would be undetermined → escalate) but the \"placed elsewhere\" case: the agreed road does not cover this segment.\n\nThe procedural rule that system records (gps / timeline / fare) override statements does bite here, but the party it displaces is the driver, whose own statement names Bukit Timah Road. Because the only thing connecting the consented road to the driven segment is an account the GPS contradicts, and because the exact driven segment (and hence extra_km) is not a pre-computed fact I can read reliably off a 30-second thinned trace, the evidence is insufficient to fix the refund amount rather than merely confirm the finding. Missing/conflicting record named in evidence_gap: the driven path has no road-name correspondence to the consented road \"Bukit Timah Road\", and the off-route facts (`gps-detour-*` with per-segment extra_km) were not supplied.\n\nResult: escalate (human reviewer + flag_account, since with a human-look-upheld violation the driver's own account would independently warrant account review). Driver profile: route_disputes_upheld_90d = 0, so RD-6's repeated-offender trigger would not in itself attach; the flag is recommended for the account-review step if the reviewer confirms the finding. Cited clause: RD-5 (with G13/G11 as the reading rules applied, not citable policy).",
+  "cited_facts": [],
+  "cited_policy": [
+   "RD-1",
+   "RD-2",
+   "RD-5"
+  ],
+  "escalate": true,
+  "escalation_reason": "Route-deviation segment for a metered RydeTAXI trip is undetermined on the evidence: the consented named road (\"Bukit Timah Road\") is not tied to the driven segment and may be contradicted by the GPS (east-side 22:39–22:53 loop vs the quoted PIE corridor), and no off-route fact with extra_km was supplied. A human must read the raw trace / meter and ERP records before any partial refund or account flag is executed.",
+  "segment_findings": [
+   {
+    "fact_id": "seg1",
+    "finding": "undetermined",
+    "ground": "named_road_untied",
+    "basis": [],
+    "reason": "Driver's 22:35:35 message (chat) proposed the named road 'Bukit Timah Road' and the rider's 22:36:15 reply 'Can lah, go ahead.' is rider consent given before the deviation, so RD-5 named-road consent exists. But the scope of a named-road consent covers driving on that road only and requires a record tying the driven segment to it; timing alone does not (G13). Here the driver's own statement and the chat name Bukit Timah Road while the GPS places the 22:39–22:53 driving east-side loop (Paya Lebar / Eunos / Kallang, matching the SYN-0009 PIE band geometry) nowhere near Bukit Timah Road — i.e. the record places the segment elsewhere, so the consent does not cover it (named_road_elsewhere). Because the record is also too thin/contradictory to measure the segment (no road-name tie, no `gps-detour-*` extra_km facts, 30 s sampling), I cannot adjudicate or price it and pass it to a human reviewer rather than fix an amount neither way."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement_verbal_consent",
+    "reason": "The driver's statement that the rider 'said can' is corroborated by the rider's own 22:36:15 chat message, so consent as such is not the contested issue; a verbal-only claim would not count under RD-5/G11, but here the rider's own message exists. What the driver's statement cannot do is tie the segment actually driven to the road he named — the GPS places it elsewhere."
+   },
+   {
+    "id": "quoted_fare_binding",
+    "reason": "The complaint cites the app-quoted fare, but this trip is RydeTAXI, which is metered (policy §0; fare.pricing = 'metered'), so the quoted figure does not cap the fare; the complaint's fare grievance is only remedyable as a route-deviation refund under RD-1/RD-2."
+   }
+  ],
+  "flag_account": true,
+  "safety_concern": "none",
+  "safety_basis": [],
+  "evidence_status": "insufficient",
+  "evidence_gap": "Fact table supply for route_deviation was omitted: no `gps-detour-*` facts with per-segment extra_km/start/end, and no path road-name matching. The driven off-route segment therefore cannot be tied to (or excluded from) the rider-consented named road \"Bukit Timah Road\": the driver's message, the rider's reply and the driver's statement all name Bukit Timah Road, while the GPS trace (22:39–22:53) runs through the east side (Paya Lebar / Eunos / Kallang) matching the PIE speed-band geometry — the only tie between the consented road and the driven segment is an account the GPS contradicts, and the trace's 30 s cadence is too coarse to measure the unexempt extra_km needed for the RD-2 refund."
+ },
+ "latency_s": 9.66,
+ "input_tokens": 18327,
+ "output_tokens": 1885,
+ "requests": 1,
+ "llm_calls": 1
+}
