@@ -206,3 +206,30 @@ def test_recovery_is_disabled_by_default_without_model_calls(monkeypatch):
     with TestClient(server.app) as client:
         assert client.get('/api/demo-controls').json()['recovery_live_runs'] is False
         assert client.post('/api/runs/C-0004', json={'recovery':'available'}).status_code == 403
+
+
+def test_untimed_rider_chat_keeps_validated_gps_but_never_calls_model():
+    from bench.recovery_suite import load_suite, prepare_case
+    row = next(r for r in load_suite()['cases'] if r['id'] == 'R-009')
+    initial, provider = prepare_case(row)
+    async def never(*args, **kwargs):
+        pytest.fail('Missing rider timestamps must be handed off before any model call')
+    result = asyncio.run(review_recovered(initial, provider, runner=never))
+    assert result['state'] == 'human_review'
+    assert result['hearings'] == result['attempts'] == []
+    assert len(result['snapshots']) == 2 and result['snapshots'][1]['gps']
+    check = result['evidence']['admission_check']
+    assert check['reason'] == 'missing_rider_chat_timestamps'
+    assert check['message_indices']
+    packet = result['evidence']['reviewer_packet']
+    assert packet['status'] == 'human_review' and 'timestamp' in packet['next_step']
+    assert all(m['ts'] is None for m in result['snapshots'][1]['chat'] if m['sender'] == 'rider')
+
+
+def test_timed_route_chat_remains_admitted():
+    full = Case.model_validate_json((ROOT / 'data/cases/C-0001.json').read_text())
+    initial = full.model_copy(deep=True); initial.gps = []
+    from recovery.evidence import recover
+    updated, report = recover(initial, SyntheticGpsProvider(full, 'available'))
+    assert report['state'] == 'ready_for_court' and updated.gps
+    assert 'admission_check' not in report

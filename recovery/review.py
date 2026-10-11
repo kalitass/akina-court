@@ -83,9 +83,10 @@ async def review_recovered(case: Case, provider: Provider, *, runner=None, on_ev
               'evidence': evidence, 'snapshots': [initial.model_dump(mode='json')],
               'hearings': [], 'attempts': [], 'comparison': None, 'failure': None, 'execution': 'simulation_only',
               'hearing_context': hearing_context(hearing_mode), 'reused_initial': None}
+    if evidence['after_hash'] != evidence['before_hash']:
+        result['snapshots'].append(updated.model_dump(mode='json'))
     if evidence['state'] != 'ready_for_court':
         return result
-    result['snapshots'].append(updated.model_dump(mode='json'))
     versions = [(1, initial), (2, updated)]
     if previous_review is not None:
         try:
