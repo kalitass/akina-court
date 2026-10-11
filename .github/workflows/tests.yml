@@ -19,3 +19,22 @@ jobs:
         run: python -m pytest -q
       - name: Judge-facing wording check
         run: python scripts/check_wording.py
+
+  ruling-logic-gate:
+    # A change under core/, policy/policy.md, data/rates.json or bench/baseline.py must come with the complete re-run:
+    # receipts that verify against this code, every result present, pages regenerated, and no wrong decision executed.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Gate
+        env:
+          LLM_PROVIDER: deepseek
+        run: python scripts/ci_gate.py origin/${{ github.base_ref }}
