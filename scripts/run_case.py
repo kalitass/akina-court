@@ -2,7 +2,7 @@
 """Run the three-agent court on one or more cases and compare with data/expected.
 
     .venv/bin/python scripts/run_case.py C-0001            # one case, prints the event log
-    .venv/bin/python scripts/run_case.py all               # six cases, summary table
+    .venv/bin/python scripts/run_case.py all               # every demo case, summary table
     .venv/bin/python scripts/run_case.py C-0001 --no-rebuttal
 
 Needs an LLM key in the environment (see core/llm.py). Writes runs/<case>.json (CaseRecord).
@@ -70,7 +70,7 @@ async def one(cid: str, verbose: bool, rebuttal: bool):
 async def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     rebuttal = "--no-rebuttal" not in sys.argv
-    ids = [f"C-{n:04d}" for n in range(1, 7)] if (not args or args[0] == "all") else args
+    ids = sorted(p.stem for p in (ROOT / "data" / "cases").glob("C-*.json")) if (not args or args[0] == "all") else args
     print(f"model: {describe_model()}  rebuttal: {rebuttal}")
     out = {}
     for cid in ids:

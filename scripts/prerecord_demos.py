@@ -7,6 +7,7 @@
 Each entry runs the court once and stores the CaseRecord under runs/<case>~<name>.json. The replay page loads it with
   /replay.html?case=C-0001&run=C-0001~fake_fact      (fault injection: the case is unchanged, the LLM output is tampered)
   /replay.html?case=C-0005&cf=grace_179              (counterfactual: the case itself is transformed)
+  /replay.html?case=C-0004&run=C-0004~stretch        (stretch module on: the bad-faith screen adds signal facts the court can cite)
 """
 from __future__ import annotations
 
@@ -37,6 +38,7 @@ DEMOS = {
     "grace_181": ("C-0005", {"cf": "grace_181"}),
     "prompt_injection": ("C-0001", {"cf": "prompt_injection"}),
     "swap_profiles": ("C-0002", {"cf": "swap_profiles"}),
+    "stretch": ("C-0004", {"flags": ("STRETCH_FRAUD",)}),      # the one stored hearing with a stretch module on; a ~ run id never writes the stores
 }
 
 
@@ -45,7 +47,13 @@ async def one(name: str) -> Path:
     case = Case.model_validate(json.loads((ROOT / "data" / "cases" / f"{cid}.json").read_text()))
     if spec.get("cf"):
         case = apply(case, spec["cf"]).model_copy(update={"case_id": f"{cid}~{spec['cf']}"})
-    rec = await run_case(case, inject=spec.get("inject"))
+    for flag in spec.get("flags", ()):
+        os.environ[flag] = "1"
+    try:
+        rec = await run_case(case, inject=spec.get("inject"))
+    finally:
+        for flag in spec.get("flags", ()):
+            os.environ.pop(flag, None)
     rid = f"{cid}~{name}"
     if model_outage(rec):
         raise SystemExit(f"{rid}: a model stage failed ({'; '.join(model_outage(rec))}) — not stored; run this one again")

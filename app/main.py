@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import Request, FastAPI, Header, HTTPException
+from fastapi import File, Form, Request, FastAPI, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -47,6 +47,7 @@ class Run:
         self.error: Optional[str] = None
         self.record: Optional[CaseRecord] = None
         self.review: Optional[dict] = None
+        self.case: Optional[Case] = None             # the case as actually heard
         self.subs: list[asyncio.Queue] = []
 
     def push(self, ev: Optional[Event]):
@@ -104,6 +105,9 @@ def list_cases():
 def get_case(cid: str, counterfactual: Optional[str] = None):
     """`cid` may be a run id like C-0005~grace_179 (the transform is applied) or a plain case id with ?counterfactual=."""
     base, _, cf = cid.partition("~")
+    live = RUNS.get(cid)
+    if live is not None and live.case is not None:        # a live run on a modified complaint: the case it actually heard
+        return live.case.model_dump(mode="json")
     case = load_case(base)
     cf = cf or counterfactual
     if cf:
@@ -144,6 +148,29 @@ def get_run(cid: str):
     if p is None:
         raise HTTPException(404, "no run yet")
     return json.loads(p.read_text())
+
+
+@app.get("/api/cases/{cid}/voice")
+def case_voice(cid: str):
+    """The spoken complaint attached to a case, if any: audio path (served from web/voice/), transcript and ASR engine."""
+    p = ROOT / "data" / "voice" / f"{cid.partition('~')[0]}.json"
+    if not p.exists():
+        raise HTTPException(404, "no spoken complaint on file for this case")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+@app.post("/api/intake/voice")
+async def intake_voice(audio: UploadFile = File(...), lang: str = Form("en"), x_demo_token: Optional[str] = Header(default=None)):
+    """A spoken complaint → text (Tencent Cloud ASR). The caller then files the text like a typed complaint
+    (POST /api/runs/{cid} with {"statement": text}); the court never receives audio."""
+    _check_token(x_demo_token)
+    from app.voice import VoiceUnavailable, transcribe
+    data = await audio.read()
+    fmt = (audio.filename or "clip.wav").rsplit(".", 1)[-1]
+    try:
+        return transcribe(data, fmt, lang)
+    except VoiceUnavailable as e:
+        raise HTTPException(503, str(e))
 
 
 @app.get("/api/demo-controls")
@@ -229,12 +256,19 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
         cid = case.case_id
     rebuttal = bool(body.get("rebuttal", True))
     inject = set(body.get("inject") or [])
+    statement = body.get("statement")
+    if statement is not None:                      # voice intake: the transcript is filed as the complaint, nothing else changes
+        if cf or inject or not isinstance(statement, str) or not statement.strip() or len(statement) > 600:
+            raise HTTPException(400, "statement must be 1–600 characters of text and cannot be combined with a counterfactual or an injection")
+        case = case.model_copy(update={"dispute": case.dispute.model_copy(update={"statement": statement.strip()})})
+        cid = f"{cid}~voice"                        # never saved over the stored run
     if inject and not cf:
         cid = f"{cid}~inject"                       # demo runs never overwrite the real run
     r = RUNS.get(cid)
     if r and not r.done:
         return {"status": "running", "events": len(r.events), "run_id": cid}
     r = RUNS[cid] = Run()
+    r.case = case if statement is not None else None
 
     async def go():
         try:
@@ -249,7 +283,7 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
                 return
             rec = await run_case(case, on_event=r.push, rebuttal=rebuttal, inject=inject)
             r.record = rec
-            if not cf and not inject:
+            if not cf and not inject and statement is None:
                 save_record(rec, RUNS_DIR)
         except Exception as e:  # surface the error as a terminal event instead of a silent hang
             r.error = f"{type(e).__name__}: {e}"
@@ -320,6 +354,68 @@ def queue_evidence_handoffs(cid: str, x_demo_token: Optional[str] = Header(defau
     if cid not in {'C-0001', 'C-0004'}:
         raise HTTPException(400, 'Choose a supported synthetic recovery case')
     return list_handoffs(cid, ROOT / 'review_runs')
+
+
+def reviewer_workspace(cid: str, scenario: str):
+    from app.reviewer import current_evidence, history, workspace
+    if scenario not in {'stored', 'missing_gps'}:
+        raise HTTPException(400, 'Choose stored or missing_gps')
+    full = load_case(cid)
+    initial = full.model_copy(deep=True)
+    if scenario == 'missing_gps':
+        if cid not in {'C-0001', 'C-0004'}:
+            raise HTTPException(400, 'Missing-GPS demonstration supports C-0001/C-0004 only')
+        initial.gps = []
+    entries = history(cid, scenario, ROOT / 'reviewer_runs')
+    try:
+        current = current_evidence(initial, entries)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc))
+    record = None
+    if scenario == 'stored':
+        try:
+            record = get_run(cid)
+        except HTTPException as exc:
+            if exc.status_code != 404:
+                raise
+    packet = workspace(current, record, scenario)
+    packet.update(revision=len(entries), history=entries,
+                  evidence_recovered=bool(current.provenance.get('recovered_gps')))
+    return full, current, packet
+
+
+@app.get('/api/reviewer/{cid}')
+def get_reviewer(cid: str, scenario: str = 'stored', x_demo_token: Optional[str] = Header(default=None)):
+    _check_token(x_demo_token)
+    return reviewer_workspace(cid, scenario)[2]
+
+
+from app.reviewer import ReviewerAction  # typed validation for reviewer requests
+
+
+@app.post('/api/reviewer/{cid}/preview')
+def preview_reviewer_action(cid: str, body: ReviewerAction, scenario: str = 'stored', x_demo_token: Optional[str] = Header(default=None)):
+    _check_token(x_demo_token)
+    from app.reviewer import decision_preview
+    _, case, packet = reviewer_workspace(cid, scenario)
+    if body.source_fingerprint != packet['source_fingerprint'] or body.revision != packet['revision']:
+        raise HTTPException(409, 'Workspace changed; reload before previewing')
+    try:
+        return {'decision': decision_preview(case, packet, body), 'execution': 'simulation_only', 'saved': False}
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.post('/api/reviewer/{cid}/actions')
+def save_reviewer_action(cid: str, body: ReviewerAction, scenario: str = 'stored', x_demo_token: Optional[str] = Header(default=None)):
+    _check_token(x_demo_token)
+    from app.reviewer import record_action
+    full, case, packet = reviewer_workspace(cid, scenario)
+    try:
+        return record_action(case, full, packet, body, ROOT / 'reviewer_runs')
+    except ValueError as exc:
+        status = 409 if 'changed' in str(exc) or 'Request ID' in str(exc) else 400
+        raise HTTPException(status, str(exc))
 
 
 @app.post("/api/override/{cid}")

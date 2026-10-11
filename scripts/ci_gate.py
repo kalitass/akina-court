@@ -9,7 +9,9 @@ Every PR: the diff must not carry forbidden words (see FORBIDDEN).
 A PR that touches a gated path (core/, policy/policy.md, data/rates.json, bench/baseline.py) must also pass:
   1. receipts — every stored demo run and every court / judge record on the benchmark and held-out sets verifies
      against this tree (case, policy, code and model fingerprints); the code fingerprint covers core/, so this holds
-     only when the runs were produced by this code;
+     only when the runs were produced by this code. A judge-only record with an older code fingerprint still stands
+     when the experiment is provably the same: the judge's input rebuilt on this tree hashes to the receipt's
+     judge_prompt_sha256 and the judge's instructions and model factory are unchanged since the producing commit;
   2. completeness — every benchmark case has a successful result in all four systems and the held-out cases in both
      judge systems, on the current result schema, with no failed runs and all stored demo runs present;
   3. pages — regenerating every derived file from the results leaves the committed files unchanged;
@@ -46,13 +48,80 @@ def sh(*args: str) -> str:
 
 
 def changed_files(base: str) -> list[str]:
-    return [l for l in sh("git", "diff", "--name-only", f"{base}...HEAD").splitlines() if l]
+    return [l for l in sh("git", "diff", "--name-only", "--no-renames", f"{base}...HEAD").splitlines() if l]   # a file moved out of core/ is a change to core/
 
 
 def check_traces(base: str) -> list[str]:
     text = sh("git", "diff", f"{base}...HEAD").lower()
     hits = [w for w in FORBIDDEN if w in text]
     return [f"the diff contains a forbidden word: {w}" for w in hits]
+
+
+def _judge_input(case) -> str:
+    """The judge's input for a judge-only run, rebuilt on this tree: fact table → policy trace → judge prompt (no advocates)."""
+    from core.agents.judge import judge_prompt
+    from core.facts.tools import build_fact_table
+    from core.orchestrate import Hooks, empty_brief, trip_summary
+    from core.policy_engine import evaluate
+    table = build_fact_table(case); cert = evaluate(case, table)
+    items = [f"{q.clause} for {q.subject}: {q.element} — {q.detail}" for q in cert.predicates if q.status == "judge"]
+    if cert.insufficient:
+        items.append(f"EVIDENCE: {cert.insufficient} — the only outcome is escalate; evidence_status = insufficient and evidence_gap says what is missing")
+    briefs = [empty_brief(s, "judge-only ablation: no advocate") for s in ("rider", "driver")]
+    jp = judge_prompt(case.dispute.model_dump(), trip_summary(case), table, briefs, {}, cert.lines(), items)
+    pc = Hooks().judge_context()
+    return jp + ("\n\n" + pc if pc else "")
+
+
+_COMMIT_OF: dict[str, str | None] = {}
+JUDGE_FILES = ("core/agents/judge.py", "core/llm.py")      # the judge's instructions and the model factory: not part of the prompt hash
+
+
+def _commit_with_code_hash(h: str) -> str | None:
+    """The most recent commit whose core/ fingerprint is `h` (searched over the last 300 commits), or None."""
+    import shutil
+    import tempfile
+    import core.receipt as receipt
+    if h in _COMMIT_OF:
+        return _COMMIT_OF[h]
+    found = None
+    for c in sh("git", "rev-list", "--max-count=300", "HEAD").split():
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            tar = subprocess.run(["git", "archive", c, "core", "data/rates.json"], cwd=ROOT, capture_output=True, check=True).stdout
+            subprocess.run(["tar", "-x", "-C", str(tmp)], input=tar, check=True)
+            keep = receipt.ROOT
+            try:
+                receipt.ROOT = tmp
+                if receipt.code_hash() == h:
+                    found = c; break
+            finally:
+                receipt.ROOT = keep
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    _COMMIT_OF[h] = found
+    return found
+
+
+def _judge_only_equivalent(rec: dict, case, model: str) -> tuple[bool, str]:
+    """A judge-only record whose code fingerprint is stale still stands when the experiment is the same: case, policy and
+    model fingerprints match, the judge's input rebuilt on this tree hashes to the stored judge_prompt_sha256, and the
+    judge's instructions and the model factory are unchanged since the commit that produced the record."""
+    from core.receipt import _h, verify
+    v = verify(rec.get("receipt"), case, model)
+    changed = [k for k, ok in v["match"].items() if not ok]
+    if changed != ["code_sha256"]:
+        return False, v["status"]
+    stored = (rec.get("receipt") or {}).get("judge_prompt_sha256")
+    if not stored or _h(_judge_input(case).encode("utf-8")) != stored:
+        return False, "the judge's input rebuilt on this tree differs from the one in the receipt — re-run"
+    commit = _commit_with_code_hash(rec["receipt"]["code_sha256"])
+    if commit is None:
+        return False, "the receipt's code fingerprint matches no commit in recent history — re-run"
+    diff = subprocess.run(["git", "diff", "--name-only", commit, "HEAD", "--", *JUDGE_FILES], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    if diff:
+        return False, f"the judge's instructions or model factory changed since {commit[:7]} ({', '.join(diff)}) — re-run"
+    return True, f"same experiment: judge input identical, {' and '.join(JUDGE_FILES)} unchanged since {commit[:7]}"
 
 
 def check_receipts() -> list[str]:
@@ -69,14 +138,24 @@ def check_receipts() -> list[str]:
         v = verify(rec.get("receipt"), Case.model_validate(get_case(rec["case_id"])), model)
         if not v["verified"]:
             bad.append(f"runs/{p.name}: {v['status']}")
+    equivalent = 0
     for sub, cases in (("bench/results", "data/bench/cases"), ("bench/results/blind", "data/bench/blind/cases")):
         for arm in ("judge_only", "court"):
             for p in sorted((ROOT / sub / arm).glob("*.record.json")):
                 rec = json.loads(p.read_text())
                 case = Case.model_validate(json.loads((ROOT / cases / f"{rec['case_id']}.json").read_text()))
                 v = verify(rec.get("receipt"), case, model)
-                if not v["verified"]:
+                if v["verified"]:
+                    continue
+                if arm == "judge_only":            # no advocates: the judge's input can be rebuilt and compared
+                    ok, why = _judge_only_equivalent(rec, case, model)
+                    if ok:
+                        equivalent += 1; continue
+                    bad.append(f"{sub}/{arm}/{p.name}: {why}")
+                else:
                     bad.append(f"{sub}/{arm}/{p.name}: {v['status']}")
+    if equivalent:
+        print(f"  (receipts: {equivalent} judge-only record(s) carry an older code fingerprint but the same experiment: input rebuilt and identical, judge files unchanged)")
     return bad
 
 
@@ -98,7 +177,7 @@ def check_completeness() -> list[str]:
                 if arm in ("judge_only", "court") and not (ROOT / sub / arm / f"{cid}.record.json").exists():
                     bad.append(f"{sub}/{arm}/{cid}.record.json missing")
     from scripts.prerecord_demos import DEMOS
-    stored = [f"{c}.json" for c in ("C-0001", "C-0002", "C-0003", "C-0004", "C-0005", "C-0006", "DISP-002")] + [f"{case}~{k}.json" for k, (case, _) in DEMOS.items()]
+    stored = [f"{p.stem}.json" for p in sorted((ROOT / "data" / "cases").glob("*.json"))] + [f"{case}~{k}.json" for k, (case, _) in DEMOS.items()]
     for name in stored:
         if not (ROOT / "runs" / name).exists():
             bad.append(f"runs/{name} missing")

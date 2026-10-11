@@ -271,7 +271,7 @@ def row_html(r: dict) -> str:
             f'<td class="{out_cls}"><b>{esc(outcome_text(ruling))}</b>{flagnote}</td>'
             f'<td>{badge}</td><td class="why">{esc(why)}</td><td class="chips">{clauses}</td>'
             f'<td class="mono">{esc(lat)}</td>'
-            f'<td><a href="/replay.html?case={esc(r["id"])}&phase=court" onclick="event.stopPropagation()" title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
+            f'<td><a href="/reviewer-workflow.html?case={esc(r["id"])}" onclick="event.stopPropagation()">Review</a> · <a href="/replay.html?case={esc(r["id"])}&phase=court" onclick="event.stopPropagation()" title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
 
 
 def drawer_html(r: dict) -> str:
