@@ -113,6 +113,21 @@ def get_facts(cid: str, counterfactual: Optional[str] = None):
     return build_fact_table(_Case.model_validate(get_case(cid, counterfactual))).model_dump(mode="json")
 
 
+@app.get("/api/evidence-demo/{cid}")
+def evidence_demo(cid: str, mode: str = "available"):
+    """Read-only synthetic recovery preview; does not run agents or save a ruling."""
+    from core.evidence import SyntheticGpsProvider, recover
+    if cid not in {"C-0001", "C-0004"} or mode not in {"available", "unavailable", "conflict"}:
+        raise HTTPException(400, "Choose a supported synthetic demo case and evidence mode")
+    full = load_case(cid)
+    partial = full.model_copy(deep=True)
+    partial.gps = []
+    updated, report = recover(partial, SyntheticGpsProvider(full, mode))
+    return {"synthetic": True, "model_called": False, "report": report,
+            "before": {"gps_points": 0},
+            "after": {"gps_points": len(updated.gps), "facts": build_fact_table(updated).model_dump(mode="json")}}
+
+
 BENCH_RUNS_DIR = ROOT / "bench" / "results" / "court"     # the benchmark's primary court run of every B-case (<id>.record.json)
 STALE_STORED_RUNS = {"DISP-002"}  # archived run predates the notice and profile-window corrections
 
