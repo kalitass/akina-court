@@ -333,7 +333,7 @@ async def no_stale_pages(request, call_next):
 @app.get("/api/evidence-demo/{cid}")
 def evidence_demo(cid: str, mode: str = "available"):
     """Read-only synthetic recovery preview; does not run agents or save a ruling."""
-    from core.evidence import SyntheticGpsProvider, recover
+    from app.evidence import SyntheticGpsProvider, recover
     if cid not in {"C-0001", "C-0004"} or mode not in {"available", "unavailable", "conflict"}:
         raise HTTPException(400, "Choose a supported synthetic demo case and evidence mode")
     full = load_case(cid)
