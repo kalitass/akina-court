@@ -23,3 +23,44 @@ el('run').addEventListener('click', async () => {
   } catch (error) { el('status').textContent = error.message; }
   finally { busy = false; el('run').disabled = false; }
 });
+
+let reviewing = false;
+fetch('/api/demo-controls').then(r => r.json()).then(c => {
+  if (c.live_runs && c.recovery_model_ready) { el('review').disabled = false; el('review').textContent = 'Run both AI hearings (uses model credits)'; }
+  else { el('review-status').textContent = !c.live_runs ? 'Live reviews are switched off on this deployment.' : 'A model credential must be configured on the server before live review can run.'; }
+}).catch(() => { el('review-status').textContent = 'Could not check live review availability.'; });
+el('review').addEventListener('click', async () => {
+  if (reviewing) return;
+  reviewing = true; el('review').disabled = true; el('review-output').hidden = true;
+  el('review-status').textContent = 'Review requested. Waiting for the court…';
+  try {
+    const headers = {'Content-Type': 'application/json'};
+    if (el('token').value) headers['X-Demo-Token'] = el('token').value;
+    const res = await fetch(`/api/runs/${encodeURIComponent(el('case').value)}`, {
+      method: 'POST', headers, body: JSON.stringify({recovery: el('mode').value})
+    });
+    const started = await res.json();
+    if (!res.ok) throw new Error(started.detail || 'Review could not start.');
+    const deadline = Date.now() + 15 * 60 * 1000;
+    let state;
+    while (Date.now() < deadline) {
+      const response = await fetch(`/api/recovery-reviews/${encodeURIComponent(started.run_id)}`);
+      if (!response.ok) throw new Error('Could not retrieve the review status.');
+      state = await response.json();
+      if (state.done) break;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    if (!state?.done) throw new Error(`Review still running. Run ID: ${started.run_id}. This page timed out; do not start a duplicate.`);
+    if (state.error) throw new Error(state.error);
+    const r = state.review;
+    if (!r) throw new Error('No review bundle returned.');
+    el('review-record').textContent = JSON.stringify(r, null, 2);
+    const show = hearing => hearing ? JSON.stringify({ruling: hearing.ruling, eligibility: hearing.eligibility, notices: hearing.notices}, null, 2) : 'No completed hearing.';
+    el('before-ruling').textContent = show(r.hearings[0]);
+    el('after-ruling').textContent = show(r.hearings[1]);
+    el('changes').textContent = r.comparison ? JSON.stringify(r.comparison, null, 2) : r.failure || r.evidence.human_task || 'No accepted evidence to review.';
+    el('review-output').hidden = false;
+    el('review-status').textContent = r.state === 'reviewed' ? 'Both hearings completed. Results are simulated; a changed decision does not itself prove improved accuracy.' : `Review not completed: ${r.state}`;
+  } catch (error) { el('review-status').textContent = error.message; }
+  finally { reviewing = false; el('review').disabled = false; }
+});
