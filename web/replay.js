@@ -7,7 +7,7 @@ const SAVED_STYLE = (() => { try { return localStorage.getItem('style') || ''; }
 const THEME = Q.get('theme') ? (Q.get('theme') === 'light' ? 'light' : 'dark') : (SAVED_STYLE === 'mono' ? 'light' : 'dark');
 if (THEME === 'light') document.body.classList.add('light');
 const MINI = Q.get('mini') === '1';   // hero micro-demo: map only, silent, ends on the result card (no court)
-let SPEED = +(Q.get('speed') || (MINI ? 100 : 50));
+let SPEED = +(Q.get('speed') || 200);
 if (MINI) document.documentElement.classList.add('mini');
 const REDUCED = matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const AUTOPLAY = Q.get('autoplay') !== '0' && !REDUCED;   // respects the OS reduced-motion setting; Play still works
