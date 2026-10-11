@@ -245,8 +245,8 @@ CONTENT = {
     "gate_raw_note": ("the raw arm never sees fact ids, so the citation rule blocks everything: this row shows an interface "
                       "requirement, not the gate's discriminative power"),
     "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
-                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone reaches "
-                      "{jo_ok}/{n} at about 1/{ratio} of the court's token cost. {advocates_sentence}"),
+                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone is right or hands off on "
+                      "{jo_safe}/{n} at about 1/{ratio} of the court's token cost, but lets {jo_wrong} wrong decisions execute. {advocates_sentence}"),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
         "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
@@ -834,11 +834,14 @@ def build(d: dict) -> str:
         cls = ' class="hl"' if a == "court" else ""
         grows.append(f'<tr{cls}><td><b>{esc(name)}</b>{"<sup>" + str(len(gnotes)) + "</sup>" if note else ""}</td><td class="n">{g["core_wrong"]}</td><td class="n">{g["model_escalated"]}</td><td class="n">{blocked}</td>'
                      f'<td class="n">{g["human_flow"]} / {g["n"]} ({pct(g["human_rate"], 0)})</td><td class="n">{g["auto"]}</td><td class="n">{wx}</td></tr>')
+    jo_wx, ct_wx = G["judge_only"]["wrong_and_executed"], G["court"]["wrong_and_executed"]
     gate_sentence = CONTENT["gate_sentence"].format(
-        fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_ok=jo_ok, n=n_bench,
+        fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_safe=n_bench - jo_wx, jo_wrong=jo_wx, n=n_bench,
         ratio=f"{jo_ratio:.0f}",
-        advocates_sentence=(f"The two advocates leave the human-review rate at {pct(G['court']['human_rate'], 0)}; their value is the observable adversarial hearing the track requires."
-                            if G["judge_only"]["human_rate"] == G["court"]["human_rate"] else
+        advocates_sentence=(f"The two advocates take that to {n_bench - ct_wx}/{n_bench} with {ct_wx} wrong decision{'s' if ct_wx != 1 else ''} executed: each side states the "
+                            f"policy ground of every open question, a point both sides agree on binds the judge, and the judge may only rule as an argued ground does; "
+                            f"human review moves from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}."
+                            if ct_wx < jo_wx else
                             f"The two advocates change human review from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}; their other value is the observable adversarial hearing the track requires."))
     # per-case table
     pc = []
