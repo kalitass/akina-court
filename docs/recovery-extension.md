@@ -38,3 +38,16 @@ Before enabling this in the main workflow: review reference answers, run the req
 After GPS acceptance, route disputes with any untimed rider message are conservatively handed to a human before model calls. This is an extension admission rule, not a policy ruling or a correction to the core court. It retains the validated GPS snapshot, message indices, original untimed chat and source-linked investigation task. Driver timestamps are never substituted for rider timestamps. Cases with complete rider timestamps still follow the existing independent hearings.
 
 R-009's preparation expectation now reflects this handoff. Its draft monetary reference is unchanged and still needs team review. A handoff is not an automatic model success; the original pilot's unsupported timestamp remains documented. This check deliberately may hand off cases a human could resolve, and does not prove overall accuracy improvement. The extension remains disabled by default; the core temporal-verification weakness and R-003 conservative escalation are not solved by this PR.
+
+## Post-integration verification (2026-10-11)
+
+- Synced main `11a3669`; no diff in core, policy, rates or baseline prompt.
+- Generator workflow completed; 747 passed and 1 skipped (748 collected). Generated pages are current.
+- All 10 draft recovery scenarios prepared successfully with no model calls.
+- Funded R-001 court rerun: initial hearing escalated; recovered hearing recommended refund_full SGD 6.61, flag_account true with human-only account review. Strict draft reference matched; simulated auto clearance true.
+- R-009 rerun: validated GPS retained; missing rider timestamp at chat index 1 handed off before any model call. Classified as retrieval handoff, never as model accuracy or correct automatic clearance.
+- Requested model deepseek-chat for all roles; returned deepseek-flash. This small rerun does not establish overall improvement.
+- Normal PR gate: trace clean; gated-path rerun skipped. Forced gate: completeness, pages and score floor pass; 67 pre-existing single-judge receipt mismatches remain. Therefore the forced gate is not fully passing. Main core files are byte-identical; no attempt was made to rewrite old receipts or charge for a full baseline rerun.
+- Integration is suitable for teammate review with the extension disabled by default. This is not clearance to enable production automatic reviews.
+
+Local post-integration experiment bundles: `32409aa8a9534af095613b54b8d8d93b.json` (R-001) and `a536a218937e4e8c918b94a4cc33fa2a.json` (R-009), stored under ignored review_runs. Historical pilot results remain unchanged.
