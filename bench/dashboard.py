@@ -467,7 +467,7 @@ h1{font-size:40px;line-height:1.1;letter-spacing:-.02em;margin:34px 0 14px;font-
 .chips.secondary .chip{color:var(--ink2)}
 .pitch{font-size:19px;line-height:1.45;color:var(--ink2);max-width:900px;margin:0 0 22px}
 .meta{font-size:12.5px;color:var(--muted);font-family:var(--mono);margin-bottom:22px}
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .tile{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px 16px;box-shadow:var(--shadow)}
 .tile .n{font:700 44px/1 var(--mono);letter-spacing:-.03em;margin:4px 0 8px}
 .tile .n small{font-size:18px;color:var(--muted);font-weight:600;margin-left:6px}
@@ -737,7 +737,6 @@ def build(d: dict) -> str:
 <p class="blurb">{esc(CONTENT['blurb'])}</p>
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
 <div class="tiles">
-<div class="tile green"><div class="l">Same model, better evidence</div><div class="n">+{lift_pp:.1f}<small>pp</small></div><div class="m">Same model, one call each: computing the facts in code lifts exact core decisions from {pct(raw['exact'])} to {pct(fo['exact'])}.</div></div>
 <div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">How it is counted: a case is right when outcome, amount and hand-off all match the policy-derived reference ({ct_ok} of {n_bench}); a case the court sends to a person instead of ruling is not wrong, a reviewer decides it ({n_bench - ct_ok - ct['wrong_executed']} such case{"s" if n_bench - ct_ok - ct['wrong_executed'] != 1 else ""}). Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.</div></div>
 <div class="tile purple"><div class="l">Cleared · wrong decisions that passed the check</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small> · {G['court']['wrong_and_executed']}</div><div class="m">{G['court']['auto']} core decisions cleared for automatic execution, {G['court']['wrong_and_executed']} observed wrong core decisions executed. Account flags always go to a human.</div></div>
 <div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">p95 {ct['latency_p95_s']:.1f} s, versus {esc(CONTENT['manual_handling'])} of manual handling. About {tok_x:.0f}× the tokens of one call.</div></div>
