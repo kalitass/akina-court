@@ -52,6 +52,14 @@ def plan(case: Case) -> EvidenceRequest | None:
 
 def recover(case: Case, provider: Provider) -> tuple[Case, dict]:
     """Return a new snapshot and an audit trail. Never changes or rules on the input."""
+    updated, report = _recover(case, provider)
+    if report['request'] is not None:
+        from core.reviewer_packet import build_packet
+        report['reviewer_packet'] = build_packet(case, updated, report)
+    return updated, report
+
+
+def _recover(case: Case, provider: Provider) -> tuple[Case, dict]:
     before = case.model_copy(deep=True)
     request = plan(before)
     report = {'version': 1, 'before_hash': digest(before), 'after_hash': digest(before),

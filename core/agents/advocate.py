@@ -7,6 +7,8 @@ evidence was gathered. Output is a CaseBrief (structured, via tool-call output).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
+import os
 from typing import Callable
 
 from pydantic_ai import Agent, RunContext
@@ -136,18 +138,62 @@ def _make_tool(name: str):
     return tool
 
 
+def local_batch_evidence() -> bool:
+    """Explicit experimental condition; the published cloud workflow is unchanged."""
+    return os.environ.get("LLM_PROVIDER", "deepseek").lower() == "ollama" and os.environ.get("LOCAL_BATCH_EVIDENCE") == "1"
+
+
+def local_compact_rebuttal() -> bool:
+    return os.environ.get("LLM_PROVIDER", "deepseek").lower() == "ollama" and os.environ.get("LOCAL_COMPACT_REBUTTAL") == "1"
+
+
+def compact_rebuttal_context(deps: AdvocateDeps, own: CaseBrief) -> str:
+    """Lossless facts already read by this side; never promotes unread evidence."""
+    facts = [f.model_dump(include={"id", "source", "text"})
+             for f in deps.table.facts if f.id in deps.seen]
+    return ("CASE " + deps.table.case_id + "\n"
+            "Your verified original brief (unchanged on the record):\n" + own.model_dump_json() +
+            "\nEvidence you already read through tools, verbatim. This is not new evidence:\n" +
+            json.dumps(facts, ensure_ascii=False) +
+            "\nTools already called: " + ", ".join(sorted(deps.called)) +
+            "\nReturn only the structured Rebuttal. Keep each response to one short sentence where possible. "
+            "Respond to every opposing claim you contest or concede; preserve all required segment grounds. "
+            "Do not repeat the complaint, policy text, or your whole original argument.\n\n")
+
+
+def get_case_facts(ctx: RunContext[AdvocateDeps], case_id: str) -> dict:
+    """Read all six evidence slices for this case in one tool call, preserving each source and fact ID."""
+    if case_id != ctx.deps.table.case_id:
+        return {"error": f"unknown case_id {case_id!r}; you are arguing {ctx.deps.table.case_id}"}
+    # Reuse the original read path: each slice still records its provenance,
+    # updates seen IDs, and emits its own evidence event.
+    return {name: _make_tool(name)(ctx, case_id) for name in TOOL_SOURCES}
+
+
+def _register_evidence_tools(agent):
+    if local_batch_evidence():
+        agent.tool(get_case_facts)
+    else:
+        for name in TOOL_SOURCES:
+            agent.tool(_make_tool(name))
+
+
 def build_advocate(side: Party) -> Agent[AdvocateDeps, CaseBrief]:
     role, client, prefix = (("Rider Advocate", "rider (passenger)", "C") if side == "rider"
                             else ("Driver Advocate", "driver", "D"))
     system = SYSTEM.format(ROLE=role, CLIENT=client, SIDE=side, PREFIX=prefix,
                            ACTIONS=", ".join(ACTIONS), POLICY=policy_text())
+    if local_batch_evidence():
+        start, end = system.index("TOOLS\n"), system.index("RULES OF ARGUMENT\n")
+        system = system[:start] + ("TOOLS\n- Call get_case_facts(case_id) once before writing your brief. "
+            "It reads all six evidence slices for this case and returns their original fact IDs and sources. "
+            "Do not repeat the call. Cite only IDs returned by the tool.\n\n") + system[end:]
     SYSTEM_CACHE[side] = system
     agent: Agent[AdvocateDeps, CaseBrief] = Agent(
         make_model("advocate"), deps_type=AdvocateDeps, output_type=CaseBrief,
         instructions=system, name=f"{side}_advocate", retries=3,
     )
-    for name in TOOL_SOURCES:
-        agent.tool(_make_tool(name))
+    _register_evidence_tools(agent)
     agent.output_validator(_require_grounds)
     return agent
 
@@ -159,8 +205,7 @@ def build_rebutter(side: Party, advocate: Agent) -> Agent[AdvocateDeps, Rebuttal
         instructions=SYSTEM_CACHE[side],
         name=f"{side}_rebuttal", retries=3,
     )
-    for name in TOOL_SOURCES:
-        agent.tool(_make_tool(name))
+    _register_evidence_tools(agent)
     agent.output_validator(_require_grounds)
     return agent
 

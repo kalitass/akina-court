@@ -8,11 +8,12 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
-from core.agents.advocate import REBUTTAL, AdvocateDeps, build_advocate, build_rebutter, opponent_text, ticket_prompt
+from core.agents.advocate import REBUTTAL, AdvocateDeps, build_advocate, build_rebutter, compact_rebuttal_context, local_compact_rebuttal, opponent_text, ticket_prompt
 from core.receipt import fingerprint
 from core.llm import describe_model
 from core.agents.judge import build_judge, build_notice_writer, judge_prompt
@@ -158,14 +159,30 @@ def empty_brief(side: str, why: str) -> CaseBrief:
     return CaseBrief(side=side, claims=[], weaknesses=[f"advocate unavailable: {why}"], requested_outcome=RequestedOutcome(action="no_action"))
 
 
+# Review-only instrumentation. Context isolation prevents simultaneous reviews
+# from mixing measurements; ordinary court runs retain their existing records.
+STAGE_TIMINGS: ContextVar = ContextVar("review_stage_timings", default=None)
+
+
 async def _staged(coro, seconds: int, what: str):
     """Run one LLM stage with a timeout; return (result, error_text)."""
+    start = time.monotonic()
+    status = "cancelled"
     try:
-        return await asyncio.wait_for(coro, timeout=seconds), None
+        result = await asyncio.wait_for(coro, timeout=seconds)
+        status = "completed"
+        return result, None
     except asyncio.TimeoutError:
+        status = "timeout"
         return None, f"{what} timed out after {seconds}s"
     except Exception as e:
+        status = "failed"
         return None, f"{what} failed: {type(e).__name__}: {str(e)[:300]}"
+    finally:
+        timings = STAGE_TIMINGS.get()
+        if timings is not None:
+            timings.append({"stage": what, "status": status,
+                            "duration_s": round(time.monotonic() - start, 3), "timeout_s": seconds})
 
 
 INJECTIONS = {
@@ -245,8 +262,11 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         rebutters = {side: build_rebutter(side, agents[side]) for side in agents}
         async def rebut(side):
             other = "driver" if side == "rider" else "rider"
-            return await rebutters[side].run(REBUTTAL.format(OPPONENT=opponent_text(briefs[other]), SIDE=side),
-                                            deps=deps[side], message_history=results[side][0].all_messages())
+            prompt = REBUTTAL.format(OPPONENT=opponent_text(briefs[other]), SIDE=side)
+            if local_compact_rebuttal():
+                return await rebutters[side].run(compact_rebuttal_context(deps[side], briefs[side]) + prompt,
+                                                deps=deps[side])
+            return await rebutters[side].run(prompt, deps=deps[side], message_history=results[side][0].all_messages())
         res2 = dict(zip(agents, await asyncio.gather(*(_staged(rebut(s), TIMEOUTS["rebuttal"], f"{s} rebuttal") for s in agents))))
         for side, (r, err) in res2.items():
             if err:
