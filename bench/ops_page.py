@@ -265,13 +265,14 @@ def row_html(r: dict) -> str:
     lat = f"{r['latency']:.1f} s" if r["latency"] is not None else "n/a"
     flagnote = '<div class="flagnote">+ account flag → a person</div>' if r["flag"] else ""
     out_cls = "c-amber" if ruling.get("ruling") in ("refund_partial", "refund_full", "fee_waived") else ("c-red" if not r["auto"] else "")
+    review_link = '' if r['auto'] else f'<a href="/review.html?case={esc(r["id"])}" onclick="event.stopPropagation()">Review</a> · '
     return (f'<tr class="row" data-id="{esc(r["id"])}" tabindex="0" role="button" aria-expanded="false">'
             f'<td><div class="ttl">{esc(r["title"])}</div><span class="cid">{esc(r["id"])}</span></td>'
             f'<td>{esc(TYPE_LABEL.get(r["type"], r["type"]))}</td>'
             f'<td class="{out_cls}"><b>{esc(outcome_text(ruling))}</b>{flagnote}</td>'
             f'<td>{badge}</td><td class="why">{esc(why)}</td><td class="chips">{clauses}</td>'
             f'<td class="mono">{esc(lat)}</td>'
-            f'<td><a href="/reviewer-workflow.html?case={esc(r["id"])}" onclick="event.stopPropagation()">Review</a> · <a href="/replay.html?case={esc(r["id"])}&phase=court" onclick="event.stopPropagation()" title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
+            f'<td>{review_link}<a href="/replay.html?case={esc(r["id"])}&phase=court" onclick="event.stopPropagation()" title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
 
 
 def drawer_html(r: dict) -> str:

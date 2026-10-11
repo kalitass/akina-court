@@ -2,9 +2,9 @@
 
 ## What this adds
 
-The operations table now links to a functional reviewer workspace. It combines the original complaint, trip replay, computed facts, unresolved policy questions and actual stored advocate readings. A reviewer can confirm a verified stored recommendation, record a reasoned assessment, or request further evidence. This is the data/action integration for a final reviewer design, not a replacement for that design.
+The team's `review-question-card` branch (80e722f) is integrated on this development branch, preserving its authors' commits. Operations links for escalated cases now open the team's `/review.html` page and `/api/review` API. Automatically cleared cases keep their replay link, without a misleading human-review entry. The independent recovery demonstration below remains a separate evidence ledger; navigation is connected, but decisions are not silently copied between the two stores.
 
-Open `/reviewer-workflow.html?case=B-0054` to inspect a real unresolved route interpretation. Open `/reviewer-workflow.html?case=C-0004&scenario=missing_gps` for the synthetic evidence-retrieval demonstration.
+Open `/review.html?case=B-0054` for the team's real unresolved route interpretation. Open `/reviewer-workflow.html?case=C-0004&scenario=missing_gps` for the synthetic evidence-retrieval demonstration, linked from the team's review page. The recovery API's before/after comparison is computed from both snapshots and includes the saved human assessment separately; it never labels that assessment as a new AI verdict.
 
 ## Frontend contract
 
@@ -31,6 +31,16 @@ Reload after a successful write. Retrying the same UUID and body returns the sav
 
 ## Verification on 2026-10-12
 
-Synced main `ee6e04d`, preserving the voice intake and fraud demonstration additions. Core, policy, rates, case data and stored run files match main. The generator workflow completed with **772 passed, 1 skipped**. Seventeen reviewer tests cover source mismatch, calculated amounts, missing/safety evidence, idempotency, stale revisions, rejected/tampered GPS, token enforcement and end-to-end API persistence.
+Synced main `ee6e04d`, preserving the voice intake and fraud demonstration additions. Core, policy, rates, case data and stored run files match main. Nineteen reviewer tests cover source mismatch, calculated amounts, missing/safety evidence, idempotency, stale revisions, rejected/tampered GPS, token enforcement, before/after source consistency, end-to-end API persistence, every reviewable case on the integrated team's queue, and a confirmed evidence request keeping its case open. Complete generator/test results are reported with the PR.
 
 The browser demonstration completed: C-0004 missing GPS → request evidence → validated GPS retained → preview full refund SGD 6.61 with human-only account review → save human assessment → reload with both actions and accepted GPS intact. This verifies a synthetic operational workflow, not an improvement to model accuracy or real support handling time.
+
+## 90-second demonstration
+
+1. On `/review.html?case=B-0054`, show the actual remaining question and verbatim evidence. Explain: "The court does not guess which road the driver used. A reviewer sees the precise unresolved issue."
+2. Open the linked GPS recovery demonstration. Read the **Before** column: zero GPS samples; only escalation is permitted. Explain: "A missing record is not evidence against either party."
+3. On a fresh demonstration ledger, choose Request more evidence, GPS interval, Available, enter a reviewer and reason, then save. On an already completed ledger, show the saved request and validation history rather than pretending to submit a new one.
+4. Read the **After** column: 114 GPS samples for C-0004; the closest approach and stationary distance come from the unchanged facts code. Explain: "We retrieved synthetic recorded telemetry, validated its source and coverage, and recomputed the facts. We did not ask a model to invent GPS."
+5. Preview and save a human full-refund assessment with its reason (or inspect the existing saved assessment). Show the calculated SGD 6.61 and reload to demonstrate persistence. Explain: "This is a traceable simulated human decision. No payment occurs. AI rehearing is a separate experiment."
+
+Do not say this experiment proves increased model accuracy, lower support costs, or production-ready recovery. Queue feedback and recovery-ledger evidence are currently separate; production source integration, staff authentication and an explicitly reviewed bridge between those stores remain necessary.

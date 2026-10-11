@@ -13,8 +13,52 @@ from core.schemas import Case
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_integrated_team_queue_loads_every_reviewable_case_without_writes(monkeypatch, tmp_path):
+    import app.main as server
+    import app.review as review
+    import app.review_api as api
+    monkeypatch.setattr(api, 'RUNS_DIR', tmp_path)
+    before = {p.name: p.read_bytes() for p in (ROOT / 'runs').glob('*.json')}
+    with TestClient(server.app) as client:
+        response = client.get('/api/review')
+        assert response.status_code == 200
+        ids = {item['case_id'] for item in response.json()}
+        assert ids and ids == set(review.ops_queue_ids())
+        for cid in ids:
+            packet = client.get('/api/review/' + cid)
+            assert packet.status_code == 200
+            assert packet.json()['case_id'] == cid and packet.json()['questions']
+        assert client.get('/api/review/C-0004').status_code == 409
+    assert not list(tmp_path.iterdir())
+    assert before == {p.name: p.read_bytes() for p in (ROOT / 'runs').glob('*.json')}
+
+
 def case(cid='C-0004'):
     return Case.model_validate_json((ROOT / 'data/cases' / (cid + '.json')).read_text())
+
+
+def test_team_evidence_request_keeps_case_open_and_requires_confirmation(monkeypatch, tmp_path):
+    import app.main as server
+    import app.review_api as api
+    monkeypatch.setattr(api, 'RUNS_DIR', tmp_path)
+    monkeypatch.setenv('DEMO_TOKEN', 'test-token')
+    headers = {'X-Demo-Token': 'test-token'}
+    body = {'outcome': 'request_evidence', 'reviewer': 'Integration test',
+            'request': {'to': 'platform', 'items': ['Authoritative road mapping for segment F3'],
+                        'due_in_hours': 12, 'on_timeout': 'decide_on_record'}}
+    with TestClient(server.app) as client:
+        assert client.post('/api/review/B-0054', json=body).status_code == 401
+        assert client.post('/api/review/B-0054', headers=headers, json=body).status_code == 422
+        assert not list(tmp_path.iterdir())
+        body['checked'] = True
+        saved = client.post('/api/review/B-0054', headers=headers, json=body)
+        assert saved.status_code == 200
+        assert saved.json()['status'] == 'awaiting_evidence'
+        assert saved.json()['queue_item']['status'] == 'open'
+        refreshed = client.get('/api/review/B-0054').json()
+        assert refreshed['status'] == 'awaiting_evidence' and refreshed['decision'] is None
+        assert refreshed['pending_request']['request']['items'] == body['request']['items']
+        assert not (tmp_path / 'overrides.json').exists()
 
 
 def action(packet, **kw):
@@ -136,11 +180,19 @@ def test_api_end_to_end_recovery_then_human_assessment(monkeypatch, tmp_path):
     with TestClient(server.app) as client:
         assert client.get(url).status_code == 401
         initial = client.get(url, headers=headers).json()
+        assert initial['comparison']['before']['gps_samples'] == 0
+        assert initial['comparison']['before']['allowed_outcomes'] == ['escalate']
+        assert not initial['comparison']['evidence_changed']
         req = action(initial, action='request_evidence').model_dump(mode='json')
         saved = client.post('/api/reviewer/C-0004/actions?scenario=missing_gps', headers=headers, json=req)
         assert saved.status_code == 200
         current = client.get(url, headers=headers).json()
         assert current['evidence_recovered'] and current['revision'] == 1 and not current['evidence_gap']
+        comparison = current['comparison']
+        assert comparison['evidence_changed'] and comparison['accepted_source']
+        assert comparison['after']['gps_samples'] > 0 and comparison['after']['location_facts']
+        assert comparison['before']['snapshot_hash'] != comparison['after']['snapshot_hash']
+        assert not comparison['ai_rehearing_performed'] and comparison['human_assessment'] is None
         # A browser retry after GPS promotion is idempotent.
         assert client.post('/api/reviewer/C-0004/actions?scenario=missing_gps', headers=headers, json=req).json() == saved.json()
         own = action(current, action='own_decision', outcome='refund_full').model_dump(mode='json')
@@ -150,6 +202,7 @@ def test_api_end_to_end_recovery_then_human_assessment(monkeypatch, tmp_path):
         assert result.status_code == 200 and result.json()['status'] == 'human_decision_recorded'
         reloaded = client.get(url, headers=headers).json()
         assert reloaded['revision'] == 2 and reloaded['history'][-1]['decision']['amount'] == 6.61
+        assert reloaded['comparison']['human_assessment']['decision']['amount'] == 6.61
         assert not result.json()['sla_queue_changed']
     assert (ROOT / 'runs/C-0004.json').read_bytes() == original
 
