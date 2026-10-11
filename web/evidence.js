@@ -55,10 +55,22 @@ el('review').addEventListener('click', async () => {
     const r = state.review;
     if (!r) throw new Error('No review bundle returned.');
     el('review-record').textContent = JSON.stringify(r, null, 2);
-    const show = hearing => hearing ? JSON.stringify({ruling: hearing.ruling, eligibility: hearing.eligibility, notices: hearing.notices}, null, 2) : 'No completed hearing.';
+    const outcome = value => ({escalate: 'Human review', refund_full: 'Full refund', refund_partial: 'Partial refund', fee_waived: 'Fee waived', no_action: 'Charge stands'})[value] || value;
+    const show = hearing => {
+      if (!hearing) return 'No completed hearing.';
+      const rule = hearing.ruling;
+      const amount = rule.amount == null ? 'No monetary amount' : `$${Number(rule.amount).toFixed(2)}`;
+      return `Decision: ${outcome(rule.ruling)}\nAmount: ${amount}\nCore action cleared: ${hearing.eligibility?.auto ? 'Yes (simulation)' : 'No — human review'}\nAccount action: ${rule.flag_account ? 'Flag for human review' : 'None'}\n\nReasoning:\n${rule.reasoning}\n\nNotices:\n${(hearing.notices || []).map(n => `${n.to}: ${n.text}`).join('\n\n')}`;
+    };
     el('before-ruling').textContent = show(r.hearings[0]);
     el('after-ruling').textContent = show(r.hearings[1]);
-    el('changes').textContent = r.comparison ? JSON.stringify(r.comparison, null, 2) : r.failure || r.evidence.human_task || 'No accepted evidence to review.';
+    const labels = {ruling:'Decision', amount:'Amount', escalate:'Human review needed', flag_account:'Account flag', evidence_status:'Evidence status'};
+    const value = (key, v) => key === 'ruling' ? outcome(v) : v == null ? 'None' : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v);
+    el('changes').textContent = r.comparison ?
+      `New evidence: ${r.snapshots[1].gps.length} validated GPS points\nSource: ${r.evidence.source}\n\n` +
+      (Object.entries(r.comparison.changes).map(([key, change]) => `${labels[key]}: ${value(key, change.before)} → ${value(key, change.after)}`).join('\n') || 'The decision fields did not change.') +
+      '\n\nBoth versions’ reasoning is shown above. This comparison does not by itself prove improved accuracy.' :
+      r.failure || r.evidence.human_task || 'No accepted evidence to review.';
     el('review-output').hidden = false;
     el('review-status').textContent = r.state === 'reviewed' ? 'Both hearings completed. Results are simulated; a changed decision does not itself prove improved accuracy.' : `Review not completed: ${r.state}`;
   } catch (error) { el('review-status').textContent = error.message; }
