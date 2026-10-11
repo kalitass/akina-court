@@ -13,7 +13,7 @@ Recovery hearings are disabled unless both `LIVE_RUNS` is enabled and `RECOVERY_
 - Full local suite: 745 passed, 1 skipped.
 - Judge-facing wording check and diff whitespace check: clean.
 - Browser: available GPS accepted and policy-condition changes shown; conflicting GPS retained the original file and produced a human investigation handoff. Live hearing control is disabled by default.
-- No new real-model result or accuracy improvement is claimed. The configured API account had no available balance at the last check.
+- Subsequent funded pilot: see `docs/recovery-pilot-2026-10-11.md`. Twelve hearings completed; the multi-agent arm had a reference mismatch with an invented rider-message time. No overall accuracy or automation improvement is claimed; keep disabled pending review.
 - The 10 recovery scenarios are draft derivatives of existing synthetic fixtures, not an independently held-out benchmark. Their references require review.
 - Existing main already has stored-run receipt/code fingerprint differences: current court code hash `ec8e76a6faaa53d7`, 15 stored demo receipts use `aff787edf0b9b629`. This extension does not repair or regenerate those records.
 
