@@ -84,6 +84,8 @@ window.I18N_ZH = {
  "<b>The code check blocks wrong executions:</b> 31 and 31 wrong decisions acted without it; with it, 7 and 0 of 65.": "<b>代码检查拦下错误执行：</b>没有它会放行 31 和 31 件错误裁决；有它，7 和 0 件，共 65 件。",
  "<b>The advocates close the gap the judge alone leaves:</b> judge + check leaves 7 wrong decisions executed (58/65 right or handed to a person); the full court leaves 0 (65/65): both sides' reasoning on the record, a policy ground each side states for every open segment, and a judge bound to the grounds argued.": "<b>辩护人补上了法官一个人留下的缺口：</b>法官 + 检查还有 7 个错误决定被执行（65 件中 58 件判对或转人工）；完整法庭是 0 个（65/65）：双方论证都在记录上，每一段双方各自说明政策依据，法官只能在双方提出的依据里裁决。",
  "Right, or handed to a person": "判对，或转给人工",
+ "Matched the reference outright": "与参考答案完全一致",
+ "outcome, amount and hand-off all right, of 65 cases; a hand-off on a case the reference rules is not counted here": "结果、金额、是否转人工三项全对，共 65 件；该判却转人工的案子这里不算",
  "right outcome, amount and hand-off, or sent to a reviewer; only a wrong decision that executes counts against a system, of 65 cases": "结果、金额、转人工全对，或交给审核员；只有判错且被执行的才算失分，共 65 件",
  "Three layers; only the middle one is a language model, and it never acts on its own.": "三层；只有中间一层是语言模型，而且它从不自行执行。",
  "Working": "真实可用",
