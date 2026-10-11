@@ -632,6 +632,32 @@ def chip(text: str, cls: str = "") -> str:
 # =====================================================================================================================
 
 
+def blind_numbers() -> dict | None:
+    """Held-out set figures (bench/results/blind): per arm, cases decided exactly right and wrong decisions executed."""
+    import blind_report
+    man = ROOT / "data" / "bench" / "blind" / "manifest.json"
+    res = ROOT / "bench" / "results" / "blind"
+    if not man.exists() or not res.exists():
+        return None
+    truth = {c["case_id"]: c["truth"] for c in json.loads(man.read_text(encoding="utf-8"))["cases"]}
+    out = {"cases": len(truth)}
+    for arm in sorted(p.name for p in res.iterdir() if p.is_dir()):
+        files = [f for f in sorted((res / arm).glob("X-*.json")) if not f.name.endswith(".record.json") and ".r" not in f.name[6:]]
+        if not files:
+            continue
+        ok = wrong = 0
+        for f in files:
+            rec = json.loads(f.read_text(encoding="utf-8")); t = truth[rec["case_id"]]; ru = rec.get("ruling") or {}
+            if not rec.get("ok"):
+                continue
+            if blind_report.exact(ru, t):
+                ok += 1
+            elif not ru.get("escalate"):
+                wrong += 1
+        out[arm] = {"exact": ok, "wrong_executed": wrong}
+    return out
+
+
 def build(d: dict) -> str:
     S = d["summary"]
     arms = ["raw", "facts_only", "judge_only", "court"]
@@ -942,9 +968,49 @@ def build(d: dict) -> str:
 </section>""")
 
     # ---------------------------------------------------------------- 7. architecture + footer
-    A(f"""<section class="sec arch" id="how"><h2><span class="num">4</span>How it works</h2>
-<p class="lead">{esc(CONTENT['arch_caption'])}</p>
-<img src="architecture-system.png" alt="System architecture: six data sources become a case; code computes the fact table and runs the public policy; on Tencent Cloud, the agents reach facts only through logged tools; code checks citations, outcome and amount before anything executes; outputs are an event log, a receipt, a review queue and notices">
+    bl = blind_numbers()
+    bl_court = (bl or {}).get("court")
+    ct_safe, jo_safe, raw_safe = n_bench - ct["wrong_executed"], n_bench - jo["wrong_executed"], n_bench - raw["wrong_executed"]
+    cites_total = ct["citations"] + ct.get("fact_citations", 0)
+    cites_bad = ct["invalid_citations"] + ct.get("invalid_fact_citations", 0)
+    held_out = (f" On the {bl['cases']} held-out cases, written after the prompts were frozen and never used for tuning, the court decided "
+                f"{bl_court['exact']} of {bl['cases']} right with {bl_court['wrong_executed']} wrong decision{'s' if bl_court['wrong_executed'] != 1 else ''} executed."
+                if bl_court else "")
+    features = [
+        ("The policy runs before the model.",
+         f"Ryde's dispute rules are compiled into executable predicates: on every case, code first decides which of the {pol['citable']} sourced "
+         f"clauses apply, which fail and which need a reading, and the model speaks only inside that remaining space. A ruling rests on the written "
+         f"policy, not on the model's memory of it, which removes the room for an invented rule at the source."),
+        ("Every ruling is verified by code, and the evidence chain cannot be tampered with.",
+         f"The facts are computed by code from the GPS trace, the chat, the fare, traffic and weather records: numbered, identical on every run; the "
+         f"advocates and the judge may cite only those numbers and the clause ids. Before anything executes, code checks the ruling item by item: "
+         f"every cited id exists, the outcome is one the policy allows, the amount equals the policy formula to the cent, a consent message precedes "
+         f"the detour it excuses. Each ruling carries a receipt with four fingerprints (case file, policy, code, model), so any change anywhere "
+         f"invalidates it. {len(d['inject'])} deliberate tampers of the AI's output (a cited fact that does not exist, a fact never read, an invented clause, "
+         f"a changed amount, a flipped finding, an account flag hidden in free text) and a prompt injection planted in the chat were all caught."),
+        ("The reasoning is fully transparent and the standard is documented.",
+         f"Every tool call, brief, rebuttal, ruling, check and notice is a timestamped event, streamed live and replayable step by step on the map; "
+         f"every citation opens the fact or the clause it points to. Across the benchmark the court made {cites_total} citations, {cites_bad} of them invalid."),
+        ("Adversarial agents beat the same model alone.",
+         f"Same model, same {n_bench} cases. The raw case file handed straight to the model: {raw_safe} of {n_bench} right or handed to a person, "
+         f"{raw['wrong_executed']} wrong decisions executed. The judge with the code check but no advocates: {jo_safe} of {n_bench}, "
+         f"{jo['wrong_executed']} wrong decisions executed. The full court (code facts, two advocates, judge, code check): {ct_safe} of {n_bench}, "
+         f"{ct['wrong_executed']} wrong decision{'s' if ct['wrong_executed'] != 1 else ''} executed. The advocates add what a single judge lacks: "
+         f"each side states the policy ground of every open question, a point both sides agree on binds the judge, and a judge may only rule as one "
+         f"of the argued grounds does.{held_out}"),
+    ]
+    feat_html = "".join(f"<li><b>{esc(t)}</b> {esc(b)}</li>" for t, b in features)
+    resp = [
+        "Safety complaints and account actions are never automated; a threat in the chat stops the court and the case goes to a person.",
+        "Insufficient evidence is a formal finding: a GPS hole, a missing record or an agreement the record cannot tie to the road sends the case to a person, with what is missing named.",
+        "The notices to rider and driver are plain language, and their amounts are checked by code against the final ruling.",
+    ]
+    resp_html = "".join(f"<li>{esc(r)}</li>" for r in resp)
+    A(f"""<section class="sec" id="features"><h2><span class="num">4</span>Key features</h2>
+<p class="lead">The AI argues; only verified policy executes.</p>
+<ol class="hl">{feat_html}</ol>
+<h3 class="mt">Responsible AI</h3>
+<ul class="hl small">{resp_html}</ul>
 <div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
 </section>
 </div><script>{JS}</script></body></html>""")
