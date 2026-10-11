@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Live synthetic recovery review, saved separately from demo and benchmark records.
 
-Set model credentials in the environment. This makes two full court calls and consumes model credits.
+Set a model provider in the environment. Two hearings use credits on cloud providers;
+the optional Ollama backend uses local inference without paid API calls.
 """
 import argparse
 import asyncio
@@ -18,7 +19,7 @@ from core.evidence import SyntheticGpsProvider
 from core.review import review_recovered, save_review
 from core.evidence import recover
 from core.orchestrate import run_case
-from core.llm import describe_model
+from core.llm import describe_model, model_configured
 
 def score_decision(hearing, expected):
     ruling = hearing['ruling']
@@ -53,9 +54,7 @@ async def main():
                        'updated':updated.model_dump(mode='json')},f,indent=2)
         print(f'Prepared only (no model evaluation): {path}')
         return 0
-    provider=os.environ.get('LLM_PROVIDER','deepseek').lower()
-    key_name={'deepseek':'DEEPSEEK_API_KEY','tokenhub':'TOKENHUB_API_KEY'}.get(provider)
-    if args.mode == 'available' and (not key_name or not os.environ.get(key_name)):
+    if args.mode == 'available' and not model_configured():
         print('Model credential missing; no model evaluation was run. Configure the provider in the local environment.')
         return 2
     async def runner(case, **kwargs):

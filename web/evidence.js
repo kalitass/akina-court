@@ -26,7 +26,11 @@ el('run').addEventListener('click', async () => {
 
 let reviewing = false;
 fetch('/api/demo-controls').then(r => r.json()).then(c => {
-  if (c.live_runs && c.recovery_model_ready) { el('review').disabled = false; el('review').textContent = 'Run both AI hearings (uses model credits)'; }
+  if (c.live_runs && c.recovery_model_ready) {
+    el('review').disabled = false;
+    el('review').textContent = c.local_inference ? 'Run both AI hearings (local model)' : 'Run both AI hearings (uses model credits)';
+    if (c.local_inference) el('review-status').textContent = 'Runs on this computer without paid API calls. The local model must be running; results are separate from the published benchmark.';
+  }
   else { el('review-status').textContent = !c.live_runs ? 'Live reviews are switched off on this deployment.' : 'A model credential must be configured on the server before live review can run.'; }
 }).catch(() => { el('review-status').textContent = 'Could not check live review availability.'; });
 el('review').addEventListener('click', async () => {

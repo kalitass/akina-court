@@ -30,7 +30,7 @@ for _flag in ("STRETCH_PRECEDENT", "STRETCH_FRAUD", "STRETCH_SLA", "STRETCH_FEED
     os.environ.setdefault(_flag, "1")            # the demo service runs with every stretch module on; set 0 in .env to get the bare MVP
 
 from core.facts.tools import build_fact_table          # noqa: E402
-from core.llm import describe_model                     # noqa: E402
+from core.llm import describe_model, model_configured  # noqa: E402
 from core.orchestrate import run_case, save_record      # noqa: E402
 from core.policy import policy_text                     # noqa: E402
 from core.schemas import Case, CaseRecord, Event        # noqa: E402
@@ -150,7 +150,8 @@ def demo_controls():
     from core.counterfactual import COUNTERFACTUALS
     from core.orchestrate import INJECTIONS
     return {"inject": INJECTIONS, "counterfactual": COUNTERFACTUALS, "live_runs": LIVE_RUNS,
-            "recovery_model_ready": bool(os.environ.get({"deepseek": "DEEPSEEK_API_KEY", "tokenhub": "TOKENHUB_API_KEY"}.get(os.environ.get("LLM_PROVIDER", "deepseek").lower(), "__UNSUPPORTED_PROVIDER__"))),
+            "recovery_model_ready": model_configured(),
+            "local_inference": os.environ.get("LLM_PROVIDER", "deepseek").lower() == "ollama",
             "live_runs_note": None if LIVE_RUNS else "Live model runs are switched off on this public demo (no model key is deployed). Every case, audit and benchmark trip here is a stored run; clone the repository and set DEEPSEEK_API_KEY to run the agents yourself."}
 
 
