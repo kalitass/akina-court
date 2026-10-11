@@ -148,7 +148,7 @@ CONTENT = {
         {"name": "Bad-faith signals", "flag": "STRETCH_FRAUD", "status": "done",
          "what": "Code-computed signals — arrival tap far from the pickup, waiting claim unsupported by GPS, jam claim "
                  "unsupported by traffic data, repeat offender — enter the fact table as citable facts.",
-         "where": [("C-0004 facts", "/replay.html?case=C-0004")]},
+         "where": [("C-0004 with the screen on", "/replay.html?case=C-0004&run=C-0004~stretch&phase=court")]},
         {"name": "SLA routing and review queue", "flag": "STRETCH_SLA", "status": "done",
          "what": "Each ruling is routed: auto-resolve, 24-hour review, or urgent safety (2 h). Anything the certificate "
                  "cannot clear, any account action and any high signal goes to a human.",
@@ -969,6 +969,16 @@ def build(d: dict) -> str:
          f"each side states the policy ground of every open question, a point both sides agree on binds the judge, and a judge may only rule as one "
          f"of the argued grounds does.{held_out}"),
     ]
+    stretch = json.loads((ROOT / "runs" / "C-0004~stretch.json").read_text())
+    sig = [f for f in stretch["facts"]["facts"] if (f.get("value") or {}).get("signal")]
+    sig_cited = sum(1 for f in sig if f["id"] in (stretch["ruling"].get("cited_facts") or []))
+    features.append(
+        ("Fraud is screened by code before anyone argues.",
+         f"A bad-faith screen runs over the record before the advocates speak: an arrival tap far from the pickup, a waiting claim the GPS does not "
+         f"show, a jam claim the traffic record does not support, a repeat offender on file. Each signal enters the fact table as a numbered fact with "
+         f"the evidence it rests on, so the advocates and the judge can cite it and the audience can check it. On the no-show case C-0004 the screen "
+         f"found {len(sig)} signals and the judge cited {sig_cited} of them; the ruling and the amount are the ones the bare court reached, and the "
+         f"account action still goes to a person. The benchmark itself runs without the screen, so its figures are the bare court's."))
     feat_html = "".join(f"<li><b>{esc(t)}</b> {esc(b)}</li>" for t, b in features)
     resp = [
         "Safety complaints and account actions are never automated; a threat in the chat stops the court and the case goes to a person.",
