@@ -261,6 +261,7 @@ CONTENT = {
     ],
     # One-line meaning for each metric row in the comparison table.
     "metric_meaning": {
+        "safe_rate": "the case was decided right, or handed to a person for a reviewer to decide; only a wrong decision that executes counts against the system",
         "exact": "outcome, refund amount (to the cent) and escalation decision all match the reference",
         "amount_1c_refund_cases": "amount within one cent, counting only cases where a refund was due (no-refund cases are excluded)",
         "ruling": "the outcome label (full refund / partial refund / no refund / escalate) matches",
@@ -730,7 +731,8 @@ def build(d: dict) -> str:
 
     # ---------------------------------------------------------------- 2. results & cost
     big = [
-        ("Exact core decisions", {a: S[a]["exact"] for a in arms}),
+        ("Right, or handed to a person", {a: 1 - S[a]["wrong_executed_rate"] for a in arms}),
+        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", {a: S[a]["exact"] for a in arms}),
         ("Outcome label correct", {a: S[a]["ruling"] for a in arms}),
         (f"Amount within one cent, refund cases (n={ct['refund_cases']})", {a: S[a]["amount_1c_refund_cases"] for a in arms}),
         ("Escalation decision correct", {a: S[a]["escalate"] for a in arms}),
@@ -744,7 +746,8 @@ def build(d: dict) -> str:
     ]
     core_tip = esc(CONTENT["core_tip"])
     rows_spec = [
-        ("Exact core decision", "exact", pct),
+        ("Right, or handed to a person", "safe_rate", pct),
+        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", "exact", pct),
         ("Outcome label", "ruling", pct),
         ("Amount within one cent, all cases", "amount_1c", pct),
         (f"Amount within one cent, refund cases only (n={ct['refund_cases']})", "amount_1c_refund_cases", pct),
@@ -825,7 +828,8 @@ def build(d: dict) -> str:
                 continue
             g = s["got"]
             got = ruling_word(g.get("ruling")) + (f" {money(g['amount'])}" if g.get("amount") else "")
-            mark = '<span class="ok">✓</span>' if s["exact"] else '<span class="bad">✗</span>'
+            mark = ('<span class="ok">✓</span>' if s["exact"] else '<span class="ok" title="handed to a person: not wrong, a reviewer decides">→ person</span>'
+                    if (g.get("escalate") or g.get("ruling") == "escalate") else '<span class="bad">✗</span>')
             cells.append(f"<td>{mark} {esc(got)}</td>")
         pc.append(f'<tr><td class="n muted">{i}</td><td><span class="tip" title="{esc(cid)} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></td>'
                   f'<td>{esc(CONTENT["type_names"].get(c["type"], c["type"]))}</td><td>{esc(exp_txt)}</td>{"".join(cells)}</tr>')

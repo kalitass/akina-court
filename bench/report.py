@@ -169,6 +169,8 @@ def class_metrics(scores: dict) -> dict:
             "executed_rate": mean(s["executed"] for s in scores.values()),
             "wrong_executed": sum(s["wrong_executed"] for s in scores.values()),
             "wrong_executed_rate": mean(s["wrong_executed"] for s in scores.values()),
+            "safe_rate": 1 - mean(s["wrong_executed"] for s in scores.values()),      # right, or handed to a person
+
             "human_review_rate": mean(not s["executed"] for s in scores.values())}
 
 

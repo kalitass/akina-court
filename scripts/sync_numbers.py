@@ -104,9 +104,9 @@ def bar_chart(title: str, sub: str, rows: list[tuple[str, float, str]], aria: st
 def chart(name: str, n: dict) -> str:
     cases = n["cases"]
     if name == "accuracy":
-        rows = [(ARM_LABEL[a], n["arms"][a]["exact"], f"{n['arms'][a]['exact']}/{cases}") for a in ARMS]
-        aria = "Right outcome, amount and hand-off: " + ", ".join(f"{l} {s}" for l, _, s in rows)
-        return f"<!--chart:accuracy-->{bar_chart('Right outcome, amount and hand-off', f'all three correct, of {cases} cases', rows, aria, cases)}<!--/chart-->"
+        rows = [(ARM_LABEL[a], n["arms"][a]["safe"], f"{n['arms'][a]['safe']}/{cases}") for a in ARMS]
+        aria = "Right, or handed to a person: " + ", ".join(f"{l} {s}" for l, _, s in rows)
+        return f"<!--chart:accuracy-->{bar_chart('Right, or handed to a person', f'right outcome, amount and hand-off, or sent to a reviewer; only a wrong decision that executes counts against a system, of {cases} cases', rows, aria, cases)}<!--/chart-->"
     if name == "wrong":
         vals = {a: (n["arms"][a]["wrong_executed_single_call"] if a in ("raw", "facts_only") else n["arms"][a]["wrong_and_executed_with_gate"]) for a in ARMS}
         rows = [(ARM_LABEL[a], vals[a], f"{vals[a]}/{cases}") for a in ARMS]
