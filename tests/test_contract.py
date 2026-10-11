@@ -84,6 +84,8 @@ DEMO = {
     # data/synth/build_cases.py c0001: Orchard jam after an accident, consent to Cavenagh, 7-Eleven stop far off the route
     "C-0001": {"kind": "route_deviation", "segments": 2, "pricing": "metered", "consent": "before", "stop": "unnamed", "stop_segment": 1, "incident": "on_stretch",
                "band": 1, "prior": 0, "threat": None, "route_km_min": {0: 0.5}, "stretch_driven_max": {0: 0.5}},
+    "C-0007": {"kind": "route_deviation", "segments": 2, "pricing": "metered", "consent": "before", "stop": "unnamed", "stop_segment": 1, "incident": "on_stretch",
+               "band": 1, "prior": 0, "threat": None, "route_km_min": {0: 0.5}, "stretch_driven_max": {0: 0.5}},   # C-0001's trip; the rider's reply came as a voice message
     "C-0002": {"kind": "route_deviation", "segments": 1, "pricing": "metered", "consent": "none", "stop": "none", "incident": "none",
                "band": 0, "prior": 3, "threat": None, "statement_consistent": True, "route_km_min": {0: 1.0}},
     "C-0003": {"kind": "route_deviation", "segments": 1, "pricing": "metered", "consent": "before", "stop": "none", "incident": "on_stretch",
@@ -112,17 +114,20 @@ def test_demo_case_meets_its_hand_written_contract(cid):
     c = _demo_contract(cid)
     errs = contract.check(raw, c)
     # the demo chat is hand-written prose, not the generator's templates: the consent / stop lines are checked here by hand
-    if cid == "C-0001":
+    if cid in ("C-0001", "C-0007"):
         errs = [e for e in errs if "no driver route request" not in e and "no rider reply" not in e and "never asked for a stop" not in e]
         chat = raw["chat"]
         assert "go round by Cavenagh" in chat[0]["text"] and chat[0]["from"] == "driver"
-        assert chat[1]["from"] == "rider" and chat[1]["text"].startswith("Sure") and "7-Eleven" in chat[1]["text"]
+        if cid == "C-0001":
+            assert chat[1]["from"] == "rider" and chat[1]["text"].startswith("Sure") and "7-Eleven" in chat[1]["text"]
+        else:   # the rider's reply is the ASR transcript of a voice message ("711" is how the recogniser wrote 7-Eleven)
+            assert chat[1]["from"] == "rider" and chat[1]["text"].startswith("Okay, sure") and "711" in chat[1]["text"]
         assert chat[1]["ts"] < raw["trip"]["pickup_at"]
     if cid == "C-0003":
         errs = [e for e in errs if "no driver route request" not in e and "no rider reply" not in e]
         chat = raw["chat"]
         assert "ECP" in chat[0]["text"] and chat[1]["from"] == "rider" and chat[1]["text"].startswith("Ok")
-    if cid == "C-0001":
+    if cid in ("C-0001", "C-0007"):
         errs = [e for e in errs if "stop=unnamed: the 7-Eleven is only" not in e]   # 1.27 km off the route: checked below with the real number
         stop = contract.stops(contract.slice_gps(raw["gps"], raw["trip"]["pickup_at"], raw["trip"]["dropoff_at"]),
                               exclude=((raw["trip"]["pickup"]["lat"], raw["trip"]["pickup"]["lon"]), (raw["trip"]["dropoff"]["lat"], raw["trip"]["dropoff"]["lon"])))

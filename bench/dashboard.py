@@ -107,6 +107,9 @@ CONTENT = {
                   "case exactly at the boundary (179 s vs 181 s).",
         "C-0006": "The driver threatened to lock the rider in. Safety cases are never auto-ruled: the judge writes a "
                   "fact summary only and the case is escalated to a human.",
+        "C-0007": "The same detour as C-0001, but the rider answered the driver with a voice message. The intake transcribed "
+                  "it (Tencent Cloud ASR) and filed the words as a chat line; the court cites the transcript like any message "
+                  "and reaches the same partial refund. The clip plays on the replay page.",
     },
 
     # MVP checklist (handbook hard requirements). status: done | package (delivered with the submission, not on this page)

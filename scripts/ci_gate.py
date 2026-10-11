@@ -98,7 +98,7 @@ def check_completeness() -> list[str]:
                 if arm in ("judge_only", "court") and not (ROOT / sub / arm / f"{cid}.record.json").exists():
                     bad.append(f"{sub}/{arm}/{cid}.record.json missing")
     from scripts.prerecord_demos import DEMOS
-    stored = [f"{c}.json" for c in ("C-0001", "C-0002", "C-0003", "C-0004", "C-0005", "C-0006", "DISP-002")] + [f"{case}~{k}.json" for k, (case, _) in DEMOS.items()]
+    stored = [f"{p.stem}.json" for p in sorted((ROOT / "data" / "cases").glob("*.json"))] + [f"{case}~{k}.json" for k, (case, _) in DEMOS.items()]
     for name in stored:
         if not (ROOT / "runs" / name).exists():
             bad.append(f"runs/{name} missing")

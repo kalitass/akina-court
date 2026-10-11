@@ -16,7 +16,7 @@ const CF = Q.get('cf') || null;
 const SHOW = Q.get('mode') !== 'expert';   // judge view (plain language) unless ?mode=expert
 const TITLES = {   // judge-facing names; the C-000n id stays in Expert view and the URL
   'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Five dollars over the estimate',
-  'C-0004': '"Arrived" 613 m away', 'C-0005': 'Two minutes away, $6.61 fee', 'C-0006': '"Sit down or I lock the doors"', 'DISP-002': "Organisers' sample: the Tiong Bahru no-show" };
+  'C-0004': '"Arrived" 613 m away', 'C-0005': 'Two minutes away, $6.61 fee', 'C-0006': '"Sit down or I lock the doors"', 'C-0007': 'The rider replied by voice', 'DISP-002': "Organisers' sample: the Tiong Bahru no-show" };
 const caseTitle = id => TITLES[id] || (id.startsWith('B-') ? `Benchmark case ${id.slice(2).replace(/^0+/, '')}` : id);
 const $ = id => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -42,9 +42,12 @@ const [caseJ, factsJ, runJ, controls, policyTxt, voiceJ] = await Promise.all([
   fetch('/api/policy').then(r => r.ok ? r.text() : '').catch(() => ''),
   api(`/api/cases/${encodeURIComponent(CID)}/voice`).catch(() => null),    // the spoken complaint, when the case has one
 ]);
-const VOICE = voiceJ && voiceJ.audio ? voiceJ : null;
+const VOICE = voiceJ && voiceJ.audio ? voiceJ : null;                                   // a spoken complaint
+const VOICE_CHAT = (voiceJ && voiceJ.chat) || [];                                      // chat messages that arrived as voice
 // a spoken complaint: the player, then the transcript the recogniser produced (the court reads text only)
 function voiceCard(){ if (!VOICE) return ''; return `<div class="card voice"><audio controls preload="none" src="${esc(VOICE.audio)}"></audio><div class="line"><b>Spoken complaint</b> · ${esc(VOICE.audio_s)} s · transcribed by Tencent Cloud ASR (${esc(VOICE.engine)}, ${esc(VOICE.request_id)}) · the court reads only the text</div><div class="line muted">Transcript: “${esc(VOICE.transcript)}”</div></div>`; }
+// a chat message that arrived as voice: the player beside the line the court cites
+function voiceChatCards(){ return VOICE_CHAT.map(v => { const f = C.facts.find(x => x.source === 'chat' && x.value && x.value.idx === v.idx); return `<div class="card voice"><audio controls preload="none" src="${esc(v.audio)}"></audio><div class="line"><b>Voice message in the chat</b> (${f ? esc(f.id) + ' · ' : ''}#${esc(v.idx)}, ${esc(v.from || 'rider')}) · ${esc(v.audio_s)} s · transcribed by Tencent Cloud ASR (${esc(v.engine)}, ${esc(v.request_id)}) · filed as text, cited like any message</div><div class="line muted">Transcript: “${esc(v.transcript)}”</div></div>`; }).join(''); }
 const POLICY = {}; for (const line of policyTxt.split('\n')) { const m = line.trim().match(/^\*\*([A-Z]+-\d+)\*\*\s*(.*)$/); if (m) POLICY[m[1]] = m[2].replace(/\*\*|`/g, '').slice(0, 260); }
 let RECORD = runJ;            // CaseRecord of the run being shown (null until a run exists)
 let RUN_ID = RID0;
@@ -538,7 +541,7 @@ function renderEvent(e, inst){
   const w = el('div', 'ev ' + esc(e.kind));
   const tool = e.tool || {};
   switch (e.kind) {
-    case 'intake': w.innerHTML = head(e) + voiceCard() + `<div class="card quote">“${esc(C.statement)}”<span>Filed by ${esc(C.filed_by)} · ${esc(C.filed_at)}${C.summary ? ' · ' + esc(C.summary) : ''}</span></div>`; break;
+    case 'intake': w.innerHTML = head(e) + voiceCard() + `<div class="card quote">“${esc(C.statement)}”<span>Filed by ${esc(C.filed_by)} · ${esc(C.filed_at)}${C.summary ? ' · ' + esc(C.summary) : ''}</span></div>` + voiceChatCards(); break;
     case 'facts': { if (!/Fact table built/i.test(e.title)) { const lines = (e.body||'').split('\n').filter(Boolean); const warn = /Bad-faith/i.test(e.title);
         w.innerHTML = head(e) + `<div class="card ${warn?'warn':''}">${lines.map(l => `<div class="line">${cite(l)}</div>`).join('')}</div>`;
         if (!inst) w.querySelectorAll('.chip.geo').forEach((c, i) => setTimeout(() => flashFact(c.dataset.id), 150 * i)); break; }
@@ -597,7 +600,7 @@ function renderShow(e, inst){
   const tool = e.tool || {}; const body = e.body || ''; const lines = body.split('\n').filter(Boolean);
   switch (e.kind) {
     case 'intake': if (/DEMO/.test(e.title)) return card(e, 'Demo: a fault is injected into the AI output', `<div class="card warn">${lines.map(l => `<div class="line">${esc(l.replace(/^\w+:\s*/, ''))}</div>`).join('')}<div class="line muted">Watch the code checks catch it.</div></div>`);
-      return card(e, VOICE ? 'Complaint filed by voice' : 'Complaint filed', voiceCard() + `<div class="card quote">“${esc(C.statement)}”<span>Filed by the ${esc(C.filed_by)} · ${esc(C.filed_at)}</span></div>`);
+      return card(e, VOICE ? 'Complaint filed by voice' : (VOICE_CHAT.length ? 'Complaint filed · the chat holds a voice message' : 'Complaint filed'), voiceCard() + `<div class="card quote">“${esc(C.statement)}”<span>Filed by the ${esc(C.filed_by)} · ${esc(C.filed_at)}</span></div>` + voiceChatCards());
     case 'facts': {
       if (/Fact table built/i.test(e.title)) {
         const pick = []; const seen = new Set(); const add = f => { if (f && !seen.has(f.id) && pick.length < 5) { seen.add(f.id); pick.push(f); } };

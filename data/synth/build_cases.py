@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate data/cases/C-0001..C-0006.json from the six spec 1.7 scripts on real OneMap routes.
+"""Generate data/cases/C-0001..C-0007.json from the spec 1.7 scripts on real OneMap routes (C-0007 = C-0001 with a voice reply).
 
     python3 data/synth/build_cases.py        # legs already in data/synth/onemap_cache.json need no token
     ONEMAP_TOKEN=... python3 data/synth/build_cases.py   # (or ONEMAP_EMAIL/ONEMAP_PASSWORD) to fetch new legs
@@ -375,6 +375,26 @@ def c0001(rates):
     }
 
 
+# The rider's reply in C-0007 arrived as a voice message. The text below is what Tencent Cloud ASR (recording-file
+# recognition, 16k_en) returned for the clip stored at web/voice/C-0007-chat-2.wav (data/voice/C-0007.json keeps the
+# engine, task id and duration). The court reads the transcript exactly as it reads a typed message.
+C0007_VOICE_REPLY = "Okay, sure, go ahead. Can you stop at a 711 on the way? I need to grab something quick one."
+
+
+def c0007(rates):
+    """C-0001's trip and records, except that the rider answered the driver by VOICE: the intake transcribed the clip and
+    filed the words as chat #2. Same detours, same stop, same answer: the capability shown is speech → text → court."""
+    case = c0001(rates)
+    case["case_id"] = "C-0007"
+    case["trip"]["trip_id"] = "T-1043"
+    case["chat"][1]["text"] = C0007_VOICE_REPLY
+    case["dispute"]["statement"] = ("The driver took a longer route and I was overcharged. I replied to him by voice message: "
+                                    "I only asked for a quick 7-Eleven stop on the way, not a drive out to Beach Road.")
+    case["driver_statement"] = ("Orchard was jammed after an accident, rider sent a voice note agreeing to go round by Cavenagh "
+                                "and asked for a stop. I stopped at the 7-Eleven I know on Beach Road.")
+    return case
+
+
 def c0002(rates):
     """Detour: leaves the PIE at Paya Lebar and goes through Sims Avenue for no reason, no chat, repeat-offender
     driver (3 route disputes upheld)."""
@@ -605,7 +625,7 @@ def describe(c: dict, detours):
 def main():
     rates = load_rates()
     os.makedirs(OUT_DIR, exist_ok=True)
-    for build in (c0001, c0002, c0003, c0004, c0005, c0006):
+    for build in (c0001, c0002, c0003, c0004, c0005, c0006, c0007):
         case = build(rates)
         detours = case.pop("_detours", None)
         dump(case, os.path.join(OUT_DIR, f'{case["case_id"]}.json'))
