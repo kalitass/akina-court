@@ -148,6 +148,15 @@ def get_run(cid: str):
     return json.loads(p.read_text())
 
 
+@app.get("/api/cases/{cid}/voice")
+def case_voice(cid: str):
+    """The spoken complaint attached to a case, if any: audio path (served from web/voice/), transcript and ASR engine."""
+    p = ROOT / "data" / "voice" / f"{cid.partition('~')[0]}.json"
+    if not p.exists():
+        raise HTTPException(404, "no spoken complaint on file for this case")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
 @app.post("/api/intake/voice")
 async def intake_voice(audio: UploadFile = File(...), lang: str = Form("en"), x_demo_token: Optional[str] = Header(default=None)):
     """A spoken complaint → text (Tencent Cloud ASR). The caller then files the text like a typed complaint

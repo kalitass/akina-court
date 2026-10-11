@@ -53,7 +53,40 @@ def transcribe(audio: bytes, fmt: str = "wav", lang: str = "en") -> dict:
     except TencentCloudSDKException as e:
         code = getattr(e, "code", "") or ""
         if "UserNotRegistered" in code or "ServerNotOpen" in code:
-            raise VoiceUnavailable("Tencent Cloud ASR is not activated on this account: open the ASR console once, then retry")
+            # one-sentence recognition is a separate product; fall back to recording-file recognition (asynchronous)
+            return _transcribe_file(client, models, TencentCloudSDKException, audio, fmt, engine)
         raise VoiceUnavailable(f"speech recognition failed: {code or e}")
     return {"text": (resp.Result or "").strip(), "engine": f"tencent-asr:{engine}", "request_id": resp.RequestId,
             "audio_s": round((resp.AudioDuration or 0) / 1000, 1)}
+
+
+def _transcribe_file(client, models, SDKError, audio: bytes, fmt: str, engine: str, wait_s: float = 45.0) -> dict:
+    """Recording-file recognition: create a task, poll until it finishes (a short clip takes a few seconds)."""
+    import re
+    import time
+    req = models.CreateRecTaskRequest()
+    req.from_json_string(json.dumps({"EngineModelType": engine, "ChannelNum": 1, "ResTextFormat": 0, "SourceType": 1,
+                                     "Data": base64.b64encode(audio).decode(), "DataLen": len(audio)}))
+    try:
+        task = client.CreateRecTask(req).Data.TaskId
+    except SDKError as e:
+        code = getattr(e, "code", "") or ""
+        if "UserNotRegistered" in code or "ServerNotOpen" in code:
+            raise VoiceUnavailable("Tencent Cloud ASR is not activated on this account: open the ASR console once, then retry")
+        raise VoiceUnavailable(f"speech recognition failed: {code or e}")
+    q = models.DescribeTaskStatusRequest()
+    q.from_json_string(json.dumps({"TaskId": task}))
+    t0 = time.monotonic()
+    while True:
+        try:
+            st = client.DescribeTaskStatus(q).Data
+        except SDKError as e:
+            raise VoiceUnavailable(f"speech recognition failed: {getattr(e, 'code', '') or e}")
+        if st.StatusStr == "success":
+            text = re.sub(r"\[\d+:\d+\.\d+,\d+:\d+\.\d+\]\s*", "", st.Result or "").strip()
+            return {"text": text, "engine": f"tencent-asr-file:{engine}", "request_id": f"task {task}", "audio_s": round(float(st.AudioDuration or 0), 1)}
+        if st.StatusStr == "failed":
+            raise VoiceUnavailable(f"speech recognition failed: {st.ErrorMsg or 'task failed'}")
+        if time.monotonic() - t0 > wait_s:
+            raise VoiceUnavailable("speech recognition timed out; try a shorter clip")
+        time.sleep(1.5)

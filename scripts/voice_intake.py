@@ -5,6 +5,9 @@
     .venv/bin/python scripts/voice_intake.py transcribe clip.wav [--lang en|zh]                   # Tencent Cloud ASR → text
     .venv/bin/python scripts/voice_intake.py file C-0001 clip.wav [--lang en]                     # transcribe, then run the court
                                                                                                    # on C-0001 with that complaint
+    .venv/bin/python scripts/voice_intake.py attach C-0001 clip.wav [--lang en]                   # store the clip as the case's spoken
+                                                                                                   # complaint: web/voice/<id>.wav +
+                                                                                                   # data/voice/<id>.json (transcript)
 
 Credentials: TENCENTCLOUD_SECRET_ID / _KEY in the environment (never in the repo); `file` also needs the model key.
 """
@@ -41,7 +44,7 @@ def main(argv: list[str]) -> int:
     if cmd == "say":
         out = say(argv[1], Path(argv[2]))
         print(f"wrote {out} ({out.stat().st_size} bytes)"); return 0
-    clip = Path(argv[2] if cmd == "file" else argv[1])
+    clip = Path(argv[2] if cmd in ("file", "attach") else argv[1])
     try:
         r = transcribe(clip.read_bytes(), clip.suffix, lang)
     except VoiceUnavailable as e:
@@ -50,6 +53,21 @@ def main(argv: list[str]) -> int:
     if cmd == "transcribe":
         return 0
     from app.main import load_case
+    if cmd == "attach":
+        import shutil
+        from datetime import datetime, timezone
+        cid = argv[1]
+        case = load_case(cid)
+        audio_dir, meta_dir = ROOT / "web" / "voice", ROOT / "data" / "voice"
+        audio_dir.mkdir(exist_ok=True); meta_dir.mkdir(exist_ok=True)
+        shutil.copyfile(clip, audio_dir / f"{cid}{clip.suffix.lower()}")
+        meta = {"case_id": cid, "audio": f"/voice/{cid}{clip.suffix.lower()}", "lang": lang, "transcript": r["text"], "engine": r["engine"],
+                "request_id": r["request_id"], "audio_s": r["audio_s"], "recognised_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "statement_on_file": case.dispute.statement,
+                "note": "The complaint was spoken; Tencent Cloud ASR produced the transcript. The case file keeps the statement as filed; the court reads text only."}
+        (meta_dir / f"{cid}.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n")
+        print(f"attached: {meta['audio']} + data/voice/{cid}.json")
+        return 0
     from core.orchestrate import run_case
     from core.schemas import Dispute
     case = load_case(argv[1])
