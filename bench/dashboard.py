@@ -932,42 +932,7 @@ def build(d: dict) -> str:
 <div class="panel"><h3 id="stretch">Additional safeguards</h3><ul class="hl small">{stretch_items}</ul></div>
 </div></section>""")
 
-    # ---------------------------------------------------------------- 5. data & method
-    fam_rows = []
-    for label, rx in CONTENT["families"]:
-        n = sum(1 for c in man if re.search(rx, c["name"]))
-        fam_rows.append(f'<span class="chip"><b>{n}</b>{esc(label)}</span>')
-    type_chips = "".join(f'<span class="chip"><b>{by_type[t]}</b>{esc(CONTENT["type_names"].get(t, t))}</span>'
-                         for t in sorted(by_type, key=lambda t: -by_type[t]))
-    run_rows = "".join(
-        f'<tr><td>{esc(CONTENT["arm_names"][k.replace("_swap", "")])}{" · identities swapped" if k.endswith("_swap") else ""}</td>'
-        f'<td class="n">{r["base"]}</td><td class="n">{r["repeats"] or "–"}</td><td class="n">{r["total"]}</td></tr>'
-        for k, r in runs.items())
-    scen_list = "".join(
-        f'<li><span class="tip" title="{esc(c["case_id"])} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></li>'
-        for c in man)
-    extra = ((" The court was additionally run with rider and driver identities swapped" if n_swap else "")
-             + (" and a second time on every case" if n_rep and n_swap else (" The court was additionally run a second time on every case" if n_rep else ""))
-             + ("." if (n_swap or n_rep) else ""))
-    method = "".join(f"<li>{esc(p.format(**fill, extra_runs=extra))}</li>" for p in CONTENT["method"])
-    A(f"""<section class="sec" id="method"><h2><span class="num">3</span>Data and method</h2>
-<p class="lead">{n_bench} synthetic benchmark trips on real OneMap road geometry, each built around one trap a careless system would fall into, plus {n_demo} hand-built demo cases.</p>
-<div class="callout mt"><h3>Caveats</h3><ul class="hl small" style="margin:0">{"".join(f"<li>{esc(c.format(**fill))}</li>" for c in CONTENT['caveats'])}</ul></div>
-<details class="mt more"><summary>Where the data comes from, how the reference answers were made, and the runs behind every number</summary>
-<div class="grid2 mt">
-<div class="panel"><h3>{n_bench} benchmark cases by dispute type</h3><div class="chips">{type_chips}</div>
-<h3 class="mt">Scenario families <span class="hint">a case can belong to several</span></h3><div class="chips">{"".join(fam_rows)}</div>
-<h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases in section 2. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
-<div class="panel"><h3>LLM runs behind this page</h3>
-<div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th><th class="n">repeat runs</th><th class="n">runs</th></tr>{run_rows}
-<tr class="hl"><td><b>Total</b></td><td class="n">{n_base} + {n_swap} swapped</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
-<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else "; identity-swap runs not yet re-run on this version"}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else "; repeat runs not yet re-run on this version"}. One model throughout: {esc(model)}.</p></div>
-</div>
-<div class="panel mt"><h3>How the reference answers were made, and what the numbers can and cannot say</h3><ul class="hl small">{method}</ul></div>
-</details>
-</section>""")
-
-    # ---------------------------------------------------------------- 7. architecture + footer
+    # ---------------------------------------------------------------- 4. key features
     bl = blind_numbers()
     bl_court = (bl or {}).get("court")
     ct_safe, jo_safe, raw_safe = n_bench - ct["wrong_executed"], n_bench - jo["wrong_executed"], n_bench - raw["wrong_executed"]
@@ -1006,12 +971,50 @@ def build(d: dict) -> str:
         "The notices to rider and driver are plain language, and their amounts are checked by code against the final ruling.",
     ]
     resp_html = "".join(f"<li>{esc(r)}</li>" for r in resp)
-    A(f"""<section class="sec" id="features"><h2><span class="num">4</span>Key features</h2>
+    A(f"""<section class="sec" id="features"><h2><span class="num">3</span>Key features</h2>
 <p class="lead">The AI argues; only verified policy executes.</p>
 <ol class="hl">{feat_html}</ol>
 <h3 class="mt">Responsible AI</h3>
 <ul class="hl small">{resp_html}</ul>
-<div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
+</section>""")
+
+    # ---------------------------------------------------------------- 5. data & method
+    fam_rows = []
+    for label, rx in CONTENT["families"]:
+        n = sum(1 for c in man if re.search(rx, c["name"]))
+        fam_rows.append(f'<span class="chip"><b>{n}</b>{esc(label)}</span>')
+    type_chips = "".join(f'<span class="chip"><b>{by_type[t]}</b>{esc(CONTENT["type_names"].get(t, t))}</span>'
+                         for t in sorted(by_type, key=lambda t: -by_type[t]))
+    run_rows = "".join(
+        f'<tr><td>{esc(CONTENT["arm_names"][k.replace("_swap", "")])}{" · identities swapped" if k.endswith("_swap") else ""}</td>'
+        f'<td class="n">{r["base"]}</td><td class="n">{r["repeats"] or "–"}</td><td class="n">{r["total"]}</td></tr>'
+        for k, r in runs.items())
+    scen_list = "".join(
+        f'<li><span class="tip" title="{esc(c["case_id"])} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></li>'
+        for c in man)
+    extra = ((" The court was additionally run with rider and driver identities swapped" if n_swap else "")
+             + (" and a second time on every case" if n_rep and n_swap else (" The court was additionally run a second time on every case" if n_rep else ""))
+             + ("." if (n_swap or n_rep) else ""))
+    method = "".join(f"<li>{esc(p.format(**fill, extra_runs=extra))}</li>" for p in CONTENT["method"])
+    A(f"""<section class="sec" id="method"><h2><span class="num">4</span>Data and method</h2>
+<p class="lead">{n_bench} synthetic benchmark trips on real OneMap road geometry, each built around one trap a careless system would fall into, plus {n_demo} hand-built demo cases.</p>
+<div class="callout mt"><h3>Caveats</h3><ul class="hl small" style="margin:0">{"".join(f"<li>{esc(c.format(**fill))}</li>" for c in CONTENT['caveats'])}</ul></div>
+<details class="mt more"><summary>Where the data comes from, how the reference answers were made, and the runs behind every number</summary>
+<div class="grid2 mt">
+<div class="panel"><h3>{n_bench} benchmark cases by dispute type</h3><div class="chips">{type_chips}</div>
+<h3 class="mt">Scenario families <span class="hint">a case can belong to several</span></h3><div class="chips">{"".join(fam_rows)}</div>
+<h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases in section 2. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
+<div class="panel"><h3>LLM runs behind this page</h3>
+<div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th><th class="n">repeat runs</th><th class="n">runs</th></tr>{run_rows}
+<tr class="hl"><td><b>Total</b></td><td class="n">{n_base} + {n_swap} swapped</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
+<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else "; identity-swap runs not yet re-run on this version"}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else "; repeat runs not yet re-run on this version"}. One model throughout: {esc(model)}.</p></div>
+</div>
+<div class="panel mt"><h3>How the reference answers were made, and what the numbers can and cannot say</h3><ul class="hl small">{method}</ul></div>
+</details>
+</section>""")
+
+    # ---------------------------------------------------------------- 7. footer
+    A(f"""<div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
 </section>
 </div><script>{JS}</script></body></html>""")
     return "\n".join(H)
