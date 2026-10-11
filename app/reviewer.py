@@ -201,3 +201,24 @@ def current_evidence(initial, entries):
             raise ValueError('Saved evidence snapshot no longer matches the current case')
         current = after
     return current
+
+
+def evidence_comparison(initial, current, entries):
+    """Describe observed evidence changes, never label a human action as an AI win."""
+    def state(case):
+        table = build_fact_table(case)
+        cert = evaluate(case, table)
+        return {'snapshot_hash': digest(case), 'gps_samples': len(case.gps),
+                'evidence_gap': cert.insufficient, 'allowed_outcomes': cert.allowed,
+                'location_facts': [f.model_dump(mode='json') for f in table.facts
+                                   if f.source == 'gps']}
+    before, after = state(initial), state(current)
+    accepted = next((e for e in reversed(entries) if e.get('recovery', {}).get('evidence', {}).get('source')), None)
+    decision = next((e for e in reversed(entries) if e.get('decision')), None)
+    return {'before': before, 'after': after,
+            'evidence_changed': before['snapshot_hash'] != after['snapshot_hash'],
+            'accepted_source': accepted['recovery']['evidence']['source'] if accepted else None,
+            'human_assessment': {'revision': decision['revision'], 'reviewer': decision['reviewer'],
+                                 'reason': decision['reason'], 'decision': decision['decision']} if decision else None,
+            'ai_rehearing_performed': False,
+            'scope': 'Observed synthetic evidence and saved human assessment; not model accuracy or cost savings.'}

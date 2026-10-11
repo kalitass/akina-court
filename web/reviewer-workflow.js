@@ -10,6 +10,21 @@ function endpoint(suffix='') { return `/api/reviewer/${encodeURIComponent($('cas
 function fields() { const action=$('action').value; $('decision-fields').hidden=action!=='own_decision'; $('evidence-fields').hidden=action!=='request_evidence'; $('preview').disabled=busy||action==='request_evidence'; }
 function render(p) {
   packet=p; $('workspace').hidden=false; pending=null;
+  const c=p.comparison; $('comparison').hidden=!c;
+  if(c){
+    const decision=c.human_assessment;
+    $('progress').replaceChildren(...[
+      'Identify the missing GPS: '+(c.before.evidence_gap||'no mechanical gap'),
+      c.evidence_changed?'Validate and retain the returned GPS: completed':'Request and validate GPS: waiting for accepted evidence',
+      decision?'Record human assessment: completed':'Assess the evidence and record a reason: pending'
+    ].map(s=>text('li',s)));
+    for(const [id,s] of [['before-state',c.before],['after-state',c.after]]){
+      $(id).replaceChildren(text('p',`${s.gps_samples} GPS samples`),text('p',s.evidence_gap||'The mechanical GPS gap is resolved.'),text('p','Policy permits: '+s.allowed_outcomes.map(v=>v.replaceAll('_',' ')).join(', ')));
+      s.location_facts.forEach(f=>$(id).append(text('p',`${f.id}: ${f.text}`)));
+    }
+    $('change-reason').textContent=c.evidence_changed?`What changed: source-linked GPS from ${c.accepted_source} replaced the missing interval. The original policy was applied again; this does not itself issue a decision.`:'No accepted GPS has been added. A missing or conflicting record cannot establish arrival or waiting time.';
+    $('human-result').textContent=decision?`Saved human assessment by ${decision.reviewer}: ${decision.decision.ruling.replaceAll('_',' ')}${decision.decision.amount==null?'':` · $${decision.decision.amount.toFixed(2)}`} (simulation). Reason: ${decision.reason}`:'No human assessment has been saved.';
+  }
   $('complaint').textContent=p.complaint.statement;
   $('trip').textContent=`${p.case_id} · ${p.complaint.filed_by} · ${p.complaint.filed_at} · ${p.route.pickup.name} → ${p.route.dropoff.name}`;
   $('court').href=p.court_url;

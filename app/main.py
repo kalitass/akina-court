@@ -357,7 +357,7 @@ def queue_evidence_handoffs(cid: str, x_demo_token: Optional[str] = Header(defau
 
 
 def reviewer_workspace(cid: str, scenario: str):
-    from app.reviewer import current_evidence, history, workspace
+    from app.reviewer import current_evidence, evidence_comparison, history, workspace
     if scenario not in {'stored', 'missing_gps'}:
         raise HTTPException(400, 'Choose stored or missing_gps')
     full = load_case(cid)
@@ -381,6 +381,8 @@ def reviewer_workspace(cid: str, scenario: str):
     packet = workspace(current, record, scenario)
     packet.update(revision=len(entries), history=entries,
                   evidence_recovered=bool(current.provenance.get('recovered_gps')))
+    if scenario == 'missing_gps':
+        packet['comparison'] = evidence_comparison(initial, current, entries)
     return full, current, packet
 
 
