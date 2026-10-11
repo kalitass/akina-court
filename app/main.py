@@ -30,7 +30,8 @@ for _flag in ("STRETCH_PRECEDENT", "STRETCH_FRAUD", "STRETCH_SLA", "STRETCH_FEED
     os.environ.setdefault(_flag, "1")            # the demo service runs with every stretch module on; set 0 in .env to get the bare MVP
 
 from core.facts.tools import build_fact_table          # noqa: E402
-from core.llm import describe_model                     # noqa: E402
+from core.llm import describe_model
+from recovery.config import model_configured  # noqa: E402
 from core.orchestrate import run_case, save_record      # noqa: E402
 from core.policy import policy_text                     # noqa: E402
 from core.schemas import Case, CaseRecord, Event        # noqa: E402
@@ -45,6 +46,7 @@ class Run:
         self.done = False
         self.error: Optional[str] = None
         self.record: Optional[CaseRecord] = None
+        self.review: Optional[dict] = None
         self.subs: list[asyncio.Queue] = []
 
     def push(self, ev: Optional[Event]):
@@ -149,6 +151,9 @@ def demo_controls():
     from core.counterfactual import COUNTERFACTUALS
     from core.orchestrate import INJECTIONS
     return {"inject": INJECTIONS, "counterfactual": COUNTERFACTUALS, "live_runs": LIVE_RUNS,
+            "recovery_model_ready": model_configured(),
+            "recovery_live_runs": LIVE_RUNS and os.environ.get("RECOVERY_REVIEW_ENABLED") == "1",
+            "local_inference": False,
             "live_runs_note": None if LIVE_RUNS else "Live model runs are switched off on this public demo (no model key is deployed). Every case, audit and benchmark trip here is a stored run; clone the repository and set DEEPSEEK_API_KEY to run the agents yourself."}
 
 
@@ -188,7 +193,35 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
         raise HTTPException(429, f"{MAX_LIVE} live runs already in progress; watch a pre-recorded case or retry in a minute")
     if not _rate_ok(ip):
         raise HTTPException(429, f"live-run budget for this client is {RATE_PER_IP} per 10 minutes; pre-recorded cases are unlimited")
+    recovery = body.get("recovery")
+    if recovery and os.environ.get("RECOVERY_REVIEW_ENABLED") != "1":
+        raise HTTPException(403, "Recovery hearings are experimental and disabled; enable RECOVERY_REVIEW_ENABLED=1 after configuring the model")
+    if "recovery" in body and (not isinstance(recovery, str) or cid not in {"C-0001", "C-0004"} or recovery not in {"available", "unavailable", "conflict"}
+                     or body.get("counterfactual") or body.get("inject")):
+        raise HTTPException(400, "Choose a supported recovery scenario without counterfactuals or injections")
+    previous_review = None
+    previous_id = body.get('reuse_review_id')
+    if previous_id is not None:
+        import re
+        if not recovery or not isinstance(previous_id, str) or not re.fullmatch(r'[0-9a-f]{32}', previous_id):
+            raise HTTPException(400, 'Reuse requires a recovery scenario and a valid saved review ID')
+        path = ROOT / 'review_runs' / f'{previous_id}.json'
+        if path.is_symlink() or not path.is_file():
+            raise HTTPException(404, 'Saved recovery review not found')
+        try:
+            previous_review = json.loads(path.read_text())
+            if not isinstance(previous_review, dict):
+                raise ValueError('Invalid saved review')
+            from recovery.review import verified_initial
+            partial = load_case(cid).model_copy(deep=True)
+            partial.gps = []
+            verified_initial(partial, previous_review)
+        except (ValueError, TypeError, KeyError) as exc:
+            raise HTTPException(409, f'Cannot reuse this review: {exc}')
     case = load_case(cid)
+    if recovery:
+        from uuid import uuid4
+        cid = f"{cid}~recovery-{uuid4().hex}"
     cf = body.get("counterfactual")
     if cf:
         from core.counterfactual import apply
@@ -205,6 +238,15 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
 
     async def go():
         try:
+            if recovery:
+                from recovery.evidence import SyntheticGpsProvider
+                from recovery.review import review_recovered, save_review
+                partial = case.model_copy(deep=True)
+                partial.gps = []
+                result = await review_recovered(partial, SyntheticGpsProvider(case, recovery), runner=run_case, review_id=cid.rsplit("-", 1)[1], previous_review=previous_review)
+                save_review(result, ROOT / "review_runs")
+                r.review = result
+                return
             rec = await run_case(case, on_event=r.push, rebuttal=rebuttal, inject=inject)
             r.record = rec
             if not cf and not inject:
@@ -270,6 +312,16 @@ def precedents():
     return [p.model_dump(mode="json") for p in precedent.load(RUNS_DIR)]
 
 
+@app.get("/api/queue/{cid}/evidence-handoffs")
+def queue_evidence_handoffs(cid: str, x_demo_token: Optional[str] = Header(default=None)):
+    """Case-linked packets for the reviewer UI; never enqueue, resolve or override."""
+    _check_token(x_demo_token)
+    from recovery.recovery_handoffs import list_handoffs
+    if cid not in {'C-0001', 'C-0004'}:
+        raise HTTPException(400, 'Choose a supported synthetic recovery case')
+    return list_handoffs(cid, ROOT / 'review_runs')
+
+
 @app.post("/api/override/{cid}")
 def override(cid: str, body: dict, x_demo_token: Optional[str] = Header(default=None)):
     _check_token(x_demo_token)
@@ -330,10 +382,25 @@ async def no_stale_pages(request, call_next):
     return resp
 
 
+@app.get("/api/recovery-reviews/{run_id}")
+def recovery_review_status(run_id: str):
+    r = RUNS.get(run_id)
+    import re
+    match = re.fullmatch(r"(C-0001|C-0004)~recovery-([0-9a-f]{32})", run_id)
+    if match is None:
+        raise HTTPException(404, "No recovery review with that ID")
+    if r is not None:
+        return {"done": r.done, "error": r.error, "review": r.review}
+    path = ROOT / "review_runs" / f"{match.group(2)}.json"
+    if not path.exists():
+        raise HTTPException(404, "No recovery review with that ID")
+    return {"done": True, "error": None, "review": json.loads(path.read_text())}
+
+
 @app.get("/api/evidence-demo/{cid}")
 def evidence_demo(cid: str, mode: str = "available"):
     """Read-only synthetic recovery preview; does not run agents or save a ruling."""
-    from core.evidence import SyntheticGpsProvider, recover
+    from recovery.evidence import SyntheticGpsProvider, recover
     if cid not in {"C-0001", "C-0004"} or mode not in {"available", "unavailable", "conflict"}:
         raise HTTPException(400, "Choose a supported synthetic demo case and evidence mode")
     full = load_case(cid)

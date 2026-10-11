@@ -45,7 +45,7 @@ Identity-swap runs: <!--n:swap_note-->not yet re-run on this version<!--/n-->. R
 uv venv .venv && uv pip install --python .venv/bin/python -r requirements.txt
 cp .env.example .env            # DEEPSEEK_API_KEY, only for live runs
 scripts/dev.sh                  # http://localhost:8000
-.venv/bin/python -m pytest -q   # <!--n:tests-->678<!--/n--> tests, no key needed
+.venv/bin/python -m pytest -q   # <!--n:tests-->746<!--/n--> tests, no key needed
 ```
 
 Without a key the pages play back the stored runs in `runs/` (six demo rulings plus the organisers' sample, and eight pre-recorded fault injections and counterfactuals). Benchmark: `bench/run_bench.py --arms raw,facts_only,judge_only,court`, then `bench/report.py`, `bench/gate_ablation.py`, `bench/dashboard.py`. Deploy: `deploy/` (Docker + Caddy; `deploy/lighthouse.sh` for Tencent Cloud Lighthouse).
