@@ -73,7 +73,7 @@ for r in json.load(sys.stdin)["FirewallRuleSet"]: print("  now",r["Protocol"],r[
     TOKEN=$(python3 -c 'import secrets;print(secrets.token_urlsafe(18))')
     # local-only files listed in .git/info/exclude (editor and tooling config) never leave this machine
     LOCAL_EXCL=(); [ -f "$HERE/../.git/info/exclude" ] && while read -r l; do case "$l" in ''|'#'*) ;; *) LOCAL_EXCL+=(--exclude "./${l%/}");; esac; done < "$HERE/../.git/info/exclude"
-    COPYFILE_DISABLE=1 tar --no-xattrs --exclude .venv --exclude .env --exclude .git --exclude '__pycache__' --exclude '.pytest_cache' "${LOCAL_EXCL[@]}" -czf /tmp/akina.tgz -C "$HERE/.." .
+    COPYFILE_DISABLE=1 tar --no-xattrs --exclude .venv --exclude .env --exclude .git --exclude '__pycache__' --exclude '.pytest_cache' "${LOCAL_EXCL[@]+"${LOCAL_EXCL[@]}"}" -czf /tmp/akina.tgz -C "$HERE/.." .
     echo "bundle $(du -h /tmp/akina.tgz | cut -f1) → $SSH_USER@$IP (domain $DOM)"
     scp -i "$PRIV" /tmp/akina.tgz "$SSH_USER@$IP:akina.tgz"
     $S "$SSH_USER@$IP" "set -e; rm -rf akina && mkdir akina && tar -xzf akina.tgz -C akina && rm akina.tgz

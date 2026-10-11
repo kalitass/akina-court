@@ -107,6 +107,10 @@ def chart(name: str, n: dict) -> str:
         rows = [(ARM_LABEL[a], n["arms"][a]["safe"], f"{n['arms'][a]['safe']}/{cases}") for a in ARMS]
         aria = "Right, or handed to a person: " + ", ".join(f"{l} {s}" for l, _, s in rows)
         return f"<!--chart:accuracy-->{bar_chart('Right, or handed to a person', f'right outcome, amount and hand-off, or sent to a reviewer; only a wrong decision that executes counts against a system, of {cases} cases', rows, aria, cases)}<!--/chart-->"
+    if name == "exact":
+        rows = [(ARM_LABEL[a], n["arms"][a]["exact"], f"{n['arms'][a]['exact']}/{cases}") for a in ARMS]
+        aria = "Matched the reference outright: " + ", ".join(f"{l} {s}" for l, _, s in rows)
+        return f"<!--chart:exact-->{bar_chart('Matched the reference outright', f'outcome, amount and hand-off all right, of {cases} cases; a hand-off on a case the reference rules is not counted here', rows, aria, cases)}<!--/chart-->"
     if name == "wrong":
         vals = {a: (n["arms"][a]["wrong_executed_single_call"] if a in ("raw", "facts_only") else n["arms"][a]["wrong_and_executed_with_gate"]) for a in ARMS}
         rows = [(ARM_LABEL[a], vals[a], f"{vals[a]}/{cases}") for a in ARMS]
