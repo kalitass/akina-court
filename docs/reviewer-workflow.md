@@ -44,3 +44,36 @@ The browser demonstration completed: C-0004 missing GPS → request evidence →
 5. Preview and save a human full-refund assessment with its reason (or inspect the existing saved assessment). Show the calculated SGD 6.61 and reload to demonstrate persistence. Explain: "This is a traceable simulated human decision. No payment occurs. AI rehearing is a separate experiment."
 
 Do not say this experiment proves increased model accuracy, lower support costs, or production-ready recovery. Queue feedback and recovery-ledger evidence are currently separate; production source integration, staff authentication and an explicitly reviewed bridge between those stores remain necessary.
+
+## Formal reviewer page: same-case evidence continuation
+
+Open `/review.html?case=C-0004&scenario=missing_gps`. This explicitly synthetic
+intake now uses the **formal** reviewer page, request API, decision API and SLA
+store throughout, rather than the independent SQLite demonstration ledger.
+
+1. GPS is removed from a copy of C-0004; the original case and stored AI verdict
+   are not loaded into this assessment. Fee decisions have no selectable finding.
+2. Request the platform GPS interval, confirm the source review and submit.
+   The formal request and an open SLA item are saved.
+3. Receive a simulated available, unavailable or conflicting response on this
+   same page. The existing GPS validator checks trip/request linkage, source,
+   ordering, timezone, interval coverage and the 30-second completeness limit.
+4. Only accepted telemetry is persisted as a new case snapshot. Reloading shows
+   the same case with refreshed facts and map. Failed retrieval stays awaiting
+   the original request; it can be retried. A stale request cannot supply evidence.
+5. The human reviews the original complaint/messages and recovered GPS, records
+   a finding, reason and fact citations. The unchanged policy calculates $6.61;
+   any account referral needs a second confirmation. Only that final human
+   decision resolves the demonstration SLA item.
+
+Scope: C-0004 complete GPS absence only; no new AI hearing or actual payment.
+The scenario's formal request, recovery, decision, precedent and SLA records
+share `runs/review_recovery_demo/C-0004/`, isolated from the benchmark queue and
+its original precedents. This is not a production GPS integration, road-name
+recovery for B-0054, a multi-worker transaction system, or evidence of improved
+model accuracy. A fixture change invalidates previously accepted telemetry.
+
+Verification: `tests/test_formal_review_recovery.py` exercises the whole HTTP
+cycle, blocked pre-evidence decisions, unavailable/conflicting retries, token
+checks, stale request rejection, scope rejection, fixture invalidation, final
+queue resolution and byte preservation of cases/archived benchmark runs.

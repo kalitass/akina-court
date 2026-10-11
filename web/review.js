@@ -20,6 +20,7 @@
   function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
   function step(n, s) { return '<span class="stepn">' + n + '</span>' + s; }
   function api(path, opts) {
+    if (Q.get('scenario') === 'missing_gps' && path.indexOf('/api/review/' + encodeURIComponent(CID)) === 0) path += '?scenario=missing_gps';
     return fetch(path, opts).then(function (r) {
       return r.text().then(function (txt) { var j = null; try { j = JSON.parse(txt); } catch (e) {} return {ok: r.ok, status: r.status, body: j, text: txt}; });
     });
@@ -59,7 +60,7 @@
     });
     var here = F.facts.filter(function (f) { return f.value && f.value.driver_pressed_here_at; })[0];
     return {g: g, span: span, segs: segs, stops: stops, chat: chat, route: ((C.route || {}).polyline || []).map(function (p) { return [p[1], p[0]]; }),
-      pickup: tr.pickup, dropoff: tr.dropoff, noShow: C.dispute.type === 'no_show', here: here ? {t: t(here.value.driver_pressed_here_at), ts: here.value.driver_pressed_here_at, m: here.value.m_from_pickup_at_tap} : null,
+      pickup: tr.pickup, dropoff: tr.dropoff, noShow: C.dispute.type === 'no_show', here: here && g.length ? {t: t(here.value.driver_pressed_here_at), ts: here.value.driver_pressed_here_at, m: here.value.m_from_pickup_at_tap} : null,
       times: {pickup: tr.pickup_at, dropoff: tr.dropoff_at || tr.cancelled_at}};
   }
   function segCoords(G, s, e) { return G.g.filter(function (p) { return p.t >= s && p.t <= e; }).map(function (p) { return p.ll; }); }
@@ -184,7 +185,7 @@
     if (focus) tool(G.noShow ? 'Pickup' : 'Question', function () { fit('focus', 600); }, true);
     tool('Whole trip', function () { fit('all', 600); }, !focus);
     var rp = document.createElement('a'); rp.className = 'btn sm'; rp.style.cssText = 'padding:3px 9px;font:700 11px var(--mono);border-radius:999px;background:var(--panel)';
-    rp.href = '/replay.html?case=' + encodeURIComponent(CID); rp.target = '_blank'; rp.rel = 'noopener'; rp.textContent = 'Open in replay ↗'; tools.appendChild(rp);
+    rp.href = '/replay.html?case=' + encodeURIComponent(CID); rp.target = '_blank'; rp.rel = 'noopener'; rp.textContent = 'Open in replay ↗'; if (Q.get('scenario') !== 'missing_gps') tools.appendChild(rp);
     return apiObj;
   }
 
@@ -246,12 +247,13 @@
   function linksBox(P) {
     var L = P.links, a = function (h, s) { return '<a class="btn sm" target="_blank" rel="noopener" href="' + esc(h) + '">' + s + ' ↗</a>'; };
     return '<div class="box"><div class="k">' + step(3, 'See more') + '<span class="r muted">only if the evidence is not enough</span></div><div class="links">'
-      + a(L.court, 'AI court replay') + a(L.trip, 'Trip replay') + a(L.facts, 'Facts') + a(L.policy, 'Policy') + a(L.receipt, 'Receipt') + '</div></div>';
+      + (L.court ? a(L.court, 'AI court replay') : '') + (L.trip ? a(L.trip, 'Trip replay') : '') + (L.facts ? a(L.facts, 'Facts') : '') + a(L.policy, 'Policy') + (L.receipt ? a(L.receipt, 'Receipt') : '') + '</div></div>';
   }
 
   /* ------------------------------------------------------------------ decision panel */
   function suggestions(P) {
     var q = P.questions[0], out = [];
+    if (P.recovery) return [{to: 'platform', item: 'GPS interval from trip acceptance to cancellation, with original source and timestamps.'}];
     if (q.kind === 'segment_scope') {
       var w = q.title.split(':')[0];
       out.push({to: 'driver', item: 'Which road did you drive during ' + w + '? A screenshot of your navigation for that stretch, if you have one.'});
@@ -340,8 +342,8 @@
       if (P.status === 'awaiting_evidence' && P.pending_request) { var R = P.pending_request; h += '<div class="done wait">Awaiting evidence from <b>' + esc(R.request.to) + '</b> until ' + esc(String(R.due_at).slice(0, 16).replace('T', ' ')) + ' UTC: ' + esc(R.request.items.join('; ')) + '. You can still decide now.</div>'; }
       if (P.status === 'decided' && P.decision) h += '<div class="done">Decided by ' + esc(P.decision.reviewer) + ' (' + esc(P.decision.outcome) + '): <b>' + esc(P.decision.ruling.ruling) + ' ' + (P.decision.ruling.amount != null ? money(P.decision.ruling.amount) : '') + '</b>. A new decision is recorded on top; the history is kept.</div>';
       h += '<div class="modes">'
-        + '<button type="button" data-mode="adopt" aria-pressed="' + (st.mode === 'adopt') + '"' + (anyAdopt ? '' : ' disabled title="The record cannot support any of the options; write your own judgment or ask for evidence"') + '>① Adopt an option<small>' + (anyAdopt ? 'pick one; code prices it' : 'no option the record supports') + '</small></button>'
-        + '<button type="button" data-mode="own" aria-pressed="' + (st.mode === 'own') + '">② My own judgment<small>finding + reason</small></button>'
+        + '<button type="button" data-mode="adopt" aria-pressed="' + (st.mode === 'adopt') + '"' + (anyAdopt ? '' : ' disabled title="The record cannot support any of the options; write your own judgment or ask for evidence"') + '>① Adopt an option<small>' + (anyAdopt ? 'pick one; code prices it' : P.recovery ? 'no new AI recommendation' : 'no option the record supports') + '</small></button>'
+        + '<button type="button" data-mode="own" aria-pressed="' + (st.mode === 'own') + '"' + (P.recovery && !P.questions[0].options.length ? ' disabled title="Retrieve GPS before deciding the fee"' : '') + '>② My own judgment<small>finding + reason</small></button>'
         + '<button type="button" data-mode="evidence" aria-pressed="' + (st.mode === 'evidence') + '">③ Request evidence<small>keep the case open</small></button></div>';
       if (st.mode === 'adopt' || st.mode === 'own') {
         qs.forEach(function (q) {
@@ -397,7 +399,7 @@
         return r;
       }).then(function (r) {
         st.busy = false;
-        if (r.ok) { st.result = r.body; P.status = r.body.status; } else st.error = detail(r);
+        if (r.ok) { if (P.recovery) { renderCase(); return; } st.result = r.body; P.status = r.body.status; } else st.error = detail(r);
         render();
       });
     }
@@ -427,12 +429,33 @@
       + '<a class="btn sm" href="/review.html">Review queue</a></div></div>';
   }
 
+  function recoveryBox(P) {
+    var R = P.recovery, last = R.last_attempt;
+    return '<div class="box"><b>GPS recovery · same review case</b><p>Synthetic C-0004 demonstration. Original cases and benchmark results remain unchanged. No new AI verdict or payment.</p>'
+      + '<p>Before: ' + R.before_gps_points + ' GPS points → Now: ' + R.after_gps_points + ' GPS points. ' + (R.accepted ? 'Source, time coverage and completeness checked. Continue your assessment below.' : 'Fee decision remains blocked until evidence is available.') + '</p>'
+      + (last ? '<p>Last response: ' + esc(last.report.human_task || 'GPS accepted; facts recalculated. Human decision still required.') + '</p>' : '')
+      + (P.pending_request ? '<label for="gps-mode">Simulate the platform response</label> <select id="gps-mode"><option value="available">Available</option><option value="unavailable">Unavailable</option><option value="conflict">Conflicting records</option></select> <button class="btn" id="receive-gps">Receive and validate GPS</button><p id="gps-error" role="status"></p>' : '') + '</div>';
+  }
+  function wireRecovery(P) {
+    var b = document.getElementById('receive-gps'); if (!b) return;
+    b.onclick = function () {
+      b.disabled = true;
+      var tok = sessionStorage.getItem(TOKEN_KEY), hd = {'Content-Type':'application/json'};
+      if (tok) hd['X-Demo-Token'] = tok;
+      api('/api/review/' + encodeURIComponent(CID) + '/receive-gps', {method:'POST', headers:hd,
+        body:JSON.stringify({requested_at:P.pending_request.requested_at, mode:document.getElementById('gps-mode').value})}).then(function (r) {
+          if (r.ok) renderCase();
+          else { b.disabled = false; document.getElementById('gps-error').textContent = detail(r); }
+        }).catch(function () { b.disabled = false; document.getElementById('gps-error').textContent = 'Response could not be verified. Reload before retrying.'; });
+    };
+  }
+
   function renderCase() {
-    Promise.all([api('/api/review/' + encodeURIComponent(CID)), api('/api/cases/' + encodeURIComponent(CID)), api('/api/cases/' + encodeURIComponent(CID) + '/facts'), api('/api/cases')]).then(function (rs) {
+    Promise.all([api('/api/review/' + encodeURIComponent(CID)), Q.get('scenario') === 'missing_gps' ? Promise.resolve({ok:true}) : api('/api/cases/' + encodeURIComponent(CID)), Q.get('scenario') === 'missing_gps' ? Promise.resolve({ok:true}) : api('/api/cases/' + encodeURIComponent(CID) + '/facts'), api('/api/cases')]).then(function (rs) {
       var r = rs[0];
       if (!r.ok) { renderNotReviewable(r); return; }
       if (!rs[1].ok || !rs[2].ok) { app.innerHTML = '<div class="notice"><p>Could not load the case: ' + esc(detail(rs[1].ok ? rs[2] : rs[1])) + '</p></div>'; return; }
-      var P = r.body, C = rs[1].body, F = rs[2].body, list = rs[3].ok ? rs[3].body : [];
+      var P = r.body, C = P.current_case || rs[1].body, F = P.current_facts || rs[2].body, list = rs[3].ok ? rs[3].body : [];
       var title = ((list.filter(function (c) { return c.case_id === CID; })[0] || {}).title) || TYPE[P.dispute_type];
       document.title = CID + ' · Review · Akina Court';
       var G = geo(C, F), base = {};
@@ -445,9 +468,10 @@
         + '<span class="badge ' + (P.queue === 'urgent_safety' ? 'red' : 'hr') + '">' + esc(QUEUE[P.queue] || P.queue) + '</span>' + (sla ? '<span class="sla ' + (/overdue/.test(sla) ? 'c-red' : 'c-amber') + '">' + esc(sla) + '</span>' : '')
         + (P.safety_concern === 'suspected' || P.safety_concern === 'confirmed' ? '<span class="badge red">Safety concern · ' + esc(P.safety_concern) + '</span>' : '')
         + (P.status !== 'open' ? '<span class="badge ' + (P.status === 'decided' ? 'ok' : 'hr') + '">' + esc(P.status.replace('_', ' ')) + '</span>' : '') + '</div>';
+      if (P.recovery) h += recoveryBox(P);
       h += '<div class="quote">“' + esc(P.statement) + '”<span class="who">' + (P.filed_by === 'rider' ? 'Rider' : 'Driver') + '\'s original complaint · filed ' + esc(filed) + ' · ' + esc(P.trip_summary) + '</span></div>';
       h += '<div class="qcard"><div class="qh">' + esc(qhead) + '</div>' + P.questions.map(function (q) { return '<div class="qt">' + esc(q.title) + '</div>'; }).join('') + '</div>';
-      h += '<div class="grid2"><div class="left"><div class="map" id="map"></div>' + settledBox(P) + sidesBox(P, P.facts) + '</div><div class="right">';
+      h += '<div class="grid2"><div class="left"><div class="map" id="map"></div>' + settledBox(P) + (P.recovery ? '' : sidesBox(P, P.facts)) + '</div><div class="right">';
       var why = P.questions.map(function (q) { return q.why_ai_stopped.map(function (w, i) { return '<p' + (i ? ' class="small"' : '') + '>' + esc(w) + '</p>'; }).join(''); }).join('');
       if (P.evidence_gap) why += '<div class="gapnote"><b>Evidence ' + esc(P.evidence_gap.status) + ':</b> ' + esc(P.evidence_gap.gap) + (q0.adoptable ? '' : ' The options below cannot be adopted as they stand: write your own judgment, or ask for the missing record.') + '</div>';
       h += '<div class="box"><div class="k">' + step(1, 'Why this reached you') + '</div><div class="why">' + why + '</div></div>';
@@ -459,6 +483,7 @@
       P.questions.forEach(function (q) { q.evidence.forEach(function (e) { if (e.quote) basis.push(e.fact_id); }); });
       var m = mountMap(document.getElementById('map'), G, {focus: q0.focus, basis: basis, base: base});
       decisionPanel(document.getElementById('dp'), P, m);
+      wireRecovery(P);
     });
   }
 

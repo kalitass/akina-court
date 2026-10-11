@@ -22,8 +22,20 @@ RUNS_DIR = ROOT / "runs"                     # decisions, overrides, precedents 
 router = APIRouter()
 
 
-def _packet(cid: str) -> review.ReviewPacket:
+def _store(cid: str, scenario: str):
+    if scenario == 'stored':
+        return RUNS_DIR
+    if scenario != 'missing_gps':
+        raise HTTPException(400, 'Unknown review scenario')
+    from app.review_recovery import directory
+    return directory(RUNS_DIR, cid)
+
+
+def _packet(cid: str, scenario: str = 'stored') -> review.ReviewPacket:
     from app.main import load_case, stored_run_path      # lazy: app.main includes this router
+    if scenario != 'stored':
+        from app.review_recovery import packet
+        return packet(load_case(cid), _store(cid, scenario))[0]
     p = review.OPS_QUEUE_DIR / f"{cid}.record.json"
     if cid not in set(review.ops_queue_ids()):
         any_run = stored_run_path(cid) or (p if p.exists() else None)
@@ -43,9 +55,9 @@ def _packet(cid: str) -> review.ReviewPacket:
     return packet
 
 
-def _queue_due(cid: str):
+def _queue_due(cid: str, scenario: str = 'stored'):
     from core.stretch import sla
-    hit = next((i for i in sla.list_queue(RUNS_DIR) if i.case_id == cid), None)
+    hit = next((i for i in sla.list_queue(_store(cid, scenario)) if i.case_id == cid), None)
     return hit.due_at if hit else None
 
 
@@ -63,18 +75,24 @@ def review_queue():
 
 
 @router.get("/api/review/{cid}")
-def review_packet(cid: str):
-    p = _packet(cid)
-    due = _queue_due(cid)
+def review_packet(cid: str, scenario: str = 'stored'):
+    p = _packet(cid, scenario)
+    due = _queue_due(cid, scenario)
     out = p.model_dump(mode="json")
-    if due is not None and p.status == "awaiting_evidence":
+    if due is not None:
         out["due_at"] = due.isoformat()
+    if scenario == 'missing_gps':
+        from app.main import load_case
+        from app.review_recovery import packet
+        _, current, recovery = packet(load_case(cid), _store(cid, scenario))
+        from core.facts.tools import build_fact_table
+        out.update(current_case=current.model_dump(mode='json'), current_facts=build_fact_table(current).model_dump(mode='json'), recovery=recovery)
     return out
 
 
 @router.post("/api/review/{cid}/preview")
-def review_preview(cid: str, decision: HumanDecision):
-    p = _packet(cid)
+def review_preview(cid: str, decision: HumanDecision, scenario: str = 'stored'):
+    p = _packet(cid, scenario)
     try:
         if decision.outcome == "request_evidence":
             return {"outcome": decision.outcome, "notices": review.notice_preview(p, decision)}
@@ -86,13 +104,26 @@ def review_preview(cid: str, decision: HumanDecision):
 
 
 @router.post("/api/review/{cid}")
-def review_decide(cid: str, decision: HumanDecision, x_demo_token: Optional[str] = Header(default=None)):
+def review_decide(cid: str, decision: HumanDecision, x_demo_token: Optional[str] = Header(default=None), scenario: str = 'stored'):
     from app.main import _check_token                     # the same demo-token rule as /api/override
     _check_token(x_demo_token)
-    p = _packet(cid)
+    p = _packet(cid, scenario)
     try:
         if decision.outcome == "request_evidence":
-            return review.request_evidence(p, decision, RUNS_DIR)
-        return review.record_decision(p, decision, RUNS_DIR)
+            return review.request_evidence(p, decision, _store(cid, scenario))
+        return review.record_decision(p, decision, _store(cid, scenario))
     except DecisionError as e:
         raise HTTPException(422, str(e))
+
+
+from app.review_recovery import ReceiveGps
+
+
+@router.post('/api/review/{cid}/receive-gps')
+def receive_review_gps(cid: str, body: ReceiveGps, scenario: str = 'stored', x_demo_token: Optional[str] = Header(default=None)):
+    from app.main import _check_token, load_case
+    _check_token(x_demo_token)
+    if scenario != 'missing_gps':
+        raise HTTPException(422, 'Synthetic GPS provider cannot fulfil this live queue case; obtain the requested authoritative record')
+    from app.review_recovery import receive
+    return receive(load_case(cid), _store(cid, scenario), body)
