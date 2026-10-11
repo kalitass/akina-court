@@ -109,7 +109,7 @@ def demo_numbers() -> dict:
     case = lambda cid: Case.model_validate(json.loads((ROOT / "data" / "cases" / f"{cid}.json").read_text()))
     c4 = build_fact_table(case("C-0004"))
     tap_m = next(f.value["m_from_pickup_at_tap"] for f in c4.facts if f.value and "m_from_pickup_at_tap" in f.value)
-    return {"c0001_refund": exp("C-0001")["amount"], "c0004_fee": exp("C-0004")["amount"], "c0004_tap_m": tap_m,
+    return {"c0001_refund": exp("C-0001")["amount"], "c0007_refund": exp("C-0007")["amount"], "c0004_fee": exp("C-0004")["amount"], "c0004_tap_m": tap_m,
             "disp002_fee": case("DISP-002").fare.cancellation_fee, "c0005_fee": exp("C-0005").get("amount") or case("C-0005").fare.cancellation_fee}
 
 

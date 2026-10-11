@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import Request, FastAPI, Header, HTTPException
+from fastapi import File, Form, Request, FastAPI, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -45,6 +45,7 @@ class Run:
         self.done = False
         self.error: Optional[str] = None
         self.record: Optional[CaseRecord] = None
+        self.case: Optional[Case] = None             # the case as actually heard (a voice-filed complaint differs from the file)
         self.subs: list[asyncio.Queue] = []
 
     def push(self, ev: Optional[Event]):
@@ -102,6 +103,9 @@ def list_cases():
 def get_case(cid: str, counterfactual: Optional[str] = None):
     """`cid` may be a run id like C-0005~grace_179 (the transform is applied) or a plain case id with ?counterfactual=."""
     base, _, cf = cid.partition("~")
+    live = RUNS.get(cid)
+    if live is not None and live.case is not None:        # a live run on a modified complaint: the case it actually heard
+        return live.case.model_dump(mode="json")
     case = load_case(base)
     cf = cf or counterfactual
     if cf:
@@ -142,6 +146,29 @@ def get_run(cid: str):
     if p is None:
         raise HTTPException(404, "no run yet")
     return json.loads(p.read_text())
+
+
+@app.get("/api/cases/{cid}/voice")
+def case_voice(cid: str):
+    """The spoken complaint attached to a case, if any: audio path (served from web/voice/), transcript and ASR engine."""
+    p = ROOT / "data" / "voice" / f"{cid.partition('~')[0]}.json"
+    if not p.exists():
+        raise HTTPException(404, "no spoken complaint on file for this case")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+@app.post("/api/intake/voice")
+async def intake_voice(audio: UploadFile = File(...), lang: str = Form("en"), x_demo_token: Optional[str] = Header(default=None)):
+    """A spoken complaint → text (Tencent Cloud ASR). The caller then files the text like a typed complaint
+    (POST /api/runs/{cid} with {"statement": text}); the court never receives audio."""
+    _check_token(x_demo_token)
+    from app.voice import VoiceUnavailable, transcribe
+    data = await audio.read()
+    fmt = (audio.filename or "clip.wav").rsplit(".", 1)[-1]
+    try:
+        return transcribe(data, fmt, lang)
+    except VoiceUnavailable as e:
+        raise HTTPException(503, str(e))
 
 
 @app.get("/api/demo-controls")
@@ -196,18 +223,25 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
         cid = case.case_id
     rebuttal = bool(body.get("rebuttal", True))
     inject = set(body.get("inject") or [])
+    statement = body.get("statement")
+    if statement is not None:                      # voice intake: the transcript is filed as the complaint, nothing else changes
+        if cf or inject or not isinstance(statement, str) or not statement.strip() or len(statement) > 600:
+            raise HTTPException(400, "statement must be 1–600 characters of text and cannot be combined with a counterfactual or an injection")
+        case = case.model_copy(update={"dispute": case.dispute.model_copy(update={"statement": statement.strip()})})
+        cid = f"{cid}~voice"                        # never saved over the stored run
     if inject and not cf:
         cid = f"{cid}~inject"                       # demo runs never overwrite the real run
     r = RUNS.get(cid)
     if r and not r.done:
         return {"status": "running", "events": len(r.events), "run_id": cid}
     r = RUNS[cid] = Run()
+    r.case = case if statement is not None else None
 
     async def go():
         try:
             rec = await run_case(case, on_event=r.push, rebuttal=rebuttal, inject=inject)
             r.record = rec
-            if not cf and not inject:
+            if not cf and not inject and statement is None:
                 save_record(rec, RUNS_DIR)
         except Exception as e:  # surface the error as a terminal event instead of a silent hang
             r.error = f"{type(e).__name__}: {e}"

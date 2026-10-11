@@ -164,8 +164,8 @@ def class_metrics(scores: dict) -> dict:
             "refund_precision": per.get("refund_full", {}).get("precision"),
             "amount_1c_refund_cases": mean(s["amount_1c"] for s in scores.values() if s["refund_due"]) if exp_refund else None,
             "refund_cases": len(exp_refund),
-            "money_error_mean": mean(s["abs_err"] for s in scores.values()),
-            "money_error_total": sum(s["abs_err"] for s in scores.values()),
+            "money_error_mean": round(mean(s["abs_err"] for s in scores.values()), 4),      # rounded: a float sum differs in its last digit across machines
+            "money_error_total": round(sum(s["abs_err"] for s in scores.values()), 2),
             "executed_rate": mean(s["executed"] for s in scores.values()),
             "wrong_executed": sum(s["wrong_executed"] for s in scores.values()),
             "wrong_executed_rate": mean(s["wrong_executed"] for s in scores.values()),
