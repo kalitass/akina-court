@@ -432,8 +432,9 @@
   function recoveryBox(P) {
     var R = P.recovery, last = R.last_attempt;
     return '<div class="box"><b>GPS recovery · same review case</b><p>Synthetic C-0004 demonstration. Original cases and benchmark results remain unchanged. No new AI verdict or payment.</p>'
-      + '<p>Before: ' + R.before_gps_points + ' GPS points → Now: ' + R.after_gps_points + ' GPS points. ' + (R.accepted ? 'Source, time coverage and completeness checked. Continue your assessment below.' : 'Fee decision remains blocked until evidence is available.') + '</p>'
-      + (last ? '<p>Last response: ' + esc(last.report.human_task || 'GPS accepted; facts recalculated. Human decision still required.') + '</p>' : '')
+      + '<p>Before: ' + R.before_gps_points + ' GPS points → Now: ' + R.after_gps_points + ' GPS points. ' + (R.accepted ? (P.status === 'decided' ? 'Human decision recorded; this demonstration review is closed.' : 'Source, time coverage and completeness checked. Continue your assessment below.') : 'Fee decision remains blocked until evidence is available.') + '</p>'
+      + (P.decision ? '<p><b>Human result: ' + esc(P.decision.ruling.ruling) + ' ' + money(P.decision.ruling.amount) + '</b> · reason and fact citations saved; no actual payment.</p>' : '')
+      + (last ? '<p>Last response: ' + esc(last.report.human_task || (P.status === 'decided' ? 'GPS accepted; reviewer completed assessment.' : 'GPS accepted; facts recalculated. Human decision still required.')) + '</p>' : '')
       + (P.pending_request ? '<label for="gps-mode">Simulate the platform response</label> <select id="gps-mode"><option value="available">Available</option><option value="unavailable">Unavailable</option><option value="conflict">Conflicting records</option></select> <button class="btn" id="receive-gps">Receive and validate GPS</button><p id="gps-error" role="status"></p>' : '') + '</div>';
   }
   function wireRecovery(P) {
@@ -463,7 +464,7 @@
       var q0 = P.questions[0], others = P.settled.filter(function (s) { return /^F\d+$/.test(s.subject); }).length;
       var qhead = 'You need to decide ' + P.questions.length + ' question' + (P.questions.length > 1 ? 's' : '') + (others ? ' · ' + others + ' segment' + (others > 1 ? 's' : '') + ' settled' : '') + (P.settled_amount ? ' (' + money(P.settled_amount) + ')' : '');
       var filed = new Date(P.filed_at).toLocaleString('en-GB', {timeZone: 'Asia/Singapore', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'});
-      var sla = slaText(P.due_at);
+      var sla = P.status === 'decided' ? '' : slaText(P.due_at);
       var h = '<div class="chead"><span class="ttl">' + esc(title) + '</span><span class="cid">' + esc(CID) + ' · ' + esc(TYPE[P.dispute_type] || P.dispute_type) + ' · ' + esc(P.service_type || '') + '</span>'
         + '<span class="badge ' + (P.queue === 'urgent_safety' ? 'red' : 'hr') + '">' + esc(QUEUE[P.queue] || P.queue) + '</span>' + (sla ? '<span class="sla ' + (/overdue/.test(sla) ? 'c-red' : 'c-amber') + '">' + esc(sla) + '</span>' : '')
         + (P.safety_concern === 'suspected' || P.safety_concern === 'confirmed' ? '<span class="badge red">Safety concern · ' + esc(P.safety_concern) + '</span>' : '')
