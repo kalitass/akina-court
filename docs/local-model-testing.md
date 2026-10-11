@@ -41,6 +41,57 @@ a connection to Ryde records. A completed experiment needs two hearings and
 Small local models can fail tool validation or exceed stage timeouts. Those
 failures must remain visible, without loosening the policy or citation checks.
 
+## Optional batched evidence experiment
+
+Pass `--batch-evidence` to `scripts/review_recovery.py` with `LLM_PROVIDER=ollama`
+to let each advocate read all six evidence slices through one tool call. The
+original slice functions still emit their evidence events and track the IDs
+read by that advocate; unrelated case IDs are rejected. No facts are inserted
+into the prompt before the tool is called. Policy, citation validation, output
+validation, and stage deadlines remain the same. This is a different retrieval
+condition, not a rerun of the original benchmark. The saved experiment labels
+it as `evidence_fetch=batched`; without the flag it records `original`.
+
+```sh
+LLM_PROVIDER=ollama LLM_MODEL=qwen3:4b-instruct-2507-q4_K_M python scripts/review_recovery.py --case C-0004 --arm court --batch-evidence --out review_runs/local/court-batched
+```
+
+The flag is rejected for cloud providers. Ordinary application runs retain the
+original tools unless `LOCAL_BATCH_EVIDENCE=1` is explicitly set with Ollama.
+
+## Failed-review diagnostics
+
+New recovery bundles include `attempts`, one entry for each hearing attempted.
+Each records the snapshot version, case ID, captured events, duration, and AI
+stage timings (including retries represented by separate correction stages).
+When a correctly identified record returns but an agent outage prevents a
+completed hearing, that record is preserved under the attempt for diagnosis.
+An exception before a record returns preserves the events emitted so far.
+
+Failed attempts are labelled `diagnostic_only`, remain outside `hearings`,
+and never receive comparison scores. They do not authorise actions. The UI
+shows the failed phase and timings; the full JSON contains the retained record.
+Parallel reviews use isolated timing collectors. Ordinary court records and
+the original benchmark model prompts remain unchanged by this instrumentation.
+Historical bundles have no attempts metadata; it cannot be reconstructed as
+measured timing after the fact.
+
+## Optional compact rebuttal experiment
+
+`--compact-rebuttal` with Ollama replaces the advocate's conversational tool
+history at the rebuttal stage with its verified brief and the verbatim text and
+sources of facts already in that advocate's `seen` set. The opposing brief is
+still provided. The full system policy, required grounds, output validators,
+tools, and 90-second deadline are unchanged. The advocate can request additional
+evidence through the existing tools; putting a fact in the opposing brief does
+not mark it as read. This changes the context condition and must be recorded
+separately from the benchmark, under `rebuttal_context=compact`.
+
+The flag is local-only and disabled by default (`LOCAL_COMPACT_REBUTTAL=1` is
+the explicit local setting). It can be tested independently or alongside
+`--batch-evidence`. An isolated rebuttal completion cannot establish that both
+hearings complete or that decision accuracy improves.
+
 The desktop workspace keeps its downloaded runtime and model under
 `../local-runtime/`; this directory is outside the Git repository. The
 DeepSeek `.env` is preserved, while local experiments use explicit environment

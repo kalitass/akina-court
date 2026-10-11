@@ -37,8 +37,16 @@ async def main():
     parser.add_argument('--mode',choices=['available','unavailable','conflict'],default='available')
     parser.add_argument('--out',type=Path,default=ROOT/'review_runs')
     parser.add_argument('--arm',choices=['judge_only','court'],default='court')
+    parser.add_argument('--batch-evidence',action='store_true',help='Ollama-only experiment: advocates read all evidence slices in one tool call')
+    parser.add_argument('--compact-rebuttal',action='store_true',help='Ollama-only experiment: replace tool-call history with verified brief and previously read facts')
     parser.add_argument('--dry-run',action='store_true',help='Prepare snapshots only; no model calls or performance scores')
     args=parser.parse_args()
+    if args.batch_evidence and os.environ.get('LLM_PROVIDER', 'deepseek').lower() != 'ollama':
+        parser.error('--batch-evidence is only supported for the local Ollama experiment')
+    if args.compact_rebuttal and os.environ.get('LLM_PROVIDER', 'deepseek').lower() != 'ollama':
+        parser.error('--compact-rebuttal is only supported for the local Ollama experiment')
+    os.environ['LOCAL_BATCH_EVIDENCE'] = '1' if args.batch_evidence else '0'
+    os.environ['LOCAL_COMPACT_REBUTTAL'] = '1' if args.compact_rebuttal else '0'
     for key in tuple(os.environ):
         if key.startswith('STRETCH_'):
             os.environ.pop(key)
@@ -62,6 +70,8 @@ async def main():
     start=time.perf_counter()
     result=await review_recovered(partial,SyntheticGpsProvider(full,args.mode),runner=runner)
     result['experiment']={'arm':args.arm,'model':describe_model(), 'duration_s':time.perf_counter()-start,
+                          'evidence_fetch': 'batched' if args.batch_evidence else 'original',
+                          'rebuttal_context': 'compact' if args.compact_rebuttal else 'original',
                           'judge_model_override':os.environ.get('LLM_MODEL_JUDGE'),
                           'advocate_model_override':os.environ.get('LLM_MODEL_ADVOCATE'),
                           'reference':'data/expected/'+args.case+'.json','scores':None}

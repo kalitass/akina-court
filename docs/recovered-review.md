@@ -27,6 +27,50 @@ Supported cases are C-0001 and C-0004. Modes are available/unavailable/conflict.
 
 ## Validation and performance limits
 
+### Integration contract for the reviewer page
+
+`GET /api/queue/C-0004/evidence-handoffs` (also C-0001) returns saved
+server recovery packets by source case. Pass `X-Demo-Token` when the demo token
+is configured. Join each queue row by `case_id`; each item has a unique
+`review_id` and `run_id` for the existing recovery-status endpoint.
+
+Display `review_state` separately from `evidence_state`: validated GPS can
+remain useful even if an advocate timed out. Show `next_step`, `failure` and the
+packet's source, investigation task and snapshot-labelled facts. Do not treat
+`ready_for_court` as a ruling or `reviewed` as permission to close a queue item.
+The endpoint never changes queue state, invokes models or applies an override.
+
+Only flat `review_runs/<review_id>.json` server bundles are included. Nested CLI
+experiment folders remain excluded. An empty list means no compatible saved
+packet, not no outstanding work. `skipped_records` reports unreadable or
+incompatible records without exposing their content. Source/snapshot hashes and
+packet contents are checked against the current deterministic assessment;
+incompatible older records stay on disk. These checks establish consistency,
+not source authenticity. Items are ordered by ID, not recency; the page must not
+label the last item as the latest review. Deployment still contains synthetic
+data only and needs real access controls before handling customer records.
+
+### Reviewer handoff without a model call
+
+Supported recovery attempts now include `evidence.reviewer_packet` (the preview
+API returns it under `report`). The packet contains both computed fact tables,
+snapshot-local citations, requested interval, accepted source, fingerprints,
+changed or newly assessable whole-case predicates, remaining interpretation
+questions, and a specific investigation task when retrieval is blocked.
+`/evidence.html` displays the summary and downloads its English plain text.
+
+This works when the model is unavailable. It prepares evidence for a reviewer;
+it does not submit an override, close a queue item, or produce a final ruling.
+Before/current fact IDs must never be compared as if they identify the same
+fact. Segment conditions are kept in their respective snapshot, not paired by
+an F-id that may shift. A newly assessable condition is labelled "not assessed"
+before recovery, rather than inventing a previous pass/fail value. No accepted
+source or new GPS is shown for rejected/conflicting records.
+
+Time saved for reviewers is a hypothesis to measure with people, not a result
+of the offline tests. The provider remains synthetic and the 30-second record
+completeness limit remains a demonstration assumption.
+
 Offline tests use an explicitly fake runner to test orchestration, snapshot integrity, comparisons, failure handling, persistence and API guards. These tests are **not model-quality evidence**. A default unscreened/unavailable judge, missing ruling, wrong case identity or mutated input causes review failure; partial completion is never shown as two successful hearings.
 
 The original 65-case no-op tests remain in place. A fresh-model benchmark still requires credentials. Before claiming improved accuracy or automation, run the frozen original benchmark for regression and a separate evidence-gap set for improvement, under equal model/tool access for judge-only and full court. Compare strict match, automatic-and-correct rate and the judge/court gap; do not count handoffs as automatic success. Existing benchmark metrics are not replaced by this implementation.

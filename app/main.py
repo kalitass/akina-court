@@ -289,6 +289,16 @@ def precedents():
     return [p.model_dump(mode="json") for p in precedent.load(RUNS_DIR)]
 
 
+@app.get("/api/queue/{cid}/evidence-handoffs")
+def queue_evidence_handoffs(cid: str, x_demo_token: Optional[str] = Header(default=None)):
+    """Case-linked packets for the reviewer UI; never enqueue, resolve or override."""
+    _check_token(x_demo_token)
+    from core.recovery_handoffs import list_handoffs
+    if cid not in {'C-0001', 'C-0004'}:
+        raise HTTPException(400, 'Choose a supported synthetic recovery case')
+    return list_handoffs(cid, ROOT / 'review_runs')
+
+
 @app.post("/api/override/{cid}")
 def override(cid: str, body: dict, x_demo_token: Optional[str] = Header(default=None)):
     _check_token(x_demo_token)

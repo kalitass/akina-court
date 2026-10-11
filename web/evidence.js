@@ -1,13 +1,50 @@
 const el = id => document.getElementById(id);
 let busy = false;
+let handoff = null;
+function showHandoff(packet) {
+  handoff = packet || null;
+  el('handoff').hidden = !handoff;
+  if (!handoff) return;
+  el('handoff-next').textContent = handoff.next_step;
+  const items = texts => texts.map(text => {
+    const li = document.createElement('li'); li.textContent = text; return li;
+  });
+  const conditionStatus = status => ({pass: 'supported by the record', fail: 'not supported by the record', judge: 'needs interpretation'})[status] || status;
+  el('handoff-changes').replaceChildren(...items(handoff.changed_conditions.length ?
+    handoff.changed_conditions.map(c => `${c.clause} ${c.element}: ${c.initial ? conditionStatus(c.initial.status) : 'not assessed'} → ${conditionStatus(c.current.status)}. ${c.current.detail}`) :
+    ['No paired whole-case condition changed. Read each snapshot for segment-specific conditions.']));
+  el('handoff-questions').replaceChildren(...items(handoff.open_questions.length ?
+    handoff.open_questions.map(q => q.clause === 'SAFE-1' ?
+      'Safety review: read the complaint, chat and statement for threats, intimidation, harassment or dangerous driving. Refer any concern to a safety reviewer. The complete handoff includes the messages.' :
+      `${q.clause} ${q.element}: ${q.detail} (current facts: ${q.evidence.join(', ') || 'see complete handoff'})`) :
+    ['No open interpretation predicate. This packet still contains no final ruling.']));
+  el('handoff-text').textContent = handoff.text;
+}
+el('download-handoff').addEventListener('click', () => {
+  if (!handoff) return;
+  const url = URL.createObjectURL(new Blob([handoff.text], {type: 'text/plain;charset=utf-8'}));
+  const a = document.createElement('a'); a.href = url;
+  a.download = `evidence-handoff-${handoff.case_id}.txt`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+for (const id of ['case', 'mode']) el(id).addEventListener('change', () => {
+  showHandoff(null); el('output').hidden = true; el('review-output').hidden = true;
+});
 el('run').addEventListener('click', async () => {
   if (busy) return;
   busy = true; el('run').disabled = true; el('output').hidden = true;
+  showHandoff(null);
+  const requestedCase = el('case').value, requestedMode = el('mode').value;
   el('status').textContent = 'Requesting and checking the simulated records…';
   try {
-    const response = await fetch(`/api/evidence-demo/${encodeURIComponent(el('case').value)}?mode=${encodeURIComponent(el('mode').value)}`);
+    const response = await fetch(`/api/evidence-demo/${encodeURIComponent(requestedCase)}?mode=${encodeURIComponent(requestedMode)}`);
     if (!response.ok) throw new Error('The evidence preview could not be loaded.');
     const data = await response.json(), r = data.report;
+    if (el('case').value !== requestedCase || el('mode').value !== requestedMode) {
+      el('status').textContent = 'Selection changed. Request the records for the current selection.';
+      return;
+    }
+    showHandoff(r.reviewer_packet);
     el('gap').textContent = r.request?.reason || 'No supported evidence request.';
     const ready = r.state === 'ready_for_court';
     el('next-title').textContent = ready ? 'Ready for court review' : 'Human investigation needed';
@@ -36,6 +73,7 @@ fetch('/api/demo-controls').then(r => r.json()).then(c => {
 el('review').addEventListener('click', async () => {
   if (reviewing) return;
   reviewing = true; el('review').disabled = true; el('review-output').hidden = true;
+  el('case').disabled = true; el('mode').disabled = true; el('run').disabled = true;
   el('review-status').textContent = 'Review requested. Waiting for the court…';
   try {
     const headers = {'Content-Type': 'application/json'};
@@ -58,6 +96,7 @@ el('review').addEventListener('click', async () => {
     if (state.error) throw new Error(state.error);
     const r = state.review;
     if (!r) throw new Error('No review bundle returned.');
+    showHandoff(r.evidence.reviewer_packet);
     el('review-record').textContent = JSON.stringify(r, null, 2);
     const outcome = value => ({escalate: 'Human review', refund_full: 'Full refund', refund_partial: 'Partial refund', fee_waived: 'Fee waived', no_action: 'Charge stands'})[value] || value;
     const show = hearing => {
@@ -75,8 +114,21 @@ el('review').addEventListener('click', async () => {
       (Object.entries(r.comparison.changes).map(([key, change]) => `${labels[key]}: ${value(key, change.before)} → ${value(key, change.after)}`).join('\n') || 'The decision fields did not change.') +
       '\n\nBoth versions’ reasoning is shown above. This comparison does not by itself prove improved accuracy.' :
       r.failure || r.evidence.human_task || 'No accepted evidence to review.';
+    if (r.attempts?.length) {
+      const attempts = r.attempts.map(a => {
+        const stages = (a.stage_timings || []).map(s =>
+          `  ${s.stage}: ${s.status}, ${s.duration_s}s (limit ${s.timeout_s}s)`).join('\n');
+        return `${a.version === 1 ? 'Before recovery' : 'After recovery'}: ${a.state}, ${a.duration_s}s` +
+          (stages ? `\n${stages}` : '') +
+          (a.failure ? `\nReason: ${a.failure}\n${a.events?.length || 0} events preserved in the review record. Failed output is diagnostic only; no action is cleared by this attempt.` : '');
+      }).join('\n\n');
+      el('changes').textContent += `\n\nReview attempts:\n${attempts}`;
+    }
     el('review-output').hidden = false;
     el('review-status').textContent = r.state === 'reviewed' ? 'Both hearings completed. Results are simulated; a changed decision does not itself prove improved accuracy.' : `Review not completed: ${r.state}`;
   } catch (error) { el('review-status').textContent = error.message; }
-  finally { reviewing = false; el('review').disabled = false; }
+  finally {
+    reviewing = false; el('review').disabled = false;
+    el('case').disabled = false; el('mode').disabled = false; el('run').disabled = busy;
+  }
 });

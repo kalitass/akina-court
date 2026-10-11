@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 from uuid import uuid4
 
 from core.evidence import Provider, digest, recover
-from core.orchestrate import model_outage, run_case
+from core.orchestrate import STAGE_TIMINGS, model_outage, run_case
 from core.schemas import Case
 
 
@@ -29,7 +30,7 @@ async def review_recovered(case: Case, provider: Provider, *, runner=None, on_ev
     updated, evidence = recover(initial, provider)
     result = {'review_id': review_id or uuid4().hex, 'source_case_id': case.case_id, 'state': evidence['state'],
               'evidence': evidence, 'snapshots': [initial.model_dump(mode='json')],
-              'hearings': [], 'comparison': None, 'failure': None, 'execution': 'simulation_only'}
+              'hearings': [], 'attempts': [], 'comparison': None, 'failure': None, 'execution': 'simulation_only'}
     if evidence['state'] != 'ready_for_court':
         return result
     result['snapshots'].append(updated.model_dump(mode='json'))
@@ -37,24 +38,42 @@ async def review_recovered(case: Case, provider: Provider, *, runner=None, on_ev
         hearing_case = snapshot.model_copy(deep=True)
         # ~ prevents precedent/SLA stores from being modified by demonstration hearings.
         hearing_case.case_id = f'{case.case_id}~recovery-{result["review_id"]}-v{version}'
+        attempt = {'version': version, 'case_id': hearing_case.case_id, 'state': 'running',
+                   'events': [], 'stage_timings': [], 'duration_s': None, 'failure': None,
+                   'record': None, 'execution': 'diagnostic_only'}
+        result['attempts'].append(attempt)
+        def capture(event):
+            attempt['events'].append(event.model_dump(mode='json'))
+            if on_event:
+                on_event(event)
+        start = time.monotonic()
+        timing_token = STAGE_TIMINGS.set(attempt['stage_timings'])
         try:
             hearing_hash = digest(hearing_case)
-            record = await runner(hearing_case, on_event=on_event)
+            record = await runner(hearing_case, on_event=capture)
             if digest(hearing_case) != hearing_hash:
                 raise RuntimeError("Hearing input mutated during review")
             if record.ruling is None:
                 raise RuntimeError("Hearing returned no ruling")
-            outages = model_outage(record)
-            if outages:
-                raise RuntimeError('; '.join(outages))
             if record.case_id != hearing_case.case_id:
                 raise RuntimeError('Hearing record does not match the reviewed case version')
             if digest(snapshot) != (evidence['before_hash'] if version == 1 else evidence['after_hash']):
                 raise RuntimeError('Evidence snapshot was mutated during review')
+            # Retain a correctly identified record for diagnosis even when an
+            # agent failed. It is never added to completed hearings or scores.
+            attempt['record'] = record.model_dump(mode='json')
+            outages = model_outage(record)
+            if outages:
+                raise RuntimeError('; '.join(outages))
             result['hearings'].append(record.model_dump(mode='json'))
+            attempt['state'] = 'completed'
         except Exception as exc:
             result.update(state='review_failed', failure=f'{type(exc).__name__}: {exc}')
+            attempt.update(state='failed', failure=result['failure'])
             return result
+        finally:
+            attempt['duration_s'] = round(time.monotonic() - start, 3)
+            STAGE_TIMINGS.reset(timing_token)
     from core.schemas import CaseRecord
     before, after = [CaseRecord.model_validate(r) for r in result['hearings']]
     result.update(state='reviewed', comparison=comparison(before, after))

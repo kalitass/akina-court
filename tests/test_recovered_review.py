@@ -155,3 +155,61 @@ def test_experiment_counts_incorrect_automatic_decision():
     result=score_decision({'ruling':{'ruling':'refund_full','amount':6.61,'escalate':False},'eligibility':{'auto':True}},
                          {'ruling':'no_action','amount':None,'escalate':False})
     assert result['wrong_automatic'] and not result['automatic_and_correct']
+
+
+def test_failed_second_hearing_preserves_record_without_counting_success(tmp_path):
+    from core.orchestrate import EventLog, STAGE_TIMINGS
+    full, partial = fixture()
+    async def runner(case, on_event=None):
+        log = EventLog(on_event)
+        record = fake_record(case)
+        if case.gps:
+            log.emit('verify', 'check', 'Rebuttal skipped — driver', 'driver rebuttal timed out after 90s')
+            record.events = log.events
+        return record
+    result = asyncio.run(review_recovered(partial, SyntheticGpsProvider(full, 'available'), runner=runner))
+    assert result['state'] == 'review_failed' and result['comparison'] is None
+    assert len(result['hearings']) == 1
+    failed = result['attempts'][1]
+    assert failed['state'] == 'failed' and failed['execution'] == 'diagnostic_only'
+    assert failed['record']['case_id'] == failed['case_id']
+    assert failed['events'][0]['title'] == 'Rebuttal skipped — driver'
+    assert failed['duration_s'] >= 0 and 'driver' in failed['failure']
+    assert STAGE_TIMINGS.get() is None
+    saved = json.loads(save_review(result, tmp_path).read_text())
+    assert saved['attempts'][1] == failed
+
+
+def test_exception_keeps_events_before_a_record_exists():
+    from core.orchestrate import EventLog
+    full, partial = fixture()
+    async def runner(case, on_event=None):
+        EventLog(on_event).emit('system', 'intake', 'Started')
+        raise RuntimeError('mock provider failure')
+    result = asyncio.run(review_recovered(partial, SyntheticGpsProvider(full, 'available'), runner=runner))
+    assert not result['hearings']
+    assert result['attempts'][0]['record'] is None
+    assert result['attempts'][0]['events'][0]['title'] == 'Started'
+
+
+def test_stage_timings_are_isolated_and_include_timeout():
+    from core.orchestrate import _staged, STAGE_TIMINGS
+    async def one(label, timeout):
+        timings = []
+        token = STAGE_TIMINGS.set(timings)
+        try:
+            async def work():
+                await asyncio.sleep(.02)
+                return label
+            await _staged(work(), timeout, label)
+            return timings
+        finally:
+            STAGE_TIMINGS.reset(token)
+    async def together():
+        return await asyncio.gather(one('first', 1), one('second', .001))
+    first, second = asyncio.run(together())
+    assert len(first) == len(second) == 1
+    assert first[0]['stage'] == 'first' and first[0]['status'] == 'completed'
+    assert second[0]['stage'] == 'second' and second[0]['status'] == 'timeout'
+    assert first[0]['duration_s'] >= 0 and second[0]['duration_s'] >= 0
+    assert STAGE_TIMINGS.get() is None
