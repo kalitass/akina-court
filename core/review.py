@@ -22,12 +22,12 @@ def comparison(before, after):
             'explanation': 'The second hearing used the validated GPS snapshot. The recorded reasoning is shown separately; a change alone does not prove accuracy improvement.'}
 
 
-async def review_recovered(case: Case, provider: Provider, *, runner=None, on_event=None):
+async def review_recovered(case: Case, provider: Provider, *, runner=None, on_event=None, review_id=None):
     """Two independent hearings, no previous briefs fed to the reopened court, no original overwrite."""
     runner = runner or run_case
     initial = case.model_copy(deep=True)
     updated, evidence = recover(initial, provider)
-    result = {'review_id': uuid4().hex, 'source_case_id': case.case_id, 'state': evidence['state'],
+    result = {'review_id': review_id or uuid4().hex, 'source_case_id': case.case_id, 'state': evidence['state'],
               'evidence': evidence, 'snapshots': [initial.model_dump(mode='json')],
               'hearings': [], 'comparison': None, 'failure': None, 'execution': 'simulation_only'}
     if evidence['state'] != 'ready_for_court':

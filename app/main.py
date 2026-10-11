@@ -219,7 +219,7 @@ async def start_run(cid: str, request: Request, body: Optional[dict] = None, x_d
                 from core.review import review_recovered, save_review
                 partial = case.model_copy(deep=True)
                 partial.gps = []
-                result = await review_recovered(partial, SyntheticGpsProvider(case, recovery), runner=run_case)
+                result = await review_recovered(partial, SyntheticGpsProvider(case, recovery), runner=run_case, review_id=cid.rsplit("-", 1)[1])
                 save_review(result, ROOT / "review_runs")
                 r.review = result
                 return
@@ -351,9 +351,16 @@ async def no_stale_pages(request, call_next):
 @app.get("/api/recovery-reviews/{run_id}")
 def recovery_review_status(run_id: str):
     r = RUNS.get(run_id)
-    if r is None or "~recovery-" not in run_id:
+    import re
+    match = re.fullmatch(r"(C-0001|C-0004)~recovery-([0-9a-f]{32})", run_id)
+    if match is None:
         raise HTTPException(404, "No recovery review with that ID")
-    return {"done": r.done, "error": r.error, "review": r.review}
+    if r is not None:
+        return {"done": r.done, "error": r.error, "review": r.review}
+    path = ROOT / "review_runs" / f"{match.group(2)}.json"
+    if not path.exists():
+        raise HTTPException(404, "No recovery review with that ID")
+    return {"done": True, "error": None, "review": json.loads(path.read_text())}
 
 
 @app.get("/api/evidence-demo/{cid}")

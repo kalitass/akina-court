@@ -108,6 +108,8 @@ def test_api_recovery_preserves_original_and_persists_separate_bundle(monkeypatc
             state=client.get('/api/recovery-reviews/'+rid).json()
             if state['done']: break
         assert state['done'] and state['review']['state']=='reviewed'
+        server.RUNS.pop(rid, None)
+        assert client.get('/api/recovery-reviews/'+rid).json() == state
         assert client.post('/api/runs/DISP-002',json={'recovery':'available'}).status_code==400
         assert client.post('/api/runs/C-0004',json={'recovery':'available','inject':['fake_fact']}).status_code==400
     assert list((tmp_path/'review_runs').glob('*.json'))
