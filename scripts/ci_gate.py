@@ -46,7 +46,7 @@ def sh(*args: str) -> str:
 
 
 def changed_files(base: str) -> list[str]:
-    return [l for l in sh("git", "diff", "--name-only", f"{base}...HEAD").splitlines() if l]
+    return [l for l in sh("git", "diff", "--name-only", "--no-renames", f"{base}...HEAD").splitlines() if l]   # a file moved out of core/ is a change to core/
 
 
 def check_traces(base: str) -> list[str]:
