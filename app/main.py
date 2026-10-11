@@ -38,6 +38,9 @@ from core.schemas import Case, CaseRecord, Event        # noqa: E402
 app = FastAPI(title="Ryde Dispute Court")
 CASES_DIR, RUNS_DIR = ROOT / "data" / "cases", ROOT / "runs"
 
+from app.review_api import router as review_router     # noqa: E402  reviewer page: /api/review (app/review_api.py)
+app.include_router(review_router)
+
 
 class Run:
     def __init__(self):
@@ -379,4 +382,4 @@ def evidence_demo(cid: str, mode: str = "available"):
             "after": {"gps_points": len(updated.gps), "facts": build_fact_table(updated).model_dump(mode="json")}}
 
 
-app.mount("/", StaticFiles(directory=ROOT / "web"), name="web")
+app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
