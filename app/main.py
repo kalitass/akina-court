@@ -38,6 +38,9 @@ from core.schemas import Case, CaseRecord, Event        # noqa: E402
 app = FastAPI(title="Ryde Dispute Court")
 CASES_DIR, RUNS_DIR = ROOT / "data" / "cases", ROOT / "runs"
 
+from app.human_review_api import router as human_review_router     # noqa: E402  human review UI: /api/human-review (app/human_review_api.py)
+app.include_router(human_review_router)
+
 
 class Run:
     def __init__(self):
