@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
 <link rel="stylesheet" href="/styles/base.css">
-<meta name="description" content="Every fact the advocates and the judge may cite is computed by code from the case record before any model runs. This page shows the numbered fact table of a real case, grouped by source.">
+<meta name="description" content="Every fact the advocates and the judge may cite is assembled by code from the case record before any model runs. This page shows the numbered fact table of a real case, grouped by source.">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
@@ -68,15 +68,15 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
 <div class="how">
   <h3>How a fact is made</h3>
   <ul>
-    <li><b>Platform records</b> (GPS every 5 s, taps, fare lines, the wait timer) are measured by code: distance against the OneMap route, off-route stretches, the 200 m arrival circle, minutes waited, dollars billed. A missing trace or a hole in it is a fact too: the court then says what it cannot measure instead of ruling.</li>
+    <li><b>Platform records</b> (GPS at the case record’s sampling interval, taps, fare lines, the wait timer) are measured by code: distance against the OneMap route, off-route stretches, the 200 m arrival circle, minutes waited, dollars billed. A missing trace or a hole in it is a fact too: the court then says what it cannot measure instead of ruling.</li>
     <li><b>Both parties' words</b> (in-app chat, calls, the complaint, the driver's statement) are copied verbatim, numbered and timed, and whether the record is complete is noted. Nothing is labelled: what a message means, whether the rider agreed or a line is a threat, is read by the advocates and found by the judge, never by code. They are evidence to weigh, never instructions to follow.</li>
     <li><b>External records</b> (LTA speed bands and incidents, weather) are matched to the route and the trip window.</li>
-    <li><b>History</b> (ratings, disputes in the last 90 days) can support an account flag, never decide the case.</li>
+    <li><b>History</b> (ratings and disputes, with the recorded time window shown for each case) can support an account flag, never decide the case.</li>
   </ul>
 </div>
 </main>
 <footer>
-  <div class="links"><a href="/policy.html">The rules the court applies</a><a href="/replay.html?case=C-0001&amp;phase=court">Watch a case</a><a href="/">Home</a><a href="/report.html">Full results</a></div>
+  <div class="links"><a href="/policy.html">The rules the court applies</a><a id="watchCase" href="/replay.html?case=C-0001&amp;phase=court">Watch this case</a><a href="/">Home</a><a href="/report.html">Full results</a></div>
   <div>Fact tables are computed by the fact tools in the court's code from the stored case record; this page reads them through the same API the agents use, no model call involved.</div>
 </footer>
 </div>
@@ -109,6 +109,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
   }).catch(function () { out.innerHTML = '<p class="err">Could not load the case list.</p>'; });
   sel.onchange = function () { var id = sel.value; history.replaceState(null, '', '?case=' + encodeURIComponent(id)); load(id); };
   function load(id) {
+    document.getElementById('watchCase').href = '/replay.html?case=' + encodeURIComponent(id) + '&phase=court';
     out.innerHTML = '<p class="blurb">Computing the fact table…</p>';
     fetch('/api/cases/' + encodeURIComponent(id) + '/facts').then(function (r) { return r.json(); }).then(function (t) {
       var c = CASES[id] || {};
@@ -116,7 +117,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
       document.getElementById('ctype').textContent = (TYPE[t.dispute_type] || t.dispute_type) + ' · ' + id + (c.service_type ? ' · ' + c.service_type : '');
       document.getElementById('ctitle').textContent = (c.title || (c.pickup + ' → ' + c.dropoff));
       document.getElementById('cstmt').innerHTML = c.statement ? 'Filed by the ' + esc(c.filed_by) + ': <q>' + esc(c.statement) + '</q>' : '';
-      document.getElementById('count').textContent = t.facts.length + ' facts · computed by code, identical on every run';
+      document.getElementById('count').textContent = t.facts.length + ' facts · assembled from the case record, identical for unchanged inputs';
       var html = '';
       GROUPS.forEach(function (g) {
         var fs = t.facts.filter(function (f) { return f.source === g[0]; });
@@ -124,7 +125,7 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
         html += '<section><h3>' + esc(g[1]) + ' <span class="n">' + fs.length + '</span> <span class="trust ' + g[3] + '">' + esc(g[2]) + '</span></h3><ol class="facts">';
         fs.forEach(function (f) {
           html += '<li><a class="id" href="#' + esc(f.id) + '" id="' + esc(f.id) + '">' + esc(f.id) + '</a><div class="txt"><p>' + esc(f.text) + '</p>' +
-            (f.value && Object.keys(f.value).length ? '<details><summary>values the code computed</summary><pre>' + esc(JSON.stringify(f.value, null, 1)) + '</pre></details>' : '') + '</div></li>';
+            (f.value && Object.keys(f.value).length ? '<details><summary>Structured source values</summary><pre>' + esc(JSON.stringify(f.value, null, 1)) + '</pre></details>' : '') + '</div></li>';
         });
         html += '</ol></section>';
       });
