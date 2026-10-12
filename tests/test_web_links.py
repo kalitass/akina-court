@@ -16,11 +16,11 @@ PAGES = sorted(WEB.glob("*.html"))
 ROUTES = re.findall(r'@app\.get\("([^"]+)"', (ROOT / "app" / "main.py").read_text())
 CASES = {p.stem for d in ("data/cases", "data/bench/cases", "data/bench/blind/cases") for p in (ROOT / d).glob("*.json")}
 RUNS = {p.stem for p in (ROOT / "runs").glob("*.json")}
-DYNAMIC_IDS = {"facts.html", "receipt.html", "replay.html", "court.html"}  # ids rendered by script, not checkable statically
+DYNAMIC_IDS = {"facts.html", "receipt.html", "replay.html"}  # ids rendered by script, not checkable statically
 
 # the one header every page carries, and where each nav item must go
 NAV = {"Home": "/", "Watch": "/#watch", "Facts": "/facts.html?case=DISP-002", "Policy": "/policy.html", "Ops": "/ops.html", "Results": "/report.html"}
-HEADERLESS = {"court.html", "replay.html"}  # full-screen tools without the site header
+HEADERLESS = {"replay.html"}  # full-screen tools without the site header
 
 
 def links(page: Path):

@@ -117,7 +117,7 @@ CONTENT = {
         {"req": "Three agents: Rider Advocate, Driver Advocate, Judge",
          "how": "Two advocate agents pull evidence through logged tools, write a brief and an append-only rebuttal; a "
                 "tool-less judge answers only the questions the policy engine left open. Each is a separate role contract.",
-         "where": [("Court feed (replay page)", "/replay.html?case=C-0001&phase=court"), ("Court UI", "/court.html")], "status": "done"},
+         "where": [("Court feed (replay page)", "/replay.html?case=C-0001&phase=court")], "status": "done"},
         {"req": "Judge output: ruling + confidence + reasoning + recommended action (e.g. a partial refund amount)",
          "how": "Structured ruling with outcome, amount, model confidence, reasoning, cited facts and clauses, rejected "
                 "claims, and a plain-language notice to each party.",
@@ -133,7 +133,7 @@ CONTENT = {
         {"req": "Agent-to-agent communication must be observable",
          "how": "Every tool call, brief, rebuttal point, judge question and verifier check is an event streamed live "
                 "(server-sent events) and replayed in the court feed with timestamps.",
-         "where": [("Replay page (Run live needs a local copy with a DeepSeek key)", "/replay.html?case=C-0001"), ("Court UI", "/court.html")], "status": "done"},
+         "where": [("Replay page (Run live needs a local copy with a DeepSeek key)", "/replay.html?case=C-0001")], "status": "done"},
         {"req": "Built with CodeBuddy (handbook requirement: conversation screenshots)",
          "how": "Developed in CodeBuddy; the conversation screenshots and a short development reflection are part of the submission package.",
          "where": [], "status": "package"},
@@ -1029,7 +1029,7 @@ def build(d: dict) -> str:
 </section>""")
 
     # ---------------------------------------------------------------- 7. footer
-    A(f"""<div class="foot"><a href="/">Start here</a><a href="/court.html">Court UI (expert)</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
+    A(f"""<div class="foot"><a href="/">Start here</a><a href="/replay.html?case=C-0001&mode=show">Showcase replay</a><a href="/replay.html?case=C-0001">Expert replay</a><a href="architecture-system.png">Architecture image</a></div>
 </section>
 </div><script>{JS}</script></body></html>""")
     return "\n".join(H)

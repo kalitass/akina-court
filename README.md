@@ -53,7 +53,7 @@ Without a key the pages play back the stored runs in `runs/` (seven demo rulings
 ## Pages
 
 - `/` landing · `/replay.html?case=C-0001` animated replay and court (`&mode=expert`, `&phase=court`, `&cf=<counterfactual>`, `&run=<stored run>`)
-- `/ops.html` what reaches a person · `/policy.html` the policy with sources and the <!--n:policy.gaps-->13<!--/n--> disclosed gaps · `/report.html` results · `/court.html` expert court · `/submission.json` machine-readable claims
+- `/ops.html` what reaches a person · `/policy.html` the policy with sources and the <!--n:policy.gaps-->13<!--/n--> disclosed gaps · `/report.html` results · `/submission.json` machine-readable claims
 
 ## Limits
 
