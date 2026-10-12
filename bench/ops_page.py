@@ -118,8 +118,6 @@ SCENARIO = {
     "bl_cancelled_by_missing": "No-show \u00b7 record does not say who cancelled",
 }
 
-ID_RE = re.compile(r"\b((?:RD|NS|SAFE|FARE)-\d+)(\([a-z]\)|\s\((?:i|ii|iii|iv)\))?")
-FACT_RE = re.compile(r"\bF(\d{1,2})\b")
 
 
 def humanize(name: str) -> str:
@@ -134,14 +132,6 @@ def esc(s) -> str:
     return html.escape(str(s if s is not None else "").replace(" \u2014 ", " - ").replace("\u2014", "-"), quote=True)
 
 
-def chip(cid: str, label: str | None, cls: str = "chip") -> str:
-    t = f' title="{esc(label)}"' if label else ""
-    base = re.sub(r"\([a-z]\)$", "", cid)
-    if base in CLAUSE:   # clause ids open the policy page at that clause; an id the policy does not have (a void citation) stays a plain chip
-        return f'<a class="{cls}" href="/policy.html#{esc(base)}" target="_blank" rel="noopener"{t}>{esc(cid)}</a>'
-    return f'<span class="{cls}"{t}>{esc(cid)}</span>'
-
-
 def clause_tag(ids: list[str]) -> str:
     """One short tag ("10 clauses") that opens a popover listing every cited clause with its title and policy-page link."""
     if not ids:
@@ -154,14 +144,6 @@ def clause_tag(ids: list[str]) -> str:
     n = len(ids)
     return (f'<button type="button" class="ctag" aria-haspopup="true" aria-expanded="false" title="Clauses the ruling cites">{n} clause{"s" if n != 1 else ""} ▾</button>'
             f'<div class="cpop" hidden><div class="cpop-h">Clauses cited in this ruling</div>{"".join(rows)}</div>')
-
-
-def chipify(text: str, facts: dict[str, str]) -> str:
-    """HTML-escape text, then wrap clause ids / fact ids in chips whose title is the plain label."""
-    out = esc(text)
-    out = ID_RE.sub(lambda m: chip(m.group(1) + (m.group(2) or ""), CLAUSE.get(m.group(1))), out)
-    out = FACT_RE.sub(lambda m: chip("F" + m.group(1), facts.get("F" + m.group(1)), "chip f"), out)
-    return out
 
 
 def money(v) -> str:
@@ -251,7 +233,7 @@ def funnel(rows: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-def row_html(r: dict) -> str:
+def row_html(r: dict, review_col: bool = False) -> str:
     rec, ruling, elig = r["rec"], r["ruling"], r["elig"]
     reasons = elig.get("reasons") or []
     if r["auto"]:
@@ -265,87 +247,32 @@ def row_html(r: dict) -> str:
     lat = f"{r['latency']:.1f} s" if r["latency"] is not None else "n/a"
     flagnote = '<div class="flagnote">+ account flag → a person</div>' if r["flag"] else ""
     out_cls = "c-amber" if ruling.get("ruling") in ("refund_partial", "refund_full", "fee_waived") else ("c-red" if not r["auto"] else "")
-    return (f'<tr class="row" data-id="{esc(r["id"])}" tabindex="0" role="button" aria-expanded="false">'
-            f'<td><div class="ttl">{esc(r["title"])}</div><span class="cid">{esc(r["id"])}</span></td>'
-            f'<td>{esc(TYPE_LABEL.get(r["type"], r["type"]))}</td>'
-            f'<td class="{out_cls}"><b>{esc(outcome_text(ruling))}</b>{flagnote}</td>'
+    replay = (f'<td class="open"><a href="/replay.html?case={esc(r["id"])}&phase=court" '
+              f'title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
+    head = (f'<tr class="row"><td><div class="ttl">{esc(r["title"])}</div><span class="cid">{esc(r["id"])}</span></td>'
+            f'<td>{esc(TYPE_LABEL.get(r["type"], r["type"]))}</td>')
+    if review_col:      # the escalated tab: outcome and automation are "human review" on every row, so the reviewer's page takes their place
+        return (head + f'<td class="why">{esc(why)}</td><td class="chips">{clauses}</td><td class="mono">{esc(lat)}</td>'
+                f'<td class="rvl"><a href="/human-review.html?case={esc(r["id"])}" '
+                f'title="Open this case on the human review page: the open question, the evidence and the decision">'
+                f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">'
+                f'<path d="M10 14 21 3M15 3h6v6M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>'
+                f'/human-review.html?case={esc(r["id"])}</a></td>' + replay)
+    return (head + f'<td class="{out_cls}"><b>{esc(outcome_text(ruling))}</b>{flagnote}</td>'
             f'<td>{badge}</td><td class="why">{esc(why)}</td><td class="chips">{clauses}</td>'
-            f'<td class="mono">{esc(lat)}</td>'
-            f'<td><a href="/replay.html?case={esc(r["id"])}&phase=court" onclick="event.stopPropagation()" title="Open the stored court run: map, then every agent step and the ruling">Replay</a></td></tr>')
-
-
-def drawer_html(r: dict) -> str:
-    rec, ruling, elig = r["rec"], r["ruling"], r["elig"]
-    fmap = {f["id"]: f["text"] for f in r["facts"]}
-    facts = "".join(f'<li>{chip(f["id"], f.get("source"), "chip f")} {chipify(f["text"], fmap)}</li>' for f in r["facts"][:8])
-    briefs = rec.get("briefs") or {}
-
-    def claims(side: str) -> str:
-        b = briefs.get(side) or {}
-        cl = (b.get("claims") or [])[:2]
-        if not cl:
-            return "<li class='muted'>no brief stored</li>"
-        return "".join(f'<li>{chipify(c.get("assertion", ""), fmap)}</li>' for c in cl)
-
-    cert = "".join(f'<li class="{"ok" if ln.startswith("✓") else "no" if ln.startswith("✗") else "info"}">{chipify(ln, fmap)}</li>'
-                   for ln in (rec.get("certificate") or []))
-    reasons = elig.get("reasons") or []
-    if r["auto"]:
-        stop = "<p>All checks passed: the policy trace allows this outcome and the amount matches what the code computed. "
-        stop += ("The refund is cleared for voucher issuance." if ruling.get("ruling") in ("refund_partial", "refund_full") else "No refund is due.")
-        if r["flag"]:
-            stop += " The account flag is not cleared: it goes to a person in the trust and safety queue.</p>"
-        else:
-            stop += "</p>"
-    else:
-        stop = "".join(f"<p>{chipify(x, fmap)}</p>" for x in reasons) or f"<p>{chipify(ruling.get('escalation_reason') or 'Escalated by the judge.', fmap)}</p>"
-    wwc = elig.get("what_would_change") or []
-    wwc_html = "".join(f"<li>{chipify(x, fmap)}</li>" for x in wwc) or "<li class='muted'>nothing recorded: no automatic outcome was issued</li>"
-    notices = "".join(f'<details><summary>Notice to the {esc(n.get("to"))}</summary><pre>{esc(n.get("text"))}</pre></details>'
-                      for n in (rec.get("notices") or []))
-    hard = ""
-    meta = []
-    if r["llm_calls"] is not None:
-        pass
-    if r["latency"] is not None:
-        meta.append(f"{r['latency']:.1f} s")
-    if r["input_tokens"]:
-        pass
-    return f'''<div class="drawer" id="d-{esc(r["id"])}" hidden>
-  <div class="dhead"><div><div class="k">{esc(TYPE_LABEL.get(r["type"], r["type"]))} · {esc(r["id"])}</div><h3>{esc(r["title"])}</h3>
-    <div class="muted small">{esc(" · ".join(meta))}</div></div>
-    <button class="close" type="button" aria-label="Close details">Close</button></div>
-  <div class="dgrid">
-    <div>
-      <div class="k">Dispute statement</div><p class="quote">{esc(rec["dispute"].get("statement"))}</p>
-      <div class="k">Trip summary</div><p>{esc((rec.get("trip_summary") or {}).get("text"))}</p>
-      {hard}
-      <div class="k">Proposed outcome</div><p><b>{esc(outcome_text(ruling))}</b>{" · account flag → a person" if r["flag"] else ""}</p>
-      <p class="small">{chipify(ruling.get("recommended_action") or "", fmap)}</p>
-      <div class="k">Facts the code computed</div><ul class="facts">{facts}</ul>
-    </div>
-    <div>
-      <div class="k">What each side argued</div>
-      <div class="side"><b>Rider's advocate</b><ul>{claims("rider")}</ul></div>
-      <div class="side"><b>Driver's advocate</b><ul>{claims("driver")}</ul></div>
-      <div class="k">Policy trace</div><ul class="cert">{cert}</ul>
-      <div class="k">{"Why it was cleared" if r["auto"] else "Why automation stopped"}</div>{stop}
-      <div class="k">What would change this ruling</div><ul>{wwc_html}</ul>
-      <div class="k">Notices</div>{notices or "<p class='muted'>none stored</p>"}
-      <p><a class="btn" href="/replay.html?case={esc(r["id"])}&phase=court">Replay: the court on this case</a> <a class="btn" href="/replay.html?case={esc(r["id"])}">the trip on the map</a></p>
-    </div>
-  </div>
-</div>'''
+            f'<td class="mono">{esc(lat)}</td>' + replay)
 
 
 def table_html(rows: list[dict], key: str, empty: str) -> str:
     if not rows:
         return f'<p class="muted">{esc(empty)}</p>'
-    head = ("<tr><th>Case</th><th>Dispute type</th><th>Proposed outcome</th><th>Automation</th><th>Why it stopped</th>"
+    review_col = key == "human"
+    head = ("<tr><th>Case</th><th>Dispute type</th><th>Why it stopped</th><th>Clauses</th><th>Time</th><th>Review page</th><th>Replay</th></tr>"
+            if review_col else
+            "<tr><th>Case</th><th>Dispute type</th><th>Proposed outcome</th><th>Automation</th><th>Why it stopped</th>"
             "<th>Clauses</th><th>Time</th><th>Replay</th></tr>")
-    body = "".join(row_html(r) for r in rows)
-    drawers = "".join(drawer_html(r) for r in rows)
-    return f'<div class="tw"><table>{head}{body}</table></div><div class="drawers">{drawers}</div>'
+    body = "".join(row_html(r, review_col) for r in rows)
+    return f'<div class="tw"><table>{head}{body}</table></div>'
 
 
 def page(rows: list[dict], f: dict, model: str) -> str:
@@ -375,7 +302,7 @@ def page(rows: list[dict], f: dict, model: str) -> str:
 *{{box-sizing:border-box}}
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}}
 a{{color:var(--blue);text-decoration:none}}a:hover{{text-decoration:underline}}
-a:focus-visible,button:focus-visible,.row:focus-visible{{outline:2px solid var(--blue);outline-offset:2px}}
+a:focus-visible,button:focus-visible{{outline:2px solid var(--blue);outline-offset:2px}}
 
 .logo{{width:34px;height:34px;border-radius:9px;display:block}}
 .hero{{padding:34px 0 6px}}
@@ -422,7 +349,7 @@ h3{{font-size:17px;margin:2px 0 4px}}
 table{{width:100%;min-width:720px;border-collapse:collapse;font-size:13.5px}}
 th{{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}}
 td{{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink2)}}
-tr.row{{cursor:pointer}}tr.row:hover td{{background:var(--panel2)}}tr.row.open td{{background:rgba(91,156,255,.08)}}
+tr.row:hover td{{background:var(--panel2)}}
 tr.row:last-child td{{border-bottom:0}}
 td:first-child{{min-width:170px}}td .ttl{{color:var(--ink);font-weight:600}}td.mono{{white-space:nowrap}}
 .cid{{color:var(--muted);font:11px var(--mono)}}
@@ -431,6 +358,7 @@ td.why{{min-width:200px;max-width:300px}}
 .badge{{display:inline-block;padding:2px 9px;border-radius:999px;font:700 11px var(--mono);white-space:nowrap;border:1px solid}}
 .badge.ok{{color:var(--green);border-color:rgba(58,210,159,.45);background:rgba(58,210,159,.08)}}
 .badge.hr{{color:var(--amber);border-color:rgba(245,181,68,.45);background:rgba(245,181,68,.08)}}
+td.rvl{{white-space:nowrap}}td.rvl a{{display:inline-flex;align-items:center;gap:6px;font:600 12.5px var(--mono);color:var(--amber);text-decoration:none}}td.rvl a:hover{{text-decoration:underline;text-underline-offset:3px}}td.rvl svg{{flex:none}}
 .chip{{display:inline-block;padding:1px 6px;border-radius:6px;font:600 11px var(--mono);color:var(--ink2);background:var(--panel2);border:1px solid var(--line);margin:1px 2px 1px 0;cursor:help;white-space:nowrap;text-decoration:none}}a.chip:hover{{border-color:var(--blue);color:var(--ink)}}
 .chip.f{{color:var(--blue)}}
 td.chips{{min-width:110px;position:relative}}
@@ -442,22 +370,6 @@ td.chips{{min-width:110px;position:relative}}
 .cpop a b{{font:700 11px var(--mono);color:var(--blue);flex:none;min-width:52px}}
 .cpop a span{{color:var(--ink2)}}
 .cpop a:hover{{background:var(--panel2)}}
-/* drawer */
-.drawer{{margin-top:12px;border:1px solid rgba(91,156,255,.4);border-radius:14px;background:var(--panel);padding:16px 18px}}
-.dhead{{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}}
-.dhead .close{{margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-family:inherit}}
-.dgrid{{display:grid;grid-template-columns:1fr 1fr;gap:22px}}
-@media(max-width:860px){{.dgrid{{grid-template-columns:1fr}}}}
-.dgrid .k{{margin-top:12px}}.dgrid .k:first-child{{margin-top:0}}
-.dgrid p{{margin:4px 0 6px;font-size:14px;color:var(--ink2)}}
-.dgrid ul{{margin:4px 0 6px;padding-left:18px;font-size:13.5px;color:var(--ink2)}}
-.dgrid li{{margin:3px 0}}
-.quote{{border-left:3px solid var(--line);padding-left:10px;font-style:italic}}
-.side{{margin:4px 0 8px}}.side b{{font-size:13px;color:var(--ink)}}
-.cert{{list-style:none;padding-left:0}}.cert li{{font-family:var(--mono);font-size:12px;padding-left:4px}}
-.cert li.ok{{color:var(--green)}}.cert li.no{{color:var(--muted)}}.cert li.info{{color:var(--ink2)}}
-details{{margin:6px 0}}summary{{cursor:pointer;color:var(--blue);font-weight:600;font-size:13.5px}}
-pre{{white-space:pre-wrap;font:13px/1.5 var(--sans);color:var(--ink2);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0}}
 /* strips */
 .strip{{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}}
 .strip>div{{padding:18px;border-left:1px solid var(--line)}}.strip>div:first-child{{border-left:0}}
@@ -468,7 +380,7 @@ pre{{white-space:pre-wrap;font:13px/1.5 var(--sans);color:var(--ink2);background
 .foot{{font-size:12.5px;color:var(--muted);margin-top:10px}}
 footer{{padding:28px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:30px}}
 footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weight:600}}
-@media(max-width:560px){{h1{{font-size:32px}}.lead{{font-size:16px}}.num{{font-size:32px}}.dgrid{{gap:14px}}}}
+@media(max-width:560px){{h1{{font-size:32px}}.lead{{font-size:16px}}.num{{font-size:32px}}}}
 </style>
 </head>
 <body>
@@ -510,7 +422,7 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
 
 <section id="cases">
   <h2>The cases, by where they land</h2>
-  <p class="sub">Click a row for the full hand-off: statement, computed facts, both sides' arguments, the policy trace, the reason automation stopped and the notices each party would receive.</p>
+  <p class="sub">Each escalated case links to its human review page: the open question, the evidence on it and the decision. Replay shows the full court run.</p>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" aria-controls="p-human" id="t-human" type="button">Needs a human ({H})</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="p-flag" id="t-flag" type="button">Account actions ({A})</button>
@@ -537,17 +449,6 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
   tabs.forEach(function(t){{t.addEventListener('click',function(){{
     tabs.forEach(function(o){{o.setAttribute('aria-selected',o===t?'true':'false');document.getElementById(o.getAttribute('aria-controls')).hidden=(o!==t);}});
   }});}});
-  function toggle(tr){{
-    var id=tr.getAttribute('data-id'),panel=tr.closest('.panel'),d=panel.querySelector('#d-'+id),open=!d.hidden;
-    panel.querySelectorAll('.drawer').forEach(function(x){{x.hidden=true;}});
-    panel.querySelectorAll('tr.row').forEach(function(x){{x.classList.remove('open');x.setAttribute('aria-expanded','false');}});
-    if(!open){{d.hidden=false;tr.classList.add('open');tr.setAttribute('aria-expanded','true');
-      if(window.matchMedia('(max-width:860px)').matches)d.scrollIntoView({{behavior:'smooth',block:'start'}});}}
-  }}
-  document.querySelectorAll('tr.row').forEach(function(tr){{
-    tr.addEventListener('click',function(){{toggle(tr);}});
-    tr.addEventListener('keydown',function(e){{if(e.key==='Enter'||e.key===' '){{e.preventDefault();toggle(tr);}}}});
-  }});
   function closePops(){{document.querySelectorAll('.cpop').forEach(function(p){{p.hidden=true;}});document.querySelectorAll('.ctag').forEach(function(b){{b.setAttribute('aria-expanded','false');}});}}
   document.addEventListener('click',function(e){{
     var b=e.target.closest('.ctag');
@@ -559,10 +460,6 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
   }},true);
   document.addEventListener('keydown',function(e){{if(e.key==='Escape')closePops();}});
   addEventListener('scroll',closePops,true);
-  document.querySelectorAll('.drawer .close').forEach(function(b){{b.addEventListener('click',function(){{
-    var d=b.closest('.drawer'),panel=d.closest('.panel');d.hidden=true;
-    var tr=panel.querySelector('tr.row[data-id="'+d.id.slice(2)+'"]');if(tr){{tr.classList.remove('open');tr.setAttribute('aria-expanded','false');}}
-  }});}});
 }})();
 </script>
 </body>

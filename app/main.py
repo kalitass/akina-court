@@ -2,7 +2,7 @@
 
     .venv/bin/python -m uvicorn app.main:app --reload --port 8000     (loads .env if present)
 
-    GET  /                       landing page (web/index.html); /court.html = expert court UI
+    GET  /                       landing page (web/index.html)
     GET  /api/cases              [{case_id, type, filed_by, statement, service_type, has_run}]
     GET  /api/cases/{id}         Case JSON (map, timeline)
     GET  /api/cases/{id}/facts   FactTable (code only, instant)

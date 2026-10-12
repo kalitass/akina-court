@@ -231,7 +231,7 @@ def build() -> dict:
             "synthetic_or_simulated": ["riders, drivers, trips, GPS traces", f"{len([c for c in d['cases'] if c.startswith('C-')])} demo cases and {n} benchmark scenarios", "policy-derived reference outcomes", "traffic, congestion and weather values per scenario", "wallet, voucher and trust-and-safety integrations"],
             "model_never_authorizes": ["facts or their values", "allowed outcomes or the amount", "execution of a refund", "account punishment", "automatic ruling on safety complaints"],
         },
-        "pages": {"landing": "/", "guided_case": "/replay.html?case=C-0001", "facts": "/facts.html?case=DISP-002", "ops_handoff": "/ops.html", "results": "/report.html", "policy": "/policy.html", "expert_court": "/court.html", "architecture": "/architecture-system.png", "health": "/api/health", "receipt_example": "/api/runs/C-0001/receipt"},
+        "pages": {"landing": "/", "guided_case": "/replay.html?case=C-0001", "facts": "/facts.html?case=DISP-002", "ops_handoff": "/ops.html", "results": "/report.html", "policy": "/policy.html", "architecture": "/architecture-system.png", "health": "/api/health", "receipt_example": "/api/runs/C-0001/receipt"},
         "live_runs": "off on the public site; `Run live` works on a local copy with DEEPSEEK_API_KEY set (README, Run it)",
         "evidence": [
             {"claim": "facts computed by code", "path": "core/facts/tools.py"},
