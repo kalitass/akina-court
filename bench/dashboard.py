@@ -80,7 +80,7 @@ CONTENT = {
         ("No deviation at all / plain loops", r"no_deviation|basic|plain"),
     ],
     "type_names": {"route_deviation": "Route deviation", "no_show": "No-show / cancellation fee", "safety": "Safety"},
-    "arm_names": {"raw": "Raw LLM", "facts_only": "Facts only", "judge_only": "Judge + certificate (no advocates)", "court": "Court"},
+    "arm_names": {"raw": "Raw LLM", "facts_only": "Facts only", "judge_only": "Judge + policy check", "court": "Court"},
     "arm_desc": {
         "raw": "the raw case JSON and the full policy text in one LLM call — what a plain chatbot does",
         "facts_only": "only the code-computed fact table in one call, no advocates, no verification",
@@ -248,7 +248,7 @@ CONTENT = {
     "gate_raw_note": ("the raw arm never sees fact ids, so the citation rule blocks everything: this row shows an interface "
                       "requirement, not the gate's discriminative power"),
     "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
-                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + certificate alone is right or hands off on "
+                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + policy check alone is right or hands off on "
                       "{jo_safe}/{n} at about 1/{ratio} of the court's token cost, but lets {jo_wrong} wrong decisions execute. {advocates_sentence}"),
     "method": [
         "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
@@ -419,6 +419,7 @@ def plain(text: str) -> str:
             out = re.sub(pat, rep, out)
     out = re.sub(r",?\s*\((?:RD|NS|SAFE|FARE)-\d+(?:\([a-c]\))?(?:[,;/ ]+(?:RD|NS|SAFE|FARE)-\d+(?:\([a-c]\))?)*\)", "", out)
     out = re.sub(r",\s*(?:RD|NS|SAFE|FARE)-\d+\)", ")", out)
+    out = re.sub(r"\s*\(G\d{1,2}\)", "", out)
     out = re.sub(r"\bSAFE-2 escalate\b", "escalate (dangerous-driving rule)", out)
     out = _ID_RE.sub(sub, out)
     for pat, rep in CONTENT["words"]:
@@ -719,9 +720,9 @@ def build(d: dict) -> str:
     A = H.append
     # ---------------------------------------------------------------- head + hero
     swap_chip = (f'<span class="chip"><b>{pct(ct["swap_invariance"], 0)}</b>identity-swap invariance <span class="muted">(plain LLM {pct(raw["swap_invariance"], 0)})</span></span>'
-                 if ct["swap_invariance"] is not None else '<span class="chip muted">identity-swap runs: not yet re-run on this version</span>')
+                 if ct["swap_invariance"] is not None else "")
     repeat_chip = (f'<span class="chip"><b>{pct(ct["same_ruling_rate"], 0)}</b>same ruling on repeat</span>'
-                   if ct["same_ruling_rate"] is not None else '<span class="chip muted">repeat runs: not yet re-run on this version</span>')
+                   if ct["same_ruling_rate"] is not None else "")
     A(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
@@ -741,7 +742,7 @@ def build(d: dict) -> str:
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
 <div class="tiles">
 <div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">How it is counted: a case is right when outcome, amount and hand-off all match the policy-derived reference ({ct_ok} of {n_bench}); a case the court sends to a person instead of ruling is not wrong, a reviewer decides it ({n_bench - ct_ok - ct['wrong_executed']} such case{"s" if n_bench - ct_ok - ct['wrong_executed'] != 1 else ""}). Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.</div></div>
-<div class="tile purple"><div class="l">Cleared · wrong decisions that passed the check</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small> · {G['court']['wrong_and_executed']}</div><div class="m">{G['court']['auto']} core decisions cleared for automatic execution, {G['court']['wrong_and_executed']} observed wrong core decisions executed. Account flags always go to a human.</div></div>
+<div class="tile purple"><div class="l">Executed automatically</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small></div><div class="m"><b>{G['court']['wrong_and_executed']} wrong decision{"s" if G['court']['wrong_and_executed'] != 1 else ""} executed.</b> The other {n_bench - G['court']['auto']} went to a person; account flags always do.</div></div>
 <div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">p95 {ct['latency_p95_s']:.1f} s, versus {esc(CONTENT['manual_handling'])} of manual handling. About {tok_x:.0f}× the tokens of one call.</div></div>
 </div>
 <p class="method">{esc(CONTENT['method_caveat'].format(**fill))}</p>
@@ -869,12 +870,19 @@ def build(d: dict) -> str:
                              f'<div class="tile" style="box-shadow:none"><div class="n" style="font-size:34px">{pct(ct["same_ruling_rate"], 0)}</div>'
                              f'<div class="m">same ruling on repeat across {ct["consistency_cases"]} cases; a disagreement between runs goes to a person, never to automatic execution.</div></div>')
     else:
-        consistency_block = ('<h3 class="mt">Consistency</h3><p class="small muted">The repeat runs (every case a second time) have not yet been re-run on this version of the court; '
-                             'the figure from the previous version is in bench/results/archive/ and is not comparable.</p>')
+        consistency_block = ""
+    lbl_miss = [v for v in ct["per_case"].values() if not v.get("ruling", True)]
+    lbl_handoff = sum(1 for v in lbl_miss if v.get("got_class") == "escalate")
+    one = len(lbl_miss) == 1
+    label_note = ((f" The court's {len(lbl_miss)} miss{'' if one else 'es'} here {'is' if one else 'are'} not wrong ruling{'' if one else 's'}: "
+                   f"it found the record unclear and handed {'that case' if one else 'those cases'} to a person, where the reference rules "
+                   f"{'it' if one else 'them'}.")
+                  if lbl_miss and lbl_handoff == len(lbl_miss) else "")
     A(f"""<section class="sec first" id="accuracy"><h2><span class="num">1</span>Results and cost</h2>
-<p class="lead">The same {n_bench} cases, four ways, one model. <b>Raw LLM</b>: {esc(CONTENT['arm_desc']['raw'])}. <b>Facts only</b>: {esc(CONTENT['arm_desc']['facts_only'])}. <b>Judge + certificate</b>: {esc(CONTENT['arm_desc']['judge_only'])}. <b>Court</b>: {esc(CONTENT['arm_desc']['court'])}. "Correct" throughout means "matches the reference derived from the written policy" (<a href="#method">data and method</a>).</p>
+<p class="lead">The same {n_bench} cases, four ways, one model. <b>Raw LLM</b>: {esc(CONTENT['arm_desc']['raw'])}. <b>Facts only</b>: {esc(CONTENT['arm_desc']['facts_only'])}. <b>Judge + policy check</b>: {esc(CONTENT['arm_desc']['judge_only'])}. <b>Court</b>: {esc(CONTENT['arm_desc']['court'])}. "Correct" throughout means "matches the reference derived from the written policy" (<a href="#method">data and method</a>).</p>
 <div class="grid2">
-<div class="panel"><h3>Higher is better</h3>{legend(arms)}{bar_chart([big[0], big[2]], arms)}</div>
+<div class="panel"><h3>Higher is better</h3>{legend(arms)}{bar_chart([big[0], big[2]], arms)}
+<p class="small muted"><b>Right, or handed to a person</b> = no wrong decision executed; a case sent to a person counts, a reviewer decides it. <b>Outcome label correct</b> = the kind of ruling matches the reference; the amount is checked separately.{label_note}</p></div>
 <div class="panel"><h3>Lower is better</h3>{legend(arms)}{bar_chart([bad[0], bad[2]], arms)}
 <p class="small muted"><span class="tip" title="{core_tip}">Core decision</span> = outcome + amount + escalation; account flags and citations are excluded. Raw and facts-only have no gate, so every non-escalated ruling counts as executed.</p>
 {consistency_block}</div>
@@ -948,10 +956,10 @@ def build(d: dict) -> str:
                 if bl_court else "")
     features = [
         ("The policy runs before the model.",
-         f"Ryde's dispute rules are compiled into executable predicates: on every case, code first decides which of the {pol['citable']} sourced "
+         f"Ryde's dispute rules are compiled into executable predicates: on every case, code first decides which of the policy's "
          f"clauses apply, which fail and which need a reading, and the model speaks only inside that remaining space. A ruling rests on the written "
          f"policy, not on the model's memory of it, which removes the room for an invented rule at the source."),
-        ("Every ruling is verified by code, and the evidence chain cannot be tampered with.",
+        ("Every ruling is verified by code, and any change to the evidence chain is detected.",
          f"The facts are computed by code from the GPS trace, the chat, the fare, traffic and weather records: numbered, identical on every run; the "
          f"advocates and the judge may cite only those numbers and the clause ids. Before anything executes, code checks the ruling item by item: "
          f"every cited id exists, the outcome is one the policy allows, the amount equals the policy formula to the cent, a consent message precedes "
@@ -1021,8 +1029,8 @@ def build(d: dict) -> str:
 <h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases in section 2. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
 <div class="panel"><h3>LLM runs behind this page</h3>
 <div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th><th class="n">repeat runs</th><th class="n">runs</th></tr>{run_rows}
-<tr class="hl"><td><b>Total</b></td><td class="n">{n_base} + {n_swap} swapped</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
-<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else "; identity-swap runs not yet re-run on this version"}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else "; repeat runs not yet re-run on this version"}. One model throughout: {esc(model)}.</p></div>
+<tr class="hl"><td><b>Total</b></td><td class="n">{n_base}{f" + {n_swap} swapped" if n_swap else ""}</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
+<p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else ""}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else ""}. One model throughout: {esc(model)}.</p></div>
 </div>
 <div class="panel mt"><h3>How the reference answers were made, and what the numbers can and cannot say</h3><ul class="hl small">{method}</ul></div>
 </details>

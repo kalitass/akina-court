@@ -4,7 +4,7 @@
 Run:  .venv/bin/python bench/ops_page.py        (stdlib only; idempotent; reads stored artifacts, never runs the court)
 
 A Ryde operations reviewer opens the page and sees, in about twenty seconds, what work disappears and what still
-reaches their team after the system processed the 49-case synthetic policy-conformance batch. Every number is computed
+reaches their team after the system processed the synthetic policy-conformance benchmark batch. Every number is computed
 from bench/results/court/B-00NN.record.json (primary runs only; *.r1.* repeats are ignored), the matching B-00NN.json
 run file (latency) and data/bench/manifest.json (scenario names). Nothing is hard-coded except the prose below.
 
@@ -58,10 +58,18 @@ SCENARIO = {
     "rd_stop_named_prior": "Detour · rider named a stop, driver has history",
     "rd_stop_unnamed": "Detour · stop the rider never named",
     "rd_two_segs_consent_seg1": "Two detours · first one agreed",
+    "rd_two_segs_consent_seg1_hv": "Two detours · first one agreed · Hougang → VivoCity",
+    "rd_two_segs_consent_seg1_jt": "Two detours · first one agreed · Jurong Point → Toa Payoh",
+    "rd_two_segs_consent_seg1_pa": "Two detours · first one agreed, driver has history",
+    "rd_two_segs_consent_seg1_bk": "Two detours · first one agreed · Buona Vista → Kallang",
     "rd_two_segs_incident_seg1": "Two detours · first one excused by incident",
     "rd_two_segs_plain": "Two detours · neither excused",
     "rd_fixed_fare": "Detour on a fixed fare",
     "rd_fixed_fare_consent": "Detour on a fixed fare · consent given",
+    "rd_fixed_fare_consent_cr": "Detour on a fixed fare · consent given · Compass One → Raffles Place",
+    "rd_fixed_fare_consent_ns": "Detour on a fixed fare · consent given · NUS → Suntec City",
+    "rd_fixed_fare_consent_prior_tv": "Fixed fare · consent given, driver has history · Toa Payoh → VivoCity",
+    "rd_fixed_fare_consent_prior_jc": "Fixed fare · consent given, driver has history · Junction 8 → Changi",
     "rd_fixed_fare_prior_flag": "Detour on a fixed fare · repeat offender",
     "rd_prior_flag": "Detour · repeat offender",
     "rd_no_deviation": "No detour · rider overstated the route",
@@ -158,30 +166,30 @@ def outcome_text(ruling: dict) -> str:
     return base
 
 
-def plain_reason(reason: str, rec: dict) -> str:
-    """One line, <=140 chars, plain language, no ids. Pattern-based; falls back to a stripped clip of the reason."""
+def plain_reason(reason: str, rec: dict) -> tuple[str, str]:
+    """(short label, one line <=140 chars), plain language, no ids. Pattern-based; falls back to a stripped clip of the reason."""
     low = reason.lower()
     dtype = rec["dispute"]["type"]
     if "unscreened" in low or "judge unavailable" in low:
-        return "The judge did not answer (timeout or provider error); nothing was weighed → a person decides"
+        return "Judge did not answer", "The judge did not answer (timeout or provider error); nothing was weighed → a person decides"
     if low.startswith("safety concern"):
-        return "The judge read a threat or intimidation in the chat or statements → human review (safety)"
+        return "Threat in chat", "The judge read a threat or intimidation in the chat or statements → human review (safety)"
     if "segment finding undetermined" in low:
-        return "The judge could not settle from the record what the rider agreed to, or whether this stretch is the road agreed → a person decides"
+        return "Agreement unclear", "The judge could not settle from the record what the rider agreed to, or whether this stretch is the road agreed → a person decides"
     if low.startswith("evidence gap") or "evidence insufficient" in low or "evidence unknown" in low:
-        return "Evidence the policy needs is missing from the record → a person decides"
+        return "Evidence missing", "Evidence the policy needs is missing from the record → a person decides"
     if "harass" in low or "sexual" in low:
-        return "Harassment alleged in a safety complaint → policy forbids automatic ruling"
+        return "Harassment alleged", "Harassment alleged in a safety complaint → policy forbids automatic ruling"
     if "dangerous driving" in low:
-        return "Dangerous driving alleged; no telematics to confirm or refute → safety review"
+        return "Dangerous driving alleged", "Dangerous driving alleged; no telematics to confirm or refute → safety review"
     if dtype == "safety":
-        return "Safety complaint → policy forbids automatic ruling"
+        return "Safety complaint", "Safety complaint → policy forbids automatic ruling"
     # fallback: strip parenthetical ids, bracketed ids and bare ids, then clip
     s = re.sub(r"\s*\((?:RD|NS|SAFE|FARE)-\d+[^)]*\)", "", reason)
     s = re.sub(r"\s*\[(?:F\d+|(?:RD|NS|SAFE|FARE)-\d+)[^\]]*\]", "", s)
     s = re.sub(r"\b(?:RD|NS|SAFE|FARE)-\d+(?:\([a-z]\))?\b", "policy", s)
     s = re.sub(r"\s{2,}", " ", s).strip()
-    return s if len(s) <= 140 else s[:139].rstrip(" ,;:(-") + "…"
+    return "Other", (s if len(s) <= 140 else s[:139].rstrip(" ,;:(-") + "…")
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -236,12 +244,6 @@ def funnel(rows: list[dict]) -> dict:
 def row_html(r: dict, review_col: bool = False) -> str:
     rec, ruling, elig = r["rec"], r["ruling"], r["elig"]
     reasons = elig.get("reasons") or []
-    if r["auto"]:
-        why = "Cleared by the policy check: allowed outcome, amount matches the code"
-        if r["flag"]:
-            why = "Cleared; the account flag goes to a person"
-    else:
-        why = plain_reason(reasons[0] if reasons else (ruling.get("escalation_reason") or "Escalated by the judge"), rec)
     badge = '<span class="badge ok">auto-cleared</span>' if r["auto"] else '<span class="badge hr">human review</span>'
     clauses = clause_tag(ruling.get("cited_policy") or [])
     lat = f"{r['latency']:.1f} s" if r["latency"] is not None else "n/a"
@@ -252,14 +254,17 @@ def row_html(r: dict, review_col: bool = False) -> str:
     head = (f'<tr class="row"><td><div class="ttl">{esc(r["title"])}</div><span class="cid">{esc(r["id"])}</span></td>'
             f'<td>{esc(TYPE_LABEL.get(r["type"], r["type"]))}</td>')
     if review_col:      # the escalated tab: outcome and automation are "human review" on every row, so the reviewer's page takes their place
-        return (head + f'<td class="why">{esc(why)}</td><td class="chips">{clauses}</td><td class="mono">{esc(lat)}</td>'
+        label, why = plain_reason(reasons[0] if reasons else (ruling.get("escalation_reason") or "Escalated by the judge"), rec)
+        safety = rec["dispute"]["type"] == "safety" or label in ("Threat in chat", "Harassment alleged", "Dangerous driving alleged")
+        return (head + f'<td><span class="why{" safety" if safety else ""}" tabindex="0">{esc(label)}'
+                f'<span class="tip" role="tooltip">{esc(why)}</span></span></td><td class="chips">{clauses}</td><td class="mono">{esc(lat)}</td>'
                 f'<td class="rvl"><a href="/human-review.html?case={esc(r["id"])}" '
                 f'title="Open this case on the human review page: the open question, the evidence and the decision">'
                 f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">'
                 f'<path d="M10 14 21 3M15 3h6v6M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>'
                 f'/human-review.html?case={esc(r["id"])}</a></td>' + replay)
     return (head + f'<td class="{out_cls}"><b>{esc(outcome_text(ruling))}</b>{flagnote}</td>'
-            f'<td>{badge}</td><td class="why">{esc(why)}</td><td class="chips">{clauses}</td>'
+            f'<td>{badge}</td><td class="chips">{clauses}</td>'
             f'<td class="mono">{esc(lat)}</td>' + replay)
 
 
@@ -269,7 +274,7 @@ def table_html(rows: list[dict], key: str, empty: str) -> str:
     review_col = key == "human"
     head = ("<tr><th>Case</th><th>Dispute type</th><th>Why it stopped</th><th>Clauses</th><th>Time</th><th>Review page</th><th>Replay</th></tr>"
             if review_col else
-            "<tr><th>Case</th><th>Dispute type</th><th>Proposed outcome</th><th>Automation</th><th>Why it stopped</th>"
+            "<tr><th>Case</th><th>Dispute type</th><th>Proposed outcome</th><th>Automation</th>"
             "<th>Clauses</th><th>Time</th><th>Replay</th></tr>")
     body = "".join(row_html(r, review_col) for r in rows)
     return f'<div class="tw"><table>{head}{body}</table></div>'
@@ -280,6 +285,11 @@ def page(rows: list[dict], f: dict, model: str) -> str:
     flagged = [r for r in rows if r["flag"]]
     auto = [r for r in rows if r["auto"]]
     H, A, N = f["human"], f["flags"], f["auto"]
+    # the flagged cases are counted inside the auto-cleared ones (refund cleared, the flag waits for a person): say so, so the tabs add up
+    flags_in_auto = sum(1 for r in rows if r["flag"] and r["auto"])
+    flag_tab = f"{A} of the {N}" if A and flags_in_auto == A else str(A)
+    flag_tip = (f'<span class="tip" role="tooltip" id="tip-flag">These {A} are part of the {N} auto-cleared cases. The refund is automatic; '
+                'the account action cannot be automated, so a person handles it.</span>' if A and flags_in_auto == A else "")
     gen = dt.date.today().isoformat()
     pct_auto = round(100 * N / f["total"]) if f["total"] else 0
     pct_h = 100 - pct_auto
@@ -297,7 +307,7 @@ def page(rows: list[dict], f: dict, model: str) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
 <link rel="stylesheet" href="/styles/base.css">
-<meta name="description" content="What reaches a human after the 49-case synthetic policy-conformance batch: {N} core decisions cleared by the policy check, {H} sent to a person, {A} account flags always routed to a person.">
+<meta name="description" content="What reaches a human after the {f["total"]}-case synthetic policy-conformance batch: {N} core decisions cleared by the policy check, {H} sent to a person, {A} account flags always routed to a person.">
 <style>
 *{{box-sizing:border-box}}
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}}
@@ -342,7 +352,12 @@ h3{{font-size:17px;margin:2px 0 4px}}
 .lane p{{margin:0;font-size:13.5px;color:var(--ink2)}}
 /* tabs */
 .tabs{{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}}
-.tab{{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--ink2);font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}}
+.tab .tipi{{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:6px;border-radius:50%;border:1px solid currentColor;font:700 10px var(--mono);opacity:.7;vertical-align:1px}}
+.tab .tip{{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);z-index:5;width:max-content;max-width:min(300px,80vw);padding:9px 12px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:500;line-height:1.45;text-align:left;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none}}
+.tab .tip::before{{content:"";position:absolute;left:50%;top:-5px;width:10px;height:10px;background:inherit;transform:translateX(-50%) rotate(45deg)}}
+.tab:hover .tip,.tab:focus-visible .tip{{opacity:1;visibility:visible}}
+@media (max-width:600px){{.tab .tip{{left:0;transform:none}}.tab .tip::before{{left:24px}}}}
+.tab{{position:relative;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--ink2);font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit}}
 .tab[aria-selected=true]{{background:#fff;color:#111;border-color:transparent}}
 .panel[hidden]{{display:none}}
 .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--panel)}}
@@ -353,7 +368,12 @@ tr.row:hover td{{background:var(--panel2)}}
 tr.row:last-child td{{border-bottom:0}}
 td:first-child{{min-width:170px}}td .ttl{{color:var(--ink);font-weight:600}}td.mono{{white-space:nowrap}}
 .cid{{color:var(--muted);font:11px var(--mono)}}
-td.why{{min-width:200px;max-width:300px}}
+.why{{position:relative;display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink2);border:1px solid var(--line);cursor:default}}
+.why.safety{{color:var(--red);border-color:rgba(255,107,107,.45)}}
+.why .tip{{position:absolute;left:0;bottom:calc(100% + 8px);z-index:5;width:max-content;max-width:min(320px,80vw);padding:9px 12px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:500;line-height:1.45;white-space:normal;opacity:0;visibility:hidden;transition:opacity .15s;pointer-events:none}}
+.why .tip::before{{content:"";position:absolute;left:18px;bottom:-5px;width:10px;height:10px;background:inherit;transform:rotate(45deg)}}
+.why:hover .tip,.why:focus-visible .tip{{opacity:1;visibility:visible}}
+tr.row:nth-child(2) .why .tip{{bottom:auto;top:calc(100% + 8px)}}tr.row:nth-child(2) .why .tip::before{{bottom:auto;top:-5px}}
 .flagnote{{font-size:11.5px;color:var(--purple);font-weight:600}}
 .badge{{display:inline-block;padding:2px 9px;border-radius:999px;font:700 11px var(--mono);white-space:nowrap;border:1px solid}}
 .badge.ok{{color:var(--green);border-color:rgba(58,210,159,.45);background:rgba(58,210,159,.08)}}
@@ -394,7 +414,7 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
 <main>
 <div class="hero">
   <h1>What reaches a human after {f["total"]} cases</h1>
-  <p class="lead">A 49-case synthetic benchmark, not live Ryde volume. Each count is recomputed from the stored rulings.</p>
+  <p class="lead">A {f["total"]}-case synthetic benchmark, not live Ryde volume. Each count is recomputed from the stored rulings.</p>
 
   <div class="funnel" aria-label="Case funnel">
     <div class="card"><div class="k">Cases in the batch</div><div class="num">{f["total"]}</div><p>Route deviation, no-show fee and safety scenarios, each with reference outcomes derived from the written policy.</p></div>
@@ -425,7 +445,7 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
   <p class="sub">Each escalated case links to its human review page: the open question, the evidence on it and the decision. Replay shows the full court run.</p>
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" aria-controls="p-human" id="t-human" type="button">Needs a human ({H})</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-flag" id="t-flag" type="button">Account actions ({A})</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="p-flag" id="t-flag" type="button"{' aria-describedby="tip-flag"' if flag_tip else ""}>Account actions ({flag_tab}){' <span class="tipi" aria-hidden="true">i</span>' if flag_tip else ""}{flag_tip}</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="p-auto" id="t-auto" type="button">Auto-cleared ({N})</button>
   </div>
   <div class="panel" id="p-human" role="tabpanel" aria-labelledby="t-human">{table_html(human, "human", "No case needed a human in this batch.")}</div>
@@ -494,7 +514,7 @@ def main() -> None:
     for r in rows:
         if not r["auto"]:
             reasons = r["elig"].get("reasons") or [r["ruling"].get("escalation_reason") or ""]
-            print(f"  {r['id']} {r['title']}: {plain_reason(reasons[0], r['rec'])}")
+            print(f"  {r['id']} {r['title']}: " + " · ".join(plain_reason(reasons[0], r['rec'])))
     print(f"wrote {OUT.relative_to(ROOT)} ({OUT.stat().st_size / 1024:.0f} KB)")
 
 

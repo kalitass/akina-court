@@ -20,11 +20,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "policy" / "clauses_en.json"
 SOURCES_MD = ROOT / "policy" / "sources.md"
 OUT = ROOT / "web" / "policy.html"
-SOURCES_URL = "/policy-sources.md"  # policy/sources.md served as text by app/main.py
 
 GROUPS = [
-    ("route_deviation", "rd", "Route deviation", "RD", "Did the driver go the long way, and does the rider get money back?"),
-    ("no_show", "ns", "No-show and cancellation", "NS", "Was the $6.61 cancellation fee or the $5 waiting fee charged correctly?"),
+    ("route_deviation", "rd", "Route deviation", "RD", "When a longer route counts against the driver, and how much the rider gets back."),
+    ("no_show", "ns", "No-show and cancellation", "NS", "When Ryde's $6.61 cancellation fee and $5 waiting fee may be charged."),
     ("fare", "fare", "Fare", "FARE", "What may be added to a fixed fare, and tolls."),
     ("safety", "safe", "Safety", "SAFE", "Cases the court never decides on its own."),
 ]
@@ -47,19 +46,6 @@ TITLE_OVERRIDE = {
     "C7": "Tada cancellation rule (press report, reference only)",
     "E": "This system's code (core/): measurement parameters and procedure, never cited",
 }
-
-# Parameters and procedure that live in code. Shown so a reader sees what is NOT a clause.
-NOT_RULES = [
-    ("Arrival radius 200 m", "The data layer decides whether the driver was \"at the pick-up point\" from GPS. Ryde publishes no distance (gap G2)."),
-    ("Detour measurement", "A GPS point more than 200 m off the route is off-route; runs merge across gaps under 120 s; under 0.2 km is map noise (gap G1)."),
-    ("Traffic match 300 m", "An LTA incident counts as \"on the route\" within 300 m of it (gap G3)."),
-    ("Hint words", "Words such as threat, kill, lock the door only mark a chat line for the reader. Whether a message is a threat is the judge's reading of it (SAFE-1); no word list decides or triggers anything."),
-    ("Citation check", "Every claim must cite a fact id and a clause id that exist. Anything else is struck before the judge sees it."),
-    ("Confidence is recorded, not a gate", "The judge's confidence is shown for diagnosis only. Whether a ruling executes is decided by the policy execution trace and the code checks on the ruling; safety cases never execute (gap G8)."),
-    ("Records over statements", "GPS, timeline and fare records beat chat messages and statements when they conflict."),
-    ("History never decides", "Profile facts (past disputes, rating) can add an account flag, never decide the outcome."),
-]
-
 
 # ----------------------------------------------------------------------------------------------- sources.md
 
@@ -114,6 +100,7 @@ def counts(rows: list[dict]) -> dict:
         "citable": len(citable),
         "citable_ryde": sum(1 for r in citable if r["source_kind"] == "Ryde first-hand"),
         "citable_derived": sum(1 for r in citable if r["source_kind"] == "Derived from"),
+        "ryde": sum(1 for r in sourced if r["source_kind"] == "Ryde first-hand"),
         "informational": sum(1 for r in sourced if not r["citable"]),
         "gaps": sum(1 for r in rows if r["group"] == "gap"),
         "by_group": {g: sum(1 for r in rows if r["group"] == g) for g, *_ in GROUPS},
@@ -132,32 +119,58 @@ def org(sid: str) -> str:
     return ORG.get(sid, "Ryde Help Centre" if sid.startswith("A") else sid)
 
 
-def src_line(srcs: list[dict], reg: dict[str, dict]) -> str:
-    """The tail line of a clause: Source: Ryde Help Centre — Cancellation and Waiting Fee ↗ · LTA — Taxi Fares ↗"""
+# Short source names for the clause tail line; the full title and the quoted passage stay in the hover text.
+SHORT = {
+    "A1": "Ryde: Cancellation and Waiting Fee", "A2": "Ryde: Cancellation and Waiting Time Policy",
+    "A3": "Ryde: driver says arrived but has not", "A4": "Ryde: fee waiver request", "A5": "Ryde: how the fees work",
+    "A6": "Ryde: platform fee", "A7": "Ryde: suggested route", "A8": "Ryde: ERP and tolls", "A9": "Ryde: edit destination fee",
+    "A10": "Ryde: driver standards", "A11": "Ryde: irregular trip behaviour", "A12": "Ryde: trip completed without the rider",
+    "A13": "Ryde Code of Conduct", "A14": "Ryde: report a safety issue", "A15": "Ryde: rider made a mess",
+    "A16": "Ryde Terms of Use", "A18": "Ryde: RydeTAXI and fare articles",
+    "B1": "SG Road Traffic Rules", "B2": "LTA demerit points", "B4": "LTA enforcement on taxi drivers", "B5": "LTA taxi fares",
+    "B6": "PTC point-to-point fares", "B7": "LTA DataMall", "C1": "Grab cancellation policy", "C2": "Grab driver Code of Conduct",
+    "C3": "Gojek cancellation fees", "C4": "CDG Zig route choice", "C5": "ComfortDelGro cancellation policy",
+    "C6": "ComfortDelGro fares", "C7": "Tada (press report)", "D1": "NYC TLC rules", "D2": "Transport for London",
+    "D3": "Uber fare review", "D4": "Uber", "D5": "GPS.gov accuracy", "E": "Set in the code",
+}
+SHOWN = 2  # sources shown before the "+N more" fold
+RANK = {"Derived from": "BACDE", "Ryde first-hand": "ABCDE"}  # a derived clause leads with the law, a Ryde clause with Ryde
+
+
+def src_line(srcs: list[dict], reg: dict[str, dict], kind: str = "Ryde first-hand") -> str:
+    """The tail line of a clause: Source SG Road Traffic Rules r.23 ↗ · LTA demerit points ↗ +4 more"""
+    order = RANK.get(kind, "ABCDE")
+    srcs = sorted(srcs, key=lambda s: order.index(s["id"][0]) if s["id"][0] in order else 9)
     parts = []
     for s in srcs:
         e = reg.get(s["id"], {"title": s.get("what", ""), "urls": [], "quote": ""})
         title = e["title"] or s.get("what", "")
-        tip = f'{s["id"]} · {title}' + (f' — “{s["quote"]}”' if s.get("quote") else "")
-        o = org(s["id"])
-        label = escape(o) if o.endswith(title) else (escape(title) if title.startswith(o) or title.startswith("Other Ryde") else f'{escape(o)} — {escape(title)}')
+        tip = f'{org(s["id"])} — {title}' + (f' — “{s["quote"]}”' if s.get("quote") else "")
+        label = SHORT.get(s["id"], org(s["id"]))
+        rule = re.search(r"\br\.\s?\d+", s.get("what", "")) if s["id"] == "B1" else None
+        if rule:
+            label += " " + rule.group(0).replace(" ", "")
+        label = escape(label)
         if e["urls"]:
             parts.append(f'<a href="{escape(e["urls"][0])}" target="_blank" rel="noopener" title="{escape(tip)}">{label} ↗</a>')
         else:
             parts.append(f'<span title="{escape(tip)}">{label}</span>')
-    return f'<p class="src"><b>Source</b> {" · ".join(parts)}</p>' if parts else ""
+    if not parts:
+        return ""
+    head, rest = parts[:SHOWN], parts[SHOWN:]
+    more = f' <details class="more"><summary>+{len(rest)} more</summary> · {" · ".join(rest)}</details>' if rest else ""
+    return f'<div class="src"><b>Source</b> {" · ".join(head)}{more}</div>'
 
 
 def clause(r: dict, reg: dict[str, dict]) -> str:
     cid = r["id"]
     kind = KIND[r["source_kind"]][1]
-    note = " <i>(not applied to this data set)</i>" if not r["citable"] else ""
     return f"""
 <li id="{escape(cid)}">
-  <p class="t"><a class="id" href="#{escape(cid)}">{escape(cid)}</a> <b>{escape(r["title"][:1].upper() + r["title"][1:])}</b><span class="kind">{escape(kind)}</span>{note}</p>
+  <p class="t"><a class="id" href="#{escape(cid)}">{escape(cid)}</a> <b>{escape(r["title"][:1].upper() + r["title"][1:])}</b><span class="kind">{escape(kind)}</span></p>
   <p class="s">{escape(r["summary_en"])}</p>
   <details><summary>Full text</summary><p class="full">{escape(r["rule_en"])}</p>{f'<p class="full muted">{escape(r["notes_en"])}</p>' if r.get("notes_en") else ""}</details>
-  {src_line(r["sources"], reg)}
+  {src_line(r["sources"], reg, r["source_kind"])}
 </li>"""
 
 
@@ -174,23 +187,13 @@ def section(n: int, group: str, anchor: str, name: str, prefix: str, blurb: str,
 def gaps_section(n: int, rows: list[dict], reg: dict) -> str:
     items = "".join(
         f'<li id="{escape(r["id"])}"><p class="t"><a class="id" href="#{escape(r["id"])}">{escape(r["id"])}</a> <b>{escape(r["title"][:1].upper() + r["title"][1:])}</b></p>'
-        f'<p class="s">{escape(r["rule_en"])}</p>{src_line(r["sources"], reg)}</li>'
-        for r in rows if r["group"] == "gap")
+        f'<p class="s">{escape(r["value_en"])}</p></li>'
+        for r in sorted((r for r in rows if r["group"] == "gap"), key=lambda r: int(r["id"][1:])))
     return f"""
 <section id="gaps">
-  <h2>{n}. Open questions for Ryde</h2>
-  <p class="blurb">Where no document states the rule, the court does not invent one. Each question is listed with the working value the code uses until Ryde answers. None of these is ever cited in a ruling.</p>
+  <h2>{n}. Thresholds set by the project</h2>
+  <p class="blurb">Ryde and the other published documents give no value for the points below, so the project sets one to let the court rule; Ryde can adjust any of them. None of these is ever cited in a ruling.</p>
   <ol class="clauses gaps">{items}</ol>
-</section>"""
-
-
-def code_section(n: int) -> str:
-    items = "".join(f'<li><b>{escape(t)}</b> {escape(d)}</li>' for t, d in NOT_RULES)
-    return f"""
-<section id="code">
-  <h2>{n}. Measured and enforced by code, not policy</h2>
-  <p class="blurb">These turn raw GPS, timestamps and chat into the facts the clauses are tested against, and keep the agents honest. They are parameters and procedure in the code, never clauses, and no ruling cites them.</p>
-  <ul class="code">{items}</ul>
 </section>"""
 
 
@@ -201,7 +204,7 @@ def page(rows: list[dict], reg: dict[str, dict]) -> str:
     premise = next((r for r in rows if r["id"] == "PREMISE"), None)
     toc = "".join(f'<a href="#{a}">{i + 1}. {escape(n)}</a>' for i, (_, a, n, _, _) in enumerate(GROUPS))
     k = len(GROUPS)
-    toc += f'<a href="#gaps">{k + 1}. Open questions</a><a href="#code">{k + 2}. Code, not policy</a>'
+    toc += f'<a href="#gaps">{k + 1}. Project thresholds</a>'
     sections = "".join(section(i + 1, g, a, n, p, b, rows, reg) for i, (g, a, n, p, b) in enumerate(GROUPS))
     premise_html = ""
     if premise:
@@ -220,7 +223,7 @@ def page(rows: list[dict], reg: dict[str, dict]) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
 <link rel="stylesheet" href="/styles/base.css">
-<meta name="description" content="The {c['citable']} numbered clauses every Akina Court ruling cites, grouped by dispute type, each with its source linked.">
+<meta name="description" content="The {c['sourced']} numbered clauses every Akina Court ruling cites, grouped by dispute type, each with its source linked.">
 <style>
 *{{box-sizing:border-box}}
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}}
@@ -252,12 +255,16 @@ summary::before{{content:"+ ";font-family:var(--mono)}}details[open] summary::be
 summary:hover{{color:var(--blue)}}
 p.full{{color:var(--ink2);margin:6px 0 4px;font-size:13.5px}}
 .muted{{color:var(--muted)}}
-p.src{{font-size:13px;color:var(--muted);line-height:1.6}}
-p.src b{{font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-right:6px;color:var(--muted)}}
-p.src a{{color:var(--ink2)}}p.src a:hover{{color:var(--blue)}}
-ul.code{{margin:0;padding:0;list-style:none}}
-ul.code li{{padding:8px 0;border-top:1px solid var(--line);font-size:14px;color:var(--ink2)}}
-ul.code li b{{color:var(--ink);margin-right:6px}}
+.src{{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 1em}}
+.src b{{font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-right:6px;color:var(--muted)}}
+.src a{{color:var(--ink2)}}.src a:hover{{color:var(--blue)}}
+.src details.more{{display:inline}}
+.src details.more summary{{display:inline;cursor:pointer;list-style:none;color:var(--muted);margin-left:8px;padding:1px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px}}
+.src details.more summary::-webkit-details-marker{{display:none}}
+.src details.more summary:hover{{color:var(--ink)}}
+.src details.more[open] summary{{display:none}}
+.src details.more summary::before{{content:none}}
+.src details.more[open]::details-content{{display:inline}}
 footer{{padding:26px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:28px}}
 footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight:600}}
 @media(max-width:560px){{}}
@@ -272,16 +279,14 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weigh
 </header>
 <main>
 <h1>The rules the court applies</h1>
-<p class="lead">Every ruling cites one or more of the <b>{c['citable']} numbered clauses</b> below and nothing else. <b>{c['citable_ryde']}</b> are Ryde's own published terms. <b>{c['citable_derived']}</b> cover route deviation, where Ryde has published nothing, and are derived from Singapore law and regulators. Each clause ends with the document it comes from; the link opens it.</p>
+<p class="lead">Every ruling cites one or more of the <b>{c['sourced']} numbered clauses</b> below and nothing else. <b>{c['ryde']}</b> are Ryde's own published terms. Each clause ends with the document it comes from; the link opens it.</p>
 <nav class="toc" aria-label="Contents">{toc}</nav>
 {premise_html}
 {sections}
 {gaps_section(k + 1, rows, reg)}
-{code_section(k + 2)}
 </main>
 <footer>
-  <div class="links"><a href="/api/policy">Policy source text (Chinese)</a><a href="{SOURCES_URL}">Source library with quotes</a><a href="/">Home</a><a href="/report.html">Full results</a></div>
-  <div>Sources read 2026-09-28 and re-checked 2026-10-09. “Derived” clauses are not Ryde policy; they rest on Singapore regulations and peer platforms' published terms. English view of policy/policy.md, the text the agents read.</div>
+  <div class="links"><a href="/">Home</a><a href="/report.html">Full results</a></div>
 </footer>
 </div>
 </body>

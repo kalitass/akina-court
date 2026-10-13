@@ -209,19 +209,16 @@ def test_copy_quotes_the_engine_constants():
     from core.facts import tools
     from core import policy_engine as pe
     expect = {
-        f"{tools.PICKUP_RADIUS_M} m": ("policy/policy.md", "policy/clauses_en.json", "scripts/build_policy_page.py"),
-        f"{tools.OFF_ROUTE_M} m": ("scripts/build_policy_page.py",),
-        f"{tools.DETOUR_MIN_KM} km": ("scripts/build_policy_page.py",),
-        f"{pe.NEAR_ROUTE_M} m": ("policy/policy.md", "scripts/build_policy_page.py"),
+        f"{tools.PICKUP_RADIUS_M} m": ("policy/policy.md", "policy/clauses_en.json"),
+        f"{tools.DETOUR_MIN_KM} km": ("policy/clauses_en.json",),
+        f"{pe.NEAR_ROUTE_M} m": ("policy/policy.md", "policy/clauses_en.json"),
+        f"{tools.GPS_GAP_S // 60} minutes": ("policy/clauses_en.json",),
         f"{pe.GRACE_S // 60} min": ("policy/policy.md",),
         f"{pe.CANCEL_FEE:.2f}": ("policy/policy.md", "policy/clauses_en.json"),
     }
     for needle, files in expect.items():
         for f in files:
             assert needle in (ROOT / f).read_text(), f"{f} does not quote {needle!r} (the constant changed, or the text did)"
-    # the detour-merge / stop / hole seconds the policy page's "not a clause" box prints
-    box = (ROOT / "scripts" / "build_policy_page.py").read_text()
-    assert f"under {tools.DETOUR_MERGE_S} s" in box and f"{tools.NEAR_ROUTE_M if False else pe.NEAR_ROUTE_M} m" in box
 
 
 # ---------------------------------------------------------------------------- hand-written rationales quote the file's own figures
