@@ -1,4 +1,4 @@
-/* Akina Court · human review UI (/human-review.html?case=B-0013). Question card first: complaint → the one open question →
+/* Akina Court · human review UI (/human-review.html?case=B-0011). Question card first: complaint → the one open question →
    map + what is settled (left) and why / evidence / more / decision (right). Every amount shown comes from the server
    (/api/human-review/{id}: option amounts; /preview: the decision's ruling); the page never computes or sends an amount for
    an adopted option. Without ?case= the page lists the human-review queue. */
@@ -8,9 +8,9 @@
   var LIGHT = !!(window.AKINA_THEME && window.AKINA_THEME.light);
   var app = document.getElementById('app');
   var WHO = {rider: 'Rider', driver: 'Driver', system: 'System'};
-  var TYPE = {route_deviation: 'Route deviation', no_show: 'No-show fee', safety: 'Safety'};
+  var TYPE = {route_deviation: 'Route deviation', no_show: 'No-show fee', fare_dispute: 'Surge pricing', safety: 'Safety'};
   var QUEUE = {review_24h: 'Review · 24 h', urgent_safety: 'Urgent safety · 2 h', auto_resolve: 'Auto'};
-  var KIND = {segment_scope: 'Is the segment covered by the agreement?', safety: 'Safety finding'};
+  var KIND = {segment_scope: 'Is the segment covered by the agreement?', safety: 'Safety finding', decision: 'Outcome of the case'};
   var TOKEN_KEY = 'akinaDemoToken';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]; }); }
@@ -78,7 +78,7 @@
     var leg = document.createElement('div'); leg.className = 'mleg';
     var track = LIGHT ? '#111827' : '#f4f6fa';
     leg.innerHTML = (G.noShow ? '<span><i style="background:' + track + '"></i>Driver approach</span><span><i style="background:var(--blue);opacity:.35;height:10px;width:10px;border-radius:50%"></i>Pickup 200 m radius</span>'
-        : '<span><i class="dash"></i>Optimal route (OneMap)</span><span><i style="background:' + track + '"></i>Actual path</span>')
+        : '<span><i class="dash"></i>Optimal route</span><span><i style="background:' + track + '"></i>Actual path</span>')
       + (G.segs.length ? '<span><i style="background:var(--purple)"></i>Undetermined</span><span><i style="background:var(--red)"></i>Counts</span><span><i style="background:var(--amber)"></i>Exempt</span>' : '')
       + (G.chat.length && !G.noShow ? '<span>💬 Where a message was sent</span>' : '');
     var apiObj = {setAnswers: function () {}};
@@ -255,8 +255,22 @@
     if (q.kind === 'segment_scope') {
       var w = q.title.split(':')[0];
       out.push({to: 'driver', item: 'Which road did you drive during ' + w + '? A screenshot of your navigation for that stretch, if you have one.'});
-      out.push({to: 'platform', item: 'Navigation / map-matching log with road names for ' + w + '.'});
+      out.push({to: 'platform', item: 'The navigation log for ' + w + ', if the road names on record are incomplete.'});
       out.push({to: 'rider', item: 'What did you agree to before the detour, in your own words?'});
+    } else if (q.kind === 'decision') {
+      var gap = P.evidence_gap ? P.evidence_gap.gap : '';
+      if (/GPS/i.test(gap)) {
+        var win = /between (\d\d:\d\d(?::\d\d)?) and (\d\d:\d\d(?::\d\d)?)/.exec(gap), span = win ? ' (' + win[1] + '–' + win[2] + ')' : '';
+        out.push({to: 'platform', item: 'The missing GPS points for the gap in the trace' + span + ', or the platform\'s location log for that time.'});
+        out.push({to: 'driver', item: 'Your phone\'s location history for that time' + span + ', if you have it.'});
+        out.push({to: 'rider', item: 'Where you were waiting, and when you saw or heard from the driver, in your own words.'});
+      } else if (gap) {
+        out.push({to: 'platform', item: 'The missing record the court names: ' + gap});
+        out.push({to: 'rider', item: 'Your account of what happened, with times.'});
+        out.push({to: 'driver', item: 'Your account of what happened, with times.'});
+      } else {
+        out.push({to: 'platform', item: 'Only if something on record is unclear: the fare breakdown and the in-app notices sent for this trip.'});
+      }
     } else {
       out.push({to: 'platform', item: 'In-trip safety report, SOS or call logs, and any in-cabin recording for the trip.'});
       out.push({to: 'rider', item: 'A written account of what was said or done, with times.'});
@@ -267,7 +281,8 @@
 
   function decisionPanel(host, P, mapApi) {
     var qs = P.questions, anyAdopt = qs.some(function (q) { return q.adoptable && q.options.length; });
-    var subj = qs[0].kind === 'segment_scope' ? qs[0].subject + ' on the map' : (P.safety_basis.length ? P.safety_basis.join(', ') : 'the record');
+    var gapIds = P.evidence_gap && P.evidence_gap.facts.length ? ' (' + P.evidence_gap.facts.join(', ') + ')' : '';
+    var subj = qs[0].kind === 'segment_scope' ? qs[0].subject + ' on the map' : qs[0].kind === 'decision' ? 'the record' + gapIds : (P.safety_basis.length ? P.safety_basis.join(', ') : 'the record');
     var sug = suggestions(P);
     var st = {mode: null, choices: {}, findings: {}, reason: '', cites: [], manual: false, amount: '', ask: sug[0].to, picked: {}, extra: '', due: 48, onTimeout: 'decide_on_record',
       checked: false, confirmAcct: false, confirmAmt: false, preview: null, previewErr: '', busy: false, result: null, error: ''};
@@ -345,11 +360,12 @@
         + '<button type="button" data-mode="evidence" aria-pressed="' + (st.mode === 'evidence') + '">③ Request evidence<small>keep the case open</small></button></div>';
       if (st.mode === 'adopt' || st.mode === 'own') {
         qs.forEach(function (q) {
-          if (qs.length > 1 || st.mode === 'own') h += '<div class="qsub">' + esc(q.id) + ' · ' + esc(KIND[q.kind] || q.kind) + (st.mode === 'own' ? ' · your finding' : '') + '</div>';
+          if (qs.length > 1 || st.mode === 'own') h += '<div class="qsub">' + (q.kind === 'decision' ? '' : esc(q.id) + ' · ') + esc(KIND[q.kind] || q.kind) + (st.mode === 'own' ? ' · your finding' : '') + '</div>';
           h += optionCards(q, picks()[q.id], st.mode === 'adopt');
           if (q.vocabulary === 'proposed') h += '<div class="small muted">The policy has no outcome vocabulary for a safety finding; these four are a proposal, recorded as safety_concern / flag_account.</div>';
         });
         if (st.mode === 'adopt' && qs.some(function (q) { return q.kind === 'segment_scope'; })) h += '<div class="small muted" style="margin-top:4px">Amounts are computed by code: counted off-route km × the trip\'s per-km rate (RD-2), the same rule as the policy check.</div>';
+        if (st.mode === 'adopt' && qs.some(function (q) { return q.kind === 'decision'; })) h += '<div class="small muted" style="margin-top:4px">Amounts are computed by code with the same formula as the policy check. The record is complete: the system stopped only because this outcome needs a person to approve it.</div>';
       }
       if (st.mode === 'own') {
         h += '<label class="f" for="rsn">Reason (required, at least 15 characters)</label><textarea id="rsn" data-k="reason" placeholder="What you saw and why you decided this way: it is kept with the precedent">' + esc(st.reason) + '</textarea>';
@@ -363,6 +379,7 @@
       if (st.mode === 'evidence') {
         h += '<div class="row2"><div><label class="f" for="ask">Ask</label><select id="ask" data-k="ask">' + ['rider', 'driver', 'platform'].map(function (x) { return '<option value="' + x + '"' + (st.ask === x ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></div>'
           + '<div><label class="f" for="due">Due within</label><select id="due" data-k="due">' + [24, 48, 72].map(function (x) { return '<option value="' + x + '"' + (+st.due === x ? ' selected' : '') + '>' + x + ' hours</option>'; }).join('') + '</select></div></div>';
+        if (qs[0].kind === 'decision' && qs[0].adoptable && !P.evidence_gap) h += '<div class="small muted" style="margin-top:6px">No evidence is needed here: the record is complete and the stop is only the approval limit. You can approve or reject the outcome above instead.</div>';
         h += '<div class="reqs" style="margin-top:6px">' + sug.map(function (s, i) { return s.to === st.ask ? '<label><input type="checkbox" data-req="' + i + '"' + (st.picked[i] ? ' checked' : '') + '><span><span class="to">' + s.to + '</span>' + esc(s.item) + '</span></label>' : ''; }).join('') + '</div>';
         h += '<label class="f" for="ext">Anything else (optional)</label><input id="ext" type="text" data-k="extra" value="' + esc(st.extra) + '" placeholder="what exactly you need">';
         h += '<label class="f" for="tmo">If nothing arrives in time</label><select id="tmo" data-k="onTimeout"><option value="decide_on_record"' + (st.onTimeout === 'decide_on_record' ? ' selected' : '') + '>Back to my queue; decide on the record</option><option value="close_no_action"' + (st.onTimeout === 'close_no_action' ? ' selected' : '') + '>Close with no change</option></select>';

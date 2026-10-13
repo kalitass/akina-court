@@ -22,6 +22,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")))
+from core.case_format import dumps, to_internal, to_official  # noqa: E402
 from fare import cancellation_fare, distance_km, fixed_fare, load_rates, metered_fare, slice_gps, stationary_windows  # noqa: E402
 from route_provider import M_PER_DEG_LAT, OneMapRouteProvider, haversine_m, m_per_deg_lon, road_geometry  # noqa: E402
 from trajectory import Congestion, Stop, build_trajectory  # noqa: E402
@@ -169,7 +171,7 @@ def compose(rp, opt, loops):
     return [list(p) for p in poly], spans, legs
 
 
-def detour_trace(rp, opt, loops, start, total_s, stops=(), zones=(), loop_zones=None, seed=0):
+def detour_trace(rp, opt, loops, start, total_s, stops=(), zones=(), loop_zones=None, seed=0, profile_of=None):
     """Trip trace over `opt` with real-road detour loops. Stops are snapped to the nearest vertex of the driven
     polyline. loop_zones = {loop_idx: (margin_km, kmh)} injects a cruising speed inside a loop (expressway legs).
     Returns (polyline, gps, measured detours as core/facts/tools sees them, leg route dicts)."""
@@ -178,7 +180,7 @@ def detour_trace(rp, opt, loops, start, total_s, stops=(), zones=(), loop_zones=
     snapped = [Stop(*poly[nearest_idx(poly, (st.lat, st.lon))], st.start_s, st.duration_s, st.jitter_m, st.anchor_s, st.away_from)
                for st in stops]
     cz = list(zones) + [Congestion(spans[k][0] + m, spans[k][1] - m, v) for k, (m, v) in (loop_zones or {}).items()]
-    gps = build_trajectory(poly, start, total_s, stops=snapped, congestion=cz, seed=seed)
+    gps = build_trajectory(poly, start, total_s, stops=snapped, congestion=cz, seed=seed, profile=profile_of(poly, legs) if profile_of else None)
     found = measure_detours(gps, opt)
     if len(found) != len(loops):
         raise ValueError(f"expected {len(loops)} detour(s), fact-tool logic finds {len(found)}: {found}")
@@ -199,7 +201,7 @@ def road_km(route, name, which="from"):
 PAUSE_S = 25            # a halt at a junction: long enough to type a message, far below the 120 s that makes a stop fact
 
 
-def pause_stops(poly, drive_s: int, pauses, used=()):
+def pause_stops(poly, drive_s: int, pauses, used=(), jitter_m: float = 0.0):
     """Stops for `pauses` = [(at_s, dur_s)]: the car halts `dur_s` seconds at the polyline vertex it reaches about `at_s`
     seconds into a drive that would take `drive_s` seconds without halts (uniform-speed estimate; the trajectory solver
     re-times the legs). Vertices in `used` (and the two ends) are never chosen, so every leg keeps a length."""
@@ -216,17 +218,57 @@ def pause_stops(poly, drive_s: int, pauses, used=()):
         if vi is None:
             raise ValueError("no free vertex for a pause")
         taken.add(vi)
-        out.append(Stop(*pts[vi], start_s=at_s, duration_s=dur))
+        out.append(Stop(*pts[vi], start_s=at_s, duration_s=dur, jitter_m=jitter_m))
     return out
 
 
-def approach_trace(rp, start_pt, pickup, accepted: datetime, pickup_at: datetime, wait_s: int, seed: int, pauses=()):
+def approach_trace(rp, start_pt, pickup, accepted: datetime, pickup_at: datetime, wait_s: int, seed: int, pauses=(),
+                   profile_of=None, jitter_m: float = 0.0):
     """Driver drives to the pickup point, parks there `wait_s` seconds before the rider boards. `pauses` = [(at_s, dur_s)]:
     short halts on the way (a red light) during which the driver types a message instead of texting while driving."""
     total = secs(accepted, pickup_at)
-    poly = rp.route([start_pt, pickup])["polyline"]
-    stops = pause_stops(poly, total - wait_s - sum(d for _, d in pauses), pauses, used=(len(poly) - 1,))
-    return build_trajectory(poly, accepted, total, stops=stops + [Stop(*pickup, start_s=total - wait_s, duration_s=wait_s)], seed=seed)
+    leg = rp.route([start_pt, pickup])
+    poly = leg["polyline"]
+    stops = pause_stops(poly, total - wait_s - sum(d for _, d in pauses), pauses, used=(len(poly) - 1,), jitter_m=jitter_m)
+    return build_trajectory(poly, accepted, total, stops=stops + [Stop(*pickup, start_s=total - wait_s, duration_s=wait_s, jitter_m=jitter_m)], seed=seed,
+                            profile=profile_of(poly, [leg]) if profile_of else None)
+
+
+GPS_ROAD_NEAR_M = 100      # a GPS sample takes the name of the nearest road of the legs it was driven on, when within this
+
+
+def gps_project(lat, lon, poly):
+    from contract import project as _p          # contract's own geometry (metres, along-track km)
+    return _p(lat, lon, poly)
+
+
+def annotate_roads(gps, legs) -> None:
+    """Set p["road"] on every GPS sample: the OneMap road (route `roads`: name, from_m, to_m) of the nearest leg the car
+    drove (approach, optimal route, detour legs), at the sample's along-track position. The official DISP-001 gives
+    `location_desc` per point; RD-5 checks a rider's "go via X" against these names."""
+    prepared = []
+    for r in legs:
+        poly = [tuple(p) for p in r["polyline"]]
+        cum = along_km(poly)
+        scale = cum[-1] * 1000 / max(r["total_km"] * 1000, 1)
+        roads = [(x["name"], x["from_m"] * scale, x["to_m"] * scale) for x in r.get("roads", []) if x["name"]]
+        if roads:
+            lats, lons = [q[0] for q in poly], [q[1] for q in poly]
+            prepared.append((poly, roads, (min(lats) - 0.002, max(lats) + 0.002, min(lons) - 0.002, max(lons) + 0.002)))
+    for p in gps:
+        best = None
+        for poly, roads, (la0, la1, lo0, lo1) in prepared:
+            if not (la0 <= p["lat"] <= la1 and lo0 <= p["lon"] <= lo1):
+                continue
+            d, along = gps_project(p["lat"], p["lon"], poly)
+            if best is None or d < best[0] - 1.0:
+                best = (d, along * 1000, roads)
+        p.pop("road", None)
+        if best is None or best[0] > GPS_ROAD_NEAR_M:
+            continue
+        _, a, roads = best
+        inside = [nm for nm, lo, hi in roads if lo - 1 <= a <= hi + 1]
+        p["road"] = inside[0] if inside else min(roads, key=lambda x: min(abs(a - x[1]), abs(a - x[2])))[0]
 
 
 def first_within(gps, pt, radius_m=ARRIVAL_RADIUS_M):
@@ -346,6 +388,7 @@ def c0001(rates):
     # the driver's two messages (14:01:00, 14:03:00) are typed at red lights on the way to the pickup, not while driving
     gps = approach_trace(rp, offset(P, 250, 1300), P, accepted, pickup_at, wait_s=10, seed=1,
                          pauses=[(5, PAUSE_S), (125, PAUSE_S)]) + trip_gps[1:]
+    annotate_roads(gps, [rp.route([offset(P, 250, 1300), P]), route, *legs])       # v3: each sample names its road (RD-5 road check)
     trip = trip_block("T-1042", "RydeTAXI", place("Orchard Road"), place("Marina Bay Sands"), route,
                       T("2026-09-20 14:00:00"), accepted, gps, T("2026-09-20 14:05:00"), pickup_at, dropoff_at)
     w0, w1 = T("2026-09-20 14:00:00"), T("2026-09-20 14:35:00")
@@ -364,7 +407,7 @@ def c0001(rates):
                                    "Accident on Orchard Road (towards Bras Basah) after Cavenagh Road, two lanes closed.")],
         },
         "weather": {"rain_mm": 0, "description": "Fair"},
-        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates),
+        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates, fold_waiting=True),   # FARE-0
         "chat": chat(("2026-09-20 14:01:00", "driver", "Hi, traffic on Orchard is bad, ok if I go round by Cavenagh?"),
                      ("2026-09-20 14:02:00", "rider", "Sure. Can you stop at a 7-Eleven on the way?"),
                      ("2026-09-20 14:03:00", "driver", "Ok")),
@@ -410,6 +453,7 @@ def c0002(rates):
                                               zones=[Congestion(cte_km + 0.3, project(1.3300, 103.8800, opt)[1] - 0.5, EXPRESSWAY_KMH)],
                                               seed=2)
     gps = approach_trace(rp, offset(P, 300, 1100), P, accepted, pickup_at, wait_s=10, seed=2) + trip_gps[1:]
+    annotate_roads(gps, [rp.route([offset(P, 300, 1100), P]), route, *legs])
     trip = trip_block("T-1057", "RydeTAXI", place("Clarke Quay"), place("Bedok Mall"), route,
                       T("2026-09-21 12:30:00"), accepted, gps, T("2026-09-21 12:34:05"), pickup_at, dropoff_at)
     R = [route, *legs]
@@ -426,7 +470,7 @@ def c0002(rates):
             "incidents": [],
         },
         "weather": {"rain_mm": 0, "description": "Fair"},
-        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates),
+        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates, fold_waiting=True),   # FARE-0
         "chat": [],
         "driver_statement": "I followed my GPS, it took me off at Paya Lebar. Nothing wrong with the fare.",
         "profiles": profiles((400, 4.8, 1, 0, 0, 0), (980, 4.5, 640, 5, 3, 3, 0)),
@@ -448,6 +492,7 @@ def c0003(rates):
                                               stops=pause_stops(opt, 24 * 60, [(15, PAUSE_S)]),
                                               loop_zones={0: (1.0, EXPRESSWAY_KMH)}, seed=3)
     gps = approach_trace(rp, (1.2840, 103.8500), P, accepted, pickup_at, wait_s=10, seed=3) + trip_gps[1:]   # from Cecil St
+    annotate_roads(gps, [rp.route([(1.2840, 103.8500), P]), route, *legs])
     trip = trip_block("T-1063", "RydeTAXI", place("Tanjong Pagar Centre"), place("Bedok Mall"), route,
                       T("2026-09-21 18:05:20"), accepted, gps, T("2026-09-21 18:09:50"), pickup_at, dropoff_at)
     R = [route, *legs]
@@ -464,7 +509,7 @@ def c0003(rates):
                                    "Accident on KPE (towards TPE) at the MCE tunnel entrance. All lanes closed. Avoid KPE.")],
         },
         "weather": {"rain_mm": 1.2, "description": "Light rain"},
-        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates),
+        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates, fold_waiting=True),   # FARE-0
         "chat": chat(("2026-09-21 18:10:30", "driver", "KPE is closed at the tunnel entrance because of an accident. I'll go by ECP instead, ok?"),
                      ("2026-09-21 18:10:50", "rider", "Ok, thanks for telling me.")),
         "driver_statement": "KPE was fully closed after an accident at the tunnel entrance. I told the rider and went by ECP, "
@@ -476,7 +521,7 @@ def c0003(rates):
 
 def c0004(rates):
     """No-show, driver-initiated: the driver parks 612 m from the pickup, taps 'I'm Here' there at 08:16:00,
-    waits 3.5 min and cancels the trip as a rider no-show; the rider is charged $6.61 (NS-0 -> NS-2 refund)."""
+    waits 3.5 min and cancels the trip as a rider no-show; the rider is charged $5.00 (NS-0 -> NS-2 refund + flag)."""
     rp = routes(4)
     spot = LOC["Stamford Road roadside bay (SMU)"]
     bj = LOC["Bugis Junction"]
@@ -493,11 +538,13 @@ def c0004(rates):
                                        away_from=P)], seed=4)
     trip = trip_block("T-1071", "RydeX", place("Bugis Junction (Victoria St entrance)", P), place("Tanjong Pagar Centre"),
                       route, T("2026-09-22 08:09:30"), accepted, gps, pressed, cancelled_at=cancelled, cancelled_by="driver")
+    trip["cancellation_reason"] = "rider_no_show"
+    annotate_roads(gps, [approach])
     return {
         "case_id": "C-0004",
         "dispute": {"type": "no_show", "filed_by": "rider", "filed_at": T("2026-09-22 08:25:00").isoformat(),
                     "statement": "The driver marked 'arrived' but he was never at the Victoria St entrance. I waited there "
-                                 "the whole time, then he cancelled on me as a no-show and I was charged $6.61."},
+                                 "the whole time, then he cancelled on me as a no-show and I was charged $5.00."},
         "trip": trip, "route": route, "gps": gps,
         "traffic": {
             # morning peak on the city fringe: band 3 (20-29 km/h), slow but moving — enough to contradict "too jammed to get closer"
@@ -532,11 +579,13 @@ def c0005(rates):
                            seed=5)
     trip = trip_block("T-1088", "RydeX", place("Tanjong Pagar Centre"), place("Orchard Road"), route,
                       T("2026-09-23 08:59:30"), accepted, gps, pressed, cancelled_at=cancelled, cancelled_by="rider")
+    trip["cancellation_reason"] = "rider_changed_plans"
+    annotate_roads(gps, [approach])
     return {
         "case_id": "C-0005",
         "dispute": {"type": "no_show", "filed_by": "rider", "filed_at": T("2026-09-23 09:30:00").isoformat(),
                     "statement": "I told the driver I was two minutes away, then I got held up upstairs, gave up and cancelled, "
-                                 "and I was still charged $6.61. I want it refunded."},
+                                 "and I was still charged $5.00. I want it refunded."},
         "trip": trip, "route": route, "gps": gps,
         "traffic": {"speed_bands": [band_from_gps("ANSON ROAD", gps, T("2026-09-23 09:00:00"), T("2026-09-23 09:15:00"), [approach, route])],
                     "incidents": []},
@@ -547,6 +596,9 @@ def c0005(rates):
                      ("2026-09-23 09:08:00", "driver", "Called you twice, no answer. Waited 5 min already.")),
         "driver_statement": "I waited more than 6 minutes at the stand and called twice. The rider never came down.",
         "profiles": profiles((300, 4.5, 3, 0, 0, 0), (1600, 4.9, 700, 0, 0, 0, 0)),
+        # the platform's call log: the two calls the driver's 09:08 message mentions, neither answered
+        "calls": [{"ts": T("2026-09-23 09:06:00").isoformat(), "caller": "driver", "callee": "rider", "answered": False, "duration_s": 0},
+                  {"ts": T("2026-09-23 09:07:20").isoformat(), "caller": "driver", "callee": "rider", "answered": False, "duration_s": 0}],
     }
 
 
@@ -564,6 +616,7 @@ def c0006(rates):
                                 congestion=[Congestion(road_km(route, "CENTRAL EXPRESSWAY") + 0.3,
                                                        road_km(route, "PAN ISLAND EXPRESSWAY", "to") - 0.3, EXPRESSWAY_KMH)], seed=6)
     gps += trip_gps[1:]
+    annotate_roads(gps, [rp.route([offset(P, 20, 1200), P]), route])
     trip = trip_block("T-1095", "RydeX", place("Clarke Quay"), place("Bedok Mall"), route,
                       T("2026-09-24 21:28:50"), accepted, gps, T("2026-09-24 21:34:10"), pickup_at, dropoff_at)
     return {
@@ -577,7 +630,7 @@ def c0006(rates):
             "incidents": [],
         },
         "weather": {"rain_mm": 0, "description": "Cloudy"},
-        "fare": fixed_fare(route, rates),
+        "fare": metered_fare(slice_gps(gps, trip["pickup_at"], trip["dropoff_at"]), rates, fold_waiting=True),   # FARE-0: distance-based
         "chat": chat(("2026-09-24 21:36:00", "rider", "Please stop the car, I want to get out here."),
                      ("2026-09-24 21:36:25", "driver", "Sit down or I lock the doors.")),
         "driver_statement": "The rider was drunk and tried to open the door at the lights on Clemenceau Avenue. I told her to "
@@ -589,13 +642,11 @@ def c0006(rates):
 # ----------------------------------------------------------------------------------------------- output
 
 def dump(case: dict, path: str):
-    text = json.dumps(case, indent=2, ensure_ascii=False)
-    flat = r'\{\n\s+((?:"[^"\n]*": [^\n{}\[\]]*\n\s+)*"[^"\n]*": [^\n{}\[\]]*)\n\s+\}'
-    text = re.sub(flat, lambda m: "{" + re.sub(r"\n\s+", " ", m.group(1)) + "}", text)  # flat objects -> one line
-    text = re.sub(r"\[\n\s+(-?[\d.]+),\n\s+(-?[\d.]+)\n\s+\]", r"[\1, \2]", text)         # [lat, lon] -> one line
-    assert json.loads(text) == case
+    """Write a case built here (internal Case dict) as an official-plus file (core/case_format.py)."""
+    official = to_official(case)
+    assert to_internal(official) == case, f"{case['case_id']}: the official-plus file would not read back to the same case"
     with open(path, "w") as f:
-        f.write(text + "\n")
+        f.write(dumps(official))
 
 
 def describe(c: dict, detours):
@@ -622,15 +673,61 @@ def describe(c: dict, detours):
     print(line + f"\n       bands: {bands}")
 
 
+# The demos' interpretive slots (what the words mean), as labels for reference.py: the same readings a scenario carries.
+DEMO_LABELS = {
+    "C-0001": {"kind": "route_deviation", "consent": "before_seg1", "stop": "unnamed", "threat": None},   # yes to Cavenagh (loop 1); the 7-Eleven is the driver's choice
+    "C-0002": {"kind": "route_deviation", "consent": "none", "stop": "none", "threat": None},
+    "C-0003": {"kind": "route_deviation", "consent": "notice_ack", "stop": "none", "threat": None},     # "I'll go by ECP instead, ok?" / "Ok, thanks for telling me."
+    "C-0004": {"kind": "no_show", "by": "driver"},
+    "C-0005": {"kind": "no_show", "by": "rider"},
+    "C-0006": {"kind": "safety", "chat": "driver_threat"},
+    "C-0007": {"kind": "route_deviation", "consent": "before_seg1", "stop": "unnamed", "threat": None},   # C-0001 with the voice reply
+}
+EXPECTED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "expected")
+
+
+def demo_gate(case: dict) -> tuple[dict, list[str]]:
+    """The demo's reference answer (reference.py with its labels) and every gate it must pass: the engine reaches the same
+    ruling, amount, flag and goodwill credit, validate.py and the linter find nothing."""
+    import lint
+    import reference
+    import validate
+    import scenarios
+    lab = DEMO_LABELS[case["case_id"]]
+    ref = reference.derive_reference(case, lab, lab["kind"])
+    expected = {k: v for k, v in ref.items() if not k.startswith("_")}
+    broken = []
+    if not scenarios.SKIP_ENGINE:
+        eng, _ = scenarios.engine_answer(case, dict(lab), ref)
+        broken += scenarios.disagreement(eng, expected)
+    broken += validate.check_case(case, load_rates(), validate.policy_clauses(), expected)
+    broken += lint.lint_case(case)
+    return expected, broken
+
+
 def main():
     rates = load_rates()
     os.makedirs(OUT_DIR, exist_ok=True)
+    built, failed = [], []
     for build in (c0001, c0002, c0003, c0004, c0005, c0006, c0007):
         case = build(rates)
         detours = case.pop("_detours", None)
+        expected, broken = demo_gate(case)
+        if broken:
+            failed.append((case["case_id"], broken))
+            continue
+        built.append((case, expected, detours))
+    for cid, broken in failed:
+        print(f"{cid} REFUSED: " + " | ".join(broken))
+    for case, expected, detours in built:
         dump(case, os.path.join(OUT_DIR, f'{case["case_id"]}.json'))
+        with open(os.path.join(EXPECTED_DIR, f'{case["case_id"]}.json'), "w") as f:
+            json.dump(expected, f, indent=2, ensure_ascii=False)
+            f.write("\n")
         describe(case, detours)
+        print(f'       reference: {expected["ruling"]} {expected["amount"] or ""}' + (" + flag_account" if expected.get("flag_account") else ""))
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

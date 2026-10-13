@@ -4,57 +4,83 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:24.692547+00:00",
+ "ts": "2026-10-13T16:36:41.056713+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 5.29,
-  "recommended_action": "Refund $5.29 (voucher) to the rider for the unexcused deviation, and refer the driver's account to Ryde review for a repeated route-deviation breach + flag_account",
-  "confidence": 0.62,
-  "reasoning": "Safety screen: chat is a normal route arrangement (\"go round via Guillemard Road\" / \"Sure, go ahead\"), no threat, abuse, harassment or dangerous-driving claim; safety_concern = none.\n\nFacts computed. Best-route (quoting) route = 10.993 km, 20.7 min. The metered trip billed 13.58 km / 29.42 min for $32.28, i.e. ~2.59 km and ~8.7 min more than the app's route. The GPS trace shows the deviation: from the timeline, the car left the PIE corridor before 22:51 and instead of the quote's alignment it ran east along the PIE-side stretch (B08 22:51:25), then made a spur east to ~1.3110/103.8854 (B42 22:58:55), turned back west (B43-B45) and only rejoined the KPE/Kallang corridor around 23:02:25 (B49). That out-and-back spur, plus the sub-optimal stretch between the exit and that turn, is the off-route segment that produced the extra distance; it carries no traffic incident (incidents = []) and the only speed band on that stretch (SYN-0009, PIE, band 2) can never exempt on its own (RD-4(b), G3). RD-4 does not exempt it.\n\nRD-5 consent. The driver did ask BEFORE the deviation (driver 22:51:15, rider \"Sure, go ahead\" 22:51:55) and the rider's message is genuine consent. But its scope is a named road: \"Guillemard Road\". The record places the driven segment elsewhere — the trace goes east to ~103.8854 on the PIE/Aljunied corridor and returns, nowhere near Guillemard Road, which sits east of Kallang in the direction of the destination and is not on the traced path; the driver's own statement also names nothing but Guillemard Road while the trace contradicts it. Nothing in the record ties the off-route segment to Guillemard Road and the record affirmatively places it somewhere else, so the agreement does not cover it: named_road_elsewhere → counts.\n\nAmount. RydeTAXI is metered, so extra distance enters the fare (RD-2). Fully attributable detour ≈ 2.3 km (the long westbound return along the PIE corridor is shared with the KPE/Kallang alignment and is not counted; the remaining ~0.3 km is map-matching noise). A GPS-traced lower bound of the off-route distance from the path itself (eastward run and the two PIE-corridor passes) gives ≈ 1.9 km. Per-km rate = fare.distance_fare ÷ fare.distance_km = 19.15 ÷ 13.58 = $1.4102/km (matches the published rates.json). At 2.3 km → 2.3 × 1.4102 = $3.24; as a proportional share of the excess distance actually billed, 2.59 km − 0.3 km noise = 2.29 unexcused km × 1.4102 = $3.23. A conservative reading that charges the whole traced deviation (≈3.75 km, the median of the traced/high estimates) yields 3 × 1.4102 = $4.23. Where the trace is too thinned (30 s samples) to fix the exact turning point, I take the upper end of the traced range and allow $5.29 (≈3.75 km × $1.4102) so the amount is not understated for the rider; the metered waiting charge of $0.11 is left as metered time (RD-3(c)). Only the mileage units are refunded; the rest of the billed distance difference (returned along the shared corridor on the correct route, plus matching jitter) is not.\n\nRD-6: the driver has 2 upheld route disputes in 90 days (route_disputes_upheld_90d = 2) and this case is upheld (>0), so this is \"repeated\" — attach flag_account for Ryde account review. The profile facts are used only for the additional action, never to establish the deviation itself.\n\nEvidence status: sufficient — GPS, timeline, chat with timestamps, fare and traffic records all present; the exact turning point rests on a 30 s-thinned trace, which is why the amount is bandwidthed rather than exact.",
+  "amount": 3.56,
+  "recommended_action": "Refund $3.56 to the rider (surge differential at the quote's 1.0× multiplier), reverse the 1.4× surge uplift on the trip record, and remind ops that the 17:18:45 parking notice failed SURGE-1 because it stated no new multiplier and no revised fare.",
+  "confidence": 0.82,
+  "reasoning": "Surge. The quote was taken at 1.0× ($12.71, surgeable subtotal $11.46); the multiplier was raised to 1.4× at 17:18:20, before pickup. SURGE-1 requires the in-app notice to state the new multiplier, the revised estimated fare and free cancellation. The only notice on record (17:18:45, in_app) reads \"Fares are 1.4× higher right now. Your fare stays at the quoted $12.71. You can cancel for free.\" It gives a generic market multiplier and expressly tells the rider her fare is unchanged — it never states the multiplier applied to her fare or the revised estimated fare. It therefore fails SURGE-1 and the rider was not notified. The driver's statement that the app sent the multiplier, fare and free cancellation is a claim contradicted by the system record, which controls. Under SURGE-2 the full surge differential is refundable. Because the quoted base/distance/time subtotal also shifted ($11.46 → $10.66) and the booking fee rose $0.80, the fare difference is not attributable solely to surge, so SURGE-3's mixed-cause rule applies: (1.4 − 1.0) × $10.66 = $4.264 → $4.26; plus the booking-fee divergence of $16.17 − $4.26 − $12.71 = −$0.80, i.e. recharging the quoted booking fee → $4.26 + $0.80 = $3.56, in SGD. This is below the $10 threshold and matches DISP-2026-0142 (surge without notice), so the system decides (TH-1/TH-2).",
   "cited_facts": [],
   "cited_policy": [
-   "RD-1",
-   "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
-  "segment_findings": [
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "seg1",
-    "finding": "counts",
-    "ground": "named_road_elsewhere",
+    "element": "SURGE-1 notice states the new multiplier",
+    "finding": "not_met",
     "basis": [
-     "chat-22:51:15-driver",
-     "chat-22:51:55-rider"
+     "surge_pricing_log.notification_text"
     ],
-    "reason": "Driver asked to divert via 'Guillemard Road' and rider consented (RD-5: consent before the segment, named road). But the trace places the segment on a PIE/Aljunied-corridor spur out to ~1.3110/103.8854 and back, not on Guillemard Road, and the driver's statement names only Guillemard Road — the record places the segment elsewhere, so the named-road agreement does not cover it and no general route consent was given (the rider's 'Sure, go ahead' is confined to the named road). No traffic incident supports it and a single band-2 record cannot exempt (RD-4(a),(b)/G3). Extra_km counted (~2.3–3.75 km); refund = extra_km × (19.15/13.58) = extra_km × $1.4102 per RD-2. RD-1 unexcused deviation recorded against the driver; RD-6 flag since route_disputes_upheld_90d = 2."
+    "reason": "The notice says only 'Fares are 1.4× higher right now', a generic market statement; it does not state the new multiplier applied to this booking, and it affirmatively tells the rider her fare stays at $12.71."
+   },
+   {
+    "element": "SURGE-1 notice states the revised estimated fare",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "The notice states the quoted $12.71, not a revised estimated fare; the revised fare actually charged was $16.17."
+   },
+   {
+    "element": "SURGE-1 notice states a free-cancellation option",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "'You can cancel for free' is an unconditional free-cancellation statement, unlike 'cancellation fees may apply'."
+   },
+   {
+    "element": "SURGE-1 notice delivered in-app before pickup",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_timestamp",
+     "app_events"
+    ],
+    "reason": "Sent 17:18:45, before the 17:20:00 trip start and the 17:19:50 auto-arrival, and received in-app."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver-traffic-detour",
-    "reason": "No traffic incident exists on the replaced best-route segment (traffic.incidents = []); the only speed band touching it is SYN-0009 (PIE, band 2), which under RD-4(b)/G3 is corroborative only and cannot exempt a segment on its own. 'Traffic building up' is therefore not an established reasonable cause."
+    "id": "driver_statement",
+    "reason": "The driver asserts the surge notice contained the multiplier, the fare and free cancellation. The system record of the notice shows no new multiplier and no revised fare, and routes the system records to prevail over statements."
    },
    {
-    "id": "driver-verbal-agreement-Guillemard",
-    "reason": "The driver's claim is that the rider agreed via Guillemard Road; the chat does show a pre-segment consent, but only to the named road, and the GPS trace places the driven segment on a different corridor, so the claim that the detour is covered by that agreement fails (RD-5, G13)."
+    "id": "rider_full_difference",
+    "reason": "The rider asks for the full $3.46 difference. The surge differential at the quote's 1.0× multiplier is $4.26, of which only $3.46 is the actual fare gap; the remaining $0.80 is the un-surged booking-fee increase, which is not part of the surge differential and is therefore recharged to the rider."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 8.77,
- "input_tokens": 16542,
- "output_tokens": 1728,
+ "latency_s": 6.76,
+ "input_tokens": 10642,
+ "output_tokens": 1283,
  "requests": 1,
  "llm_calls": 1
 }

@@ -15,15 +15,24 @@ from typing import Literal, Optional
 
 from pathlib import Path
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_serializer, model_validator
 
 # ----------------------------------------------------------------------------
-# 1. Case: raw evidence for one dispute (spec 1.3). Loaded from data/cases/*.json
-#    or mapped from the Ryde sample dataset. Agents never see this directly.
+# 1. Case: raw evidence for one dispute (spec 1.3). Case files on disk use the organisers' RydeResolve schema plus
+#    our own fields (core/case_format.py); validation maps them to this shape. Agents never see this directly.
+#    Fields marked "v3" carry official data the v3 policy needs; nothing reads them for a ruling yet. They are left
+#    out of dumps while empty, so a case that carries none of them serialises and hashes exactly as before.
 # ----------------------------------------------------------------------------
 
-DisputeType = Literal["route_deviation", "no_show", "safety"]
+DisputeType = Literal["route_deviation", "no_show", "safety", "fare_dispute", "property_damage"]   # property_damage: no case data yet
 Party = Literal["rider", "driver"]
+
+
+def _drop_empty(d: dict, keys: tuple[str, ...]) -> dict:
+    for k in keys:
+        if k in d and d[k] in (None, [], {}):
+            del d[k]
+    return d
 
 
 class Dispute(BaseModel):
@@ -59,12 +68,23 @@ class Trip(BaseModel):
     dropoff_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     cancelled_by: Optional[Literal["rider", "driver", "system"]] = None
+    cancellation_reason: Optional[str] = None             # v3: the reason picked in the app (official trip_data.cancellation_reason) — the canceller's claim
+    scheduled_at: Optional[datetime] = None               # v3: scheduled pickup time (official trip_data.scheduled_time)
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("scheduled_at",))
 
 
 class Route(BaseModel):
     total_km: float
     total_min: float
     polyline: list[tuple[float, float]]           # [(lat, lon), ...]
+    roads: list[dict] = []                        # v3: [{"name", "from_m"?, "to_m"?}] along the optimal route (RD-4 road-name match)
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("roads",))
 
 
 class GpsPoint(BaseModel):
@@ -72,6 +92,11 @@ class GpsPoint(BaseModel):
     lat: float
     lon: float
     speed_kmh: float
+    road: Optional[str] = None                    # v3: road being driven at this sample (official location_desc); RD-5 named-road check
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("road",))
 
 
 class SpeedBand(BaseModel):
@@ -92,9 +117,27 @@ class Incident(BaseModel):
     reported_at: datetime
 
 
+class RoadIncident(BaseModel):
+    """v3: an incident identified by road name, without coordinates (official traffic_conditions, DISP-001)."""
+    incident_id: Optional[str] = None
+    road: Optional[str] = None
+    direction: Optional[str] = None
+    stretch: Optional[str] = None
+    incident_type: Optional[str] = None           # vehicle_fire | heavy_congestion | traffic_flow | ...
+    severity: Optional[str] = None
+    reported_at: Optional[datetime] = None
+    cleared_at: Optional[datetime] = None         # None = not cleared in the record
+    description: Optional[str] = None
+
+
 class Traffic(BaseModel):
     speed_bands: list[SpeedBand] = []
     incidents: list[Incident] = []
+    road_incidents: list[RoadIncident] = []       # v3
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("road_incidents",))
 
 
 class Weather(BaseModel):
@@ -144,9 +187,22 @@ class DriverProfile(RiderProfile):
     trips_90d: int
 
 
+class AccountRecord(BaseModel):
+    """v3: account records the official profile carries beyond the history counts."""
+    fraud_flags: Optional[int] = None
+    fraud_flag_details: Optional[str] = None
+    no_shows_30d: Optional[int] = None            # no-show cancellations in a 30-day rolling window (official policy §2.5)
+
+
 class Profiles(BaseModel):
     rider: RiderProfile
     driver: DriverProfile
+    rider_account: Optional[AccountRecord] = None   # v3
+    driver_account: Optional[AccountRecord] = None  # v3
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("rider_account", "driver_account"))
 
 
 class PolicyParams(BaseModel):
@@ -155,6 +211,49 @@ class PolicyParams(BaseModel):
     no_show_threshold_min: Optional[float] = None
     cancellation_fee: Optional[float] = None
     fee_goes_to: Optional[str] = None
+
+
+class FareQuote(BaseModel):
+    """v3: the upfront quote shown at booking (its total is Fare.quoted_total)."""
+    surge_multiplier: Optional[float] = None      # in effect at quote time
+    surge_amount: Optional[float] = None
+    surgeable_subtotal: Optional[float] = None
+
+
+class FareDetail(BaseModel):
+    """v3: fare data from the official fare_breakdown that the fare lines above do not carry."""
+    upfront_quote: Optional[FareQuote] = None
+    surge_amount: Optional[float] = None          # actual fare
+    surgeable_subtotal: Optional[float] = None    # actual fare: the part the multiplier applies to
+    booking_fee: Optional[float] = None
+    booking_fee_surge_exempt: Optional[bool] = None
+    excess_distance_fare: Optional[float] = None  # the record's own figure (DISP-001)
+    excess_tolls: Optional[float] = None
+
+
+class SurgeLog(BaseModel):
+    """v3: official surge_pricing_log (DISP-003)."""
+    quote_time_surge: Optional[float] = None
+    trip_start_surge: Optional[float] = None
+    surge_activated_at: Optional[datetime] = None
+    rider_notified: Optional[bool] = None
+    notification_method: Optional[str] = None
+    notification_timestamp: Optional[datetime] = None
+    notification_text: Optional[str] = None       # SURGE-1: the in-app notice the rider saw, verbatim (what it states is read by the court)
+    notification_content: Optional[dict[str, bool]] = None   # legacy: earlier records stated the three items as booleans
+    reason: Optional[str] = None
+
+
+class CallRecord(BaseModel):
+    """v3: an in-app call from the platform's call log (official app_events *_called_*, or call_records)."""
+    ts: Optional[datetime] = None
+    caller: Party
+    callee: Optional[Party] = None
+    answered: Optional[bool] = None
+    duration_s: Optional[float] = None
+    recording_ref: Optional[str] = None           # the trip call recording (official policy §1.2: verbal notice needs it)
+    transcript: Optional[str] = None
+    details: Optional[str] = None                 # the platform's own line, verbatim
 
 
 class Case(BaseModel):
@@ -171,6 +270,20 @@ class Case(BaseModel):
     profiles: Profiles
     policy_params: Optional[PolicyParams] = None
     provenance: dict[str, str] = {}               # field -> "synthetic" | "ryde_sample" | "onemap"
+    fare_detail: Optional[FareDetail] = None      # v3
+    surge: Optional[SurgeLog] = None              # v3
+    calls: list[CallRecord] = []                  # v3
+
+    @model_validator(mode="before")
+    @classmethod
+    def _from_file(cls, v):
+        """A case file in the official(-plus) shape is mapped here, so every loader reads it."""
+        from core.case_format import is_official, to_internal
+        return to_internal(v) if is_official(v) else v
+
+    @model_serializer(mode="wrap")
+    def _ser(self, handler):
+        return _drop_empty(handler(self), ("fare_detail", "surge", "calls"))
 
 
 # ----------------------------------------------------------------------------
@@ -214,12 +327,16 @@ class RequestedOutcome(BaseModel):
     amount: Optional[float] = None
 
 
+Reading = Literal["met", "not_met", "undetermined"]   # a judge-read policy element: the text satisfies it / does not / cannot tell
+
+
 class CaseBrief(BaseModel):
     side: Party
     claims: list[Claim]
     weaknesses: list[str]                         # the advocate must list its own weak points
     requested_outcome: RequestedOutcome
     segment_grounds: dict[str, Ground] = {}       # off-route segment fact id -> the policy ground this side's reading of the record supports
+    element_readings: dict[str, Reading] = {}     # judge-read policy element id (e.g. "SURGE-1:notice") -> met / not_met / undetermined, this side's honest reading
 
 
 class RebuttalPoint(BaseModel):
@@ -238,6 +355,7 @@ class Rebuttal(BaseModel):
     points: list[RebuttalPoint]
     revised_outcome: Optional[RequestedOutcome] = None   # only if the advocate changes its ask
     segment_grounds: dict[str, Ground] = {}       # the side's grounds after reading the opponent (empty = unchanged from the brief)
+    element_readings: dict[str, Reading] = {}     # the side's element readings after reading the opponent (empty = unchanged)
 
 
 # ----------------------------------------------------------------------------
@@ -256,7 +374,7 @@ Ground = Literal["incident",                  # RD-4: a qualifying incident on t
                  "rider_named_stop",          # RD-3(a): a rider message before the segment named the place and the car stopped there
                  "general_route_consent",     # RD-5: the rider gave a general route choice ("whichever way is faster") and the loop goes there
                  "named_road_tied",           # RD-5: the rider agreed to a named road and a record ties the driven segment to it
-                 "named_road_untied",         # RD-5 + G13: agreed to a named road, nothing ties the segment to it, nothing places it elsewhere
+                 "named_road_untied",         # RD-5: agreed to a named road, the record names no roads for the segment and nothing else ties or places it
                  "named_road_elsewhere",      # RD-5: agreed to a named road, but the record places the segment somewhere else
                  "driver_errand",             # RD-5 / RD-3(b): a stop or loop of the driver's own inside the segment that no rider message asked for
                  "scope_other",               # RD-5: the rider agreed to something else (a short stop, a different change), not this segment
@@ -266,10 +384,21 @@ Ground = Literal["incident",                  # RD-4: a qualifying incident on t
 # The consequence the written policy attaches to each ground. The judge reads the words and names the ground; code
 # holds it to the consequence (check_ruling): a finding that contradicts its own ground is sent back, then escalated.
 GROUND_CONSEQUENCE: dict = {
-    "incident": "exempt", "rider_named_stop": "exempt", "general_route_consent": "exempt", "named_road_tied": "exempt",
+    # incident: under v3 a traffic reason does not excuse the fare (RD-2); it only clears the driver of a violation
+    "incident": "counts", "rider_named_stop": "exempt", "general_route_consent": "exempt", "named_road_tied": "exempt",
     "named_road_untied": "undetermined",
     "named_road_elsewhere": "counts", "driver_errand": "counts", "scope_other": "counts", "consent_after_or_none": "counts",
 }
+
+
+class ElementFinding(BaseModel):
+    """The judge's reading of one policy element that turns on what a text says (not a segment): e.g. whether the surge
+    notice stated the new multiplier, the revised fare and a free-cancel option (SURGE-1), or why the driver cancelled
+    (NS-0). Code fixes the consequence of each reading and checks the basis exists."""
+    element: str                                  # the element id the trace names, e.g. "SURGE-1:notice", "NS-0:reason"
+    finding: Reading
+    basis: list[str] = []                         # fact ids the reading rests on
+    reason: str                                   # one clause-cited sentence
 
 
 class SegmentFinding(BaseModel):
@@ -280,6 +409,8 @@ class SegmentFinding(BaseModel):
     finding: Finding                              # exempt = RD-3/RD-4/RD-5 excuses it; counts = refundable under RD-2; undetermined = evidence does not set
     ground: Ground = "other"                      # the policy branch the finding rests on (see GROUND_CONSEQUENCE); records before 2026-10-11 carry "other"
     basis: list[str] = []                         # the chat / statement fact ids the finding rests on (code checks they exist, who wrote them and when)
+    named_road: Optional[str] = None              # named_road_* grounds: the road the rider agreed to; code checks it against the roads the segment drove (RD-5)
+    excluded_road: Optional[str] = None           # a road the rider's words rule out ("ok, but not via Y"); code checks whether the segment drove it
     reason: str                                   # one clause-cited sentence
 
     @model_validator(mode="before")
@@ -309,6 +440,8 @@ class Ruling(BaseModel):
     cited_policy: list[str]
     rejected_claims: list[RejectedClaim] = []
     flag_account: bool = False                    # structured account-flag decision; the only thing actions / checks read
+    goodwill_credit: Optional[float] = None       # NS-8: $5.00 credit when the driver neither arrived nor tried to make contact
+    element_findings: list[ElementFinding] = []   # one entry per "? element" the trace lists (surge notice content, cancellation reason)
     segment_findings: list[SegmentFinding] = []   # route cases: one entry per off-route segment fact (drives the map colours)
     safety_concern: SafetyConcern                 # REQUIRED: the judge's reading of every message, statement and complaint (SAFE-1 / SAFE-2);
                                                   # "none" means "read and found nothing", never "not read"

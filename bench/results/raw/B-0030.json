@@ -4,43 +4,80 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:42.108280+00:00",
+ "ts": "2026-10-13T15:35:50.892689+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; advise the rider that cancellations are only free within 3 minutes of matching and that driver ETA/distance is not a waiver ground under Ryde's published policy.",
-  "confidence": 0.88,
-  "reasoning": "Safety screen: chat consists only of a rider ETA query and the driver's \"About 5 min, traffic\" reply; no threat, harassment, sexual remark, abuse, or dangerous-driving allegation in chat, complaint or driver statement. safety_concern = none.\n\nDispute is a post-trip cancellation-fee dispute on an on-demand (immediate) RydeX booking. cancelled_by = rider, so NS-0 routes this to NS-4, not NS-1/NS-2 (no driver no-show claim is made; the driver simply says \"I was on my way when the rider cancelled\").\n\nNS-4 arithmetic: matched at 21:30:00 (accepted_at); cancelled at 21:33:20. Elapsed = 3 min 20 s = 200 s > 180 s (3:00). The free-cancellation window had expired, so the $6.61 cancellation fee is valid and no_action is the result. The rider's stated reason (driver still far away) is not a ground for waiver: under NS-4 the driver's not-yet-arrived status does not entitle the rider to free cancellation, and Ryde has no published \"driver later than ETA\" waiver (NS-8 is informational and not citable, and no ETA field exists in the record). The rider's remedy would be a discretionary RydeHELP voucher request (NS-7), which does not by itself void the fee.\n\nRecord consistency check: no \"I'm Here\" tap, no arrival confirmation and no waiting fee appear in the timeline (driver_arrived_at / driver_pressed_here_at / fee_applied_at all null), and the fare breakdown shows only cancellation_fee 6.61 — so the only charge in dispute is the cancellation fee and no cancelled-by-driver branch (NS-1/NS-2/NS-3) applies. GPS shows the driver ~2.8 km from the NUS pickup at 21:33:20, consistent with \"on my way\"; irrelevant to NS-4 but confirms no no-show mechanics were triggered. Rates/route deviation are not in dispute (trip never started) and no refund component exists.\n\nDriver profile (no_show_disputes_upheld_90d = 1, disputes_upheld_90d = 1) is not a basis for any action here: RD-6 applies only where a route-deviation refund > 0 or an RD-1 violation is recorded, neither of which exists in this cancelled-trip case. No flag_account. All elements needed (match time, cancel time, cancel initiator, charge amount) are present and timed, so evidence_status = sufficient.",
+  "ruling": "refund_full",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show fee to the rider; log the voided no-show on the driver's record for repeated invalid no-show claims.",
+  "confidence": 0.9,
+  "reasoning": "Safety screen: the complaint, the driver statement and the chat contain no threat, harassment, sexual remark or dangerous-driving allegation — nothing safety-related. Proceeding on the merits.\n\nCancellation type: the driver cancelled and the recorded reason is rider_no_show, so NS-1/NS-2 govern (NS-0).\n\nNS-1 conditions, checked against the system records:\n(i) Arrival at pickup: driver_arrived at 21:32:45; the GPS cluster from 21:33:00 to 21:37:35 sits at ~1.35258, 103.94434, i.e. roughly 40–50 m from the pickup point (1.3525, 103.9447) — within 200 m. Met.\n(ii) Free wait: the 5-minute window runs from the later of scheduled pickup (21:32:45 if the driver arrival is treated as the scheduled pickup) and arrival, so it expires at 21:37:45. The driver cancelled at 21:37:35 — 10 seconds early. No no-show threshold (e.g. 8 min) appears in this record. Not met.\n(iii) Contact attempts: ≥ 1 in-app message (21:33:15, 21:37:25) was sent — met; but the required ≥ 1 in-app phone call must be a completed call. The only call record, 21:34:15, shows answered=false, duration_s=0.0 — an unanswered, zero-second call is not a phone call made to the rider. Not met.\n(iv) Continuous presence: the telemetry shows the driver stationary at the pickup for the whole window (samples at 21:33–21:37 all at the same location) with no GPS gap. Met.\n\nTwo NS-1 conditions therefore fail, so the fee is voided under NS-2: refund_full of $5.00. The rider's account is clean, but the profile never decides the case — the GPS, call and event records do. The driver marked/cancelled on a no-show without completing the required call and before the free wait expired; there is no indication of fraudulent arrival marking (GPS was at the pickup), so no RD-6/NS-2 flag_account is applied; the void should nonetheless be logged against the driver's no-show record.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7"
+   "NS-1",
+   "NS-2",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "rider_free_cancellation",
-    "reason": "Cancellation occurred 3 min 20 s after matching (21:30:00 -> 21:33:20), outside the 3-minute free window; NS-4 makes the $6.61 fee payable. The driver's distance/ETA is not a statutory or published waiver ground (NS-8 informational only)."
+    "element": "NS-1(i) driver arrived and GPS within 200 m of pickup",
+    "finding": "met",
+    "basis": [
+     "driver_arrived 21:32:45",
+     "gps 21:33:00–21:37:35 near 1.35258,103.94434"
+    ],
+    "reason": "Arrival recorded and GPS stationary ~40–50 m from Tampines Mall pickup (1.3525, 103.9447), within the 200 m radius."
    },
    {
-    "id": "driver_no_show",
-    "reason": "No 'I'm Here' tap, no arrival confirmation and no waiting-fee entry in the timeline; the driver never claimed the rider was a no-show (statement: was on his way), so NS-1/NS-2 are not engaged."
+    "element": "NS-1(ii) 5-minute free wait elapsed before cancellation",
+    "finding": "not_met",
+    "basis": [
+     "driver_arrived 21:32:45",
+     "cancellation_time 21:37:35"
+    ],
+    "reason": "The wait ran from the later of arrival/scheduled pickup (21:32:45) and would expire at 21:37:45; cancellation at 21:37:35 is 10 seconds early. No record override threshold applies."
+   },
+   {
+    "element": "NS-1(iii) at least 1 in-app message AND at least 1 in-app call before cancelling",
+    "finding": "not_met",
+    "basis": [
+     "chat 21:33:15",
+     "chat 21:37:25",
+     "call 21:34:15 unanswered duration 0"
+    ],
+    "reason": "Messages were sent, but the sole call was unanswered with 0 s duration — not a phone call to the rider as NS-1 requires."
+   },
+   {
+    "element": "NS-1(iv) driver remained at the pickup point throughout",
+    "finding": "met",
+    "basis": [
+     "gps 21:33:00–21:37:35 stationary"
+    ],
+    "reason": "Every telemetry sample in the wait window is at the same pickup location with no gap."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement",
+    "reason": "Driver states he waited more than 5 minutes and cancelled for no-show, but the event/GPS records show cancellation at 21:37:35, before the 5-minute window from 21:32:45 expired, and the only call was unanswered (0 s). System records override the statement."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.57,
- "input_tokens": 12474,
- "output_tokens": 1013,
+ "latency_s": 6.97,
+ "input_tokens": 11303,
+ "output_tokens": 1350,
  "requests": 1,
  "llm_calls": 1
 }

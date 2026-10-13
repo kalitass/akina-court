@@ -7,6 +7,7 @@ from the benchmark files. This script writes those figures into the hand-written
 
 Marker syntax
   README.md, web/index.html   <!--n:PATH[:FMT]-->value<!--/n-->     the value between the markers is replaced
+                              <!--gen:audit_model|audit_runs-->      README sentences that exist only while an audit sample is stored
                               <!--chart:NAME-->...<!--/chart-->      the whole block is regenerated (bar charts)
                               <!--gen:NAME-->...<!--/gen-->          the whole block is regenerated (meta description)
   web/i18n.zh.src.js          {n:PATH[:FMT]}                         rendered into web/i18n.zh.js (keys and values)
@@ -45,10 +46,6 @@ def numbers() -> dict:
         pa["cites_pct"] = round(pa["cites_invalid"] / pa["cites_total"] * 100, 1) if pa["cites_total"] else 0.0
     n["provenance"]["calls_c"] = f"{n['provenance']['calls']:,}"
     n["provenance"]["runs_c"] = f"{n['provenance']['runs']:,}"
-    b = n.get("blind")
-    n["blind_note"] = ("not yet run on this version" if not b or "court" not in b else
-                       f"{b['cases']} cases; full court {b['court']['exact']}/{b['cases']} matched, {b['court']['wrong_executed']}/{b['cases']} wrong and executed"
-                       + (f"; judge + check {b['judge_only']['exact']}/{b['cases']}" if "judge_only" in b else ""))
     n["swap_note"] = ("not yet re-run on this version" if n["court"].get("swap_invariance") is None
                       else f"{n['court']['swap_invariance'] * 100:.0f}% same ruling with rider and driver identities swapped")
     n["repeat_note"] = ("not yet re-run on this version" if n["court"].get("pass_all_repeats") is None
@@ -109,8 +106,8 @@ def chart(name: str, n: dict) -> str:
         return f"<!--chart:accuracy-->{bar_chart('Right, or handed to a person', f'right outcome, amount and hand-off, or sent to a reviewer; only a wrong decision that executes counts against a system, of {cases} cases', rows, aria, cases)}<!--/chart-->"
     if name == "exact":
         rows = [(ARM_LABEL[a], n["arms"][a]["exact"], f"{n['arms'][a]['exact']}/{cases}") for a in ARMS]
-        aria = "Matched the reference outright: " + ", ".join(f"{l} {s}" for l, _, s in rows)
-        return f"<!--chart:exact-->{bar_chart('Matched the reference outright', f'outcome, amount and hand-off all right, of {cases} cases; a hand-off on a case the reference rules is not counted here', rows, aria, cases)}<!--/chart-->"
+        aria = "Matched the reference: " + ", ".join(f"{l} {s}" for l, _, s in rows)
+        return f"<!--chart:exact-->{bar_chart('Matched the reference', f'outcome, amount and hand-off all right, of {cases} cases; a hand-off counts only where the reference accepts one', rows, aria, cases)}<!--/chart-->"
     if name == "wrong":
         vals = {a: (n["arms"][a]["wrong_executed_single_call"] if a in ("raw", "facts_only") else n["arms"][a]["wrong_and_executed_with_gate"]) for a in ARMS}
         rows = [(ARM_LABEL[a], vals[a], f"{vals[a]}/{cases}") for a in ARMS]
@@ -124,46 +121,55 @@ def chart(name: str, n: dict) -> str:
 
 
 # the classic benchmark cases the landing page offers behind "More examples": (scenario name, one-line brief). Case ids,
-# titles and outcomes come from the manifests, so the chips follow a regeneration; the briefs carry no figure.
+# titles and outcomes come from the manifest, so the chips follow a regeneration; the briefs carry no figure. A name the
+# manifest no longer has is skipped (the brief describes that scenario's reference answer, so it is never re-used).
 EXAMPLES = [
-    ("rd_incident_on_stretch", "An accident sat on the stretch the driver left, reported before he turned off: the detour is excused."),
-    ("rd_consent_after", "The rider said \"sure\" two minutes after the car had already left the route: not consent."),
-    ("rd_stop_named", "The rider named the mall and asked for the stop: the way there is not a detour."),
-    ("rd_prior_flag", "A detour upheld against a driver with prior upheld route disputes: refund and an account flag for a person."),
-    ("ns_fake_here_far", "\"I'm Here\" tapped hundreds of metres from the pickup: fee refunded, the tap goes to a person."),
-    ("bl_gps_tail_missing", "The GPS trace ends minutes before the drop-off: the missing stretch cannot be measured, a person decides."),
+    ("rd_port_trust_fastest", "\"Whatever road is fastest, I trust you\": the rider left the route to the driver, so a slower way round is not refunded. A judge alone refunded it; the court refunded nothing and left the open reading to a person."),
+    ("sg_port_notice_fare_unchanged", "The surge notice said \"your fare stays at the quoted price\", then the surge was charged: no revised fare was ever stated, so the surge part is refunded."),
+    ("ns_driver_cancel_flat_tyre", "The driver waited, messaged and called, then wrote \"Sorry, tyre puncture, car got problem, have to cancel\": a driver's own reason, so the fee is refunded."),
+    ("rd_consent_except_road", "\"可以，不要走 Clementi Avenue 2\" (OK, just not Clementi Avenue 2) and the driver never did: the agreement covers the detour, no refund."),
+    ("rd_notice_ack_hmm", "The driver said he was taking another road and the rider answered \"hmm ok lor\": an acknowledged notice counts."),
+    ("ns_gate_b_refused_to_move", "Driver at the other gate within 200 m, rider asking him to come over: he waited, called and messaged, the fee stands."),
 ]
-OUTCOME = {"no_action": "no refund", "refund_partial": "refund", "refund_full": "fee refunded", "escalate": "a person decides"}
+OUTCOME = {"no_action": "no refund", "refund_partial": "refund", "refund_full": "fee refunded", "fee_waived": "fee waived", "escalate": "a person decides"}
 
 
 def examples_block(n: dict) -> str:
     import json
-    from bench.ops_page import SCENARIO, humanize
-    by_name = {}
-    for m in (ROOT / "data" / "bench" / "manifest.json", ROOT / "data" / "bench" / "blind" / "manifest.json"):
-        for c in json.loads(m.read_text())["cases"]:
-            by_name[c["name"]] = c
+    from bench.ops_page import title_for
+    by_name = {c["name"]: c for c in json.loads((ROOT / "data" / "bench" / "manifest.json").read_text())["cases"]}
     chips = []
     for name, brief in EXAMPLES:
-        c = by_name[name]
-        out = OUTCOME[c["truth"]["ruling"]] + (" + account flag" if c["truth"].get("flag_account") else "")
-        title = SCENARIO.get(name) or humanize(name)
+        c = by_name.get(name)
+        if c is None:
+            print(f"sync_numbers: example scenario {name} is not in the manifest; its chip is left out", file=sys.stderr)
+            continue
+        out = OUTCOME.get(c["truth"]["ruling"], c["truth"]["ruling"].replace("_", " ")) + (" + account flag" if c["truth"].get("flag_account") else "")
+        title = title_for(name, c.get("type"))
         chips.append(f'<a class="chip" href="/replay.html?case={c["case_id"]}&phase=court"><b>{title}</b><span>{brief}</span><em>{out}</em></a>')
-    blind = n.get("blind") or {}
-    summary = f"More examples · {n['cases']} benchmark cases and {blind.get('cases', 0)} held-out cases, every one replayable"
+    summary = f"More examples · {n['cases']} benchmark cases, every one replayable"
     return (f'<!--gen:examples--><details class="audits more"><summary>{summary}</summary><div class="chips">' + "".join(chips)
-            + f'<a class="chip go" href="/replay.html?case=B-0001&phase=court"><b>More →</b><span>All {n["cases"]} benchmark and {blind.get("cases", 0)} held-out cases, one by one, in the replay page.</span></a>'
+            + f'<a class="chip go" href="/replay.html?case=B-0001&phase=court"><b>More →</b><span>All {n["cases"]} benchmark cases, one by one, in the replay page.</span></a>'
             + '</div></details><!--/gen-->')
 
 
 def gen(name: str, n: dict) -> str:
     if name == "examples":
         return examples_block(n)
+    pv = n["provenance"]
+    if name == "audit_model":      # README bullet, only while an audit sample (bench/audit_sample.py) is stored for these results
+        # the block opens at the end of the previous bullet, so an absent sample leaves no empty line or stray marker in the list
+        body = (f"\n- **Knowing which model answered.** The API labels its served model `{pv['served_model']}` while we request `deepseek-chat`; "
+                "every stored response keeps both ids and the API's own trace ids.") if pv.get("served_model") else ""
+        return f"<!--gen:audit_model-->{body}<!--/gen-->"
+    if name == "audit_runs":
+        body = (f"; {pv['audit_runs']} further runs keep the exact requests and raw responses in `bench/results/audit_sample/`." if pv.get("audit_runs") else ".")
+        return f"<!--gen:audit_runs-->{body}<!--/gen-->"
     if name == "meta":
         c = n["court"]
         text = (f"A ride dispute settled in {round(c['latency_mean_s'])} seconds, every ruling on the record. Multi-agent dispute resolution for ride-hailing: "
                 f"code computes the facts, two AI advocates and a judge argue, and a pre-execution policy check blocks any unsupported outcome or amount. "
-                f"3 agents, 3 dispute types (safety always goes to a person), {c['latency_mean_s']:.1f} s per case, {c['auto']}/{n['cases']} cleared automatically, "
+                f"3 agents, {sum(1 for v in n['types'].values() if v)} dispute types (safety always goes to a person), {c['latency_mean_s']:.1f} s per case, {c['auto']}/{n['cases']} cleared automatically, "
                 f"{n['arms']['court']['wrong_and_executed_with_gate']} wrong decisions executed.")
         secs = round(c["latency_mean_s"])   # link previews show attribute text raw, so numbers go in here, not as <!--n:--> markers
         og_title = f"Akina Court — a ride dispute settled in {secs} seconds, every ruling on the record"

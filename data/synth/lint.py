@@ -1,6 +1,6 @@
 """One linter for every case file: the physical and story rules a reader checks by eye, measured from the record alone.
 
-    .venv/bin/python data/synth/lint.py                 # every committed case (bench, held-out, demos, the organisers' sample)
+    .venv/bin/python data/synth/lint.py                 # every committed case (bench, demos, the organisers' samples)
     .venv/bin/python data/synth/lint.py data/cases/C-0001.json
 
 These rules hold for any case, generated or hand-written; nothing here reads a scenario. Scenario-specific claims (what
@@ -10,7 +10,6 @@ over every committed file.
 """
 from __future__ import annotations
 
-import json
 import os
 import re
 import statistics
@@ -20,8 +19,12 @@ from datetime import datetime, timedelta
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, HERE)
-from contract import ENDPOINT_RADIUS_M, STOP_MIN_S, hav_m, project, segments, stops, ts  # noqa: E402
+sys.path.insert(0, ROOT)
+from core.case_format import read_case  # noqa: E402
+from contract import ENDPOINT_RADIUS_M, STOP_MIN_S, hav_m, loops_back, project, segments, stops, ts  # noqa: E402
 
+MAX_STEP_M = 125           # 5 s at 90 km/h
+SPEEDING_STEP_M = 140      # ~100 km/h: only where the complaint alleges speeding (the trace corroborates it)
 TYPING_S = 10              # a driver's message is typed in the TYPING_S before its timestamp; the car must not move meanwhile
 TYPING_MOVE_M = 12         # GPS jitter allowance while stationary
 CONNECTOR_M = 160          # the straight hop from the road to a pin (OneMap snaps a pin to the nearest road of each route); beyond this the pin is wrong
@@ -50,7 +53,7 @@ def _pos_at(gps, t: datetime, tol_s: int = 30):
     return sorted((p for p in gps if abs((ts(p) - t).total_seconds()) <= tol_s), key=lambda p: abs((ts(p) - t).total_seconds()))
 
 
-WARN_CODES = ("TYPING", "RETRACE")     # a reader may frown, the record stays consistent: reported, not refused
+WARN_CODES = ("TYPING", "RETRACE", "LOOPBACK")     # LOOPBACK: reported; the candidate search already refuses it for new loops     # a reader may frown, the record stays consistent: reported, not refused
 
 
 def lint_case(case: dict, warnings: bool = False) -> list[str]:
@@ -124,6 +127,8 @@ def _lint(case: dict) -> list[str]:
             if s["route_km"] < MIN_BYPASS_KM:
                 bad(f"SPUR: segment {k} leaves and rejoins the route within {s['route_km']:.2f} km (an out-and-back, not a different way)")
                 continue
+            if any(p.get("road") for p in gps) and loops_back(trip[s["i0"]:s["i1"] + 1]):
+                bad(f"LOOPBACK: segment {k} comes back over its own path (an out-and-back spur, a U-turn or a closed loop) with no stop in it")
             stretch = [(p, km) for p, km in zip(poly, cum) if s["entry_km"] + 0.05 <= km <= s["exit_km"] - 0.05]
             inside = [(p["lat"], p["lon"]) for p in trip[s["i0"]:s["i1"] + 1]]
             if len(stretch) >= 2 and inside:
@@ -132,6 +137,13 @@ def _lint(case: dict) -> list[str]:
                                if min(hav_m(stretch[i][0], g) for g in inside) <= 60 and min(hav_m(stretch[i + 1][0], g) for g in inside) <= 60)
                 if total and redriven / total > RETRACE_MAX:
                     bad(f"RETRACE: segment {k} re-drives {redriven / total:.0%} of the {s['route_km']:.2f} km stretch it claims to leave")
+
+    # ---- speed: no 5 s step faster than a car drives here (a speeding complaint may show up to ~100 km/h)
+    if len(gps) > 1:
+        step = max(hav_m((a["lat"], a["lon"]), (b["lat"], b["lon"])) / max((ts(b) - ts(a)).total_seconds() / 5, 1) for a, b in zip(gps, gps[1:]))
+        limit = SPEEDING_STEP_M if re.search(r"speeding", case["dispute"]["statement"], re.I) else MAX_STEP_M
+        if step > limit:
+            bad(f"SPEED: a 5 s step of {step:.0f} m (> {limit} m)")
 
     # ---- traffic: a band the car drove must agree with the trace; an incident is not written for this trip
     for b in case.get("traffic", {}).get("speed_bands", []):
@@ -150,8 +162,10 @@ def _lint(case: dict) -> list[str]:
 
 def all_case_files() -> list[str]:
     out = []
-    for d in ("data/bench/cases", "data/bench/blind/cases", "data/cases"):
+    for d in ("data/bench/cases", "data/bench/candidates/cases", "data/cases"):
         p = os.path.join(ROOT, d)
+        if not os.path.isdir(p):
+            continue
         out += sorted(os.path.join(p, f) for f in os.listdir(p) if f.endswith(".json"))
     return out
 
@@ -160,7 +174,7 @@ def main(argv: list[str]) -> int:
     files = argv or all_case_files()
     n_bad = 0
     for f in files:
-        errs = lint_case(json.load(open(f)), warnings=True)
+        errs = lint_case(read_case(f), warnings=True)
         if errs:
             n_bad += any(e.split(":")[0] not in WARN_CODES for e in errs)
             print(os.path.relpath(f, ROOT))

@@ -41,13 +41,14 @@ you need not be neutral, but you may ONLY argue from facts in the case fact tabl
 
 MATERIALS
 - The ticket (below) and a fact INDEX: fact ids and their source only. You do not yet know what any fact says.
-- The full dispute policy (below). Clauses are numbered (RD-1, NS-2, FARE-1 ...). Clauses marked 不可引用 are
-  informational and must not be cited. Only numbered clauses from the policy may be cited; the court's own procedure
+- The full dispute policy (below). Clauses are numbered (RD-1, NS-2, SURGE-1 ...). Only numbered clauses from the
+  policy may be cited, and only those of this dispute type (plus FARE-0, SAFE-, TH-); the court's own procedure
   (the rules below) is not a clause and must never be cited as one.
 
 TOOLS
 - Six get_*_facts(case_id) tools return slices of the fact table. Call at least the tool matching the dispute type
-  (route_deviation → get_route_facts, no_show → get_no_show_facts) plus get_chat_facts; call others when useful.
+  (route_deviation → get_route_facts, no_show → get_no_show_facts, fare_dispute → get_fare_facts) plus get_chat_facts;
+  call others when useful.
   Do not call the same tool twice.
 
 RULES OF ARGUMENT
@@ -55,10 +56,11 @@ RULES OF ARGUMENT
   not exist is void and the judge never sees it.
 - When chat / statements conflict with gps / timeline / fare facts, the system records win. Do not build
   a claim on a statement alone when a system record contradicts it.
-- Consent (RD-5) is the rider's own message sent before the segment started; a driver's statement that the rider
-  agreed verbally is a claim, not consent (G11). Quote the message you rely on by its fact id and say what it means
-  and how far it reaches: a general route choice, or a specific named road — and, for a named road, which fact ties
-  the driven segment to that road (if none does, say so: the judge may find it undetermined, G13).
+- Consent (RD-5) is the rider's own message sent before (or at) the start of the segment; a driver's statement that
+  the rider agreed verbally is a claim, not consent. Quote the message you rely on by its fact id and say what it means
+  and how far it reaches: a general route choice, or a specific named road — and, for a named road, whether it is
+  among the "Roads driven" the segment fact lists (code checks this). A traffic reason (RD-4) does not exempt a
+  segment from the refund; it only decides whether a driver violation is recorded.
 - If a message, statement or the complaint reads as a threat, intimidation, harassment or a dangerous-driving
   allegation, say so and cite it (SAFE-1 / SAFE-2): the case then goes to a person. A hint word alone is not a threat.
 - Profile facts can support a flag_account request, never the main finding.
@@ -71,11 +73,16 @@ OUTPUT
 - Return a CaseBrief. side = "{SIDE}". Claim ids: {PREFIX}1, {PREFIX}2, ... Write in English, concise, each
   assertion one or two sentences that a judge can check against the cited facts.
 - segment_grounds: for EVERY off-route segment fact (the gps facts that say "Off-route segment ..."), the policy
-  ground your honest reading of the record supports, one of "rider_named_stop" (RD-3(a): a rider message before the segment named the place and the car stopped there), "general_route_consent" (RD-5: a general route choice such as "whichever way is faster", and the loop goes there), "named_road_tied" (RD-5: agreed to a named road and a record ties the segment to it), "named_road_untied" (agreed to a named road, nothing ties the segment to it, nothing places it elsewhere: G13), "named_road_elsewhere" (the record places the segment somewhere else), "driver_errand" (a stop or loop of the driver's own that no rider message asked for), "scope_other" (the rider agreed to something else, e.g. a short stop), "consent_after_or_none" (no rider message before the segment agrees to it), "incident" (RD-4), "other". This is a statement of what the record shows, not of what helps your side: a ground both
-  advocates state is taken as agreed and binds the judge; the judge decides only between the grounds the two of you put forward. Empty for non-route cases.
+  ground your honest reading of the record supports, one of "rider_named_stop" (RD-3(a): a rider message before the segment named the place and the car stopped there), "general_route_consent" (RD-5: a general route choice such as "whichever way is faster", and the loop goes there), "named_road_tied" (RD-5: agreed to a named road and the segment drove it — code checks the roads; a yes with a road ruled out, "but not via Y", does not cover a segment that drove Y), "named_road_untied" (agreed to a named road, and the record names no roads for the segment), "named_road_elsewhere" (the segment did not drive the named road, or the record places it somewhere else), "driver_errand" (a stop or loop of the driver's own that no rider message asked for), "scope_other" (the rider agreed to something else, e.g. a short stop), "consent_after_or_none" (no rider message before the segment agrees to it), "other". This is a statement of what the record shows, not of what helps your side: a ground both
+  advocates state is shown to the judge as agreed; the judge still rules on its own reading. Empty for non-route cases.
+- element_readings: when the ticket lists QUESTIONS OF READING (e.g. "SURGE-1:notice" — does the in-app notice text state the new
+  multiplier, the revised fare AND that the rider may cancel without penalty; "NS-0:reason" — did the driver cancel because the
+  rider did not show, or for a reason of his own), give your honest reading of the quoted text for each id: "met", "not_met" or
+  "undetermined". Read the words, not what helps your side: a notice that says "fees may apply" does not offer a free cancel; a
+  driver who writes "car got problem, cancelling" cancelled for his own reason whatever reason he picked in the app.
   Read the EXCHANGE, not the yes alone. A yes in any words ("sure", "ok go ahead", "can lah", "可以") to a driver's ask that names the road
-  to be taken ("can I go round via X?") is an agreement to X: named_road_tied if you can cite the record that ties the segment to X (a stop
-  on X, a message placing the car on X, a road name in a fact), otherwise named_road_untied — never "tied" without such a record, never
+  to be taken ("can I go round via X?") is an agreement to X: named_road_tied if X is among the segment's "Roads driven", named_road_elsewhere if
+  the segment lists roads and X is not among them, named_road_untied only when the segment lists no roads — never
   "general" because the yes was short. A road named only as the one to be avoided ("jam on the PIE, shall I take another way?") names no
   route; a yes to that, or words leaving the route to the driver ("whichever way is faster", "随便你"), is general_route_consent, and a
   loop that leaves the corridor and reaches nothing is still general_route_consent unless a record shows a stop or an errand of the driver's
@@ -168,12 +175,15 @@ def build_rebutter(side: Party, advocate: Agent) -> Agent[AdvocateDeps, Rebuttal
 SYSTEM_CACHE: dict = {}
 
 
-def ticket_prompt(dispute: dict, trip_summary: str, table: FactTable) -> str:
+def ticket_prompt(dispute: dict, trip_summary: str, table: FactTable, questions: list[str] | None = None) -> str:
     index = "\n".join(f"  {f.id}  {f.source}" for f in table.facts)
+    q = ("QUESTIONS OF READING (the code cannot read words; for each element id give your honest reading of the text in "
+         "element_readings: met / not_met / undetermined — a reading both advocates share is taken as agreed):\n"
+         + "\n".join(f"  {x}" for x in questions) + "\n\n") if questions else ""
     return (f"CASE {table.case_id} — dispute type: {dispute['type']}, filed by: {dispute['filed_by']}\n"
             f"Complaint: \"{dispute['statement']}\"\n"
             f"Trip: {trip_summary}\n\n"
-            f"FACT INDEX (ids and sources only; read contents with the tools):\n{index}\n\n"
+            f"FACT INDEX (ids and sources only; read contents with the tools):\n{index}\n\n{q}"
             f"Build your brief for the {dispute.get('_side', 'client')}.")
 
 

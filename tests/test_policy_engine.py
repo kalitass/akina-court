@@ -8,7 +8,7 @@ from core.counterfactual import apply
 from core.facts.tools import build_fact_table
 from core.policy import citable_ids
 from core.policy_engine import check_ruling, evaluate, expected_amount
-from core.schemas import Case, Ruling, SegmentFinding
+from core.schemas import Case, ElementFinding, Ruling, SegmentFinding
 from core.verify import verify_ruling
 
 
@@ -39,10 +39,19 @@ def ruling_from_expected(cid, exp, cert):
                 for f, e in EXEMPT.get(cid, {}).items()]
     upheld = any(f.finding == "counts" for f in findings) or any(sg["exempt"] is False for sg in cert.segments.values())
     flag = bool(cert.flag_required) if cert.flag_required is not None else bool(cert.flag_conditional and upheld)
+    # a reading the trace leaves to the judge: RD-3 "the rider named this place" follows its segment's finding; any other
+    # element takes the reading whose consequence is the expected outcome
+    found = {f.fact_id: f.finding for f in findings}
+    elements = []
+    for eid, el in cert.elements.items():
+        reading = (("met" if found.get(el["segment"]) == "exempt" else "not_met") if el.get("segment")
+                   else next((k for k, v in el["outcome"].items() if v == exp["ruling"]), "undetermined"))
+        elements.append(ElementFinding(element=eid, finding=reading, basis=["F1"], reason=f"ref [{eid.split(':')[0]}]"))
+        flag = flag or bool(el.get("flag_if_met") and reading == "met")
     return Ruling(ruling=exp["ruling"], amount=exp.get("amount"), recommended_action="x" + (" + flag_account" if flag else ""), flag_account=flag,
                   safety_concern="none", evidence_status="sufficient",
                   confidence=0.9, reasoning="[F1][RD-1]", cited_facts=["F1"], cited_policy=exp["cited_policy"],
-                  segment_findings=findings, escalate=exp["escalate"])
+                  segment_findings=findings, element_findings=elements, escalate=exp["escalate"])
 
 
 @pytest.mark.parametrize("cid", [f"C-{n:04d}" for n in range(1, 7)])
@@ -69,10 +78,11 @@ def test_wrong_amount_is_blocked():
 
 
 def test_flipped_code_settled_finding_is_blocked():
-    case, exp = load("C-0003")
+    case, exp = load("C-0002")                    # no rider message before the detour: code settles the segment (counts)
     table = build_fact_table(case); cert = evaluate(case, table)
-    r = ruling_from_expected("C-0003", exp, cert).model_copy(update={"ruling": "refund_partial", "amount": 1.18,
-                                                                        "segment_findings": [_sf(fact_id="F3", finding="counts", reason="x")]})
+    assert cert.segments["F3"]["exempt"] is False
+    r = ruling_from_expected("C-0002", exp, cert).model_copy(update={"ruling": "no_action", "amount": None,
+                                                                        "segment_findings": [_sf(fact_id="F3", finding="exempt", reason="x")]})
     ok, why = check_ruling(cert, r)
     assert not ok and any("contradicts code" in w for w in why)
 
@@ -89,7 +99,7 @@ def test_fake_citation_escalates():
     ("swap_profiles", "C-0001", ["refund_partial", "no_action", "escalate"]), ("heavy_rain", "C-0001", ["refund_partial", "no_action", "escalate"]),
     ("grace_179", "C-0005", ["refund_full", "escalate"]), ("grace_181", "C-0005", ["no_action", "escalate"]),
     ("no_consent", "C-0001", ["refund_partial", "escalate"]),   # no rider message before the segment remains: RD-5 / RD-3 fail by timing, code settles the segment (the driver's words and statement are not consent, G11)
-    ("metered_to_fixed", "C-0001", ["no_action", "escalate"]),
+    ("no_call", "DISP-002", ["refund_full", "escalate"]),      # NS-1 (iii): messages alone are not enough, the fee is refunded
 ])
 def test_counterfactuals_move_only_where_the_clause_says(name, base, allowed):
     case, _ = load(base)

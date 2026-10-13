@@ -8,7 +8,7 @@ reaches their team after the system processed the synthetic policy-conformance b
 from bench/results/court/B-00NN.record.json (primary runs only; *.r1.* repeats are ignored), the matching B-00NN.json
 run file (latency) and data/bench/manifest.json (scenario names). Nothing is hard-coded except the prose below.
 
-Judge-facing wording rules: no "paid automatically", "executed automatically" or "accurate"; refunds are Ryde vouchers;
+Judge-facing wording rules: no "paid automatically", "executed automatically" or "accurate"; refunds go back to the original payment method;
 account flags and safety always go to a person; clause ids and fact ids appear only inside chips whose title is the
 plain-language label; no em-dashes in page copy.
 """
@@ -26,25 +26,70 @@ COURT = ROOT / "bench" / "results" / "court"
 MANIFEST = ROOT / "data" / "bench" / "manifest.json"
 OUT = ROOT / "web" / "ops.html"
 
-# Plain-English clause labels (copied from web/replay.js CLAUSE).
+# Plain-English clause labels. Any clause id not listed here falls back to its title in policy/policy.md (policy_titles()).
 CLAUSE = {
     "RD-1": "driver must take the direct route", "RD-2": "refund for extra kilometres", "RD-3": "rider-requested stop",
-    "RD-4": "reroute justified by traffic or an incident", "RD-5": "rider agreed to the route beforehand",
-    "RD-6": "repeat offender: account flag",
-    "NS-0": "when a cancellation fee applies", "NS-1": "driver waited 3 min at pickup after \"I'm Here\"",
+    "RD-4": "reroute justified by traffic or an incident", "RD-5": "rider told and agreed beforehand",
+    "RD-6": "repeat offender: account flag", "RD-7": "reminder to the driver after an uninformed reroute",
+    "NS-0": "which cancellation rule applies", "NS-1": "no-show fee stands: driver arrived, waited, messaged and called",
     "NS-2": "no-show not proven: fee refunded", "NS-3": "driver cancelled: no fee", "NS-4": "3-minute free-cancel window",
-    "NS-6": "waiting-fee conditions", "NS-7": "30-day dispute window",
-    "FARE-1": "fixed fare: only published extras", "FARE-2": "toll overcharge", "FARE-3": "cleaning-fee claim (not in this data)",
-    "NS-5": "advance-booking cancellation (not in this data)", "NS-8": "driver-late free cancel (no such Ryde rule)",
-    "SAFE-3": "trip completed without the rider (fraud)", "SAFE-1": "threat or harassment: human review",
-    "SAFE-2": "accident or dangerous driving: human review",
+    "NS-8": "driver did not arrive: free cancel", "NS-9": "repeat rider no-shows: account flag",
+    "SURGE-1": "surge notice before pickup", "SURGE-2": "surge refund when the rider was not told", "SURGE-3": "how the surge refund is computed",
+    "SAFE-1": "safety screen: human review", "SAFE-2": "accident or dangerous driving: human review",
+    "SAFE-3": "the AI may not rule on safety", "SAFE-4": "interim suspension until review",
+    "TH-4": "missing records: human review",
 }
+
+
+def policy_titles() -> dict:
+    """{clause id: title} from policy/policy.md (`**RD-1** — Distance and tolerance [...]`)."""
+    try:
+        text = (ROOT / "policy" / "policy.md").read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    return {m.group(1): m.group(2).strip() for m in re.finditer(r"^\*\*([A-Z]+-\d+)\*\*\s*[—-]\s*([^\[\n]+)", text, flags=re.M)}
+
+
+for _cid, _title in policy_titles().items():
+    CLAUSE.setdefault(_cid, _title[:1].lower() + _title[1:])
 OUTW = {"refund_partial": "Partial refund", "refund_full": "Full refund", "no_action": "No refund",
         "fee_waived": "Fee waived", "escalate": "Human review", "flag_account": "Account flag"}
-TYPE_LABEL = {"route_deviation": "Route deviation", "no_show": "No-show fee", "safety": "Safety"}
+TYPE_LABEL = {"route_deviation": "Route deviation", "no_show": "No-show fee", "fare_dispute": "Surge pricing", "safety": "Safety"}
 
 # Scenario titles: plain language for every manifest name. Unknown names fall back to humanize().
 SCENARIO = {
+    "rd_port_trust_fastest": "Detour · \"whatever road is fastest, I trust you\"",
+    "rd_notice_ack_hmm": "Detour · notice answered \"hmm ok lor\"",
+    "rd_stop_named_longer_way": "Detour · named stop, longer way there",
+    "rd_consent_except_road": "Detour · \"ok, just not that road\"",
+    "rd_port_auntie_any_way": "Detour · \"any way also can, you decide\"",
+    "rd_long_loop_mid_amount": "Detour · long loop, refund over $10",
+    "rd_impatient_rider": "Detour · rider said no, driver went anyway",
+    "rd_call_log_no_recording": "Detour · phone call with no recording",
+    "rd_recorded_call_consent": "Detour · agreed on a recorded call",
+    "sg_notice_estimate_above_charge": "Surge · estimate higher than the charge",
+    "sg_notified_full": "Surge · complete notice, fraud flag on file",
+    "sg_notice_after_pickup": "Surge · notice sent after pickup",
+    "sg_notice_no_cancel_option": "Surge · notice without a free-cancel option",
+    "sg_port_notice_fare_unchanged": "Surge · notice says the fare is unchanged",
+    "sg_surge_unchanged_complaint_threat": "Surge · threat in the complaint",
+    "sg_mixed_rider_stop": "Surge · unannounced surge plus the rider's own stop",
+    "sg_notice_just_before_pickup": "Surge · notice seconds before pickup",
+    "sg_over_50": "Surge · refund over $50",
+    "sg_port_notice_window_closed": "Surge · free cancel offered too late",
+    "ns_wait_5m10": "No-show · waited just over five minutes",
+    "ns_wait_4m50": "No-show · left just under five minutes",
+    "ns_no_call": "No-show · messaged but never called",
+    "ns_app_noshow_own_reason": "No-show · app says no-show, driver's words say otherwise",
+    "ns_no_contact": "No-show · no message, no call",
+    "ns_need_to_go_after_no_reply": "No-show · \"no reply, I need to go\"",
+    "ns_driver_cancel_flat_tyre": "No-show · \"car got problem\", then cancelled",
+    "ns_safety_in_complaint": "No-show · safety allegation in the complaint",
+    "ns_driver_late_no_contact": "No-show · driver late and silent",
+    "ns_repeat_noshow_flag": "No-show · third no-show in 30 days",
+    "ns_early_arrival_scheduled": "No-show · arrived before the booked time",
+    "ns_impatient_driver": "No-show · \"you never come, cancelling\"",
+    "ns_gate_b_refused_to_move": "No-show · waiting at the other gate",
     "rd_basic": "Detour · unexplained loop",
     "rd_consent_before": "Detour · consent given beforehand",
     "rd_consent_after": "Detour · consent only after the fact",
@@ -111,7 +156,9 @@ SCENARIO = {
     "rd_named_singlish_nx": "Detour \u00b7 Singlish consent, heavy rain",
     "rd_named_cn_am": "Detour \u00b7 consent in Chinese to a named road",
     "rd_named_cn_tp": "Detour \u00b7 Chinese consent, driver has priors",
-    # held-out set
+    # surge pricing
+    "sg_not_notified": "Surge pricing \u00b7 rider never told",
+    # evidence and wording edge cases
     "bl_general_consent": "Detour \u00b7 \"whichever way is faster\"",
     "bl_general_consent_cn": "Detour \u00b7 general consent, in Chinese",
     "bl_general_errand": "Detour \u00b7 general consent, driver's own stop inside",
@@ -128,11 +175,22 @@ SCENARIO = {
 
 
 
-def humanize(name: str) -> str:
-    """Fallback for a manifest name missing from SCENARIO: 'rd_foo_bar' -> 'Detour · foo bar'."""
-    prefix = {"rd": "Detour", "ns": "No-show", "safe": "Safety"}
-    head, _, rest = name.partition("_")
-    return f"{prefix.get(head, head.title())} · {rest.replace('_', ' ')}"
+PREFIX = {"rd": "Detour", "ns": "No-show", "safe": "Safety", "sg": "Surge pricing"}
+TYPE_PREFIX = {"route_deviation": "Detour", "no_show": "No-show", "fare_dispute": "Surge pricing", "safety": "Safety"}
+
+
+def humanize(name: str, dispute_type: str | None = None) -> str:
+    """Fallback for a manifest name missing from SCENARIO: 'rd_foo_bar' -> 'Detour · foo bar'. A prefix the map does not
+    know ('bl_...') takes the dispute type's word when the type is given."""
+    head, _, rest = (name or "").partition("_")
+    lead = PREFIX.get(head) or TYPE_PREFIX.get(dispute_type or "") or head.replace("_", " ").capitalize()
+    body = (rest if head in PREFIX or rest else name).replace("_", " ").strip()
+    return f"{lead} · {body}" if body and lead.lower() != body.lower() else lead
+
+
+def title_for(name: str, dispute_type: str | None = None) -> str:
+    """Plain title for a scenario name: SCENARIO when listed, else humanize()."""
+    return SCENARIO.get(name) or humanize(name, dispute_type)
 
 
 def esc(s) -> str:
@@ -145,10 +203,10 @@ def clause_tag(ids: list[str]) -> str:
     if not ids:
         return '<span class="muted">no clause cited</span>'
     rows = []
-    for c in ids:
-        base = re.sub(r"\([a-z]\)$", "", c)
-        title = CLAUSE.get(base, "")
-        rows.append(f'<a href="/policy.html#{esc(base)}" target="_blank" rel="noopener"><b>{esc(c)}</b><span>{esc(title)}</span></a>')
+    for c in ids:      # plain name on the page; the clause id only in the link's tooltip and anchor
+        base = re.sub(r"\([a-z]+\)$", "", c)
+        title = CLAUSE.get(base, "") or "policy clause"
+        rows.append(f'<a href="/policy.html#{esc(base)}" target="_blank" rel="noopener" title="{esc(c)}"><span>{esc(title[:1].upper() + title[1:])}</span></a>')
     n = len(ids)
     return (f'<button type="button" class="ctag" aria-haspopup="true" aria-expanded="false" title="Clauses the ruling cites">{n} clause{"s" if n != 1 else ""} ▾</button>'
             f'<div class="cpop" hidden><div class="cpop-h">Clauses cited in this ruling</div>{"".join(rows)}</div>')
@@ -166,28 +224,52 @@ def outcome_text(ruling: dict) -> str:
     return base
 
 
+SAFETY_LABELS = ("Threat in chat", "Threat in the complaint", "Harassment in the complaint", "Harassment alleged", "Dangerous driving alleged")
+
+
+def concern_source(rec: dict) -> str:
+    """Where the safety concern the judge read sits: 'chat' when a fact it rests on is a chat message, else 'complaint'."""
+    facts_block = rec.get("facts") or {}
+    facts = {f.get("id"): f for f in (facts_block.get("facts", []) if isinstance(facts_block, dict) else facts_block)}
+    basis = (rec.get("ruling") or {}).get("safety_basis") or []
+    chat = any(str(facts.get(b, {}).get("text", "")).startswith("Chat #") for b in basis)
+    return "chat" if chat else "complaint"
+
+
 def plain_reason(reason: str, rec: dict) -> tuple[str, str]:
-    """(short label, one line <=140 chars), plain language, no ids. Pattern-based; falls back to a stripped clip of the reason."""
+    """(short label, one line <=140 chars), plain language, no ids. Pattern-based; falls back to a stripped clip of the reason.
+    Order matters: a missing record is checked before an unsettled reading, because a gap in the evidence is often why the
+    reading cannot be settled."""
     low = reason.lower()
     dtype = rec["dispute"]["type"]
+    complaint = (rec["dispute"].get("statement") or "").lower()
     if "unscreened" in low or "judge unavailable" in low:
         return "Judge did not answer", "The judge did not answer (timeout or provider error); nothing was weighed → a person decides"
     if low.startswith("safety concern"):
-        return "Threat in chat", "The judge read a threat or intimidation in the chat or statements → human review (safety)"
+        if concern_source(rec) == "chat":
+            return "Threat in chat", "The judge read a threat or intimidation in the chat → human review (safety)"
+        if re.search(r"harass|sexual|my body", complaint):
+            return "Harassment in the complaint", "The complaint describes harassment by the other party → human review (safety)"
+        return "Threat in the complaint", "The complaint describes a threat by the other party → human review (safety)"
+    if low.startswith("evidence gap") or "evidence insufficient" in low or "evidence unknown" in low:
+        if "gps" in low:
+            return "GPS trace incomplete", "Part of the GPS trace is missing, so the policy's test cannot be measured → a person decides"
+        return "Evidence missing", "Evidence the policy needs is missing from the record → a person decides"
     if "segment finding undetermined" in low:
         return "Agreement unclear", "The judge could not settle from the record what the rider agreed to, or whether this stretch is the road agreed → a person decides"
-    if low.startswith("evidence gap") or "evidence insufficient" in low or "evidence unknown" in low:
-        return "Evidence missing", "Evidence the policy needs is missing from the record → a person decides"
+    m = re.search(r"\$([\d,]+\.\d\d) is above \$([\d,]+)", reason)
+    if m:
+        return f"Refund over ${m.group(2)}", f"Refund of ${m.group(1)} is over ${m.group(2)} → a person decides; the system prepares the case file"
     if "harass" in low or "sexual" in low:
         return "Harassment alleged", "Harassment alleged in a safety complaint → policy forbids automatic ruling"
     if "dangerous driving" in low:
-        return "Dangerous driving alleged", "Dangerous driving alleged; no telematics to confirm or refute → safety review"
+        return "Dangerous driving alleged", "Dangerous driving alleged; the speed trace goes to a person to weigh → safety review"
     if dtype == "safety":
         return "Safety complaint", "Safety complaint → policy forbids automatic ruling"
     # fallback: strip parenthetical ids, bracketed ids and bare ids, then clip
-    s = re.sub(r"\s*\((?:RD|NS|SAFE|FARE)-\d+[^)]*\)", "", reason)
-    s = re.sub(r"\s*\[(?:F\d+|(?:RD|NS|SAFE|FARE)-\d+)[^\]]*\]", "", s)
-    s = re.sub(r"\b(?:RD|NS|SAFE|FARE)-\d+(?:\([a-z]\))?\b", "policy", s)
+    s = re.sub(r"\s*\((?:[A-Z]{2,5})-\d+[^)]*\)", "", reason)
+    s = re.sub(r"\s*\[(?:F\d+|(?:[A-Z]{2,5})-\d+)[^\]]*\]", "", s)
+    s = re.sub(r"\b(?:RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC)-\d+(?:\([a-z]+\))?\b", "policy", s)
     s = re.sub(r"\s{2,}", " ", s).strip()
     return "Other", (s if len(s) <= 140 else s[:139].rstrip(" ,;:(-") + "…")
 
@@ -218,7 +300,7 @@ def load() -> list[dict]:
         flag = (bool(ruling.get("flag_account")) and not ruling.get("escalate")) or any(a.get("type") == "flag_account" for a in actions)   # an escalated case creates no account action; the reviewer decides
         auto = bool(elig.get("auto")) and not ruling.get("escalate")
         rows.append({
-            "id": cid, "name": man["name"], "title": SCENARIO.get(man["name"]) or humanize(man["name"]),
+            "id": cid, "name": man["name"], "title": title_for(man["name"], man.get("type")),
             "hard": man.get("hard", ""), "type": rec["dispute"]["type"], "rec": rec, "facts": facts,
             "elig": elig, "ruling": ruling, "auto": auto, "flag": flag,
             "latency": run.get("latency_s"), "llm_calls": run.get("llm_calls"), "input_tokens": run.get("input_tokens"),
@@ -229,13 +311,13 @@ def load() -> list[dict]:
 def funnel(rows: list[dict]) -> dict:
     auto = [r for r in rows if r["auto"]]
     human = [r for r in rows if not r["auto"]]
-    voucher = [r for r in auto if r["ruling"].get("ruling") in ("refund_partial", "refund_full", "fee_waived")]
+    refunded = [r for r in auto if r["ruling"].get("ruling") in ("refund_partial", "refund_full", "fee_waived")]
     noref = [r for r in auto if r["ruling"].get("ruling") == "no_action"]
-    other = [r for r in auto if r not in voucher and r not in noref]
+    other = [r for r in auto if r not in refunded and r not in noref]
     flags = [r for r in rows if r["flag"]]
     lat = [r["latency"] for r in rows if r["latency"] is not None]
-    return {"total": len(rows), "auto": len(auto), "voucher": len(voucher), "noref": len(noref), "other": len(other),
-            "human": len(human), "flags": len(flags), "voucher_sum": sum(float(r["ruling"].get("amount") or 0) for r in voucher),
+    return {"total": len(rows), "auto": len(auto), "refunded": len(refunded), "noref": len(noref), "other": len(other),
+            "human": len(human), "flags": len(flags), "refund_sum": sum(float(r["ruling"].get("amount") or 0) for r in refunded),
             "lat_mean": (sum(lat) / len(lat)) if lat else 0.0, "lat_max": max(lat) if lat else 0.0,
             "human_ids": [r["id"] for r in human], "flag_ids": [r["id"] for r in flags]}
 
@@ -255,7 +337,7 @@ def row_html(r: dict, review_col: bool = False) -> str:
             f'<td>{esc(TYPE_LABEL.get(r["type"], r["type"]))}</td>')
     if review_col:      # the escalated tab: outcome and automation are "human review" on every row, so the reviewer's page takes their place
         label, why = plain_reason(reasons[0] if reasons else (ruling.get("escalation_reason") or "Escalated by the judge"), rec)
-        safety = rec["dispute"]["type"] == "safety" or label in ("Threat in chat", "Harassment alleged", "Dangerous driving alleged")
+        safety = rec["dispute"]["type"] == "safety" or label in SAFETY_LABELS
         return (head + f'<td><span class="why{" safety" if safety else ""}" tabindex="0">{esc(label)}'
                 f'<span class="tip" role="tooltip">{esc(why)}</span></span></td><td class="chips">{clauses}</td><td class="mono">{esc(lat)}</td>'
                 f'<td class="rvl"><a href="/human-review.html?case={esc(r["id"])}" '
@@ -297,6 +379,11 @@ def page(rows: list[dict], f: dict, model: str) -> str:
     human_note = ("Every one is a safety complaint or a message the judge read as a threat; the policy allows only human review for those."
                   if all_safety else "Each one was stopped by the policy check or escalated by the judge.")
     fl_types = sorted({TYPE_LABEL.get(r["type"], r["type"]).lower() for r in flagged})
+    order = ["route_deviation", "no_show", "fare_dispute", "safety"]
+    present = sorted({r["type"] for r in rows}, key=lambda x: order.index(x) if x in order else len(order))
+    names = [TYPE_LABEL.get(x, x.replace("_", " ")) for x in present]
+    names = [names[0]] + [n.lower() for n in names[1:]] if names else ["Dispute"]
+    type_words = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
     flag_note = (f"Proposed in {', '.join(fl_types)} cases (repeat offenders, false \"I'm Here\" taps)." if flagged
                  else "No account action was proposed in this batch.")
     return f'''<!doctype html>
@@ -417,9 +504,9 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
   <p class="lead">A {f["total"]}-case synthetic benchmark, not live Ryde volume. Each count is recomputed from the stored rulings.</p>
 
   <div class="funnel" aria-label="Case funnel">
-    <div class="card"><div class="k">Cases in the batch</div><div class="num">{f["total"]}</div><p>Route deviation, no-show fee and safety scenarios, each with reference outcomes derived from the written policy.</p></div>
+    <div class="card"><div class="k">Cases in the batch</div><div class="num">{f["total"]}</div><p>{esc(type_words)} scenarios, each with reference outcomes derived from the written policy.</p></div>
     <div class="arrow" aria-hidden="true">→</div>
-    <div class="card"><div class="k">Core decisions auto-cleared</div><div class="num c-green">{N}<small>/ {f["total"]}</small></div><p><b>{f["voucher"]}</b> auto-cleared for voucher issuance ({money(f["voucher_sum"])} in Ryde vouchers) and <b>{f["noref"]}</b> with no refund due. Each one passed the pre-execution policy check.</p></div>
+    <div class="card"><div class="k">Core decisions auto-cleared</div><div class="num c-green">{N}<small>/ {f["total"]}</small></div><p><b>{f["refunded"]}</b> auto-cleared for a refund to the original payment method ({money(f["refund_sum"])} in refunds) and <b>{f["noref"]}</b> with no refund due. Each one passed the pre-execution policy check.</p></div>
     <div class="arrow" aria-hidden="true">→</div>
     <div class="card"><div class="k">Sent to a person</div><div class="num c-amber">{H}</div><p>{human_note} They arrive with the facts, both arguments and the policy trace already prepared.</p></div>
   </div>
@@ -436,7 +523,7 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:10px;font-weig
     <div><div class="k">Inputs</div><h3>What the court reads</h3><p>trip · GPS · chat · fare · profiles · OneMap route · LTA traffic · weather</p></div>
     <div><div class="k">Outputs</div><h3>What it hands back</h3><p>cleared / needs a person · proposed actions · plain-language notices · audit receipt</p></div>
     <div><div class="k">Production connectors (not included)</div><h3>Where Ryde would connect</h3>
-      <ul><li>trip records in → one case record</li><li>refund → wallet / voucher API</li><li>account flag → trust and safety queue</li><li>appeals → audit receipt</li></ul></div>
+      <ul><li>trip records in → one case record</li><li>refund → payment API</li><li>account flag → trust and safety queue</li><li>appeals → audit receipt</li></ul></div>
   </div>
 </section>
 
@@ -506,8 +593,8 @@ def main() -> None:
         if bad in own_copy:
             sys.exit(f"wording rule violated: {bad!r} found in page")
     OUT.write_text(html_text)
-    print(f"cases={f['total']} auto={f['auto']} (voucher={f['voucher']}, no_refund={f['noref']}, other={f['other']}) "
-          f"human={f['human']} flags={f['flags']} voucher_total=${f['voucher_sum']:.2f} "
+    print(f"cases={f['total']} auto={f['auto']} (refunded={f['refunded']}, no_refund={f['noref']}, other={f['other']}) "
+          f"human={f['human']} flags={f['flags']} refund_total=${f['refund_sum']:.2f} "
           f"latency_mean={f['lat_mean']:.1f}s max={f['lat_max']:.1f}s")
     print("human:", ", ".join(f["human_ids"]))
     print("flags:", ", ".join(f["flag_ids"]))

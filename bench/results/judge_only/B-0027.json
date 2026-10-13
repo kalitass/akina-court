@@ -4,110 +4,138 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:41:11.153228+00:00",
+ "ts": "2026-10-13T17:47:36.505140+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and record the driver's cancellation as fee-void; no account flag.",
-  "confidence": 0.93,
-  "reasoning": "The dispute enters the NS group through NS-0: the cancellation was made by the driver ([F4], cancelled_by = driver), so the fee's validity is tested under NS-1/NS-2 rather than the fixed-fare rules. The rider's complaint is that the fee was charged after a short wait ([F4], [F5], [F7]). Safety screening: I read all chat messages, the driver's statement and the complaint ([F9], [F10], [F11], [F12]) — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern = none and no SAFE-1 / SAFE-2 escalation [SAFE-1]. Evidence is sufficient: the GPS trace covers the whole wait with no hole, and even the arrival confirmation is a driver tap, not a platform auto-confirmation ([F1], [F2], [F3], [F5], [F6]) [NS-1]. NS-1 fails on its third element: NS-1 (i) and (ii) are met — the driver tapped \"I'm Here\" at 14:14:10 and was 41 m from the pickup, inside the 200 m radius ([F6], [F1]) [NS-1] — but the driver then stayed within the radius only 1 min 40 s (100 s), short of the required more than 3 minutes before cancelling ([F6], [F2]) [NS-1]. His own chat \"3 min up, cancelling the trip\" ([F10]) does not match the record: the earliest approach was 14:13:25 ([F2]) and his tap 14:14:10 ([F6]), so cancelling at 14:15:50 ([F4]) cannot complete a 3-minute wait after arrival. Because NS-1 (i)(ii)(iii) is not jointly satisfied, NS-2 applies: the $6.61 cancellation fee is fully refunded to the rider [NS-2]. The NS-2 flag branch is not triggered — the trace settles that the arrival confirmation was made while the driver was within the radius ([F6], [F1]), so no false \"I'm Here\" and no account flag [NS-2]. The refund is payable as a Ryde voucher and Ryde retains final discretion ([F7]) [NS-7].",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Refund $63.10 to the rider's original payment method as the surge differential; close the fare dispute. No driver violation and no account flag: the route matched the optimal route and the notice failure is a pricing-notice issue on the platform's side, not an RD-2 deviation.",
+  "confidence": 0.88,
+  "reasoning": "The trip was quoted at $71.67 at 1× and the multiplier rose to 2× before trip start, so the surge differential is (2 − 1) × $66.65 = $66.65, capped at the $63.10 by which the actual fare exceeds the quote [F6][F7][F8][SURGE-2][SURGE-3]. Under SURGE-2 the differential is refundable when the rider was not properly notified; the only question is whether the 14:06:25 in-app notice meets SURGE-1 [F9][SURGE-1].\n\nThe notice was timely — sent at 14:06:25, before the 14:09:00 pickup [F9][F4][SURGE-1] — and it states two of the three required items: the new multiplier (\"2.0×\") and a revised estimated fare (\"New estimated fare: $141.87\") [F9][SURGE-1]. The third item fails: the same message says \"Cancellation fees may apply\", which does not state that the rider may cancel without penalty, and SURGE-1 treats such wording as not meeting the item [F9][SURGE-1]. I read the notice text itself rather than the rider's later characterisation of it, so this is a reading of the words, not a conflict with the platform log.\n\nBecause the notice omits the free-cancellation statement, the reading is not_met and the outcome the trace fixes is refund_partial, refunding the surge part: (2 − 1) × $66.65 = $63.10 [F7][F8][SURGE-2][SURGE-3]. Nothing else is refundable — the route matched the optimal route exactly (billed 38.0 km vs 38.0 km, +0.0 km), so there is no RD-2 deviation refund, and the booking fee of $1.47 is not surged [F1][F3][F5][F7][RD-1][SURGE-3].\n\nNo repeat-deviation flag applies: route deviations were zero and the trace requires no flag_account [F15][RD-6]. The chat is limited to pickup logistics (white dress at the taxi stand; blue Prius two minutes away) and the driver's written statement is about pricing and driving the app route; I read the messages and found no threat, intimidation, harassment or dangerous-driving allegation, so the safety screen is clear [F10][F11][F12][F13]. The record is complete for the elements decided: a timestamped in-app notice, fare breakdown and surge log — evidence is sufficient to rule [F9][F12][F5][F7].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
    "F6",
    "F7",
+   "F8",
    "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13",
+   "F15"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7",
-   "SAFE-1"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "TH-1: $63.10 is above $50 — a person decides; the system prepares the case file",
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The notice sent at 14:06:25, before pickup, states the new multiplier (2.0×) and a revised estimated fare ($141.87), but its third item reads \"Cancellation fees may apply\", which fails to state that the rider may cancel without penalty — SURGE-1 treats vague or self-contradicting wording as not meeting the item [F9][SURGE-1], so the surge part is refunded under SURGE-2."
+   }
+  ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and record the driver's cancellation as fee-void; no account flag.",
-  "confidence": 0.93,
-  "reasoning": "The dispute enters the NS group through NS-0: the cancellation was made by the driver ([F4], cancelled_by = driver), so the fee's validity is tested under NS-1/NS-2 rather than the fixed-fare rules. The rider's complaint is that the fee was charged after a short wait ([F4], [F5], [F7]). Safety screening: I read all chat messages, the driver's statement and the complaint ([F9], [F10], [F11], [F12]) — no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, so safety_concern = none and no SAFE-1 / SAFE-2 escalation [SAFE-1]. Evidence is sufficient: the GPS trace covers the whole wait with no hole, and even the arrival confirmation is a driver tap, not a platform auto-confirmation ([F1], [F2], [F3], [F5], [F6]) [NS-1]. NS-1 fails on its third element: NS-1 (i) and (ii) are met — the driver tapped \"I'm Here\" at 14:14:10 and was 41 m from the pickup, inside the 200 m radius ([F6], [F1]) [NS-1] — but the driver then stayed within the radius only 1 min 40 s (100 s), short of the required more than 3 minutes before cancelling ([F6], [F2]) [NS-1]. His own chat \"3 min up, cancelling the trip\" ([F10]) does not match the record: the earliest approach was 14:13:25 ([F2]) and his tap 14:14:10 ([F6]), so cancelling at 14:15:50 ([F4]) cannot complete a 3-minute wait after arrival. Because NS-1 (i)(ii)(iii) is not jointly satisfied, NS-2 applies: the $6.61 cancellation fee is fully refunded to the rider [NS-2]. The NS-2 flag branch is not triggered — the trace settles that the arrival confirmation was made while the driver was within the radius ([F6], [F1]), so no false \"I'm Here\" and no account flag [NS-2]. The refund is payable as a Ryde voucher and Ryde retains final discretion ([F7]) [NS-7].",
+  "ruling": "refund_partial",
+  "amount": 63.1,
+  "recommended_action": "Refund $63.10 to the rider's original payment method as the surge differential; close the fare dispute. No driver violation and no account flag: the route matched the optimal route and the notice failure is a pricing-notice issue on the platform's side, not an RD-2 deviation.",
+  "confidence": 0.88,
+  "reasoning": "The trip was quoted at $71.67 at 1× and the multiplier rose to 2× before trip start, so the surge differential is (2 − 1) × $66.65 = $66.65, capped at the $63.10 by which the actual fare exceeds the quote [F6][F7][F8][SURGE-2][SURGE-3]. Under SURGE-2 the differential is refundable when the rider was not properly notified; the only question is whether the 14:06:25 in-app notice meets SURGE-1 [F9][SURGE-1].\n\nThe notice was timely — sent at 14:06:25, before the 14:09:00 pickup [F9][F4][SURGE-1] — and it states two of the three required items: the new multiplier (\"2.0×\") and a revised estimated fare (\"New estimated fare: $141.87\") [F9][SURGE-1]. The third item fails: the same message says \"Cancellation fees may apply\", which does not state that the rider may cancel without penalty, and SURGE-1 treats such wording as not meeting the item [F9][SURGE-1]. I read the notice text itself rather than the rider's later characterisation of it, so this is a reading of the words, not a conflict with the platform log.\n\nBecause the notice omits the free-cancellation statement, the reading is not_met and the outcome the trace fixes is refund_partial, refunding the surge part: (2 − 1) × $66.65 = $63.10 [F7][F8][SURGE-2][SURGE-3]. Nothing else is refundable — the route matched the optimal route exactly (billed 38.0 km vs 38.0 km, +0.0 km), so there is no RD-2 deviation refund, and the booking fee of $1.47 is not surged [F1][F3][F5][F7][RD-1][SURGE-3].\n\nNo repeat-deviation flag applies: route deviations were zero and the trace requires no flag_account [F15][RD-6]. The chat is limited to pickup logistics (white dress at the taxi stand; blue Prius two minutes away) and the driver's written statement is about pricing and driving the app route; I read the messages and found no threat, intimidation, harassment or dangerous-driving allegation, so the safety screen is clear [F10][F11][F12][F13]. The record is complete for the elements decided: a timestamped in-app notice, fare breakdown and surge log — evidence is sufficient to rule [F9][F12][F5][F7].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
    "F6",
    "F7",
+   "F8",
    "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13",
+   "F15"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7",
-   "SAFE-1"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "RD-1",
+   "RD-6"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The notice sent at 14:06:25, before pickup, states the new multiplier (2.0×) and a revised estimated fare ($141.87), but its third item reads \"Cancellation fees may apply\", which fails to state that the rider may cancel without penalty — SURGE-1 treats vague or self-contradicting wording as not meeting the item [F9][SURGE-1], so the surge part is refunded under SURGE-2."
+   }
+  ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "The rider's brief requests no_action, i.e. that the $6.61 stand; the record shows the driver tapped \"I'm Here\" only at 14:14:10 and waited 1 min 40 s inside the radius before cancelling at 14:15:50 ([F6], [F2], [F4]), short of the >3-minute continuous wait NS-1 (iii) requires, so the fee does not stand under NS-2."
+    "reason": "The claim that the higher fare should simply stand despite the notice fails: the 14:06:25 notice does not state that the rider may cancel without penalty (it says \"Cancellation fees may apply\"), so SURGE-1's notice requirement is not met and the surge differential is refundable under SURGE-2 [F9][SURGE-2]."
+   },
+   {
+    "id": "C2",
+    "reason": "To the extent the complaint seeks the full $63.10 as an unexplained overcharge of the whole fare, only the surge component is refundable: the route matched the optimal route at +0.0 km with billed distance 38.0 km, and the booking fee is surge-exempt [F1][F3][F5][F7][RD-1][SURGE-3]."
    },
    {
     "id": "D1",
-    "reason": "The driver's position (no_action; chat \"3 min up, cancelling the trip\" and statement that he waited and cancelled as a no-show [F10], [F12]) is contradicted by the system records: cumulative time within 200 m before cancellation was 2 min 25 s and only 100 s after the tap ([F2], [F6]), so the NS-1 (iii) condition is not met and the NS-1 defence to the fee fails under NS-2."
+    "reason": "The driver's statement that pricing is the app's does not defeat the refund: SURGE-1/SURGE-2 turn on the content of the platform's notice at [F9], which omits the free-cancellation statement [F9][SURGE-1][SURGE-2]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "resolved",
- "events": 8,
+ "status": "escalated",
+ "events": 9,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: C1, D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this fare_dispute case removed from cited_policy: RD-1, RD-6\ndropped rejected_claims not in any live brief: C1, C2, D1\n✓ ruling consistent with the policy certificate\n✗ TH-1: $63.10 is above $50 — a person decides; the system prepares the case file"
  ],
  "record_path": "bench/results/judge_only/B-0027.record.json",
- "latency_s": 6.95,
- "input_tokens": 12739,
- "output_tokens": 1412,
+ "latency_s": 13.43,
+ "input_tokens": 22189,
+ "output_tokens": 2882,
  "requests": 2,
  "llm_calls": 2
 }

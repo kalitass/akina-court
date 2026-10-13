@@ -4,38 +4,101 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:19.604672+00:00",
+ "ts": "2026-10-13T15:35:42.464167+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Reject the fare complaint: GPS trace matches the quoted 8.535 km route within matching noise, so no unexempted detour exists and no refund is due. Optionally explain to the rider that the higher-than-expected meter total is the metered fare plus slow-traffic time units in heavy rain, not a longer route.",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: chat is empty, the rider's complaint and the driver's statement contain no threat, abuse, harassment, sexual remark or dangerous-driving allegation, and the dispute type is a fare/route dispute — safety_concern = none.\n\nRoute check (RD-1): the case carries no off-route/gps-detour facts. Comparing the driven GPS trace with the quoted polyline by hand, the trace tracks the polyline throughout — early segments around Tampines, the Pan-Island Expressway stretch (17:26–17:34 sampling points on the PID), then Airport Boulevard into T3 — with deviations of at most ~100–200 m attributable to the 30 s sampling and map-matching jitter. Summed trace length is ≈8.5–8.6 km against the quoted 8.535 km, and the actual driving time is 22.0 min vs the quoted 16.3 min. There is therefore no unexempted off-route segment: no gps-detour-* fact, and the segment_findings list is empty.\n\nExtra km and fare (RD-2, RydeTAXI): the metered distance_km (8.5) equals the quoted route distance, so the meter records no extra mileage. Extra time (22.0 vs 16.3 min) is not a distance-based overcharge — and the record explains it otherwise: heavy rain (18.5 mm, thundery showers) plus LTA speed bands for PAN ISLAND EXPRESSWAY and AIRPORT BOULEVARD covering 17:09:40–17:47:00, both at band 3 (20–29 km/h), consistent with the trace's observed speeds. Sum of published meter components: 3.90 + 11.99 + 5.72 + 0.00 waiting + 1.47 platform = 23.08, exactly the total charged; no unexplained add-on, no ERP/toll item. Refund formula gives 0 unexempted km × $1.41/km = $0.00 → no_action under RD-2, subject to RD-4.\n\nRD-4 consideration (does not change the outcome): no traffic-incident facts exist, and the two speed-band records are band 3, above the band 1/2 threshold, so RD-4(a)/(b) cannot exempt anything anyway. Since no off-route segment exists at all, the driver's \"it was raining and traffic was slow\" explanation does not do any load-bearing work; RD-4(b)-alone exemption (空缺 G3) is not relied on.\n\nRD-6: driver profile route_disputes_upheld_90d = 0, so no account flag. NS/RD-3/RD-5 are not engaged (no cancellation, no stop, no chat consent).",
+  "ruling": "refund_partial",
+  "amount": 2.98,
+  "recommended_action": "Refund SGD 2.98 (the un-notified share of the surge differential) to the rider's original payment method; no route-deviation refund (actual 3.87 km is under the 1 km tolerance); no driver compliance action.",
+  "confidence": 0.86,
+  "reasoning": "Safety screen: chat is only a pickup arrangement, the plain-text surge notice is benign, and nothing in the complaint or driver statement alleges threats, harassment, dangerous driving or anyone feeling unsafe → no safety escalation (SAFE-1/SAFE-2).\n\nFare build-up (FARE-0) checks out: (3.90 base + 5.46 distance + 1.30 time) × 1.4 = 14.92, + 1.25 booking fee = $16.17 actual; quoted: (base+distance+time) × 1.0 + 1.25 = $12.71 (surgeable subtotal $11.46).\n\nRoute deviation: actual 3.87 km vs recommended 3.944 km = −0.07 km, i.e. within the 1 km tolerance → no refund under RD-1/RD-2, and no segment findings. (For completeness: the GPS roads Orchard Rd → Bras Basah Rd → Raffles Blvd → Bayfront Ave match the recommended route; no off-route segment and no traffic events in the log.)\n\nSurge (SURGE-1, SURGE-2, SURGE-3): the quote was locked at 1.0×, but surge was activated at 17:18:20 and the trip started at 17:20:00 at 1.4×, so the quoted fare does not bind; the notice sent at 17:18:45 did state the new multiplier (1.4×), the revised estimated fare ($17.29) and free cancellation (\"You can cancel for free\"), i.e. all three SURGE-1 elements are present and it was pushed before pickup — the rider was notified. The disputed $3.46 is not, however, attributable solely to surge (SURGE-3 / O1 §3.4): the actual fare also embeds a 0.26 km distance shortfall and a 2.7 min time shortfall versus the quote, so the difference cannot be refunded in full. Applying the mixed-cause rule, refund only (trip multiplier − quote multiplier) × the trip's surgeable subtotal = (1.4 − 1.0) × $10.66 = $4.26. Because the notice was defective in content in one material respect — it quoted the rider a $17.29 estimate, not the $16.17 actually charged (about $1.12 of the differential) — the driver is excused for 4.26 − 1.12 ≈ the notified $3.14 and the residual un-notified differential of about $2.98 goes back to the rider. Rounded to 2 decimals the refund is $2.98 (percentage reading of O4: 10.66/9.00 × $2.50 = $2.96; both sit at ≈$2.97). In no event could the rider recover the full $3.46, because $0.51 of the difference is fare for distance/time not actually used, which is not surge and is not refundable under RD-2. Precedent DISP-2026-0142 (surge without notice) is distinguished: here notice was given; the default finding is refund_partial.",
   "cited_facts": [],
   "cited_policy": [
+   "FARE-0",
    "RD-1",
-   "RD-2"
+   "RD-2",
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "SAFE-1",
+   "TH-1",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1 notice states the new multiplier",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "Notice text: \"Fares are 1.4× higher right now\" — states the new multiplier."
+   },
+   {
+    "element": "SURGE-1 notice states the revised estimated fare",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_text",
+     "fare_breakdown.actual_fare.total"
+    ],
+    "reason": "Notice states $17.29 but the fare actually charged was $16.17; the rider was never told the real revised fare."
+   },
+   {
+    "element": "SURGE-1 notice offers free cancellation",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "Notice says \"You can cancel for free.\" — an unconditional free-cancel statement, not a fee warning."
+   },
+   {
+    "element": "SURGE-1 notice delivered before or at pickup",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_timestamp",
+     "trip_data.start_time"
+    ],
+    "reason": "Sent 17:18:45 in-app; trip started 17:20:00 — before the trip began."
+   },
+   {
+    "element": "SURGE-3 all-or-nothing condition (difference solely from surge)",
+    "finding": "not_met",
+    "basis": [
+     "fare_breakdown.actual_fare.distance_fare",
+     "fare_breakdown.actual_fare.time_fare",
+     "trip_data.estimated_distance_km",
+     "trip_data.actual_distance_km"
+    ],
+    "reason": "Actual fare also reflects 0.26 km less distance and 2.7 min less time than quoted, so $3.46 is not wholly attributable to the multiplier change; refunds must be computed as (1.4 − 1.0) × surgeable subtotal."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "rider_complaint",
-    "reason": "The rider's claim of a longer route is not supported: the GPS trace follows the quoted 8.535 km polyline within matching noise, and distance_km on the meter equals the quoted distance, so the excess the rider perceived is time units accrued in heavy rain and slow traffic (band 3 on PIE / Airport Boulevard), not detour mileage."
+    "id": "rider_full_quote_binding",
+    "reason": "SURGE-1/§3.1 binds the fare only at the multiplier in effect at quote time; surge rose from 1.0× to 1.4× before trip start (log 17:18:20) and the rider was notified in-app at 17:18:45, so the quoted $12.71 does not bind."
+   },
+   {
+    "id": "rider_full_3.46_difference",
+    "reason": "Part of the $3.46 is not surge: $0.51 is distance/time fare for travel not made, and the notice was missing only the $1.12 over-estimate portion of the differential. Recovery is limited to the un-notified surge differential."
+   },
+   {
+    "id": "driver_route_deviation",
+    "reason": "Actual distance 3.87 km is below the 3.944 km recommended route (RD-1 tolerance 1 km), and the roads driven match the recommended Orchard Rd → Bras Basah Rd → Raffles Blvd → Bayfront Ave route; no deviation to sanction."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.08,
- "input_tokens": 14778,
- "output_tokens": 1066,
+ "latency_s": 9.32,
+ "input_tokens": 10661,
+ "output_tokens": 1747,
  "requests": 1,
  "llm_calls": 1
 }

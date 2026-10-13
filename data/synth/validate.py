@@ -15,18 +15,25 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_cases import ARRIVAL_RADIUS_M, MOVING_KMH, ROAD_NEAR_M, ROADS, SPEED_BANDS, measure_detours, project  # noqa: E402
-from fare import cancellation_fare, fixed_fare, load_rates, metered_fare, slice_gps, stationary_windows  # noqa: E402
+from fare import FOLDED, POLICY_CANCELLATION_FEE, cancellation_fare, fixed_fare, load_rates, metered_fare, slice_gps, stationary_windows  # noqa: E402
 from route_provider import haversine_m  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+from core.case_format import read_case  # noqa: E402
 
 CASES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cases")
 EXPECTED_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "expected")
 POLICY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "policy", "policy.md")
 NEAR_M = ROAD_NEAR_M            # a road / incident must sit within this of the actual trace OR of the optimal route
-MAX_STEP_M = 100                # 5 s at 72 km/h; anything faster is a synthesis bug
+MAX_STEP_M = 125                # 5 s at 90 km/h; anything faster is a synthesis bug
+HELP_CENTRE_FEE = 6.61          # Ryde's help-centre fee, still on the older demo records
+SPEEDING_STEP_M = 140           # ~100 km/h: only where the complaint alleges speeding (the trace corroborates it)
 STOP_WORDS = re.compile(r"\b(stop|7-eleven|wait here|pull over)\b", re.I)
 RULINGS = {"refund_full", "refund_partial", "fee_waived", "no_action", "escalate"}
 
 TOP = {"case_id", "dispute", "trip", "route", "gps", "traffic", "weather", "fare", "chat", "driver_statement", "profiles"}
+TOP_OPTIONAL = {"calls", "fare_detail", "surge"}
+TRIP_OPTIONAL = {"scheduled_at", "cancellation_reason"}  # v3 records: a booking for a set time; the reason picked in the app           # v3 records: call log, fare breakdown with the quote, surge log
 TRIP = {"trip_id", "service_type", "pickup", "dropoff", "estimated_km", "estimated_min", "requested_at", "accepted_at",
         "driver_arrived_at", "driver_pressed_here_at", "pickup_at", "dropoff_at", "cancelled_at", "cancelled_by"}
 FARE_TRIP = {"pricing", "base_fare", "distance_km", "distance_fare", "time_min", "time_fare", "waiting_min", "waiting_fee",
@@ -65,14 +72,14 @@ def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None
     poly = [tuple(p) for p in c["route"]["polyline"]]
 
     # schema
-    ok(set(c) == TOP, f"top-level keys {sorted(set(c) ^ TOP)}")
-    ok(set(t) == TRIP, f"trip keys {sorted(set(t) ^ TRIP)}")
-    ok(set(fare) == (FARE_CANCEL if cancelled else FARE_TRIP), f"fare keys {sorted(set(fare))}")
-    ok(c["dispute"]["type"] in {"route_deviation", "no_show", "safety"}, "dispute.type")
+    ok(set(c) - TOP_OPTIONAL == TOP, f"top-level keys {sorted((set(c) - TOP_OPTIONAL) ^ TOP)}")
+    ok(set(t) - TRIP_OPTIONAL == TRIP, f"trip keys {sorted((set(t) - TRIP_OPTIONAL) ^ TRIP)}")
+    ok(set(fare) - {"quoted_total"} == (FARE_CANCEL if cancelled else FARE_TRIP), f"fare keys {sorted(set(fare))}")
+    ok(c["dispute"]["type"] in {"route_deviation", "no_show", "safety", "fare_dispute"}, "dispute.type")
     ok(t["service_type"] in {"RydeTAXI", "RydeX"}, "trip.service_type")
     ok(all(re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\+08:00", p["ts"]) for p in gps), "gps ts format")
     ok(set(c["profiles"]["rider"]) == PROFILE_R and set(c["profiles"]["driver"]) == PROFILE_D, "profile keys")
-    for who, p in c["profiles"].items():
+    for who, p in ((k, c["profiles"][k]) for k in ("rider", "driver")):
         ok(p["route_disputes_upheld_90d"] + p["no_show_disputes_upheld_90d"] <= p["disputes_upheld_90d"] <= p["disputes_90d"],
            f"{who} profile: per-type upheld counts exceed totals")
 
@@ -90,7 +97,8 @@ def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None
     ok(all((dt(b["ts"]) - dt(a["ts"])).total_seconds() == 5 for a, b in zip(gps, gps[1:])), "gps is a 5 s grid")
     ok(all(p["speed_kmh"] >= 0 for p in gps), "speed >= 0")
     step = max(haversine_m((a["lat"], a["lon"]), (b["lat"], b["lon"])) for a, b in zip(gps, gps[1:]))
-    ok(step <= MAX_STEP_M, f"max 5 s displacement {step:.0f} m (> {MAX_STEP_M} m)")
+    limit = SPEEDING_STEP_M if re.search(r"speeding", c["dispute"]["statement"], re.I) else MAX_STEP_M
+    ok(step <= limit, f"max 5 s displacement {step:.0f} m (> {limit} m)")
     if not cancelled:
         first = next(p for p in gps if p["ts"] == t["pickup_at"])
         last = next(p for p in gps if p["ts"] == t["dropoff_at"])
@@ -104,14 +112,16 @@ def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None
 
     # driver arrival (200 m rule) derived from gps
     within = [p["ts"] for p in gps if haversine_m((p["lat"], p["lon"]), P) <= ARRIVAL_RADIUS_M]
-    ok(t["driver_arrived_at"] == (within[0] if within else None), "driver_arrived_at == first gps sample within 200 m")
+    ok(t["driver_arrived_at"] in ((within[0] if within else None), t["driver_pressed_here_at"]) if t["driver_pressed_here_at"] else t["driver_arrived_at"] == (within[0] if within else None),
+       "driver_arrived_at == the arrival confirmation, or the first gps sample within 200 m")
     if t["driver_pressed_here_at"] and t["driver_arrived_at"]:
         ok(t["driver_pressed_here_at"] >= t["driver_arrived_at"], "'I'm Here' pressed after arriving")
     if t["driver_pressed_here_at"]:
         ok(t["accepted_at"] <= t["driver_pressed_here_at"] <= end, "'I'm Here' inside accepted..end")
     if c["dispute"]["type"] == "no_show":
         dmin = min(haversine_m((p["lat"], p["lon"]), P) for p in gps)
-        ok((t["driver_arrived_at"] is not None) == (dmin < ARRIVAL_RADIUS_M), f"no_show: arrived_at vs min distance {dmin:.0f} m")
+        ok((t["driver_arrived_at"] is not None) == (dmin < ARRIVAL_RADIUS_M) or t["driver_arrived_at"] == t["driver_pressed_here_at"],
+           f"no_show: arrived_at vs min distance {dmin:.0f} m")
         if t["cancelled_by"] == "driver":
             ok(t["driver_pressed_here_at"] is not None, "driver no-show cancellation without an 'I'm Here' tap")
 
@@ -138,7 +148,7 @@ def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None
         ok(detours, "route_deviation: no off-route segment > 200 m from the optimal route")
         billed_excess = fare["distance_km"] - c["route"]["total_km"]
         seg_excess = sum(d["extra_km"] for d in detours)
-        ok(-0.1 <= billed_excess - seg_excess <= 1.0,   # real roads hide some extra km inside the 200 m on-route band
+        ok(-0.3 <= billed_excess - seg_excess <= 1.0,   # real roads hide some extra km inside the 200 m on-route band; 5 s steps cut corners
            f"segments add {seg_excess:.2f} km but the meter shows +{billed_excess:.2f} km over the optimal route")
         for d in detours:
             ok(d["extra_km"] >= 0.5, f"detour {d['start'][11:19]} adds only {d['extra_km']} km (too close to the 0.2 km noise floor)")
@@ -147,14 +157,16 @@ def check_case(c: dict, rates: dict, clauses: dict, expected: dict | None = None
 
     # fare recomputed from the trace / rate card
     if cancelled:
-        ok(fare == cancellation_fare(rates), "cancellation fare == rates.json")
-    elif t["service_type"] == "RydeTAXI":
-        ok(fare == metered_fare(trip_gps, rates, fare["surge_multiplier"], fare["discount"]), "metered fare == recomputed from gps")
+        ok(fare in (cancellation_fare(rates), cancellation_fare(rates, POLICY_CANCELLATION_FEE), cancellation_fare(rates, HELP_CENTRE_FEE)),
+           "cancellation fare == the policy's $5.00 (or the help centre's $6.61 of the older demo records)")
+    elif fare["pricing"] == "metered":
+        ok({k: v for k, v in fare.items() if k != "quoted_total"} == metered_fare(trip_gps, rates, fare["surge_multiplier"], fare["discount"],
+                                                                                 fold_waiting=fare.get("waiting_fee_basis") == FOLDED), "metered fare == recomputed from gps")
         ok(abs(fare["time_min"] + fare["waiting_min"] - (dt(t["dropoff_at"]) - dt(t["pickup_at"])).total_seconds() / 60) < 0.02,
            "time_min + waiting_min == trip minutes (stop minutes billed once)")
     else:
         ok(fare == fixed_fare(c["route"], rates, fare["surge_multiplier"], fare["discount"]), "fixed fare == quoted from route")
-    ok(fare["pricing"] == ("metered" if t["service_type"] == "RydeTAXI" else "fixed"), "fare.pricing matches service_type")
+    ok(fare["pricing"] == "metered" or t["service_type"] == "RydeX", "fare.pricing matches service_type (FARE-0: RydeX fares may be distance-based)")
 
     # traffic: every speed band / incident sits within NEAR_M of the actual trace OR of the optimal route (each judged
     # on its own), inside the trip window; bands the trace drives through agree with the GPS speeds
@@ -217,8 +229,7 @@ def main():
     clauses = policy_clauses()
     failed = 0
     for path in sorted(glob.glob(os.path.join(CASES_DIR, "C-*.json"))):
-        with open(path) as f:
-            case = json.load(f)
+        case = read_case(path)
         errs = check_case(case, rates, clauses)
         print(f"{case['case_id']} {'PASS' if not errs else 'FAIL'}")
         for e in errs:

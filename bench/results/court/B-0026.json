@@ -4,159 +4,179 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:31:25.315059+00:00",
+ "ts": "2026-10-13T17:49:03.018818+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and send the driver's account for review of the \"I'm Here\" tap made 600 m from the pickup + flag_account",
-  "confidence": 0.95,
-  "reasoning": "The driver cancelled at 12:09:25 and $6.61 was charged as a rider no-show [F3][F6], so NS-0 routes the case to NS-1/NS-2: the fee stands only if the arrival and waiting elements are met [NS-0]. The trace settles NS-1(i) as satisfied — the driver tapped \"I'm Here\" at 12:06:15 [F5] — but NS-1(ii) fails: at that moment the GPS placed him 600 m from the pickup, and his closest approach over the whole trip was 599 m, never inside 200 m [F5][F1]. NS-1(iii) fails as well: he stayed within the 200 m radius for 0 s after the tap, so no continuous 3-minute wait at the pick-up location can be shown [F5]; his stationary 3 min 30 s was spent 600 m away [F2]. With (ii) and (iii) unmet, NS-2 gives the rider the full return of the $6.61 [NS-2], payable as a Ryde voucher and within the rider's dispute window [NS-7]. The driver's post-trip statement that he \"waited more than 3 minutes at the pickup\" [F12] is contradicted by the GPS and timeline records, and system records prevail over statements; the null driver_arrived_at corroborates that the platform never placed him at the pickup [F4]. Because he tapped \"I'm Here\" while GPS showed him outside the pickup radius, NS-2 also requires the account flag [F5][F1][NS-2]. The rider's own chat message at 12:07 confirms she was at the pickup point and saw no car [F9], consistent with the GPS. Traffic on Jalan Besar at band 3 with no incidents and fair weather [F13][F14][F15] explains nothing about a stationary driver 600 m from the pickup and is not a \"reasonable cause\" screen for an NS-1 (ii)/(iii) failure [NS-1]. Profile facts were not used to decide the case [F16][F17].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the dispute as not upheld: the surge rise from 1× to 1.4× was notified in-app at 12:01:40, before the 12:02:00 trip start, with all three SURGE-1 items stated, so the $27.82 fare stands and no refund is issued. No flag_account, no driver violation and no RD-7 reminder (the rider was informed). Log the ruling against the trip record.",
+  "confidence": 0.9,
+  "reasoning": "The dispute is a fare/surge dispute: the rider was quoted $21.67 at surge 1× (F6) and charged $27.82 at surge 1.4× from trip start (F5, F7), so the fare exceeds the quote by $6.15 (F8); the whole difference comes from the multiplier change, because the billed distance of 8.63 km sits under the 8.7 km optimal route (F3) and there is no off-route segment — no RD-1/RD-2 excess-distance refund arises (F1).\n\nSURGE-1 is satisfied. The trace marks the rise (1× → 1.4×) and the in-app notification at or before pickup as settled ✓ (F8, F9). Reading the logged notice text itself — \"Fares are 1.4× higher right now. Your new estimated fare is $29.75. You can cancel for free.\" — it states the new multiplier (1.4×), a revised estimated fare ($29.75) and free cancellation without penalty; all three SURGE-1 items are present (F9). The rider's complaint that the notice \"only popped up as I was getting into the car\" is a statement contradicted by the platform's timestamped surge log, which places it at 12:01:40, 20 seconds before trip start at 12:02:00 (F2, F9); the system record governs that conflict [SURGE-1]. The fact that the stated estimate ($29.75) exceeded the fare finally charged ($27.82) does not make the notice deficient: SURGE-1 requires a revised estimated fare to be stated, and no item is vague or contradicted within the notice itself [SURGE-1].\n\nBecause the rider was notified, SURGE-2's \"rider not notified → refund the surge differential\" row is not triggered; the higher fare stands [SURGE-2]. The differential arithmetic — \"(1.4 − 1.0) × $18.82 = $7.53, capped at the $6.15 the fare exceeds the quote\" (F8) — is therefore never payable [SURGE-3]. The chat contains only pickup logistics with no fare or route agreement (F10, F11) and is complete and timestamped (F12), and the driver states he followed the app's route (F13), which the GPS record supports.\n\nSafety screen: I read both chat messages (caller at the taxi stand in a red cap; driver arriving in a black Hyundai Ioniq), the driver's post-trip statement, the rider's complaint and both briefs. Nothing describes threats, intimidation, harassment, sexual remarks, dangerous driving or an accident; the complaint is about notice timing only. No safety basis exists.\n\nEvidence: the surge log with timestamp and quoted text (F9), the fare build-up (F5, F7, F8) and the complete timestamped chat (F12) settle every element this ruling needs, so the record is sufficient. The amount in issue, $6.15, is under $10, within the system's final jurisdiction under TH-1/TH-2 (C1).\n\nPrecedent: DISP-2026-0142 (surge without notice) supports a refund only where notice was missing; here the notice was given, so the fare stands.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
-   "F4",
    "F5",
    "F6",
+   "F7",
+   "F8",
    "F9",
-   "F12"
+   "F10",
+   "F11",
+   "F12",
+   "F13"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The logged in-app notice at 12:01:40, before the 12:02:00 trip start (F9), states all three items SURGE-1 requires: the new multiplier (1.4×), the revised estimated fare ($29.75) and that the rider may cancel for free. None of the three is missing, vague, or contradicted within the notice itself; that the stated estimate is higher than the fare ultimately charged does not unstate it. Per SURGE-2, the notified rider's higher fare therefore stands."
+   }
+  ],
   "rejected_claims": [
    {
+    "id": "C1",
+    "reason": "The arithmetic is correct — the $6.15 excess arises solely from the multiplier rise from 1× to 1.4× on a billed 8.63 km that is under the 8.7 km optimal route (F3, F6, F7, F8) — but SURGE-2 only refunds the surge differential where the rider was not notified, and the log shows notice at 12:01:40 with all three items (F9). C1's conclusion of a refund fails on SURGE-2."
+   },
+   {
+    "id": "C3",
+    "reason": "Conditional on the notice not stating all three SURGE-1 items; the notice text in F9 states the multiplier, the revised estimated fare and free cancellation, so the SURGE-2 refund row is not triggered and the $7.53/(1.4 − 1) × $18.82 calculation, capped at $6.15 (F8), never becomes payable (SURGE-2, SURGE-3)."
+   },
+   {
+    "id": "C4",
+    "reason": "Profile facts cannot decide a case; the rider's clean record (F14) and the driver's 2 upheld disputes (F15) do not bear on whether the SURGE-1 notice was given, which the platform log F9 settles. Rider advocate withdrew this claim."
+   },
+   {
+    "id": "C5",
+    "reason": "Correct that the two chat messages are pickup logistics only (F10, F11, F12), but the SURGE-1 notice duty is discharged through the in-app notice logged at 12:01:40 (F9), not through the chat thread, so the absence of fare talk in the chat does not help the rider."
+   },
+   {
     "id": "D1",
-    "reason": "A tap is only NS-1(i); the same record shows the tap at 12:06:15 was made 600 m from the pickup with 0 s inside the radius afterwards [F5], and the closest approach was 599 m [F1], so the tap does not make this a valid rider no-show under NS-1 [NS-1]."
+    "reason": "Accepted only as to the arithmetic consequence: F1 and F3 show no excess distance and no RD-1/RD-2 refund, but that clause plays no part in the outcome of this surge dispute, which turns on SURGE-1/SURGE-2 (F1, F3, F9)."
    },
    {
     "id": "D2",
-    "reason": "The 3 min 30 s stationary period occurred 600 m from the pickup [F2][F1], not at the pick-up location, so NS-1(iii) is not met; the written statement [F12] is contradicted by the GPS/timeline records, which prevail [NS-1]."
-   },
-   {
-    "id": "D3",
-    "reason": "Chat engagement does not put the car inside the arrival radius: the rider replied at 12:07 that she was at the pickup point with no car present [F9], while GPS never placed the driver within 200 m [F1][F5] [NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "A complete, timestamped chat record [F11] does not supply the missing GPS elements: driver_arrived_at is null [F4] and the arrival tap was made 600 m out [F5], leaving NS-1(ii) and (iii) unsatisfied [NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Band 3 traffic on Jalan Besar with no incidents and fair weather [F13][F14][F15] does not excuse a stationary driver awaiting pickup 600 m from the pick-up point; NS-1 (ii)/(iii) still fail [NS-1]."
+    "reason": "The $6.15 is indeed surge-caused (F6, F7, F8), but SURGE-3's differential is refundable only when SURGE-2's non-notification row applies; the notice was given (F9), so nothing is payable (SURGE-2, SURGE-3)."
    },
    {
     "id": "D6",
-    "reason": "The driver advocate's own fallback accepts the full return of the fee [F6]; the request to omit account action is not accepted because NS-2 attaches the flag where the arrival tap was made outside the pickup radius [F5][NS-2]."
-   },
-   {
-    "id": "D7",
-    "reason": "Profile facts [F17][F16] are not used to decide the case; the outcome rests on the GPS and timeline records [F1][F4][F5][NS-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "The rider advocate's label of the flag as an NS-7 matter is misdirected: the account flag arises under NS-2 (fake arrival confirmation), while NS-7 only governs the voucher form of the refund [F5][F6][NS-2][NS-7]."
+    "reason": "Correct that no RD-6 flag applies — the driver's upheld disputes are neither route nor no-show matters (F15) — but RD-6 is a repeat-deviation clause that never arises in a fare/surge dispute, so it is not part of the outcome (F15, F9)."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F8",
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and send the driver's account for review of the \"I'm Here\" tap made 600 m from the pickup + flag_account",
-  "confidence": 0.95,
-  "reasoning": "The driver cancelled at 12:09:25 and $6.61 was charged as a rider no-show [F3][F6], so NS-0 routes the case to NS-1/NS-2: the fee stands only if the arrival and waiting elements are met [NS-0]. The trace settles NS-1(i) as satisfied — the driver tapped \"I'm Here\" at 12:06:15 [F5] — but NS-1(ii) fails: at that moment the GPS placed him 600 m from the pickup, and his closest approach over the whole trip was 599 m, never inside 200 m [F5][F1]. NS-1(iii) fails as well: he stayed within the 200 m radius for 0 s after the tap, so no continuous 3-minute wait at the pick-up location can be shown [F5]; his stationary 3 min 30 s was spent 600 m away [F2]. With (ii) and (iii) unmet, NS-2 gives the rider the full return of the $6.61 [NS-2], payable as a Ryde voucher and within the rider's dispute window [NS-7]. The driver's post-trip statement that he \"waited more than 3 minutes at the pickup\" [F12] is contradicted by the GPS and timeline records, and system records prevail over statements; the null driver_arrived_at corroborates that the platform never placed him at the pickup [F4]. Because he tapped \"I'm Here\" while GPS showed him outside the pickup radius, NS-2 also requires the account flag [F5][F1][NS-2]. The rider's own chat message at 12:07 confirms she was at the pickup point and saw no car [F9], consistent with the GPS. Traffic on Jalan Besar at band 3 with no incidents and fair weather [F13][F14][F15] explains nothing about a stationary driver 600 m from the pickup and is not a \"reasonable cause\" screen for an NS-1 (ii)/(iii) failure [NS-1]. Profile facts were not used to decide the case [F16][F17].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the dispute as not upheld: the surge rise from 1× to 1.4× was notified in-app at 12:01:40, before the 12:02:00 trip start, with all three SURGE-1 items stated, so the $27.82 fare stands and no refund is issued. No flag_account, no driver violation and no RD-7 reminder (the rider was informed). Log the ruling against the trip record.",
+  "confidence": 0.9,
+  "reasoning": "The dispute is a fare/surge dispute: the rider was quoted $21.67 at surge 1× (F6) and charged $27.82 at surge 1.4× from trip start (F5, F7), so the fare exceeds the quote by $6.15 (F8); the whole difference comes from the multiplier change, because the billed distance of 8.63 km sits under the 8.7 km optimal route (F3) and there is no off-route segment — no RD-1/RD-2 excess-distance refund arises (F1).\n\nSURGE-1 is satisfied. The trace marks the rise (1× → 1.4×) and the in-app notification at or before pickup as settled ✓ (F8, F9). Reading the logged notice text itself — \"Fares are 1.4× higher right now. Your new estimated fare is $29.75. You can cancel for free.\" — it states the new multiplier (1.4×), a revised estimated fare ($29.75) and free cancellation without penalty; all three SURGE-1 items are present (F9). The rider's complaint that the notice \"only popped up as I was getting into the car\" is a statement contradicted by the platform's timestamped surge log, which places it at 12:01:40, 20 seconds before trip start at 12:02:00 (F2, F9); the system record governs that conflict [SURGE-1]. The fact that the stated estimate ($29.75) exceeded the fare finally charged ($27.82) does not make the notice deficient: SURGE-1 requires a revised estimated fare to be stated, and no item is vague or contradicted within the notice itself [SURGE-1].\n\nBecause the rider was notified, SURGE-2's \"rider not notified → refund the surge differential\" row is not triggered; the higher fare stands [SURGE-2]. The differential arithmetic — \"(1.4 − 1.0) × $18.82 = $7.53, capped at the $6.15 the fare exceeds the quote\" (F8) — is therefore never payable [SURGE-3]. The chat contains only pickup logistics with no fare or route agreement (F10, F11) and is complete and timestamped (F12), and the driver states he followed the app's route (F13), which the GPS record supports.\n\nSafety screen: I read both chat messages (caller at the taxi stand in a red cap; driver arriving in a black Hyundai Ioniq), the driver's post-trip statement, the rider's complaint and both briefs. Nothing describes threats, intimidation, harassment, sexual remarks, dangerous driving or an accident; the complaint is about notice timing only. No safety basis exists.\n\nEvidence: the surge log with timestamp and quoted text (F9), the fare build-up (F5, F7, F8) and the complete timestamped chat (F12) settle every element this ruling needs, so the record is sufficient. The amount in issue, $6.15, is under $10, within the system's final jurisdiction under TH-1/TH-2 (C1).\n\nPrecedent: DISP-2026-0142 (surge without notice) supports a refund only where notice was missing; here the notice was given, so the fare stands.",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
-   "F4",
    "F5",
    "F6",
+   "F7",
+   "F8",
    "F9",
-   "F12"
+   "F10",
+   "F11",
+   "F12",
+   "F13"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The logged in-app notice at 12:01:40, before the 12:02:00 trip start (F9), states all three items SURGE-1 requires: the new multiplier (1.4×), the revised estimated fare ($29.75) and that the rider may cancel for free. None of the three is missing, vague, or contradicted within the notice itself; that the stated estimate is higher than the fare ultimately charged does not unstate it. Per SURGE-2, the notified rider's higher fare therefore stands."
+   }
+  ],
   "rejected_claims": [
    {
+    "id": "C1",
+    "reason": "The arithmetic is correct — the $6.15 excess arises solely from the multiplier rise from 1× to 1.4× on a billed 8.63 km that is under the 8.7 km optimal route (F3, F6, F7, F8) — but SURGE-2 only refunds the surge differential where the rider was not notified, and the log shows notice at 12:01:40 with all three items (F9). C1's conclusion of a refund fails on SURGE-2."
+   },
+   {
+    "id": "C3",
+    "reason": "Conditional on the notice not stating all three SURGE-1 items; the notice text in F9 states the multiplier, the revised estimated fare and free cancellation, so the SURGE-2 refund row is not triggered and the $7.53/(1.4 − 1) × $18.82 calculation, capped at $6.15 (F8), never becomes payable (SURGE-2, SURGE-3)."
+   },
+   {
+    "id": "C4",
+    "reason": "Profile facts cannot decide a case; the rider's clean record (F14) and the driver's 2 upheld disputes (F15) do not bear on whether the SURGE-1 notice was given, which the platform log F9 settles. Rider advocate withdrew this claim."
+   },
+   {
+    "id": "C5",
+    "reason": "Correct that the two chat messages are pickup logistics only (F10, F11, F12), but the SURGE-1 notice duty is discharged through the in-app notice logged at 12:01:40 (F9), not through the chat thread, so the absence of fare talk in the chat does not help the rider."
+   },
+   {
     "id": "D1",
-    "reason": "A tap is only NS-1(i); the same record shows the tap at 12:06:15 was made 600 m from the pickup with 0 s inside the radius afterwards [F5], and the closest approach was 599 m [F1], so the tap does not make this a valid rider no-show under NS-1 [NS-1]."
+    "reason": "Accepted only as to the arithmetic consequence: F1 and F3 show no excess distance and no RD-1/RD-2 refund, but that clause plays no part in the outcome of this surge dispute, which turns on SURGE-1/SURGE-2 (F1, F3, F9)."
    },
    {
     "id": "D2",
-    "reason": "The 3 min 30 s stationary period occurred 600 m from the pickup [F2][F1], not at the pick-up location, so NS-1(iii) is not met; the written statement [F12] is contradicted by the GPS/timeline records, which prevail [NS-1]."
-   },
-   {
-    "id": "D3",
-    "reason": "Chat engagement does not put the car inside the arrival radius: the rider replied at 12:07 that she was at the pickup point with no car present [F9], while GPS never placed the driver within 200 m [F1][F5] [NS-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "A complete, timestamped chat record [F11] does not supply the missing GPS elements: driver_arrived_at is null [F4] and the arrival tap was made 600 m out [F5], leaving NS-1(ii) and (iii) unsatisfied [NS-1]."
-   },
-   {
-    "id": "D5",
-    "reason": "Band 3 traffic on Jalan Besar with no incidents and fair weather [F13][F14][F15] does not excuse a stationary driver awaiting pickup 600 m from the pick-up point; NS-1 (ii)/(iii) still fail [NS-1]."
+    "reason": "The $6.15 is indeed surge-caused (F6, F7, F8), but SURGE-3's differential is refundable only when SURGE-2's non-notification row applies; the notice was given (F9), so nothing is payable (SURGE-2, SURGE-3)."
    },
    {
     "id": "D6",
-    "reason": "The driver advocate's own fallback accepts the full return of the fee [F6]; the request to omit account action is not accepted because NS-2 attaches the flag where the arrival tap was made outside the pickup radius [F5][NS-2]."
-   },
-   {
-    "id": "D7",
-    "reason": "Profile facts [F17][F16] are not used to decide the case; the outcome rests on the GPS and timeline records [F1][F4][F5][NS-1]."
-   },
-   {
-    "id": "C6",
-    "reason": "The rider advocate's label of the flag as an NS-7 matter is misdirected: the account flag arises under NS-2 (fake arrival confirmation), while NS-7 only governs the voucher form of the refund [F5][F6][NS-2][NS-7]."
+    "reason": "Correct that no RD-6 flag applies — the driver's upheld disputes are neither route nor no-show matters (F15) — but RD-6 is a repeat-deviation clause that never arises in a fare/surge dispute, so it is not part of the outcome (F15, F9)."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F8",
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 27,
+ "events": 26,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this fare_dispute case removed from cited_policy: TH-1, TH-2\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 100%\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/court/B-0026.record.json",
- "latency_s": 21.67,
- "input_tokens": 107794,
- "output_tokens": 6329,
- "requests": 10,
+ "latency_s": 28.03,
+ "input_tokens": 97546,
+ "output_tokens": 6742,
+ "requests": 11,
  "llm_calls": 6
 }

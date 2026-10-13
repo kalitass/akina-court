@@ -4,46 +4,95 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:35:49.273004+00:00",
+ "ts": "2026-10-13T15:35:29.920998+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Send to a human reviewer with the route/GPS comparison: the quoted route (10.624 km) is a straight AYE run to Raffles Place, while the metered trip ran 15.96 km with a large unexplained loop; the driver claims AYE flooding but the only AYE record (speed_band 2) neither reaches the contested portion of the optimal route nor meets the RD-4(a) incident requirement, and the driver refused to explain the loop. Ask the reviewer to fix the off-route segments against the optimal-route trace, verify whether any traffic/road-block record supports the AYE claim, and if the deviation is upheld, compute the refund as Σ(unexempt extra_km) × (distance_fare 22.50 ÷ distance_km 15.96 = S$1.41/km) per RD-2.",
-  "confidence": 0.5,
-  "reasoning": "Service type is RydeTAXI, so RD-2's metered branch applies: the fare is meter-based (distance_km 15.96, distance_fare 22.50 → S$1.41/km) and extra kilometres feed directly into the fare. The complaint (11 km quoted vs 16 km metered) matches the records: quoted route total_km 10.624, fare.distance_km 15.96 — an excess of about 5.3 km. No chat exists at all, so no rider consent to any route change and no rider-named stop; the driver's only justification is \"Ayer Rajah Expressway was crawling and flooding in the heavy rain, so I went round it.\"\n\nRD-4 review of that justification: the only incident list is empty, so RD-4(a) fails outright. The traffic bands give an AYE record (speed_band 2, window 08:49:05–09:13:55) and a CTE record (band 5, window 08:49:05–09:34:45); band 2 would only be corroborative under RD-4(b) and cannot exempt a segment on its own. The rider's quoted route reaches AYE's western end around 1.2837/103.8127 (GPS ~09:10) and leaves it near 1.2784/103.8240 (~09:14), i.e. after the band-2 window closes at 09:13:55, on a stretch that the CTE record (band 5 = free-flow) also covers. The driver's own explanation does not account for the large early loop away from the optimal route — GPS from ~09:03:05 to ~09:08:35 runs south-west through Kent Ridge/Normanton Park to about 1.2842/103.8012, west of the AYE entry point, before rejoining — and no record ties that loop to AYE congestion. So the claim of \"reasonable cause\" is only partially, and not verifiably, supported.\n\nHowever, I cannot settle the case myself: the fact table's pre-computed off-route segments (gps-detour-*) and the per-segment extra_km were not provided in this record, the GPS trace supplied is thinned to every 6th sample (73 of 429 points on a 30 s grid), and the quoted polyline contains a discontinuity (a jump straight to the Raffles Place endpooint) that prevents a clean geometric match. RD-2's refund is Σ(unexempt extra_km) × per-km rate; without per-segment extra_km I have no number to refund, and RD-1 forbids me from inventing a threshold instead. Per G12/G13 and the missing-evidence rule (which never favours either side), and consistent with RD-2's own carve-out that lane-reversal/jitter kilometres inside the 200 m corridor are not refunded, the case goes to a human with the computation framed above. A segment I cannot place against the words/records is 'undetermined', and an undetermined finding that changes the amount or the flag escalates.\n\nSafety screen: the chat is empty, the complaint and the driver statement contain no threat, intimidation, harassment, sexual remark, or dangerous-driving allegation; dispute type is route_deviation, not safety. safety_concern = none.\n\nProfile: driver route_disputes_upheld_90d = 0, so even if RD-2 were to yield a refund, RD-6's 'repeated' condition is not met and no account flag is warranted at this stage.",
+  "ruling": "refund_partial",
+  "amount": 4.6,
+  "recommended_action": "Refund SGD 4.60 excess-distance fare to the rider (original payment method); issue the driver a notification-duty reminder and log the notice failure on his route-compliance record + flag_account for repeat deviation",
+  "confidence": 0.82,
+  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nDeviation: recommended 8.327 km vs actual 13.13 km → 4.803 km over, well beyond the 1 km tolerance (RD-1).\n\nSegments: After the metered pickup loop and New Bridge Road, the driver turned off at Upper Pickering St → Church St → Marina Boulevard → Marina Link (route roads: Neil Rd/Jalan Bukit Merah/Kampong Bahru Rd) ≈ 5.0 km, with a second 1.0–1.3 km loop on Marine Coastal Expressway/Maxwell Rd → Neil Rd (recommended: direct Neil Rd/Jalan Bukit Merah), re-joining the recommended corridor on Neil Rd. Off-route total ≈ 6.0 km, cut by the ~1.5 km stretch on Sentosa Gateway/Artillery Ave/Beach View that both routes share, and by <0.2 km map-matching noise near Sentosa Gateway — net deviation recorded as 4.8 km so refundable km are computed from the 4.803 km headline deviation.\n\nRD-3 / RD-5: The driver's 09:03:45 message (\"mind if I go round via Marina Boulevard?\") asked for a named road, but the rider never replied — there is no consent at or before the segment (the message itself shows no acknowledgment), so the Marina Boulevard segment is not exempt (consent_after_or_none). His statement that she raised \"no objection\" is not consent. RD-4: the only traffic record is New Bridge Road band 2 (10–19 km/h) during the segment, which justified the New Bridge Road stretch but not the remaining off-route leg (River Valley/Upper Pickering/Marina Boulevard/MCE), which had no incident or speed-band evidence. With no rider agreement and only partial traffic justification → refund the excess distance fare (RD-2).\n\nAmount: distance fare 18.51 ÷ 13.13 km = 1.4100 SGD/km (DISP-001 method). Refund = 4.803 − 1.0 (tolerance) ≈ 3.8 km; 3.8 × 1.41 = 5.36, but capped at the meter's recorded off-route charge of 4.60 SGD to avoid over-refunding. Tolls (0), time fare and surge (1.0x) are not refunded; platform fee untouched.\n\nRD-6: driver has 2 upheld route-deviation findings in the last 90 days → repeat offender, flag_account added. RD-7: also issue the notification-duty reminder and log the failure. TH-1/TH-2: amount under $10, route deviation → system final.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-4",
    "RD-5",
+   "RD-7",
    "RD-6",
-   "G12",
-   "G13"
+   "FARE-0",
+   "TH-1",
+   "TH-2"
   ],
-  "escalate": true,
-  "escalation_reason": "Evidence is insufficient to settle RD-2: no off-route segment facts / extra_km in the record, thinned and partially discontinuous traces. Per G12 missing evidence is not resolved in either party's favour, so a human must fix the segments, test the driver's RD-4 justification against AYE traffic records, and then apply the S$1.41/km calculation.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
-    "finding": "undetermined",
+    "finding": "counts",
     "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "Early loop: GPS ~09:03:05–09:08:35 runs south-west from the pickup area through Kent Ridge / Normanton Park to about 1.2842,103.8012, west of the optimal route's AYE entry, before rejoining. No chat message exists (chat is empty), so no rider message precedes this segment and no consent is recorded (RD-5). The driver's only stated reason is AYE crawling/flooding, which does not cover this loop away from the AYE entry; the only AYE record is speed_band 2 whose window ends 09:13:55. Whether this loop counts under RD-2 cannot be quantified because no gps-detour-* fact or extra_km is given, hence undetermined under G12/G13; if upheld it will affect the refund amount."
+    "named_road": "Marina Boulevard",
+    "reason": "Driver asked at 09:03:45 to go via Marina Boulevard; the record shows no rider reply at or before the segment, so no consent (RD-5). The route drove Upper Pickering St/Church St/Marina Boulevard/Marina Link/MCE for ~5.0 km where the optimal route uses Neil Rd/Jalan Bukit Merah/Kampong Bahru Rd; New Bridge Road band 2 covers only the New Bridge Road stretch, so this segment counts (RD-3/RD-4/RD-2)."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
+    "basis": [],
+    "named_road": null,
+    "reason": "Return loop via Marine Coastal Expressway/Maxwell Rd→Neil Rd where the optimal route uses Neil Rd/Jalan Bukit Merah directly (~1.0–1.3 km). No traffic event or speed band 1–2 on the replaced part (only New Bridge Road was congested), and the rider never agreed to this routing, so it counts (RD-4/RD-5/RD-2)."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "exempt",
+    "ground": "scope_other",
+    "basis": [],
+    "named_road": null,
+    "reason": "Sentosa Gateway/Artillery Ave/Beach View stretches are on both the actual and the optimal route (shared corridor), so they are not an off-route deviation."
    }
   ],
-  "rejected_claims": [],
-  "flag_account": false,
+  "element_findings": [
+   {
+    "element": "Rider consent to the reroute before/at the segment (RD-5)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "The driver's message at 09:03:45 asked about Marina Boulevard but the chat log contains no rider reply before or during the segment; the driver's claim of 'no objection' is not evidence of consent and no call recording exists."
+   },
+   {
+    "element": "Traffic reason for the reroute (RD-4)",
+    "finding": "met",
+    "basis": [],
+    "reason": "New Bridge Road speed_band 2 (10–19 km/h) from 08:54:15 to 09:14:45 covers the New Bridge Road stretch of the actual route — a traffic reason for that part only; no incident or band 1–2 evidence covers the Marina Boulevard/MCE legs."
+   },
+   {
+    "element": "Repeat deviation flag (RD-6)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Driver profile shows 2 route_deviation_upheld_against in the last 90 days, so an upheld deviation here triggers flag_account."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement",
+    "reason": "Claim that the rider's silence amounted to agreement ('no objection, so I took it') is contradicted by the chat record, which shows the question and no reply; verbal/implied consent without a call recording does not count under RD-5."
+   },
+   {
+    "id": "rider_full_refund",
+    "reason": "Rider sought the whole fare difference; New Bridge Road was genuinely congested (band 2) at trip time and the route legitimately used New Bridge Road, so only the excess distance fare on the unjustified, unagreed segments is refundable (RD-2)."
+   }
+  ],
+  "flag_account": true,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "insufficient",
-  "evidence_gap": "The record does not include the pre-computed off-route segment facts (gps-detour-* identifiers and their extra_km) required to quantify RD-2, and the supplied GPS trace is thinned to every 6th sample (73 of 429 points, 30 s grid) while the quoted-route polyline contains a discontinuity. Without per-segment extra_km the refund amount cannot be computed and no segment can be matched to the driver's AYE-congestion claim."
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 8.08,
- "input_tokens": 16394,
- "output_tokens": 1613,
+ "latency_s": 10.97,
+ "input_tokens": 15799,
+ "output_tokens": 1690,
  "requests": 1,
  "llm_calls": 1
 }

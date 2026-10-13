@@ -1,135 +1,168 @@
 # Reference answers: change log
 
-The reference answer of every benchmark case is derived by `data/synth/scenarios.py` from the scenario's own labels
-(what was injected: consent, stops, incidents, waits) and the evidence rules in `policy/policy.md`, never from a
-model's output. The version string lives in `data/bench/manifest.json` (`reference_version`). Every answer that a
-rule change moves is listed here with the gap and why it moves the outcome.
+The reference answer of every benchmark case is derived by `data/synth/reference.py` from the generated record and the
+scenario's interpretive labels (what the rider's words mean), under the rules in `policy/policy.md`, never from a
+model's output; `data/synth/scenarios.py` publishes a case only when the engine reaches the same answer. The version
+string lives in `data/bench/manifest.json` (`reference_version`). Every answer that a rule change moves is listed here.
 
-## 2026-10-11 v4 — no rider message before the segment: settled by code
+## 2026-10-14 v5e — four cases validated against the live models, ported verbatim
 
-Rule: RD-5 consent and an RD-3 rider-named stop both need a message from the RIDER sent before the segment started.
-That is timing, which code measures. When every rider message is later than the segment start, or the record holds
-only the driver's messages and the driver's statement (a claim, not consent — G11), both clauses fail and the segment
-counts; the question is no longer put to the judge. No outcome and no amount moves. Nine answers lose RD-5 from
-their cited clauses (the clause fails mechanically instead of being read): B-0003, B-0005, B-0006, B-0009, B-0014,
-B-0015, B-0018, B-0019, B-0021. The policy trace of those cases (and of B-0024, the threat case) marks RD-5 / RD-3 ✗
-where it used to mark them ?. Case files are unchanged.
+Rules unchanged. Four cases built by hand (a bench case copied, texts edited) and validated against the live models were ported through
+the generator: each is its base scenario's record (same trip, GPS, fare and date) with the validated texts laid over it, verbatim
+(PORT_TEXT in scenarios.py). B-0001 and B-0007 share B-0014's trip; B-0023 shares B-0020's (without the fraud flag); B-0028 keeps its own.
+Every expected answer carries escalate_ok.
 
-## 2026-10-10 v3 — agreement to a named road needs a record tying the driven segment to it (G13)
-
-Rule: a rider's agreement to "go via X" covers driving on X only. The record carries no road names for the driven
-path, so unless a stop on X, a message placing the car on X or a road name in a fact ties the segment to X, the
-finding is undetermined; when that finding changes the amount or the flag, a person decides. Timing alone is a lead.
-Case files are unchanged; 4 of 49 answers move, all from an automatic outcome to a hand-off.
-
-| case | scenario | before | after | evidence gap | why it changes the outcome |
-|---|---|---|---|---|---|
-| B-0002 | rd_consent_before | no_action | escalate | no record ties segment F3 to Sims Avenue, the road the rider agreed to | metered trip: the finding decides the RD-2 amount |
-| B-0013 | rd_two_segs_consent_seg1 | refund_partial $6.74 | escalate | no record ties segment F3 (loop 1) to Kranji Expressway, the road the rider agreed to | metered trip: loop 1's finding decides part of the amount (loop 2 counts either way) |
-| B-0023 | rd_consent_before_prior | no_action | escalate | no record ties segment F3 to Bedok South Avenue 3, the road the rider agreed to | metered trip, and the driver's prior makes the RD-6 flag depend on the finding |
-| B-0025 | rd_consent_before_light | no_action | escalate | no record ties segment F3 to Prince George's Park, the road the rider agreed to | metered trip; the decoy incident is far from the route and does not settle the segment under RD-4 |
-
-Not moved although it holds the same kind of agreement: B-0017 (rd_fixed_fare_consent) — a fixed-fare trip with no
-prior: the finding changes neither the amount nor the flag, so the segment may stay undetermined and the answer stays
-no_action. B-0008 (incident on the replaced stretch) stays exempt under RD-4, which code settles.
-
-## 2026-10-09 v2 — the court reads the chat; keyword labels removed
-
-B-0049 (rd_keyword_trap_find_you): escalate → refund_partial $1.09. "I'll find you at the lobby" is a pickup
-arrangement, not a threat; the old answer encoded a keyword rule. B-0003 / B-0021 (rd_consent_after, rd_request_only):
-RD-5 added to the cited clauses (the chat holds a route exchange the judge had to read).
-
-## 2026-09-28 v1 — initial set (49 cases, seed in the manifest)
-
-## 2026-10-10 v3b — incident scenarios regenerated so the loop really bypasses the incident
-
-A reviewer found that the loops of the incident scenarios left and rejoined the optimal route at almost the same point
-(an out-and-back spur replacing 30–40 m of route), so the accident placed mid-stretch was not on the stretch the
-driver bypassed and RD-4 failed although the scenario said "accident on the replaced stretch → exempt". The generator
-now requires an incident scenario's loop to bypass at least 1.0 km of the optimal route (`MIN_REPLACED_KM`); four case
-files changed, the rules did not.
-
-| case | scenario | before | after | why |
+| case | scenario | before (v5d) | after | why |
 |---|---|---|---|---|
-| B-0004 | rd_incident_on_stretch | refund_partial $2.44 (RD-4 failed: incident off the 30 m stretch) | no_action | the loop now bypasses 2.1 km containing the accident, reported 12 min before pickup → RD-4 exempts it |
-| B-0006 | rd_incident_late | refund_partial $6.82 | refund_partial $4.34 (now $1.90, see v3d) (now refund_partial $3.33, see v4) | same geometry fix; the accident is on the bypassed stretch but reported after the detour began → still not exempt, amount follows the new segment |
-| B-0008 | rd_band1_incident | no_action | no_action | geometry fixed (bypasses 1.5 km instead of 0.2 km); outcome unchanged |
-| B-0014 | rd_two_segs_incident_seg1 | refund_partial $15.21 (both segments) | refund_partial $4.89 (segment 2 only) (now refund_partial $4.41, see v4) | segment 1 now bypasses the accident → exempt under RD-4; segment 2 unexplained → counts |
+| B-0001 | rd_port_trust_fastest | no_action (rd_cte_consent_connector) | no_action | ported R-0014: "Whatever road you think is fastest, I trust you, don't need to follow the app." |
+| B-0007 | rd_port_auntie_any_way | refund_partial $7.73 (rd_stop_unnamed) | no_action | ported R-0016: "Any way also can, you decide, just bring me to NUS to see my grandson." |
+| B-0023 | sg_port_notice_fare_unchanged | no_action (sg_surge_fell) | refund_partial $3.46 | ported M-0011: "Your fare stays at the quoted $12.71." (no revised fare) |
+| B-0028 | sg_port_notice_window_closed | no_action (sg_rider_denies_notice) | refund_partial $4.88 | ported M-0008: "Free cancellation until 17:13." received at 17:14:45 (the window had closed) |
 
-## 2026-10-10 v3c — contract gate: every loop that claims a bypass must bypass ≥ 1.0 km
+## 2026-10-13 v5d — six cases where each side is partly right
 
-`data/synth/contract.py` now derives, from each scenario's conditions, the facts its label implies and the generator
-refuses to write a case that fails them. Regenerated with real bypass geometry: B-0013 (loop 1), B-0017, B-0023, B-0025,
-X-0005, X-0006, X-0007 (named-road loops that were out-and-back spurs); B-0030, B-0042 (an "en route" driver now really
-approaches the pickup); B-0016, B-0019 (fixed-fare statements no longer talk about a meter); X-0004 (a 10 km loop
-replaced by a 1.2 km bypass). Reference outcomes unchanged except the two blind amounts below.
+Rules unchanged. Six more near-duplicates were replaced by cases a careful reading after argument settles.
 
-| case | scenario | before | after | why |
+| case | scenario | before (v5c) | after | why |
 |---|---|---|---|---|
-| X-0004 | bl_negation | refund_partial $14.14 | refund_partial $3.27 (now refund_partial $5.41, see v4) | same rule (rider refused, driver went anyway: counts); the loop is now a realistic bypass, so the extra km and the amount changed |
-| X-0007 | bl_named_elsewhere | refund_partial $2.44 | refund_partial $2.21 (now refund_partial $7.11, see v4) | same rule (driver's own account puts the car on another road: counts); loop regenerated as a real bypass |
+| B-0002 | rd_notice_ack_hmm | no_action (rd_within_tolerance) | no_action | acknowledged notice: 'Jam ahead on Ayer Rajah Expressway, I'm going via Clementi Avenue 2.' / 'hmm ok lor'; complaint 'I just said hmm' |
+| B-0005 | rd_consent_except_road | refund_partial $3.61 (rd_consent_after) | no_action | consent with an exclusion not driven: '可以，不要走 Clementi Avenue 2。' |
+| B-0015 | rd_two_segs_consent_seg1 | refund_partial $6.49 (rd_two_segs_consent_seg1) | refund_partial $6.49 | reworked: 'can go via Upper Bukit Timah Road?' / 'ok'; complaint wants the whole excess, driver 'She agreed to my route.' |
+| B-0025 | sg_mixed_rider_stop | refund_partial $14.88 (sg_mixed_rider_stop) | refund_partial $11.22 | shorter trip; 'Can stop at Paya Lebar Square for 5 min?' / 'Ok'; driver 'No refund is due...'; only the surge part is refunded |
+| B-0026 | sg_notice_just_before_pickup | refund_partial $21.54 (sg_mid_amount) | no_action | complete notice 20 s before pickup; complaint 'only popped up as I was getting into the car' |
+| B-0046 | ns_gate_b_refused_to_move | no_action (ns_parked_180m_rider_says_absent) | no_action | Gate A / Gate B: 'Cannot stop at Gate A, double yellow line, please come to Gate B.'; complaint 'refused to come to me' |
 
-## 2026-10-10 v3d — story realism: loops that go somewhere, halts for every driver message, no case dated after the build
+## 2026-10-13 v5c — six cases where reading the text exactly as the policy writes it is the whole question
 
-A reader's audit of the case files found things no rule checks: drivers typing route requests at 40 km/h on an expressway,
-LTA bulletins naming the trip's destination mall, out-and-back spurs excused as "GPS rerouted me", a "jam" the record's
-own speed bands denied, airport trips crawling the ECP at 30 km/h, and a bench whose last eight disputes were dated after
-the submission deadline. `data/synth/scenarios.py` now (a) times every driver line inside a 25 s halt of the car (a
-junction), (b) requires a `frac` loop to replace >= 1.0 km of the route when its story goes round a stretch (0.5 km
-otherwise) and to drive at most 4x the stretch it replaces, keeping the candidate with the smallest extra km, (c) backs
-every "traffic ahead on X" with a band-2 crawl on X, (d) writes incidents with DataMall direction labels, (e) treats the
-ECP/highways as expressway class for cruising speed, (f) varies the stock wording, (g) dates the bench from 2026-09-01.
-The rules did not change: no ruling, flag or escalation moved; 10 bench amounts and 2 held-out amounts follow the new,
-smaller loops. Four bench scenarios and one held-out scenario found no loop that meets (b) on their road network and keep
-their previously committed record unchanged (dates included): B-0013, B-0014, B-0015, B-0022, X-0004.
+Rules unchanged. Six near-duplicate cases were replaced by cases built around a realistic distractor that invites a stricter or looser
+reading than the policy text; the benefiting party has an obvious argument. The fraud flag of the replaced B-0028 moved to B-0021.
 
-| case | scenario | before | after | why |
+| case | scenario | before (v5b) | after | why |
 |---|---|---|---|---|
-| B-0001 | rd_basic | refund_partial $4.17 | refund_partial $1.57 (now refund_partial $4.33, see v4) | the 2.96 km out-and-back spur on the ECP is replaced by a loop that bypasses a real stretch |
-| B-0003 | rd_consent_after | refund_partial $7.26 | refund_partial $2.28 (now refund_partial $2.74, see v4) | smallest qualifying loop (was a 6.5 km loop round 1.3 km of AYE) |
-| B-0005 | rd_incident_decoy | refund_partial $2.98 | refund_partial $1.49 (now refund_partial $2.76, see v4) | smallest qualifying loop; the decoy breakdown stays 2+ km from it |
-| B-0006 | rd_incident_late | refund_partial $4.34 | refund_partial $1.90 (now refund_partial $3.33, see v4) | smallest qualifying loop; the accident is still listed after the turn-off (now 10 min after, not 90 s) |
-| B-0007 | rd_band1_no_incident | refund_partial $1.13 | refund_partial $0.99 (now refund_partial $2.69, see v4) | smallest qualifying loop; band 1 alone still does not exempt |
-| B-0009 | rd_band2_heavy_rain | refund_partial $10.36 | refund_partial $1.09 (now refund_partial $7.06, see v4) | the 9.4 km loop round 2 km of AYE is gone; same rule (band 2 + rain do not exempt) |
-| B-0012 | rd_stop_unnamed | refund_partial $4.47 | refund_partial $2.93 (now refund_partial $6.90, see v4) | smallest qualifying loop; the 7-Eleven is still >= 500 m off the route |
-| B-0018 | rd_prior_flag | refund_partial $7.26 + flag_account | refund_partial $2.02 + flag_account (now refund_partial $3.00 + flag_account, see v4) | smallest qualifying loop; RD-6 flag unchanged |
-| B-0021 | rd_request_only | refund_partial $3.12 | refund_partial $1.49 (now refund_partial $6.27, see v4) | smallest qualifying loop; no reply, RD-5 still fails |
-| B-0049 | rd_keyword_trap_find_you | refund_partial $1.09 | refund_partial $1.07 (now refund_partial $2.74, see v4) | re-sampled trace with the pickup halt; same loop |
-| X-0003 | bl_general_errand | refund_partial $5.60 | refund_partial $1.33 (now refund_partial $7.12, see v4) | new pair (AMK Hub → VivoCity); the driver's own 4-min stop inside the loop still makes it count |
-| X-0007 | bl_named_elsewhere | refund_partial $2.21 | refund_partial $0.85 (now refund_partial $7.11, see v4) | new pair (Compass One → Kallang Wave Mall); the driver's account still puts the car on another road |
+| B-0001 | rd_cte_consent_connector | refund_partial $6.42 (rd_basic) | no_action | distractor: agreed road driven together with its connector roads |
+| B-0004 | rd_stop_named_longer_way | refund_partial $4.65 (rd_incident_on_stretch) | no_action | distractor: the driver's own 'the way to the market was a bit longer because of one-way streets' |
+| B-0016 | rd_call_log_no_recording | refund_partial $4.08 (rd_verbal_consent_no_recording) | refund_partial $4.08 | distractor: an answered 25 s call in the call log, with no recording or transcript |
+| B-0019 | sg_notice_estimate_above_charge | refund_partial $3.47 (sg_not_notified) | no_action | distractor: the notice's estimate ($12.65) is above the fare charged ($11.88), and the rider calls it misleading (replaces the arguable time-limited free cancel) |
+| B-0028 | sg_rider_denies_notice | refund_partial $1.85 (sg_fraud_flag_rider) | refund_partial $4.88 | distractor: the rider's 'I never received any notice about surge pricing' |
+| B-0037 | ns_need_to_go_after_no_reply | refund_full $5.00 (ns_rider_cancel_150s) | no_action | distractor: 'No reply from you, I need to go already, cancelling.' |
+| B-0021 | sg_notice_after_pickup | refund_partial $2.56 (sg_notice_after_pickup) | refund_partial $2.56 | distractor: fraud flag moved here from the replaced B-0028: timing is code-settled (97% >= 95%) |
 
-Held-out pairs no longer repeat a bench route: X-0002 Toa Payoh HDB Hub → Changi City Point, X-0003 AMK Hub → VivoCity,
-X-0005 Pasir Ris MRT → Suntec City, X-0006 Hougang Mall → Changi Airport T3, X-0007 Compass One → Kallang Wave Mall,
-X-0009 Junction 8 → Jurong Point, X-0010 NEX Serangoon → VivoCity, X-0011 Buona Vista MRT → Suntec City, X-0012 Toa Payoh
-HDB Hub → Pasir Ris MRT (outcomes unchanged).
+## 2026-10-13 v5b — reviewers' round: one arrival time, readings as text, realistic speeds
 
-## 2026-10-10 v4: the generator rebuilt — pinned loop plans, corridor candidates, target amounts, one linter
+Rules unchanged. Records changed after a hand audit: (1) a no-show's recorded arrival is the arrival confirmation, the car parks at it, so
+arrival, parking and the tap coincide; (2) what a reader must decide is text, never a boolean in the file: the surge notice is its verbatim
+`notification_text`, every cancellation carries `cancellation_reason` (the canceller's claim) and the driver's own words; (3) speeds follow the
+road class (expressways ~70 km/h, 10% faster at night), the trace standing still wanders a metre, the last sample of a moving car keeps its
+speed; (4) surge trips are RydeX with the quote priced on the route estimate and FARE-0 fares (waiting folded into time); (5) a jam band covers
+the whole detour; (6) TH-* never in cited_policy (the thresholds are named in the rationale); a TH-3 escalation carries `merits`;
+(7) safety rationales are factual summaries; SAFE-2 only for dangerous driving. Amounts move with the new timings and loops.
 
-The generation flow was redone after an external review: every case is built in memory and published only after the
-contract, an engine-free reference derivation (`reference.py`), the typed `expect`, the format checks and the linter
-(`lint.py`) all pass; loop geometry is searched among corridor candidates (two via points on a parallel road) and
-single-via candidates, scored by the distance of the refundable extra km from a target amount ($3 / $5 / $7 by
-scenario identity) instead of "smallest extra wins", and the chosen plan is pinned in the manifest so a rebuild
-reproduces the file byte for byte. Random streams now derive from the scenario name. Two scenarios changed pair
-(rd_scope_other: Toa Payoh HDB Hub -> VivoCity; rd_consent_before_prior: NEX Serangoon -> Suntec City) because their
-corridors offered no valid loop. No rule changed: rulings, flags and escalations are unchanged; the amounts below follow
-the new loops.
-
-| case | scenario | before | after | why |
+| case | scenario | before (v5) | after | why |
 |---|---|---|---|---|
-| B-0001 | rd_basic | refund_partial $1.57 | refund_partial $4.33 | new loop plan (target amount, corridor candidates) |
-| B-0003 | rd_consent_after | refund_partial $2.28 | refund_partial $2.74 | new loop plan (target amount, corridor candidates) |
-| B-0005 | rd_incident_decoy | refund_partial $1.49 | refund_partial $2.76 | new loop plan (target amount, corridor candidates) |
-| B-0006 | rd_incident_late | refund_partial $1.90 | refund_partial $3.33 | new loop plan (target amount, corridor candidates) |
-| B-0007 | rd_band1_no_incident | refund_partial $0.99 | refund_partial $2.69 | new loop plan (target amount, corridor candidates) |
-| B-0009 | rd_band2_heavy_rain | refund_partial $1.09 | refund_partial $7.06 | new loop plan (target amount, corridor candidates) |
-| B-0012 | rd_stop_unnamed | refund_partial $2.93 | refund_partial $6.90 | new loop plan (target amount, corridor candidates) |
-| B-0014 | rd_two_segs_incident_seg1 | refund_partial $4.89 | refund_partial $4.41 | new loop plan (target amount, corridor candidates) |
-| B-0015 | rd_two_segs_plain | refund_partial $3.74 | refund_partial $8.22 | new loop plan (target amount, corridor candidates) |
-| B-0018 | rd_prior_flag | refund_partial $2.02 + flag_account | refund_partial $3.00 + flag_account | new loop plan (target amount, corridor candidates) |
-| B-0021 | rd_request_only | refund_partial $1.49 | refund_partial $6.27 | new loop plan (target amount, corridor candidates) |
-| B-0022 | rd_scope_other | refund_partial $2.44 | refund_partial $6.43 | new loop plan (target amount, corridor candidates) |
-| B-0049 | rd_keyword_trap_find_you | refund_partial $1.07 | refund_partial $2.74 | new loop plan (target amount, corridor candidates) |
-| X-0003 | bl_general_errand | refund_partial $1.33 | refund_partial $7.12 | new loop plan (target amount, corridor candidates) |
-| X-0004 | bl_negation | refund_partial $3.27 | refund_partial $5.41 | new loop plan (target amount, corridor candidates) |
-| X-0007 | bl_named_elsewhere | refund_partial $0.85 | refund_partial $7.11 | new loop plan (target amount, corridor candidates) |
+| B-0001 | rd_basic | refund_partial $4.51 (rd_basic) | no_action | new loop position (the old one only had out-and-back candidates) |
+| B-0003 | rd_named_cn_am | no_action (rd_named_cn_am) | escalate (merits: no_action) | fraud flag added on the rider: a lone reading of the clear text (87%) is under TH-3's 95%; merits = the policy's answer once both sides read it alike |
+| B-0004 | rd_incident_on_stretch | refund_partial $7.19 (rd_incident_on_stretch) | no_action | loop rebuilt without the U-turn; accident text no longer names a guessed exit |
+| B-0005 | rd_consent_after | refund_partial $3.06 (rd_consent_after) | no_action | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0007 | rd_stop_unnamed | refund_partial $7.71 (rd_stop_unnamed) | no_action | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0008 | bl_named_elsewhere | refund_partial $7.50 (bl_named_elsewhere) | refund_partial $5.95 | loop rebuilt without the U-turn |
+| B-0009 | rd_request_only | refund_partial $7.47 + flag_account (rd_request_only) | refund_partial $6.77 + flag_account | Beach Station pin moved to the real station; loop rebuilt |
+| B-0010 | rd_long_loop_mid_amount | refund_partial $11.58 (rd_long_loop_mid_amount) | refund_partial $11.55 | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0013 | rd_general_consent_jp | escalate (rd_general_consent_jp) | escalate (merits: no_action) | merits added: no_action once the reading is settled |
+| B-0014 | rd_impatient_rider | refund_partial $3.44 (rd_rude_rider) | refund_partial $5.89 | now an objection ('No... stay on') plus plain impatience, not an insult |
+| B-0015 | rd_two_segs_consent_seg1 | refund_partial $6.66 (rd_two_segs_consent_seg1) | refund_partial $6.49 | loop 2 rebuilt; the rider's yes is 'Ok can.'; RD-3 cited |
+| B-0016 | rd_verbal_consent_no_recording | refund_partial $7.53 (rd_verbal_consent_no_recording) | refund_partial $4.08 | loop rebuilt |
+| B-0018 | bl_negation | refund_partial $6.53 (bl_negation) | refund_partial $4.50 | new loop position (0.20-0.40) |
+| B-0019 | sg_notice_estimate_above_charge | refund_partial $4.34 (sg_not_notified) | no_action | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0021 | sg_notice_after_pickup | refund_partial $3.48 (sg_notice_after_pickup) | refund_partial $2.56 | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0022 | sg_notice_no_cancel_option | refund_partial $5.41 (sg_notice_no_cancel_option) | escalate (merits: refund_partial $4.65) | fraud flag added on the rider: a lone reading of the clear text (87%) is under TH-3's 95%; merits = the policy's answer once both sides read it alike |
+| B-0020 | sg_notified_full | no_action (sg_notified_full) | escalate (merits: no_action) | fraud flag added on the rider: a lone reading of the clear text (87%) is under TH-3's 95%; merits = the policy's answer once both sides read it alike |
+| B-0024 | sg_surge_unchanged_complaint_threat | escalate (sg_surge_unchanged_threat) | escalate | the safety allegation is in the complaint of a fare dispute |
+| B-0025 | sg_mixed_rider_stop | refund_partial $15.71 (sg_mixed_rider_stop) | refund_partial $11.22 | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0026 | sg_mid_amount | refund_partial $25.89 (sg_mid_amount) | no_action | the notice says only 'prices are higher than usual' (a reading) |
+| B-0027 | sg_over_50 | escalate (sg_over_50) | escalate | the notice says 'cancellation fees may apply' (a reading) |
+| B-0028 | sg_fraud_flag_rider | refund_partial $2.95 (sg_fraud_flag_rider) | refund_partial $4.88 | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0032 | ns_app_noshow_own_reason | refund_full $5.00 (ns_no_message) | refund_full $5.00 | app says rider_no_show, the driver's own words give his reason (NS-3) |
+| B-0039 | ns_driver_cancel_flat_tyre | refund_full $5.00 (ns_driver_cancel_flat_tyre) | refund_full $5.00 | driver arrived and waited; no reason picked; 'car got problem' (NS-3) |
+| B-0040 | ns_safety_in_complaint | refund_full $5.00 (ns_driver_late_contacted) | escalate | a no-show charge whose complaint alleges harassment (SAFE-1) |
+| B-0041 | ns_driver_late_no_contact | refund_full $5.00 (ns_driver_late_no_contact) | refund_full $5.00 + goodwill_credit $5.00 | new timings (road-class speeds, arrival = confirmation, estimate-priced quote) |
+| B-0045 | ns_impatient_driver | no_action (ns_rude_driver) | escalate (merits: no_action) | fraud flag added on the rider: a lone reading of the clear text (87%) is under TH-3's 95%; merits = the policy's answer once both sides read it alike |
+
+## 2026-10-13 v5 — the organisers' policy; a new 50-case set
+
+The benchmark was rebuilt on the organisers' Dispute Resolution Policy v2.1 (`policy/policy.md` v3): 18 route
+deviation, 18 no-show, 10 surge (fare dispute), 4 safety. It replaces the earlier set: 34 cases are rebuilt from one
+of its scenarios (same name, pair and pinned loop plan where the story still holds; `reused_from` in the manifest names
+the earlier id), 16 are new. Every case file was regenerated (official-plus format, GPS samples carry the
+road name, $5.00 fees, call logs, surge logs).
+
+Rules that move answers, compared with v4:
+
+* RD-1 / RD-2: every fare is distance-based (no fixed-fare branch). Deviation = billed distance − optimal route; the 1 km
+  tolerance applies to what is left once exempt segments are taken out; refund = that × the trip's per-km distance fare.
+* RD-4: a traffic reason (incident on the replaced stretch reported before the segment, or speed band 1–2) no longer
+  exempts a segment; it decides whether a driver violation is recorded, and an uninformed reroute with a reason gets the
+  RD-7 reminder. Only the rider's agreement before the segment (RD-5) or a rider-named stop (RD-3) exempts.
+* RD-5: a rider's agreement to "go via X" is checked against the road names of the GPS samples of the segment (X driven
+  -> exempt, not driven -> counts); a recorded call whose transcript holds the rider's yes counts as agreement, a driver's
+  account of a spoken yes without a recording does not. Named-road agreements no longer escalate (v4 G13).
+* NS-1: $5.00; 5-minute free wait (inclusive) from the later of arrival and scheduled time (a record-stated threshold is
+  counted from arrival); the driver needs at least one in-app message AND one call before cancelling. NS-8 (driver late
+  past scheduled + 5 min: free cancel, $5.00 goodwill credit without any contact attempt) and NS-9 (third no-show in 30
+  days: flag) are new.
+* SURGE-1..3 (new): refund (trip multiplier − quote multiplier) × surgeable subtotal unless the rider got an in-app
+  notice before pickup stating the new multiplier, the revised fare and free cancellation; the booking fee is not surged.
+* TH-1..4: over $50 a person decides; $10–50 needs code confidence ≥ 80%; a fraud flag raises it to 95% (a judge reading
+  of the rider's words gives 90%, a fraud flag ×97%); missing or broken records escalate.
+
+| case | scenario | before (v4 case it was built from) | after | why |
+|---|---|---|---|---|
+| B-0001 | rd_port_trust_fastest | validated by hand (R-0014) | no_action | the rider, before the detour: 'Whatever road you think is fastest, I trust you, don't need to follow the app.'; no traffic reason, and the complaint says the driver abused that trust: a general route choice covers a way round to the destination (RD-5), and what is left is within the 1 km tolerance -> no refund |
+| B-0002 | rd_notice_ack_hmm | v4 case 0003 (rd_consent_after): refund_partial $2.74 | no_action | the driver told the rider (a statement, not a question) he was going via a named road because of the jam, the rider answered 'hmm ok lor' before the turn-off, and the GPS shows that road; the complaint says 'I just said hmm': an acknowledged notice is agreement (RD-5) -> no refund |
+| B-0003 | rd_named_cn_am | v4 case 0056 (rd_named_cn_am): escalate | escalate (merits: no_action) | traffic on the stretch; the driver asked to go via a named road and the rider agreed in Chinese before the turn-off, and the GPS road names show that road: informed and agreed (merits: no refund); the rider carries a fraud flag, so a lone reading (87%) is under 95% -> escalate unless both sides read the yes alike |
+| B-0004 | rd_stop_named_longer_way | new | no_action | the rider named Tiong Bahru Market before the turn-off and the car stopped there; the driver himself says the way there was longer because of one-way streets, but RD-3 exempts the whole segment to a rider-named stop, and what is left is within the 1 km tolerance -> no refund |
+| B-0005 | rd_consent_except_road | v4 case 0050 (rd_general_consent_jp): no_action | no_action | 'Jam ahead, shall I take another way?' answered '可以，不要走 Y' (ok, don't use Y): consent with an exclusion; the GPS road names show Y was not driven, so the consent covers the loop (RD-5); the complaint says the rider put conditions -> no refund |
+| B-0006 | rd_stop_named_prior | v4 case 0011 (rd_stop_named_prior): no_action | no_action | RD-3: the rider named Clementi Mall; with that loop exempt, what is left of the deviation is under the 1 km tolerance, and the driver's 2 priors trigger no RD-6 flag -> no refund, no flag |
+| B-0007 | rd_port_auntie_any_way | validated by hand (R-0016) | no_action | the 72-year-old rider, before the detour: 'Any way also can, you decide, just bring me to NUS'; the complaint asks for sympathy: a general route choice covers the way round (RD-5), the rest is within tolerance -> no refund |
+| B-0008 | bl_named_elsewhere | earlier-set case 0007 (bl_named_elsewhere): refund_partial $7.11 | refund_partial $5.95 | the rider agreed to go via a named road, but the GPS road names show the segment never used it (RD-5) -> the agreement does not cover it, refund |
+| B-0009 | rd_request_only | v4 case 0021 (rd_request_only): refund_partial $6.27 | refund_partial $6.77 + flag_account | the driver asked about another road and the rider never answered: no agreement (RD-5); the driver has 2 upheld route disputes in 90 days -> refund + flag_account (RD-6) |
+| B-0010 | rd_long_loop_mid_amount | v4 case 0052 (rd_general_consent_cn_cp): no_action | refund_partial $11.55 | a long loop round a crawling stretch, rider not informed: the refund is in the $10-50 band (TH-1) and code settles it -> refund, the system decides |
+| B-0011 | bl_gps_tail_missing | earlier-set case 0008 (bl_gps_tail_missing): escalate | escalate | the trace ends 4 min before drop-off, and just before that the rider asked for another road and drop-off point: whether the car went there (the rider's own route, RD-3) cannot be measured (TH-4) -> escalate |
+| B-0012 | rd_threat_in_chat | v4 case 0024 (rd_threat_in_chat): escalate | escalate | route dispute whose chat holds an intimidating driver message -> the safety screen (SAFE-1) overrides: escalate |
+| B-0013 | rd_general_consent_jp | v4 case 0050 (rd_general_consent_jp): no_action | escalate (merits: no_action) | 'whichever way is faster' would exempt the loop, but that rests on reading the rider's words and the rider carries a fraud flag: 90% x 97% is under the 95% TH-3 needs -> escalate |
+| B-0014 | rd_impatient_rider | v4 case 0049 (rd_keyword_trap_find_you): refund_partial $2.74 | refund_partial $5.89 | the driver asked to go round and the rider said no, stay on the main road; he went anyway, and the rider wrote 'Why you go this way?? I said stay. I'm late already': an objection (no agreement, RD-5) and frustration, not a safety matter -> refund |
+| B-0015 | rd_two_segs_consent_seg1 | v4 case 0013 (rd_two_segs_consent_seg1): escalate | refund_partial $6.49 | two segments: before the first the driver asked 'can go via' a road and the rider said 'ok', and the GPS shows it driven (exempt; no traffic reason, so the rider's own route, RD-3); the second is a later loop with no message before it (counts); the rider wants all of it back, the driver says she agreed to his route -> refund the second segment's share only |
+| B-0016 | rd_call_log_no_recording | v4 case 0009 (rd_band2_heavy_rain): refund_partial $7.06 | refund_partial $4.08 | the driver says 'I called her before the turn and she said ok', and the call log shows an answered 25 s call, but no recording and no transcript: a logged call is not the rider's agreement (RD-5: verbal notice needs the recording) -> refund |
+| B-0017 | rd_recorded_call_consent | v4 case 0008 (rd_band1_incident): no_action | no_action | an accident on the stretch, and the recorded call before pickup has the rider agreeing to go via the road the GPS shows -> informed and agreed (RD-5 with a recording), no refund |
+| B-0018 | bl_negation | earlier-set case 0004 (bl_negation): refund_partial $5.41 | refund_partial $4.50 | 'Can lah, but not via Y' and the GPS shows the segment on Y: the agreement excluded the road the driver took -> counts, refund |
+| B-0019 | sg_notice_estimate_above_charge | new | no_action | the in-app notice before pickup states 1.3x, a new estimated fare and 'You can cancel for free'; the estimate is above what was charged and the rider calls it misleading, but SURGE-1 asks the notice to state a revised fare, not to predict it -> no refund |
+| B-0020 | sg_notified_full | new | escalate (merits: no_action) | surge rose and the rider got an in-app notice before pickup with the new multiplier, the revised fare and free cancellation, then rode (merits: no refund); the rider carries a fraud flag, so a lone reading of the notice (87%) is under 95% -> escalate unless both sides read it alike |
+| B-0021 | sg_notice_after_pickup | new | refund_partial $2.56 | a complete notice, but sent after pickup (SURGE-1 needs it before or at pickup); the rider carries a fraud flag, but the timing is settled by code (97% >= 95%, TH-3) -> refund the surge part |
+| B-0022 | sg_notice_no_cancel_option | new | escalate (merits: refund_partial $4.65) | the log says rider_notified, but the notice never offers free cancellation: no SURGE-1 notice (merits: refund the surge part); the rider carries a fraud flag, so a lone reading (87%) is under 95% -> escalate unless both sides read it alike |
+| B-0023 | sg_port_notice_fare_unchanged | validated by hand (M-0011) | refund_partial $3.46 | the timely notice says 'Your fare stays at the quoted $12.71': it states no revised estimated fare, so SURGE-1 is not met although the multiplier and free cancellation are there -> refund the surge part (capped at actual - quote) |
+| B-0024 | sg_surge_unchanged_complaint_threat | new | escalate | filed as a fare dispute: the 1.3x surge was in the quote and unchanged (no refund on the fare), but the complaint says the driver told the rider he knows where she lives -> safety screen (SAFE-1): escalate |
+| B-0025 | sg_mixed_rider_stop | new | refund_partial $11.22 | no notice of a 1.4x surge, and the rider also asked for a stop that lengthened the trip; she wants the whole difference over the quote, he says nothing is due because of the stop -> refund only the surge part, (1.4 - 1.0) x surgeable subtotal (SURGE-3); the stop's share is hers (RD-3) |
+| B-0026 | sg_notice_just_before_pickup | new | no_action | a complete in-app notice timestamped 20 s before pickup; the rider says it only popped up as she got into the car, with no real chance to cancel; SURGE-1 asks for it before or at the point of pickup -> no refund |
+| B-0027 | sg_over_50 | new | escalate | the notice names 2.0x and the new fare but says 'cancellation fees may apply' (the opposite of a free-cancel option): not a SURGE-1 notice, and the surge part is over $50 (TH-1) -> escalate, the system prepares the case file |
+| B-0028 | sg_port_notice_window_closed | validated by hand (M-0008) | refund_partial $4.88 | the notice says 'Free cancellation until 17:13.' but reached the rider at 17:14:45, after that window had closed: no free-cancel option was open to her, so SURGE-1 is not met -> refund the surge part (capped at actual - quote) |
+| B-0029 | ns_wait_5m10 | v4 case 0033 (ns_wait_185s_edge): no_action | no_action | 5 min 10 s at the pickup after the arrival tap, two messages, and one unanswered call that is only in the call log; the rider says he never called -> every NS-1 condition holds, fee stands |
+| B-0030 | ns_wait_4m50 | v4 case 0034 (ns_wait_175s_edge): refund_full $6.61 | refund_full $5.00 | 4 min 50 s at the pickup, then cancelled: short of the 5-minute free wait (NS-1 (ii)) -> refund |
+| B-0031 | ns_no_call | v4 case 0028 (ns_wait_4min): no_action | refund_full $5.00 | waited 5+ min and messaged, but never called (NS-1 (iii) needs both); the rider's 2 earlier no-shows count for nothing when this one is not upheld -> refund, no flag |
+| B-0032 | ns_app_noshow_own_reason | v4 case 0027 (ns_wait_2min): refund_full $6.61 | refund_full $5.00 | the app reason says rider_no_show and every NS-1 element holds, but the driver's own cancel message says he left for a family matter: the reason is his, not a no-show (NS-0, NS-3) -> refund |
+| B-0033 | ns_no_contact | v4 case 0031 (ns_no_here_tap): refund_full $6.61 | refund_full $5.00 | Precedent 7.3 pattern: a long wait at the pin but zero contact attempts -> refund the $5.00 |
+| B-0034 | ns_fake_here_far | v4 case 0026 (ns_fake_here_far): refund_full $6.61 + flag_account | refund_full $5.00 + flag_account | NS-2: arrival tapped 600 m away, never within 200 m -> refund + flag_account |
+| B-0035 | bl_hole_in_wait | earlier-set case 0011 (bl_hole_in_wait): escalate | escalate | 6 min from the arrival tap to the cancel, a message and a call: the fee would stand if the car stayed, but a 200 s hole in the trace leaves that unproven (NS-1 (iv), TH-4) -> escalate |
+| B-0036 | bl_record_threshold_7m50 | earlier-set case 0009 (bl_record_threshold_7m50): refund_full $5.00 | refund_full $5.00 | the record states an 8-min no-show threshold; 7:50 passes the 5-min default but not the record's own -> refund |
+| B-0037 | ns_need_to_go_after_no_reply | v4 case 0029 (ns_rider_cancel_150s): refund_full $6.61 | no_action | no reason picked in the app; after 6 min, two messages and a call the driver wrote 'No reply from you, I need to go already, cancelling': he leaves because the rider did not come (a no-show, NS-0), not for a reason of his own; NS-1 holds -> fee stands |
+| B-0038 | ns_rider_cancel_200s | v4 case 0030 (ns_rider_cancel_200s): no_action | no_action | NS-4: 200 s after matching -> fee stands; the driver being on the way is not a ground (no scheduled time, NS-8 cannot apply) |
+| B-0039 | ns_driver_cancel_flat_tyre | new | refund_full $5.00 | no reason picked in the app; the driver arrived, waited 5+ min, messaged and called, then wrote 'tyre puncture, car got problem, have to cancel': his own reason, not a no-show (NS-0, NS-3) -> refund |
+| B-0040 | ns_safety_in_complaint | new | escalate | filed as a no-show charge and the no-show facts favour the driver, but the complaint says he kept making comments about her body and asked where she lives -> safety screen (SAFE-1): escalate |
+| B-0041 | ns_driver_late_no_contact | new | refund_full $5.00 + goodwill_credit $5.00 | NS-8: late driver who never messaged or called -> refund + $5.00 goodwill credit |
+| B-0042 | ns_repeat_noshow_flag | v4 case 0042 (ns_rider_cancel_100s_bad_profile): refund_full $6.61 | no_action + flag_account | every NS-1 condition holds and the driver's 'waited more than 5 min, cancelling' is a no-show cancel; this is the rider's third no-show in 30 days -> fee stands + flag_account (NS-9) |
+| B-0043 | ns_early_arrival_scheduled | new | refund_full $5.00 | the driver arrived about 2 min before the scheduled pickup and cancelled 4 min after it (6 min after arriving): the free wait runs from the scheduled time, 4 min is short of 5 -> refund |
+| B-0044 | ns_threat_in_chat | v4 case 0041 (ns_threat_in_chat): escalate | escalate | the no-show facts favour the driver, but his chat holds 'I will find you and you will regret it' -> safety screen (SAFE-1): escalate |
+| B-0045 | ns_impatient_driver | new | escalate (merits: no_action) | no reason picked in the app, but 'Waited 5 min already, you never come, cancelling' is a no-show cancel and NS-1 holds (merits: fee stands); 'Still waiting ah, so slow' is impatience, not a safety matter; the rider carries a fraud flag, so a lone reading (87%) is under 95% -> escalate unless both sides read it alike |
+| B-0046 | ns_gate_b_refused_to_move | v4 case 0043 (ns_wait_4min_180m): no_action | no_action | the driver tapped at Gate B, 150 m from the pin, and told the rider he could not stop at Gate A (double yellow line); he called once, waited 6 min and cancelled; the rider says he refused to come to her: NS-1 holds within 200 m and he cancelled because she did not come (NS-0) -> fee stands |
+| B-0047 | safe_driver_threat | v4 case 0044 (safe_driver_threat): escalate | escalate | SAFE-1: driver threatens to lock the rider in -> escalate |
+| B-0048 | safe_rider_threat | v4 case 0045 (safe_rider_threat): escalate | escalate | SAFE-1: rider threatens the driver; the driver filed -> escalate, no refund |
+| B-0049 | safe_innocuous_chat_dangerous_driving | v4 case 0046 (safe_innocuous_chat_dangerous_driving): escalate | escalate | innocuous chat; the complaint alleges speeding and hard braking, and the trace shows ~98 km/h on the expressway with two sharp decelerations -> SAFE-2 escalate |
+| B-0050 | safe_no_chat_harassment | v4 case 0047 (safe_no_chat_harassment): escalate | escalate | no chat at all; harassment alleged in the statement -> escalate (SAFE-1 via type) |

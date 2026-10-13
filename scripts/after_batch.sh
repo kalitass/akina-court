@@ -6,7 +6,6 @@ cd "$(dirname "$0")/.."
 PY=.venv/bin/python
 $PY bench/report.py                 # bench/results/summary.{json,md}
 $PY bench/gate_ablation.py          # bench/results/gate_ablation.json
-$PY bench/blind_report.py || true   # bench/results/blind/summary.md (only when the held-out set has been run)
 $PY bench/dashboard.py              # web/report.html
 $PY bench/ops_page.py               # web/ops.html
 $PY scripts/build_policy_page.py    # web/policy.html

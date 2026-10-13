@@ -4,39 +4,86 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:38.106065+00:00",
+ "ts": "2026-10-13T15:35:50.101735+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and advise the driver that 'I'm Here' may only be tapped at the pickup point on GPS and that cancellation requires >3 minutes of continuous waiting there.",
+  "ruling": "refund_partial",
+  "amount": 66.65,
+  "recommended_action": "Refund the $66.65 surge differential to the rider's original payment method (SURGE-2/§3.3) with no driver action; separately coach the app copy team: the surge notice must state the revised fare and that the rider may cancel without penalty, and must not use \"cancellation fees may apply\".",
   "confidence": 0.86,
-  "reasoning": "Driver-initiated cancellation with a no-show claim, so NS-0 routes to NS-1/NS-2. Computing distance (haversine) from the pickup pin (1.3249, 103.9296) to each GPS fix: at the 14:14:00 sample (immediately before the 14:14:10 tap) the driver is at 1.325166, 103.929853 — about 45 m from the pickup point, inside the 200 m data-layer radius, so NS-1(ii) is satisfied. NS-1(iii) fails: the trace shows the vehicle essentially stationary (speed ≈ 0.6–2.7 km/h) from 14:14:00 through the cancellation at 14:15:50, i.e. about 1 min 40 s after the tap, far short of the required >3 minutes of continuous waiting at the pickup point. The driver's own chat message at 14:15:40 (\"3 min up, cancelling the trip\") is a statement, and system records (timeline + GPS) override statements; the tap was at 14:14:10, so no 3 minutes had elapsed. Per NS-2, with (iii) not met the $6.61 cancellation fee must be refunded in full. The per requirements, arrival-confirmation method is not recorded (arrival_confirmed_by is null), so I do not characterise it as a driver tap or platform auto-confirmation; since the 14:14:00 GPS fix is ~45 m from the pickup, NS-2's flag_account trigger (tap while GPS shows outside the pickup area) is not established. Evidence is sufficient: the GPS trace plus thinned-30 s samples fully cover the wait window to cancellation, so no gap is present and no escalation is needed. No safety issue appears in the chat or the driver's statement.",
+  "reasoning": "The rider booked at a 1.0× multiplier (quote $71.67, surgeable subtotal $70.20) and rode at 2.0× (surge activated 14:06:00, after the 14:04:25 booking). The multiplier rose after quoting, so SURGE-1/SURGE-2 govern. The record shows a notice was sent (in_app at 14:06:25, before the 14:08:25 arrival/14:09:00 departure) and it states the new multiplier (2.0×), but SURGE-1 requires all three items — the new multiplier, the revised estimated fare, and free cancellation. It does give a revised estimate ($141.87, which even mismatches the actual $134.77), but it says \"Cancellation fees may apply\", which is not the required \"may cancel without penalty\" and is why the rider says she \"did not dare cancel\". Missing an item → not properly notified → SURGE-2 row 2: refund the full surge differential. Amount = (trip multiplier 2.0 − quote multiplier 1.0) × surgeable subtotal $66.65 = $66.65; booking fee $1.47 is surge-exempt and not refunded. No route deviation is in play (actual 37.96 km vs recommended 38.009 km, within RD-1 tolerance; GPS roads match the optimal route), so the differential is a clean surge figure under SURGE-3.",
   "cited_facts": [],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
+   "PREC-1",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1: surge notice states the new multiplier, the revised estimated fare, and free cancellation",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_text",
+     "surge_pricing_log.rider_notified"
+    ],
+    "reason": "Notice (in_app, 14:06:25, before pickup) does state the new multiplier (2.0×) and a revised estimated fare ($141.87), but the free-cancellation item is absent: it says \"Cancellation fees may apply\", which per the policy is not a free-cancel statement and misled the rider into not cancelling. Missing any item → not notified."
+   },
+   {
+    "element": "SURGE-3: whether the surge differential is clean or mixed with other causes",
+    "finding": "met",
+    "basis": [
+     "trip_data.actual_distance_km",
+     "trip_data.estimated_distance_km"
+    ],
+    "reason": "Actual 37.96 km vs recommended/estimated 38.009 km → deviation −0.049 km, inside the 1 km tolerance (RD-1) and only map noise. No route-deviation refund arises, so the whole quote-to-actual difference is attributable to surge."
+   },
+   {
+    "element": "RD-3/RD-5: any rider-requested stop, route or accepted destination edit",
+    "finding": "not_met",
+    "basis": [
+     "chat_logs"
+    ],
+    "reason": "Chat contains only pickup arrangement (white dress, blue Prius, 2 min away); no named stop or route, no destination edit, and edit_destination_fee is 0.00. No segment is exempt."
+   },
+   {
+    "element": "SAFE-1: safety screen of complaint, chat and driver statement",
+    "finding": "not_met",
+    "basis": [
+     "dispute_ticket.description",
+     "dispute_ticket.driver_statement",
+     "chat_logs"
+    ],
+    "reason": "Read in context these concern pricing only — no threat, harassment, sexual remark, dangerous-driving or accident allegation — and the dispute type is fare_dispute."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "driver_no_show",
-    "reason": "The driver's claim that the rider was a no-show is not supported by the system records: the GPS trace shows only ~1 min 40 s of stationary waiting at the pickup point after the 'I'm Here' tap (14:14:10 → 14:15:50), below the >3 minutes required by NS-1(iii); the driver's chat message asserting '3 min up' does not override the timeline."
+    "id": "rider: refund the full $63.10 quote-vs-actual difference",
+    "reason": "SURGE-3 refunds only the surge component. Actual − quote ($134.77 − $71.67) includes the surge-exempt booking fee ($1.47), so the refund is the surge differential $66.65, not $63.10."
+   },
+   {
+    "id": "driver: \"Pricing is the app's, not mine. I picked up on time and drove the app route.\"",
+    "reason": "Not contradicted by the record (departure 14:09:00, actual distance 37.96 km vs recommended 38.009 km, roads match the optimal route). The driver's conduct is not the cause of the refund; the defect is in the surge notice, and no driver violation is recorded here."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.0,
- "input_tokens": 12435,
- "output_tokens": 887,
- "requests": 1,
+ "latency_s": 14.09,
+ "input_tokens": 44443,
+ "output_tokens": 2713,
+ "requests": 2,
  "llm_calls": 1
 }

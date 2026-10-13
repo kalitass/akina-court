@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:39:23.784158+00:00",
+ "ts": "2026-10-13T15:42:59.104119+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case; no account action against the driver.",
-  "confidence": 0.95,
-  "reasoning": "Safety screen: the chat is purely logistical (\"How long will you be?\" / \"5 min more, traffic is slow\"), the driver's statement is neutral, and the complaint contains no threat, harassment, sexual remark or dangerous-driving allegation — nothing to escalate under SAFE-1/SAFE-2. safety_concern = none.\n\nRouting: the trip is an on-demand RydeX booking cancelled by the rider, so by NS-0 the case enters through NS-4 (rider-cancellation branch), not the no-show branch.\n\nNS-4: F2 is a system timeline record — accepted 14:05:00, cancelled by rider at 14:07:55 = 2 min 55 s after matching, i.e. within the 3-minute window (≤ 3:00). Per NS-4 no cancellation fee is chargeable. The $6.61 recorded in F3/F5 was therefore levied contrary to NS-4 and must be returned in full → refund_full of $6.61 (paid as a Ryde voucher, NS-7).\n\nThe driver's side is irrelevant here but consistent: F4 shows no \"I'm Here\" tap and no automatic arrival, F1 shows the driver's closest approach was 2189 m (never within 200 m), F3 shows driver_arrived_at is null — so the NS-1 no-show conditions were never met either. The driver's statement (F10, \"I was on my way\") is a claim and, in any event, NS-4 makes the driver's non-arrival irrelevant to a rider cancellation inside 3 minutes; NS-8 (late-ETA free cancellation) is informational only and is not cited. Surge was 1.0× (F6) and the traffic band on Stevens Road (F11) / fine weather (F13) do not affect the fee.\n\nAmount arithmetic: fee on record = $6.61 [F5]; chargeable amount under NS-4 = $0.00; refund = $6.61 − $0.00 = $6.61.\n\nNo RD-6 flag: the driver's profile shows 0 upheld route/no-show disputes in 90 d [F15], and no route-deviation breach is recorded, so the flag condition is not met. No NS-2 flag either, since the driver never tapped \"I'm Here\" [F4]. Evidence is complete for every element needed (timeline timestamps, GPS, fare, complete timestamped chat — F2/F9), so evidence_status = sufficient.",
+  "ruling": "fee_waived",
+  "amount": 5.0,
+  "recommended_action": "Void the $5.00 no-show fee and refund the rider to the original payment method (NS-2); no driver flag — the arrival-fraud condition is not met.",
+  "confidence": 0.9,
+  "reasoning": "Safety screen: complaint, chats [F11][F12], call log [F14] and driver statement [F15] contain no threat, harassment, sexual remark or dangerous-driving allegation; dispute type is no_show, not safety. safety_concern = none.\n\nNS-0: the driver cancelled and picked \"rider_no_show\" in the app [F5], so the fee can only stand under NS-1.\n\nNS-1 checklist:\n(i) Arrival — met. Driver tapped \"I'm Here\" at 14:07:40, 40 m from pickup [F8], within the 200 m radius; GPS closest approach 26 m at 14:07:35 [F2].\n(ii) Free wait — NOT met on the record's own threshold. The 5-minute free wait is counted from the later of scheduled pickup time and arrival (arrival 14:07:40 [F7][F8]); it would expire at 14:12:40. The record's no-show threshold of 8 minutes (DISP-002, applied in place of the 5-minute rule per NS-1 and contradiction C4) expires at 14:15:40. The driver cancelled at 14:13:40 [F5] — 6 min 0 s after arrival [F7], i.e. before either threshold passed. The driver's own message \"More than 5 min already\" [F12] and his statement [F15] do not create time; the timeline controls [F5][F7].\n(iii) Contact attempts — met. 2 in-app messages (first 14:08:10) and 1 in-app call (first 14:09:10) before cancellation [F6][F11][F14].\n(iv) Continuous presence — met. Stationary 14:07:40–14:13:40, 40 m from pickup [F4], within 200 m the whole time [F3][F8]. The 3 min 20 s GPS gap [F1] falls inside a proven continuous stationary period bounded by samples on both sides, so it raises no live doubt; had it stood alone, NS-1(iv)/TH-4 would require escalation.\n\nOne NS-1 condition (the wait requirement) fails → NS-2 applies: the $5.00 fee is voided, refund_full of the rider's $5.00 [F9]. The additional NS-2 flag condition is not triggered: the driver's marked arrival was 40 m from the pickup point [F8], i.e. genuinely at the pickup point, so there is no fraudulent-arrival marker. No RD-6/NS-9 add-ons: deviation route count 0 [F20] and rider no-shows 0 [F19]. Amount is under $10, so the system rules finally (TH-1, TH-2; C1). Precedent DISP-2026-0211 (no-show cancel) is distinguished: there the threshold had genuinely elapsed — here it had not.",
   "cited_facts": [
    "F1",
    "F2",
@@ -26,37 +26,96 @@
    "F10",
    "F11",
    "F12",
-   "F13",
    "F14",
-   "F15"
+   "F15",
+   "F19",
+   "F20"
   ],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7"
+   "NS-1",
+   "NS-2",
+   "TH-1",
+   "TH-2",
+   "C4"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver-no-show-claim",
-    "reason": "The driver asserts only that he was on his way [F10], and the record shows he never arrived [F1, F3, F4]. This is moot for the ruling: the rider cancelled within 3 minutes of matching, so NS-4 waives the fee regardless of the driver's position."
+    "element": "Driver arrival at pickup (NS-1(i))",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F2"
+    ],
+    "reason": "\"I'm Here\" tapped 14:07:40 at 40 m; GPS closest approach 26 m at 14:07:35 — within the 200 m radius."
    },
    {
-    "id": "traffic-justification",
-    "reason": "The Stevens Road speed band 4 (30–39 km/h) [F11] and absence of incidents [F12] concern the driver's ETA and are not a recognised basis to charge the rider; NS-4 does not condition the free-cancellation window on traffic."
+    "element": "5-minute free wait / record no-show threshold elapsed before cancellation (NS-1(ii))",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F5",
+     "F12",
+     "F15"
+    ],
+    "reason": "Wait runs from the later of scheduled pickup and arrival (14:07:40); 5 min expires 14:12:40 and the record's 8-min threshold 14:15:40, but cancellation was at 14:13:40 — 6 min 0 s after arrival. The driver's assertion \"more than 5 min\" is contradicted by the timeline."
+   },
+   {
+    "element": "Pre-cancellation in-app message and call (NS-1(iii))",
+    "finding": "met",
+    "basis": [
+     "F6",
+     "F11",
+     "F14"
+    ],
+    "reason": "2 timestamped messages (first 14:08:10) and 1 in-app call (14:09:10) placed before the 14:13:40 cancellation."
+   },
+   {
+    "element": "Continuous presence at pickup point (NS-1(iv))",
+    "finding": "met",
+    "basis": [
+     "F4",
+     "F3",
+     "F1"
+    ],
+    "reason": "Stationary 6 min 0 s, 40 m from pickup, within 200 m throughout; the 3 min 20 s GPS gap sits inside that bounded stationary window."
+   },
+   {
+    "element": "Fraudulent arrival to trigger NS-2 account flag",
+    "finding": "not_met",
+    "basis": [
+     "F8"
+    ],
+    "reason": "Marked arrival was 40 m from the pickup point, so the NS-2 flag condition (arrival marked while GPS was not at pickup) does not apply."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "F5",
+    "reason": "The app-recorded cancellation reason \"rider_no_show\" is the driver's selected claim (NS-0/NS-1); it cannot stand because the wait threshold had not elapsed — he cancelled 6 min 0 s after his own arrival."
+   },
+   {
+    "id": "F15",
+    "reason": "Driver statement that he \"waited over 5 minutes\" before cancelling is contradicted by the timeline: arrival 14:07:40, cancellation 14:13:40 (F5, F7, F8); statement yields to system records."
+   },
+   {
+    "id": "F12",
+    "reason": "\"More than 5 min already\" at 14:13 is inconsistent with the 14:07:40 arrival and 14:13:40 cancellation on the timeline; the chat does not establish the wait had expired."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.78,
- "input_tokens": 10152,
- "output_tokens": 1058,
+ "latency_s": 8.54,
+ "input_tokens": 7812,
+ "output_tokens": 1667,
  "requests": 1,
  "llm_calls": 1
 }

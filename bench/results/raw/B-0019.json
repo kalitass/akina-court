@@ -4,53 +4,87 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:16.337144+00:00",
+ "ts": "2026-10-13T15:35:42.303691+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Record the RD-1 breach on the driver's file (unexplained off-route loop) but maintain the fixed fare with no refund; send the driver account to Ryde for review as a repeat route-deviation offender; reply to the rider explaining that a RydeX fare is a fixed quote and the deviation has been noted.",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: chat is empty, the complaint is fee- and route-focused, and the driver's statement is neutral (\"the GPS rerouted me\"). No threat, harassment, sexual remark or dangerous-driving allegation anywhere in the record → safety_concern = none; no SAFE escalation.\n\nFare model: the trip is RydeX, a non-metered service with a fixed quote (fare.pricing = \"fixed\", base 3.90 + distance 15.06 + time 4.50 + platform 1.47 = 24.93). Per §0 / RD-2 (non-metered branch) a fixed quote does not vary with mileage, so no part of the fare can be refunded on a route-deviation theory. The fare breakdown shows no unmentioned add-ons (no tolls, no waiting fee, no edit-destination fee, no cancellation fee), so FARE-1 / FARE-2 produce nothing.\n\nRoute: quoted route 10.679 km @ 17.3 min. The GPS trace (30 s thinned grid) shows the driven path leaving the quoted corridor after ~14:22: at 14:22:15 the trace is at ~1.2943, 103.8243 while the quoted polyline at that longitude runs ~1.2780–1.2790 lat (≈1.8 km north). The vehicle continues east along the lat ≈1.284–1.294 line to ~103.8274–103.8279 (14:23:15, 14:23:45), then loops back west on the lat ≈1.2903–1.2926 line (14:24:15–14:24:45) before rejoining near 1.2783, 103.8285 (>1 km off the correct corridor for roughly 3 min — longer than any plausible map-matching or junction-artifact excursion), and continues west. Nothing in the record (no chat at all, no rider message) explains this loop; the driver's \"the GPS rerouted me\" is not a rider consent (RD-5 requires the rider's own pre-detour message; a driver's claim is not consent, G11). Ground: driver_errand / consent_after_or_none → counts (RD-1 / RD-5). One off-route segment only; the remaining 9+ km of trace samples sit within ~150–250 m of the quoted polyline and are treated as in-corridor.\n\nApplicable consequence: RD-2 non-metered branch → no distance refund (refundable amount 0 → no_action), but the RD-1 breach is recorded. RD-6: this case is \"成立\" (RD-1 violation recorded) AND driver.route_disputes_upheld_90d = 2 (≥ 1) → flag_account = true for Ryde account review.\n\nTraffic: LTA records show AYE and CTE at speed band 4 (≈40–50 km/h) over the trip window and no incidents; band 4 is not band 1 or 2, so RD-4 gives no reasonable-cause exemption (and RD-4(b) alone is only corroborative anyway). Evidence: the GPS trace is complete with no gaps > 2 min, so evidence_status = sufficient.",
+  "ruling": "refund_partial",
+  "amount": 2.45,
+  "recommended_action": "Refund the surge differential of $2.45 (1.3× − 1.0× applied to the surgeable subtotal of $8.18) to the rider's original payment method; no driver action as the notification-duty requirements were met.",
+  "confidence": 0.9,
+  "reasoning": "The quote was locked at 1.0× (upfront_quote $10.02, surgeable_subtotal $8.77). The surge log shows the multiplier rising to 1.3× at 14:09:55, i.e. between quote and pickup (trip start 14:13:00), and the rider was notified in-app at 14:10:20 — before the trip began. The notification text states the new multiplier (\"Fares are 1.3× higher right now\"), a revised estimated fare (\"Your new estimated fare is $12.65\") and free cancellation (\"You can cancel for free\"). All three SURGE-1 items are present, so the rider WAS notified: under SURGE-2 the default row would be no_action.\n\nHowever, the revised estimate the rider was given ($12.65) is not the fare charged ($11.88), and the difference is not driven solely by surge. The surgeable subtotal also shrank between quote ($8.77) and trip ($8.18, because the actual distance 2.43 km came in under the estimated 2.513 km), so the surge differential must be computed on the trip's own surgeable subtotal as SURGE-3 requires when causes are mixed: (1.3 − 1.0) × $8.18 = $2.45, which matches the recorded surge_amount of $2.45 (booking fee $1.25 is surge-exempt and excluded). The rider's complaint that the notified fare differed from the charged fare is made out only to this extent: the notice's $12.65 estimate overstated the true 1.3× fare by $0.77, which the rider has in fact already had the benefit of (she was charged $11.88, not $12.65). Refunding the full surge differential of $2.45 leaves the base, distance, time and booking-fee components payable.\n\nNo route deviation arises: actual distance 2.43 km is below the recommended 2.513 km, so the deviation is negative (RD-1 tolerance not exceeded) and no excess distance fare exists. The driver's statement that he \"drove the route the app showed\" is consistent with the telemetry. No safety indicators appear anywhere in the chat, complaint or driver statement.",
   "cited_facts": [],
   "cited_policy": [
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
    "RD-1",
-   "RD-2",
-   "RD-5",
-   "RD-6",
-   "FARE-1"
+   "TH-1"
   ],
   "escalate": false,
   "escalation_reason": null,
-  "segment_findings": [
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "seg1",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
-    "basis": [],
-    "reason": "The driven trace leaves the quoted corridor and runs >1 km north-east of it for roughly 3 minutes (14:22:15–14:24:45; sampled points ~1.290–1.294 N vs quoted ~1.279 N at the same longitudes) before looping back and rejoining. No rider message exists in the chat (empty record) and the driver's 'GPS rerouted me' statement is not rider consent, so no RD-5 consent covers the segment; it is an unexplained deviation under RD-1 and is not exempted by RD-3 or RD-4 (traffic bands 4, no incidents). Consequence: counts as an off-route segment; under RD-2 (non-metered) the refundable amount is 0, so no fare is returned but the RD-1 breach is recorded."
+    "element": "SURGE-1 notice: states the new surge multiplier",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "Notification text reads \"Fares are 1.3× higher right now\", expressly stating the 1.3× multiplier."
+   },
+   {
+    "element": "SURGE-1 notice: states the revised estimated fare",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "Notification text reads \"Your new estimated fare is $12.65\"."
+   },
+   {
+    "element": "SURGE-1 notice: states the rider may cancel without penalty",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "Notification text reads \"You can cancel for free\" — a genuine free-cancel statement, not the qualified \"cancellation fees may apply\"."
+   },
+   {
+    "element": "SURGE-1 timing: notice before or at pickup / before trip start",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_timestamp",
+     "trip_data.start_time"
+    ],
+    "reason": "Notice sent 14:10:20; trip started 14:13:00 — the notice preceded the trip."
+   },
+   {
+    "element": "SURGE-3 basis: differential computed on trip surgeable subtotal (mixed causes)",
+    "finding": "met",
+    "basis": [
+     "fare_breakdown.actual_fare.surgeable_subtotal",
+     "fare_breakdown.upfront_quote.surgeable_subtotal"
+    ],
+    "reason": "Quote subtotal $8.77 vs trip subtotal $8.18 (actual distance below estimate), so the differential is (1.3−1.0)×$8.18 = $2.45, booking fee $1.25 excluded."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_refund_request",
-    "reason": "The rider paid a fixed RydeX quote (fare.pricing = 'fixed'); under §0 and RD-2 (non-metered branch) mileage changes do not change the fare, and no unmentioned add-on was charged, so there is nothing to refund — RD-2 yields 0 → no_action. The deviation is nevertheless recorded as an RD-1 breach."
-   },
-   {
-    "id": "driver_gps_excuse",
-    "reason": "Claimed 'the GPS rerouted me' without any rider message; a driver's own account is not rider consent (RD-5, G11) and no LTA band-1/2 congestion or incident supports a reasonable-cause exemption under RD-4, so the segment stays unexplained."
+    "id": "claim-misleading-full-surge-refund",
+    "reason": "The rider was validly notified before departure: the in-app notice at 14:10:20 (before the 14:13:00 trip start) stated the new multiplier (1.3×), a revised estimated fare ($12.65) and free cancellation, satisfying SURGE-1. The notice therefore was not non-compliant as to the new multiplier or the free-cancel right; the only discrepancy is that the notified estimate ($12.65) was $0.77 higher than the fare actually charged ($11.88), and that excess was never collected from the rider. The refund is limited to the surge differential computed under SURGE-3."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.2,
- "input_tokens": 15358,
- "output_tokens": 1446,
+ "latency_s": 7.43,
+ "input_tokens": 9951,
+ "output_tokens": 1467,
  "requests": 1,
  "llm_calls": 1
 }

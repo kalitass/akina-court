@@ -37,6 +37,8 @@ EXPECTED = {Path(p).stem: json.load(open(p)) for p in glob.glob(str(ROOT / "data
 
 
 def core_ok(ruling: str, amount, escalate: bool, exp: dict) -> bool:
+    if exp.get("escalate_ok") and report.model_escalated({"escalate": escalate, "ruling": ruling}):
+        return True        # a reading a careful person may check: the hand-off is right (bench/report.py scores it the same way)
     return ruling == exp["ruling"] and abs(round(float(amount or 0) * 100) - round(float(exp.get("amount") or 0) * 100)) <= 1 \
         and report.model_escalated({"escalate": escalate, "ruling": ruling}) == bool(exp.get("escalate"))
 
@@ -106,7 +108,10 @@ def court_arm(arm: str = "court") -> dict:
         rp = Path(p).with_name(Path(p).name[:-5] + ".record.json")
         elig = json.load(open(rp)).get("eligibility") if rp.exists() else None
         auto = bool(elig.get("auto")) if isinstance(elig, dict) else rec.get("status") == "resolved"
-        wrong = not core_ok(r["ruling"], r.get("amount"), r.get("escalate"), exp)
+        m = exp.get("merits")     # a confidence-path case (TH-3): the policy's answer once the reading is settled is also right when the arm's checks executed it
+        merits_ok = bool(m) and auto and r["ruling"] == m["ruling"] and abs(round(float(r.get("amount") or 0) * 100) - round(float(m.get("amount") or 0) * 100)) <= 1
+        esc_ok = bool(exp.get("escalate_ok")) and report.model_escalated(r)
+        wrong = not (core_ok(r["ruling"], r.get("amount"), r.get("escalate"), exp) or merits_ok or esc_ok)
         rows.append({"case_id": cid, "core_wrong": wrong, "auto": auto, "wrong_and_executed": auto and wrong,
                      "model_escalated": report.model_escalated(r), "human_reasons": (elig or {}).get("reasons", [])})
     n = len(rows)

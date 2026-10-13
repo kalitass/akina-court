@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Akina Court · Receipt</title>
-<meta name="description" content="Reproducibility receipt for one ruling: what it rests on, whether it can be reproduced today, and how the policy decided it.">
+<meta name="description" content="Receipt for one ruling: what it rests on, whether its case, policy, code and model are unchanged since, and how the policy decided it.">
 <link rel="icon" href="/logo.svg">
 <script src="/theme.js"></script>
 <link rel="stylesheet" href="/styles/base.css">
@@ -79,24 +79,33 @@ ul.cited{list-style:none;margin:0 0 4px;padding:0}ul.cited li{display:flex;gap:1
   const main = document.getElementById('main');
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const OUT = { refund_partial:'Partial refund', refund_full:'Full refund', no_action:'No refund', fee_waived:'Fee waived', escalate:'Sent to a human reviewer' };
-  const TYPE = { route_deviation:'Route deviation', no_show:'No-show fee', safety:'Safety' };
+  const TYPE = { route_deviation:'Route deviation', no_show:'No-show fee', fare_dispute:'Surge pricing', safety:'Safety' };
   const KEYS = [['case_sha256','Case file','the trip, GPS, chat, fare and profiles the ruling was made on'],['policy_sha256','Policy text','policy/policy.md, every clause the judge may cite'],['code_sha256','Court code','core/: fact engine, policy engine, agents, checks'],['model','Model','the model id the agents were run with']];
-  const REPLAY_HREF = `/replay.html?case=${encodeURIComponent(CASE)}${RUN !== CASE ? '&run=' + encodeURIComponent(RUN) : ''}&phase=court`;
-  let r, run;
+  const SUFFIX = RUN.includes('~') ? RUN.slice(RUN.indexOf('~') + 1) : '';
+  let r, run, controls = {};
   try {
-    const [a, b] = await Promise.all([fetch(`/api/runs/${encodeURIComponent(RUN)}/receipt`), fetch(`/api/runs/${encodeURIComponent(RUN)}`)]);
+    const [a, b, c] = await Promise.all([fetch(`/api/runs/${encodeURIComponent(RUN)}/receipt`), fetch(`/api/runs/${encodeURIComponent(RUN)}`),
+      SUFFIX ? fetch('/api/demo-controls').catch(() => null) : null]);
     if (!a.ok) throw new Error(`no receipt for ${RUN} (${a.status})`);
     r = await a.json(); run = b.ok ? await b.json() : null;
+    if (c && c.ok) controls = await c.json().catch(() => ({}));
   } catch (e) { main.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  // A counterfactual run (C-0005~grace_179) rules on a changed case: its facts and its replay are the changed case's. A fault
+  // injected into an agent (C-0001~fake_fact) leaves the case as it was: its facts are the original case's.
+  const CF = SUFFIX && ((controls.counterfactual || {})[SUFFIX] !== undefined) ? SUFFIX : '';
+  const FACT_CASE = CF ? (r.case_id || RUN) : CASE;
+  const REPLAY_HREF = CF ? `/replay.html?case=${encodeURIComponent(CASE)}&cf=${encodeURIComponent(CF)}&phase=court`
+    : `/replay.html?case=${encodeURIComponent(CASE)}${RUN !== CASE ? '&run=' + encodeURIComponent(RUN) : ''}&phase=court`;
   const ru = r.ruling || {}, el = r.eligibility || {}, d = (run && run.dispute) || r.dispute || {};
   const human = ru.escalate || ru.ruling === 'escalate' || el.auto === false;
+  const handedOff = ru.escalate || ru.ruling === 'escalate';      // the judge's text then proposes an action nobody carried out
   const amt = ru.amount != null ? '$' + (+ru.amount).toFixed(2) : '';
   const actions = (el.actions || []).map(a => `<span class="badge ${a.mode === 'auto' ? 'green' : 'amber'}">${esc((a.type || '').replace(/_/g, ' '))} · ${a.mode === 'auto' ? 'auto-cleared' : 'a person decides'}</span>`).join(' ');
   // fingerprints
   const stored = r.stored, cur = r.current || {}, match = r.match || {};
   const short = v => v == null ? '—' : String(v).length > 20 ? String(v).slice(0, 16) + '…' : String(v);
   let status;
-  if (stored && r.verified) status = `<div class="status ok"><span class="ic">✓</span><div><b>Reproducible today</b><p>${esc(r.status)}. Running the same case through the same policy, code and model would be checked against exactly these fingerprints.</p></div></div>`;
+  if (stored && r.verified) status = `<div class="status ok"><span class="ic">✓</span><div><b>Unchanged since the ruling</b><p>${esc(r.status)}. The case, the policy, the code and the model match the fingerprints taken when the ruling was made; a change to any of the four would show here. This checks what the ruling rests on, not that a new run would word it the same way.</p></div></div>`;
   else if (stored) status = `<div class="status bad"><span class="ic">⚠</span><div><b>Something changed since this ruling</b><p>${esc(r.status)}. The rows marked ✗ differ from what was fixed at ruling time; re-run the case before relying on it.</p></div></div>`;
   else status = `<div class="status none"><span class="ic">○</span><div><b>No fingerprints were stored with this run</b><p>It was recorded before receipts were introduced, so there is nothing to compare against. The fingerprints below are what a re-run today would be sealed with.</p></div></div>`;
   const rows = KEYS.map(([k, label, what]) => `<tr><td class="k">${label}<div class="small" style="margin:0;font-weight:400">${what}</div></td><td class="h">${stored ? esc(short(stored[k])) : '—'}</td><td class="h">${esc(short(cur[k]))}</td><td class="m">${stored ? (match[k] ? '<span class="badge green">✓ same</span>' : '<span class="badge red">✗ changed</span>') : '<span class="badge grey">not stored</span>'}</td></tr>`).join('');
@@ -112,19 +121,20 @@ ul.cited{list-style:none;margin:0 0 4px;padding:0}ul.cited li{display:flex;gap:1
   }).join('');
   const wwc = (el.what_would_change || []).map(x => `<li>${esc(x)}</li>`).join('');
   const FTXT = {}; ((run && run.facts && run.facts.facts) || []).forEach(f => { FTXT[f.id] = f.text; });
-  const factHref = f => `/facts.html?case=${encodeURIComponent(CASE)}#${encodeURIComponent(f)}`;
+  const factHref = f => `/facts.html?case=${encodeURIComponent(FACT_CASE)}#${encodeURIComponent(f)}`;
   const facts = (ru.cited_facts || []).map(f => `<li><a class="chip" href="${factHref(f)}">${esc(f)}</a><span>${esc(FTXT[f] || 'see the fact table')}</span></li>`).join('');
   const clauses = (ru.cited_policy || []).map(c => `<a class="chip" href="/policy.html#${esc(c.replace(/\(.*$/, ''))}" target="_blank" rel="noopener">${esc(c)}</a>`).join('');
   document.title = `Akina Court · Audit record ${RUN}`;
   main.innerHTML = `
   <h1>Audit record for this ruling</h1>
   <p class="small" style="margin:-2px 0 6px;font-family:var(--mono)">${esc(RUN)}</p>
+  ${CF ? `<p class="small" style="margin:0 0 6px">Counterfactual run: ${esc(CASE)} changed on purpose (${esc(String(controls.counterfactual[CF]).split(' — ')[0].replace(/^[a-z-]+: /, ''))}). Its facts and its replay are those of the changed case.</p>` : ''}
   <p class="lead">${esc(TYPE[d.type] || d.type || 'Dispute')}${d.filed_by ? ' · filed by the ' + esc(d.filed_by) : ''}${r.issued_at ? ' · ruled ' + esc(String(r.issued_at).replace('T', ' ').slice(0, 16)) + ' UTC' : ''}</p>
   ${d.statement ? `<p class="q">“${esc(d.statement)}”</p>` : ''}
   <div class="card"><h2>Outcome</h2><div class="verdict"><span class="out">${esc(OUT[ru.ruling] || ru.ruling || '')}</span>${amt ? `<span class="amt">${amt}</span>` : ''}<span class="badge ${human ? 'amber' : 'green'}">${human ? '👤 a person decides' : '⚡ cleared by the policy check'}</span></div>
     ${actions ? `<div class="act"><div class="chips">${actions}</div></div>` : ''}
-    ${ru.recommended_action ? `<div class="act">${esc(ru.recommended_action)}</div>` : ''}</div>
-  <div class="card"><h2>Can this ruling be reproduced?</h2>${status}
+    ${ru.recommended_action ? (handedOff ? `<div class="act"><b>The judge's proposal (not carried out — a person decides):</b> ${esc(ru.recommended_action)}</div>` : `<div class="act">${esc(ru.recommended_action)}</div>`) : ''}</div>
+  <div class="card"><h2>Has anything changed since the ruling?</h2>${status}
     <details><summary class="small" style="cursor:pointer;color:var(--blue)">Technical fingerprints</summary><table style="margin-top:8px"><tr><th>What</th><th>Sealed at ruling time</th><th>Now</th><th></th></tr>${rows}</table>
     <p class="small">Fingerprints are SHA-256 hashes, shortened. Model: <span style="font-family:var(--mono)">${esc(r.model || cur.model || '')}</span>.</p></details></div>
   <div class="card"><h2>How the policy decided it</h2><ul class="trace">${trace || '<li class="sum"><span class="ic">·</span><span>No policy trace stored for this run.</span></li>'}</ul></div>

@@ -15,6 +15,7 @@ from functools import lru_cache
 
 from pydantic_ai import Agent
 
+from core.case_format import to_official
 from core.facts.tools import build_fact_table
 from core.llm import make_model
 from core.policy import ACTIONS, policy_text
@@ -31,47 +32,35 @@ def usage_of(res):
 COMMON_RULES = """RULES
 - ruling must be one of: {ACTIONS}. amount (SGD, 2 decimals) only for refund_full / refund_partial / fee_waived,
   null for no_action and escalate. recommended_action is a short imperative for Ryde ops; append "+ flag_account"
-  when a clause (RD-6, NS-2) calls for it and set the structured field `flag_account: true` (only that field counts).
-  Never put flag_account in `ruling`.
-- cited_policy: the clause ids (e.g. RD-2, NS-1) whose conditions you actually applied. Clauses marked 不可引用
-  cannot be cited. cited_facts: leave empty unless you were given fact ids.
+  when a clause (RD-6, NS-2, NS-9) calls for it and set the structured field `flag_account: true` (only that field
+  counts). Never put flag_account in `ruling`. When NS-8 calls for a goodwill credit, set goodwill_credit: 5.0.
+- cited_policy: the clause ids (e.g. RD-2, NS-1, SURGE-2) whose conditions you actually applied. cited_facts: leave
+  empty unless you were given fact ids.
 - reasoning: short paragraphs with the arithmetic for any amount. confidence 0-1.
-- System records (gps / timeline / fare) override statements (chat / complaint / driver statement) when they
+- System records (gps / timeline / fare / logs) override statements (chat / complaint / driver statement) when they
   conflict. Profile facts never decide a case alone. These are rules of procedure, not clauses: never cite them.
 - SAFETY SCREEN, every case: read every chat message, the driver's statement and the complaint. If any of it is a
   threat, intimidation, harassment, a sexual remark or a dangerous-driving allegation (SAFE-1, SAFE-2), or the dispute
   type is safety, do NOT rule: ruling = "escalate", escalate = true, safety_concern = "suspected" or "confirmed" with
   safety_basis, reasoning = factual summary for a human reviewer. Read words in context: a pickup arrangement is not a
-  threat, and a threat needs no particular keyword. Ryde's code of conduct bars "abuse of any kind": hostile or abusive
-  language aimed at the other party (telling them to shut up, insults, intimidation) is abuse under SAFE-1 and is at
-  least "suspected"; a false "suspected" costs a human look, a missed threat that lets a refund execute is not acceptable.
-- Consent (RD-5) is the rider's own message sent before the detour began; a driver's statement that the rider agreed
-  verbally is a claim, not consent (G11). Its scope is a reading of the words: a general route choice ("whichever way
-  is faster") covers a route chosen to get there, not a driver's own errand; agreement to a specific named road covers
-  driving on that road only, and the record must tie the driven segment to it — timing alone does not; if nothing
-  ties them, the finding is undetermined (G13); if the record places the segment somewhere else (a stop away from
-  that road, the driver's own account naming another road or place), the agreement does not cover it: counts.
+  threat, and a threat needs no particular keyword.
+- Route deviation: a traffic reason (RD-4) never exempts a segment; the amount turns on whether the rider agreed to or
+  asked for the route before it began (RD-5 / RD-3). Consent is the rider's own message sent before or at the start of
+  the segment; a driver's statement that the rider agreed verbally is a claim, not consent. Agreement to a specific
+  named road covers the segment if the segment drove that road (the connecting roads onto and off it are part of going
+  via it), and not if it did not; a qualified yes ("ok, but not via Y") does not cover a segment that drove Y.
+- Read texts as a careful person would: a surge notice must STATE the new multiplier, the revised fare and that the rider
+  may cancel without penalty ("cancellation fees may apply" is not a free cancel); the reason a driver picked in the app
+  is his claim, and his own words in the chat or statement decide why he cancelled (NS-1 vs NS-3).
 - evidence_status, every case: "sufficient" (the record settles every element you need; evidence_gap null),
   "insufficient" (a needed record is missing — no GPS, a hole, an untimed message: name it in evidence_gap and rule
   escalate) or "unknown" (rule escalate). Missing evidence never favours either side.
-- Rider-named stops (RD-3): when the rider names the place and the car stops there, the whole segment driven to reach
-  it is exempt; do not split it into "the stop" and "the way there". A stop the rider asked for without naming a place
-  does not excuse the driver's choice of a far one.
 - segment_findings: for route_deviation cases, one entry per off-route segment you identify (fact_id = the fact id
-  if you were given one, else "seg1", "seg2" ...), finding = "exempt" / "counts" / "undetermined", basis = the chat
-  fact ids relied on (if you were given ids), reason with clause ids. Empty otherwise. An undetermined finding that
-  changes the amount or the flag → escalate.
-- ground = the policy branch the words fall under, one of: "rider_named_stop" (RD-3(a): a rider message before the
-  segment named the place and the car stopped there → exempt), "general_route_consent" (RD-5: "whichever way is
-  faster" and the loop goes there → exempt), "named_road_tied" (RD-5: agreed to a named road and a record ties the
-  segment to it → exempt), "named_road_untied" (RD-5 + G13: nothing ties the segment to the named road, nothing
-  places it elsewhere → undetermined), "named_road_elsewhere" (the record places the segment somewhere else →
-  counts), "driver_errand" (a stop or loop of the driver's own that no rider message asked for → counts),
-  "scope_other" (the rider agreed to something else, e.g. a short stop → counts), "consent_after_or_none" (no rider
-  message before the segment agrees to it → counts). You read the words and name the ground; the policy fixes the
-  consequence and code checks that your finding is that consequence — a finding that contradicts its own ground is
-  sent back to you once, then goes to a person. "other" cannot execute.
-- safety_concern is required: "none" means you read everything and found nothing (never write "unscreened": code uses it when no judge ran).
+  if you were given one, else "seg1", "seg2" ...), finding = "exempt" / "counts" / "undetermined", ground (one of
+  rider_named_stop, general_route_consent, named_road_tied, named_road_untied, named_road_elsewhere, driver_errand,
+  scope_other, consent_after_or_none), named_road when the rider agreed to a named road, basis = the chat fact ids
+  relied on (if you were given ids), reason with clause ids. Empty otherwise.
+- safety_concern is required: "none" means you read everything and found nothing (never write "unscreened").
 
 OUTPUT: a Ruling. English.
 
@@ -80,10 +69,11 @@ POLICY (full text)
 """
 
 SYSTEM_RAW = """You are the dispute-resolution judge for Ryde (Singapore ride-hailing). You receive the COMPLETE RAW CASE
-RECORD as JSON: the dispute ticket, trip timeline, quoted route (polyline + km), the driver's GPS trace (5 s samples,
-thinned to every {THIN}th point), LTA speed bands and incidents, weather, the fare breakdown, the in-app chat, the
-driver's statement and both parties' 90-day profiles. Nobody has pre-computed anything: distances, times, who was
-where when, and what was agreed are for you to work out from the record. Apply the numbered policy below and rule.
+RECORD as JSON, in the platform's own format: the dispute ticket, both parties' profiles, trip data, fare breakdown,
+the driver's GPS telemetry (thinned to every {THIN}th sample), the optimal route, chat logs, app events, call
+records, traffic conditions and the surge log where there is one. Nobody has pre-computed anything: distances,
+times, who was where when, and what was agreed are for you to work out from the record. Apply the numbered policy
+below and rule.
 
 """ + COMMON_RULES
 
@@ -96,11 +86,13 @@ reasoning and list them in cited_facts.
 
 
 def thin_case(case: Case) -> dict:
-    """Raw Case JSON for the prompt: gps every GPS_THIN-th sample (last sample kept), everything else verbatim."""
-    d = json.loads(case.model_dump_json(by_alias=True, exclude={"provenance"}))
-    gps = d["gps"]
-    d["gps"] = gps[::GPS_THIN] + ([gps[-1]] if (len(gps) - 1) % GPS_THIN else [])
-    d["_note"] = f"gps thinned to every {GPS_THIN}th sample ({len(d['gps'])} of {len(gps)} points, 5 s grid -> {5 * GPS_THIN} s)"
+    """The case file as stored on disk (official field names), gps every GPS_THIN-th sample (last sample kept),
+    our provenance notes left out."""
+    d = to_official(json.loads(case.model_dump_json(by_alias=True)))
+    d.get("case_metadata", {}).pop("provenance", None)
+    gps = d.get("gps_telemetry", [])
+    d["gps_telemetry"] = gps[::GPS_THIN] + ([gps[-1]] if gps and (len(gps) - 1) % GPS_THIN else [])
+    d["_note"] = f"gps_telemetry thinned to every {GPS_THIN}th sample ({len(d['gps_telemetry'])} of {len(gps)} points)"
     return d
 
 
@@ -124,7 +116,8 @@ def baseline_prompt(case: Case, arm: str) -> str:
         return head + "\nRAW CASE RECORD (JSON)\n" + json.dumps(thin_case(case), ensure_ascii=False, separators=(",", ":")) + "\n\nIssue your Ruling."
     t = case.trip
     trip = (f"{t.service_type} {t.pickup.name} → {t.dropoff.name}, estimate {t.estimated_km:.1f} km / {t.estimated_min:.0f} min"
-            + (f", cancelled by {t.cancelled_by} at {t.cancelled_at:%H:%M:%S}" if t.cancelled_at else f", pickup {t.pickup_at:%H:%M} drop-off {t.dropoff_at:%H:%M}"))
+            + (f", cancelled by {t.cancelled_by} at {t.cancelled_at:%H:%M:%S}" if t.cancelled_at else
+               (f", pickup {t.pickup_at:%H:%M} drop-off {t.dropoff_at:%H:%M}" if t.pickup_at and t.dropoff_at else "")))
     return head + f"Trip: {trip}\n\nFACT TABLE\n" + fact_table_text(case) + "\n\nIssue your Ruling."
 
 

@@ -19,7 +19,7 @@ STALE = [
     (r"法庭 \*\*95\.9|court 95\.9|95\.9 / 95\.9|\*\*95\.9%\*\*", "pre-rerun court accuracy"),
     (r"0\s*/\s*412", "pre-rerun citation count"),
     (r"343 (?:LLM|case-system|stored) runs", "run count before the judge_only arm"),
-    (r"100% accurate|100% correct", "say 'matched the policy-derived reference 49/49', not accurate/correct"),
+    (r"100% accurate|100% correct", "say 'matched the policy-derived reference' with the count from the numbers block, not accurate/correct"),
     (r"三臂", "there are four arms now (raw, facts_only, judge_only, court)"),
     (r"人工标准答案|human-labell?ed (reference|answers|truth)|hand-labelled (reference|answers|truth)", "reference answers are policy-derived, not human-labelled"),
     (r"解决(最后一个|了最后)?解释性|settle the last interpretive|interpretive tail", "judge_only's miss was an amount error, not an interpretive one"),
@@ -28,11 +28,14 @@ STALE = [
     (r"闸门让系统安全|gate makes the system safe", "retired framing: facts_only + gate still leaks"),
     (r"S\$0\.10", "price claim without a dated calculation"),
     (r"Independent review", "say 'adversarial model review'"),
-    (r"paid automatically|executed automatically|auto-executed", "wallet is simulated: say 'cleared for automatic voucher issuance' / 'auto-cleared'"),
+    (r"paid automatically|executed automatically|auto-executed", "payment is simulated: say 'auto-cleared' / 'cleared for a refund to the original payment method'"),
     (r"real Singapore routes|real routes", "say 'synthetic trips on real OneMap road geometry'"),
     (r"nothing is a mock-up", "case data and wallet/trust integrations are simulated; say so"),
     (r"TokenHub", "TokenHub was never used; judge-facing text names the DeepSeek API only"),
     (r"\b392 LLM runs|[Tt]hree-arm", "392 case-system runs / 1,191 model calls; four arms"),
+    (r"Precedent 7\.3|§\s?7\.3", "old policy numbering: the precedent is the official DISP-2026-0211"),
+    (r"not yet re-run", "leave out a measurement that does not exist instead of announcing it"),
+    (r"offline ablation|discriminative power|\bthe raw arm\b|\bcourt arm\b", "internal jargon: say 'the policy check applied afterwards', 'Raw LLM', 'full court'"),
 ]
 
 
@@ -47,7 +50,7 @@ def main() -> int:
             if any(tok in line for tok in ("check_wording", "旧文", "retired", "不说", "不要说", "不是纯粹", "不能说", "never say", "do not say")):
                 continue   # lines that quote a stale term on purpose, to forbid it
             for pat, why in STALE:
-                if re.search(pat, line):
+                if re.search(pat, line, flags=re.I):      # case-insensitive: "Executed automatically" in a heading is the same claim
                     bad += 1
                     print(f"{rel}:{i}: /{pat}/ — {why}\n    {line.strip()[:140]}")
     print("wording check:", "clean" if not bad else f"{bad} stale mention(s)")

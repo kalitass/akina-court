@@ -36,17 +36,20 @@ def consistent(text: str, ruling: Ruling, on_record: list[float] = ()) -> bool:
     amounts = [float(a) for a in AMOUNT_RE.findall(text or "")]
     if ruling.escalate or ruling.ruling == "escalate":
         return not amounts and "voucher" not in (text or "").lower()
+    extra = [ruling.goodwill_credit] if ruling.goodwill_credit else []
     if not ruling.amount:
-        return all(any(abs(a - x) < 0.005 for x in on_record) for a in amounts)
-    return all(abs(a - ruling.amount) < 0.005 for a in amounts)
+        return all(any(abs(a - x) < 0.005 for x in list(on_record) + extra) for a in amounts)
+    return all(any(abs(a - x) < 0.005 for x in [ruling.amount] + extra) for a in amounts)
 
 
 def fallback_notices(ruling: Ruling) -> tuple[str, str]:
     """Template notices for a ruled case, built from the structured ruling only."""
     outcome = PLAIN.get(ruling.ruling, ruling.ruling)
-    money = f" You will receive ${ruling.amount:.2f} as a Ryde voucher." if ruling.amount else ""
-    money_d = f" A ${ruling.amount:.2f} Ryde voucher is issued to the rider." if ruling.amount else ""
+    money = f" ${ruling.amount:.2f} will be refunded to your original payment method." if ruling.amount else ""
+    money_d = f" ${ruling.amount:.2f} is refunded to the rider." if ruling.amount else ""
     flag = " Your account has been referred for review." if ruling.flag_account else ""
+    if ruling.goodwill_credit:
+        money += f" You also receive a ${ruling.goodwill_credit:.2f} goodwill credit."
     rider = f"We have reviewed your dispute: {outcome}.{money} The decision follows Ryde's dispute policy and the trip record."
     driver = f"We have reviewed the dispute on this trip: {outcome}.{money_d}{flag} The decision follows Ryde's dispute policy and the trip record."
     return rider, driver

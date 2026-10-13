@@ -4,44 +4,79 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:49.443969+00:00",
+ "ts": "2026-10-13T15:35:54.140915+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case as driver-cancelled without a valid no-show; no account flag is required.",
-  "confidence": 0.88,
-  "reasoning": "The driver cancelled (cancelled_by = driver) claiming rider no-show, so the case runs through NS-0 into NS-1. NS-1 requires all three of: (i) the driver pressed \"I'm Here\"; (ii) at that instant the GPS put the driver within the pickup radius (≤200 m); (iii) after the tap, the driver waited continuously >3 minutes (≥3:01) within the radius until cancelling.\n\n(i) is satisfied: driver_pressed_here_at = 13:02:35, and arrival_confirmed_by is null in the record.\n(ii) fails on the record. Using an equirectangular approximation at this latitude (111,320 m per degree of latitude, 110,860 m per degree of longitude), the pickup (1.3525, 103.9447) sits between the 13:01:30 fix (1.352103, 103.945222) and the 13:02:00 fix (1.353075, 103.944617). The 13:02:30 fix (1.352366, 103.944349), the closest sample to the 13:02:35 tap, is ≈40 m south and ≈39 m west of the pickup → ≈56 m, which passes, but the trace at 13:01:30 and 13:02:00 puts the car 60–90 m away and travelling (speed 27.9 then 23.2 km/h). The car only comes to rest at ~13:02:30. The record therefore does not show the driver at the pickup when the button was pressed — the tap precedes or coincides with the car's arrival at the kerb, and the driver's own statement (\"after pressing I'm Here I waited…\") contradicts the GPS.\n(iii) also fails as measured from the tap: 13:02:35 → 13:05:30 is 2 min 55 s (175 s) < 3:01, i.e. under three minutes. Arrival at the pickup is logged at 13:01:00, but NS-1 counts only the continuous wait after the \"I'm Here\" tap; the drive-by beforehand (13:02:00–13:02:30) does not count, and the 30 s sampling grid leaves the exact time the car stopped (≈13:02:30) before the tap anyway.\n\nSince NS-1 fails, NS-2 applies: the $6.61 cancellation fee is refunded in full (refund_full). No flag_account: although NS-2's abuse flag attaches when the driver is outside the radius at the tap (m_from_pickup_at_tap > 200), the nearest sample here is ≈56 m and a single sample does not establish the tap-instant position beyond reasonable doubt; the shortfall of ~5–25 s against the 3-minute threshold is likewise a borderline miss, so Ryde should record a policy breach without a fraud flag. Safety screening: chat, complaint and driver statement contain no threat, harassment, abuse or dangerous-driving allegation (the driver's two messages are routine pickup/arrival notices and a cancel notice), so no escalation. Confirmed fare chain per NS-0 (driver-cancelled, no-show claim); NS-7: refund issued as a Ryde voucher, non-cash, within the 30-day window (trip 2026-09-18, claim same day).",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show fee to the rider and flag the driver's account for review of a false arrival mark + flag_account",
+  "confidence": 0.95,
+  "reasoning": "The record resolves this cleanly. The driver marked arrival at 13:01:00 and cancelled as a rider no-show at 13:04:30, charging the rider $5.00. Under NS-1 the no-show fee stands only if, among other conditions, (i) the driver's GPS was within 200 m of the pickup point at the arrival mark and (iv) the driver stayed at the pickup point throughout. The telemetry contradicts both: at 13:01:00 the driver is at 1.304754, 103.854878 (Jalan Besar) and remains within tens of metres of that spot through 13:04:30, roughly 590 m from Bugis Junction at 1.2994, 103.8555 — far outside the 200 m radius. The driver never came to the pickup point, consistent with the rider's report of \"no car here\". The rider's message at 13:02:20 confirms she was at the pickup point. The driver's message and one unanswered call satisfy NS-1(iii) and the wait satisfies NS-1(ii), but a single failed condition voids the fee under NS-2, so this is a full refund of the $5.00 charged. NS-2's additional account flag applies only where the driver marked arrival while GPS was not at the pickup point — which is exactly what happened here (he pressed \"I'm Here\" ~590 m away while the rider was waiting at the bay), so the account flag is added. No safety indicator was found in any text; no route/deviation or surge element exists (no trip was performed, fare $0.00). Precedent DISP-2026-0211 (no-show cancel) confirms the $5.00 no-show framework, but there the driver's proximity and contact were established, whereas here the GPS disproves presence.",
   "cited_facts": [],
   "cited_policy": [
-   "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "TH-2",
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver_statement",
-    "reason": "System records override statements: the GPS trace has the car still moving 27.9 and 23.2 km/h at 13:01:30 and 13:02:00 and only stationary from ~13:02:30, while the 'I'm Here' tap is logged at 13:02:35 and the cancel at 13:05:30 — 2 min 55 s later. The record does not support 'waited more than 3 minutes at the pickup after pressing I'm Here'."
+    "element": "Driver pressed \"I'm Here\" / arrival auto-confirmed with GPS within 200 m of pickup (NS-1(i))",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "Arrival event at 13:01:00, but the nearest GPS sample (13:01:00) places the driver at 1.304754, 103.854878 — approximately 590 m from the Bugis Junction pickup point (1.2994, 103.8555), far outside the 200 m radius. The driver sat there until cancellation."
    },
    {
-    "id": "rider_complaint_detail",
-    "reason": "The rider says they came out 'a minute after the driver cancelled'; the outcome does not depend on this, since the driver's own tap/cancel timestamps already fail NS-1 (iii)."
+    "element": "5-minute free wait elapsed before cancellation (NS-1(ii))",
+    "finding": "met",
+    "basis": [],
+    "reason": "Booking confirmed 12:57:30, arrival marked 13:01:00, cancellation 13:04:30 — more than 3.5 minutes after the arrival mark and, even taking the driver's own mark as the start, more than the 5-minute threshold had elapsed since booking would suggest. Wait length is not the failing element."
+   },
+   {
+    "element": "Driver sent ≥1 in-app message and made ≥1 in-app call before cancelling (NS-1(iii))",
+    "finding": "met",
+    "basis": [],
+    "reason": "Driver message at 13:01:25 and driver-initiated call at 13:02:30 (unanswered), both before the 13:04:20 cancellation message and 13:04:30 cancellation."
+   },
+   {
+    "element": "Driver remained at the pickup point throughout the wait (NS-1(iv))",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "GPS shows the vehicle stationary on Jalan Besar at ~1.3048, 103.8549, roughly 590 m from the pickup point, for the entire wait; it never reached the pickup location."
+   },
+   {
+    "element": "Reason for cancellation (NS-0 / NS-3)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Driver cancelled with reason \"rider_no_show\" and his statement says the rider never showed, so NS-1/NS-2 apply rather than NS-3."
+   },
+   {
+    "element": "Safety screen of complaint, statement and chat (SAFE-1)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Complaint, driver statement and chat contain no threat, harassment, sexual remark or dangerous-driving allegation; the driver's own cancellation message is a routine operational notice, not intimidation."
    }
   ],
-  "flag_account": false,
+  "rejected_claims": [
+   {
+    "id": "driver_statement_arrived_at_pickup",
+    "reason": "GPS telemetry places the vehicle ~590 m from the Bugis Junction pickup point for the entire wait; system records override the driver's statement (NS-1(i),(iv) fail)."
+   }
+  ],
+  "flag_account": true,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.7,
- "input_tokens": 12766,
- "output_tokens": 1198,
+ "latency_s": 7.48,
+ "input_tokens": 10222,
+ "output_tokens": 1300,
  "requests": 1,
  "llm_calls": 1
 }

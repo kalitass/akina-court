@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build web/policy.html from policy/clauses_en.json and policy/sources.md.
+"""Build web/policy.html from policy/policy.md and policy/sources.md.
 
     python3 scripts/build_policy_page.py          # writes web/policy.html and prints the counts
 
-The page is the judge-facing English view of policy/policy.md: a plain summary of every clause the court may cite,
-grouped by dispute type, with the source of each clause as a direct link to the document it comes from.
-policy.md stays the only text the agents read; this page renders policy/clauses_en.json (a hand translation of it)
-and resolves the source ids (A1, B1 ...) to the URLs recorded in policy/sources.md.
+The page is the judge-facing view of policy/policy.md, the text the agents read: every clause with its label and
+source, the contradictions in the official documents and the rules Ryde has not specified. There is no second copy
+of the clause text; this script parses policy.md directly. Source codes (O1, A9, B7 ...) resolve to the entries of
+policy/sources.md, which the page lists at the end with their links.
 """
 from __future__ import annotations
 
@@ -17,204 +17,347 @@ from html import escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "policy" / "clauses_en.json"
+POLICY_MD = ROOT / "policy" / "policy.md"
 SOURCES_MD = ROOT / "policy" / "sources.md"
 OUT = ROOT / "web" / "policy.html"
 
-GROUPS = [
-    ("route_deviation", "rd", "Route deviation", "RD", "When a longer route counts against the driver, and how much the rider gets back."),
-    ("no_show", "ns", "No-show and cancellation", "NS", "When Ryde's $6.61 cancellation fee and $5 waiting fee may be charged."),
-    ("fare", "fare", "Fare", "FARE", "What may be added to a fixed fare, and tolls."),
-    ("safety", "safe", "Safety", "SAFE", "Cases the court never decides on its own."),
-]
-
-KIND = {
-    "Ryde first-hand": ("green", "Ryde official", "Stated directly in Ryde's Help Centre or Terms of Use."),
-    "Derived from": ("blue", "Derived", "Ryde has published nothing; derived from Singapore law, LTA / PTC rules and peer platforms' published terms."),
-    "Gap: no source": ("amber", "Gap", "No document supports it; kept as an open question for Ryde, never cited."),
+# the three clause labels policy.md uses, and how the page shows them
+LABELS = {
+    "Official": ("green", "Official"),
+    "Official + system detail": ("blue", "Official + system detail"),
+    "System rule": ("amber", "System rule"),
 }
 
-ORIGIN = {
-    "A": ("Ryde official", "Help Centre articles and Terms of Use. Read through Ryde's public Zendesk pages."),
-    "B": ("Singapore law and regulators", "Road Traffic Rules on Singapore Statutes Online, LTA demerit and fare rules, PTC fare rules, LTA DataMall."),
-    "C": ("Singapore peer platforms", "Grab, Gojek, ComfortDelGro and Zig: published cancellation, route and conduct rules."),
-    "D": ("International reference", "NYC TLC, Transport for London, Uber and GPS.gov: supporting references only."),
+# ruling actions written as `code` in policy.md, shown in plain words (the code stays in the hover text)
+ACTION_WORDS = {
+    "refund_full": "full refund", "refund_partial": "partial refund", "fee_waived": "fee waived", "no_action": "no action",
+    "escalate": "escalate to a person", "flag_account": "account review flag", "goodwill_credit": "goodwill credit",
+    "interim_suspension": "interim suspension", "partial_refund": "partial refund",
 }
 
-TITLE_OVERRIDE = {
-    "A18": "Other Ryde Help Centre articles (cancellation scope, RydeTAXI meter, fare calculation, dashcams)",
-    "C7": "Tada cancellation rule (press report, reference only)",
-    "E": "This system's code (core/): measurement parameters and procedure, never cited",
+# short names for the source line under a clause; the full title is on the source entry it links to
+SHORT = {
+    "O1": "Ryde Dispute Resolution Policy v2.1", "O2": "DISP-001 sample case", "O3": "DISP-002 sample case",
+    "O4": "DISP-003 sample case", "A1": "Ryde Help Centre: cancellation and waiting fee",
+    "A3": "Ryde Help Centre: driver marked arrival", "A7": "Ryde Help Centre: preferred route",
+    "A9": "Ryde Help Centre: edit destination fee", "A10": "Ryde Help Centre: driver standards",
+    "A14": "Ryde Help Centre: safety and accidents", "B7": "LTA DataMall: traffic speed bands",
 }
+GROUP_NAMES = {"O": "Official documents (sent by the organisers)", "A": "Ryde Help Centre", "B": "Data definitions"}
+
+CLAUSE_RE = re.compile(r"^\*\*([A-Z]+-\d+)\*\* — (.+?) \[([^\]]+)\]\s*$")
+ID_RE = re.compile(r"\b((?:FARE|RD|NS|SURGE|DMG|SAFE|TH|PREC)-\d+)\b")
+CODE_RE = re.compile(r"\b([OAB]\d{1,2})\b")
+SECT_RE = re.compile(r"§\s?\d+(?:\.\d+)*|Appendix [A-Z]|closing note")
+SYSTEM_TAIL = re.compile(r"(?:^|\.\s)((?:(?!\.\s)[^\"])*?):\s*system rule\.?\s*$")
 
 # ----------------------------------------------------------------------------------------------- sources.md
 
-URL_RE = re.compile(r"https?://[^\s）]+")
+URL_RE = re.compile(r"https?://[^\s;)]+")
 
 
 def load_sources() -> dict[str, dict]:
-    """{id: {title, urls, quote, category}} parsed from policy/sources.md."""
+    """{code: {id, title, group, what, file, urls, excerpt}} parsed from policy/sources.md (removed entries excluded)."""
     out: dict[str, dict] = {}
     cur = None
     for line in SOURCES_MD.read_text(encoding="utf-8").splitlines():
-        m = re.match(r"^### ([A-D]\d+)\.\s*(.*)$", line)
+        if line.startswith("## "):
+            cur = None
+            continue
+        m = re.match(r"^### ([OAB]\d+)\.\s*(.*)$", line)
         if m:
             cur = m.group(1)
-            title = re.sub(r"（.*?）", "", m.group(2)).strip()
-            out[cur] = {"id": cur, "title": title, "urls": [], "quote": "", "category": cur[0]}
-            continue
-        if line.startswith("## E."):
-            cur = "E"
-            out[cur] = {"id": "E", "title": "", "urls": [], "quote": "", "category": "E"}
-            continue
-        if line.startswith("## F."):
-            cur = None
+            out[cur] = {"id": cur, "title": m.group(2).strip(), "group": cur[0], "what": "", "file": "", "urls": [], "excerpt": ""}
             continue
         if not cur:
             continue
-        for u in URL_RE.findall(line):
-            out[cur]["urls"].append(u.rstrip("；;，,。"))
-        for i in re.findall(r"…/(\d+)", line):
-            out[cur]["urls"].append(f"https://help.rydesharing.com/hc/en-us/articles/{i}")
-        if line.startswith("- 摘录：") and not out[cur]["quote"]:
-            q = re.findall(r"[“\"]([^”\"]{12,})[”\"]", line)
-            out[cur]["quote"] = q[0] if q else ""
-    for k, e in out.items():
-        e["urls"] = list(dict.fromkeys(e["urls"]))
-        if k in TITLE_OVERRIDE or re.search(r"[一-鿿]", e["title"]):
-            e["title"] = TITLE_OVERRIDE.get(k, re.sub(r"[一-鿿]+", "", e["title"]).strip())
+        e = out[cur]
+        if line.startswith("- URL:"):
+            e["urls"] = list(dict.fromkeys(URL_RE.findall(line)))
+        elif line.startswith("- File:"):
+            f = re.search(r"`([^`]+)`", line)
+            e["file"] = f.group(1) if f else ""
+        elif line.startswith("- What it is:"):
+            e["what"] = line.split(":", 1)[1].strip()
+        elif re.match(r"- Excerpts?:", line):
+            e["excerpt"] = line.split(":", 1)[1].strip()
     return out
 
 
-# ----------------------------------------------------------------------------------------------- data
+# ----------------------------------------------------------------------------------------------- policy.md
 
-def load() -> list[dict]:
-    return json.loads(SRC.read_text(encoding="utf-8"))
+def load() -> dict:
+    """policy.md as {title, lead, legend, sections: [{num, prefix, name, anchor, clauses, body}]}."""
+    lines = POLICY_MD.read_text(encoding="utf-8").splitlines()
+    doc = {"title": "", "lead": "", "legend": [], "sections": []}
+    sec = None
+    clause = None
+    for line in lines:
+        if line.startswith("# ") and not doc["title"]:
+            doc["title"] = line[2:].strip()
+            continue
+        m = re.match(r"^## (\d+)\. (?:([A-Z]+) — )?(.+)$", line)
+        if m:
+            name = m.group(3).strip()
+            anchor = m.group(2).lower() if m.group(2) else re.sub(r"[^a-z]+", "-", re.sub(r"\(.*?\)", "", name).lower()).strip("-")
+            sec = {"num": int(m.group(1)), "prefix": m.group(2) or "", "name": name, "anchor": anchor, "clauses": [], "body": []}
+            doc["sections"].append(sec)
+            clause = None
+            continue
+        if sec is None:   # the preamble: lead sentence and label legend
+            lm = re.match(r"^- \*\*(.+?)\*\*(?: in a Source line)?\s*[:=]\s*(.+)$", line)
+            if lm:
+                doc["legend"].append((lm.group(1).strip("[]"), lm.group(2).strip()))
+            elif line.strip() and not doc["lead"] and not line.startswith(("|", "-", "Source codes")):
+                doc["lead"] = line.strip()
+            continue
+        if line.strip() == "---":
+            continue
+        cm = CLAUSE_RE.match(line)
+        if cm:
+            clause = {"id": cm.group(1), "title": cm.group(2).strip(), "label": cm.group(3).strip(), "body": [], "source": ""}
+            sec["clauses"].append(clause)
+            continue
+        if line.startswith("<sub>Source:"):
+            src = line[len("<sub>Source:"):].removesuffix("</sub>").strip()
+            if clause:
+                clause["source"] = src
+            else:
+                sec["source"] = src
+            continue
+        (clause["body"] if clause else sec["body"]).append(line)
+    return doc
 
 
-def counts(rows: list[dict]) -> dict:
-    sourced = [r for r in rows if r["group"] in ("route_deviation", "no_show", "fare", "safety")]
-    citable = [r for r in sourced if r["citable"]]
-    return {
-        "sourced": len(sourced),
-        "citable": len(citable),
-        "citable_ryde": sum(1 for r in citable if r["source_kind"] == "Ryde first-hand"),
-        "citable_derived": sum(1 for r in citable if r["source_kind"] == "Derived from"),
-        "ryde": sum(1 for r in sourced if r["source_kind"] == "Ryde first-hand"),
-        "informational": sum(1 for r in sourced if not r["citable"]),
-        "gaps": sum(1 for r in rows if r["group"] == "gap"),
-        "by_group": {g: sum(1 for r in rows if r["group"] == g) for g, *_ in GROUPS},
-    }
+def clauses(doc: dict) -> list[dict]:
+    return [c for s in doc["sections"] for c in s["clauses"]]
+
+
+def parse_source(src: str, reg: dict[str, dict]) -> dict:
+    """A clause's Source line as {docs: [(code, [sections])], system_set: str|None, codes: [..], missing: [..]}."""
+    system_set = None
+    rest = src
+    if re.fullmatch(r"system rule\.?", src.strip()):
+        return {"docs": [], "system_set": "", "codes": [], "missing": [], "text": src}
+    m = SYSTEM_TAIL.search(src)
+    if m:
+        system_set = m.group(1).strip()
+        rest = src[:m.start(1)].strip()
+    hits = list(CODE_RE.finditer(rest))
+    docs: dict[str, list[str]] = {}
+    for i, h in enumerate(hits):
+        seg = rest[h.end(): hits[i + 1].start() if i + 1 < len(hits) else len(rest)]
+        refs = docs.setdefault(h.group(1), [])
+        for r in SECT_RE.findall(seg):
+            r = r.replace("§ ", "§")
+            if r not in refs:
+                refs.append(r)
+    codes = list(docs)
+    return {"docs": list(docs.items()), "system_set": system_set, "codes": codes,
+            "missing": [c for c in codes if c not in reg], "text": src}
 
 
 # ----------------------------------------------------------------------------------------------- html bits
 
-ORG = {"A16": "Ryde Terms of Use", "B1": "Singapore Statutes Online", "B2": "LTA", "B3": "LTA", "B4": "LTA", "B5": "LTA",
-       "B6": "PTC", "B7": "LTA DataMall", "B8": "Singapore Courts", "C1": "Grab", "C2": "Grab", "C3": "Gojek", "C4": "CDG Zig",
-       "C5": "ComfortDelGro", "C6": "ComfortDelGro", "C7": "Mothership (Tada)", "D1": "NYC TLC", "D2": "Transport for London",
-       "D3": "Uber", "D4": "Uber", "D5": "GPS.gov", "E": "This system's code"}
+def cap(text: str) -> str:
+    return text[:1].upper() + text[1:]
 
 
-def org(sid: str) -> str:
-    return ORG.get(sid, "Ryde Help Centre" if sid.startswith("A") else sid)
+def inline(text: str) -> str:
+    """Escape, then **bold**, `action` in plain words, clause ids and contradiction numbers as links."""
+    t = escape(text, quote=False)
+    t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+    t = re.sub(r"`([^`]+)`", lambda m: f'<span class="act" title="{m.group(1)}">{ACTION_WORDS[m.group(1)]}</span>'
+               if m.group(1) in ACTION_WORDS else f"<code>{m.group(1)}</code>", t)
+    t = ID_RE.sub(lambda m: f'<a href="#{m.group(1)}">{m.group(1)}</a>', t)
+    t = re.sub(r"section (\d+), (C\d+)", r'section \1, <a href="#\2">\2</a>', t)
+    return t
 
 
-# Short source names for the clause tail line; the full title and the quoted passage stay in the hover text.
-SHORT = {
-    "A1": "Ryde: Cancellation and Waiting Fee", "A2": "Ryde: Cancellation and Waiting Time Policy",
-    "A3": "Ryde: driver says arrived but has not", "A4": "Ryde: fee waiver request", "A5": "Ryde: how the fees work",
-    "A6": "Ryde: platform fee", "A7": "Ryde: suggested route", "A8": "Ryde: ERP and tolls", "A9": "Ryde: edit destination fee",
-    "A10": "Ryde: driver standards", "A11": "Ryde: irregular trip behaviour", "A12": "Ryde: trip completed without the rider",
-    "A13": "Ryde Code of Conduct", "A14": "Ryde: report a safety issue", "A15": "Ryde: rider made a mess",
-    "A16": "Ryde Terms of Use", "A18": "Ryde: RydeTAXI and fare articles",
-    "B1": "SG Road Traffic Rules", "B2": "LTA demerit points", "B4": "LTA enforcement on taxi drivers", "B5": "LTA taxi fares",
-    "B6": "PTC point-to-point fares", "B7": "LTA DataMall", "C1": "Grab cancellation policy", "C2": "Grab driver Code of Conduct",
-    "C3": "Gojek cancellation fees", "C4": "CDG Zig route choice", "C5": "ComfortDelGro cancellation policy",
-    "C6": "ComfortDelGro fares", "C7": "Tada (press report)", "D1": "NYC TLC rules", "D2": "Transport for London",
-    "D3": "Uber fare review", "D4": "Uber", "D5": "GPS.gov accuracy", "E": "Set in the code",
-}
-SHOWN = 2  # sources shown before the "+N more" fold
-RANK = {"Derived from": "BACDE", "Ryde first-hand": "ABCDE"}  # a derived clause leads with the law, a Ryde clause with Ryde
+def table(rows: list[str], row_ids: bool = False) -> str:
+    cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows if not re.match(r"^\|[\s|:-]+\|$", r.strip())]
+    head, body = cells[0], cells[1:]
+    th = "".join(f"<th>{inline(c)}</th>" for c in head)
+    trs = "".join(
+        (f'<tr id="{escape(r[0])}">' if row_ids and re.fullmatch(r"C\d+", r[0]) else "<tr>") + "".join(f"<td>{inline(c)}</td>" for c in r) + "</tr>"
+        for r in body)
+    return f'<div class="tw"><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table></div>'
 
 
-def src_line(srcs: list[dict], reg: dict[str, dict], kind: str = "Ryde first-hand") -> str:
-    """The tail line of a clause: Source SG Road Traffic Rules r.23 ↗ · LTA demerit points ↗ +4 more"""
-    order = RANK.get(kind, "ABCDE")
-    srcs = sorted(srcs, key=lambda s: order.index(s["id"][0]) if s["id"][0] in order else 9)
-    parts = []
-    for s in srcs:
-        e = reg.get(s["id"], {"title": s.get("what", ""), "urls": [], "quote": ""})
-        title = e["title"] or s.get("what", "")
-        tip = f'{org(s["id"])} — {title}' + (f' — “{s["quote"]}”' if s.get("quote") else "")
-        label = SHORT.get(s["id"], org(s["id"]))
-        rule = re.search(r"\br\.\s?\d+", s.get("what", "")) if s["id"] == "B1" else None
-        if rule:
-            label += " " + rule.group(0).replace(" ", "")
-        label = escape(label)
-        if e["urls"]:
-            parts.append(f'<a href="{escape(e["urls"][0])}" target="_blank" rel="noopener" title="{escape(tip)}">{label} ↗</a>')
-        else:
-            parts.append(f'<span title="{escape(tip)}">{label}</span>')
-    if not parts:
+def blocks(lines: list[str], row_ids: bool = False) -> str:
+    """Markdown paragraphs (one per line), bullet lists and tables."""
+    out, i = [], 0
+    lines = [l for l in lines]
+    while i < len(lines):
+        l = lines[i]
+        if not l.strip():
+            i += 1
+            continue
+        if l.startswith("|"):
+            j = i
+            while j < len(lines) and lines[j].startswith("|"):
+                j += 1
+            out.append(table(lines[i:j], row_ids))
+            i = j
+            continue
+        if l.startswith("- "):
+            j = i
+            while j < len(lines) and lines[j].startswith("- "):
+                j += 1
+            out.append("<ul>" + "".join(f"<li>{inline(x[2:])}</li>" for x in lines[i:j]) + "</ul>")
+            i = j
+            continue
+        out.append(f"<p>{inline(l)}</p>")
+        i += 1
+    return "".join(out)
+
+
+def src_line(src: str, reg: dict[str, dict]) -> str:
+    if not src:
         return ""
-    head, rest = parts[:SHOWN], parts[SHOWN:]
-    more = f' <details class="more"><summary>+{len(rest)} more</summary> · {" · ".join(rest)}</details>' if rest else ""
-    return f'<div class="src"><b>Source</b> {" · ".join(head)}{more}</div>'
+    p = parse_source(src, reg)
+    parts = []
+    for code, refs in p["docs"]:
+        name = SHORT.get(code, reg.get(code, {}).get("title", code))
+        label = escape(name + (" " + ", ".join(refs) if refs else ""))
+        tip = escape(reg.get(code, {}).get("title", code))
+        parts.append(f'<a href="#src-{code}" title="{tip}">{label}</a>')
+    if p["system_set"] is not None:
+        parts.append("Set by this system" + (f": {inline(p['system_set'][:1].lower() + p['system_set'][1:])}" if p["system_set"] else ""))
+    wording = "" if not p["docs"] else f'<details class="w"><summary>Source wording</summary><p class="full">{wording_text(src, reg)}</p></details>'
+    return f'<div class="src"><b>Source</b> {" · ".join(parts)}</div>{wording}'
 
 
-def clause(r: dict, reg: dict[str, dict]) -> str:
-    cid = r["id"]
-    kind = KIND[r["source_kind"]][1]
+def wording_text(src: str, reg: dict[str, dict]) -> str:
+    """The Source line as written, with source codes as named links and 'system rule' in plain words."""
+    t = escape(src, quote=False)
+    t = re.sub(r":\s*system rule\.?\s*$", ": set by this system.", t)
+    return CODE_RE.sub(lambda m: f'<a href="#src-{m.group(1)}">{escape(SHORT.get(m.group(1), m.group(1)))}</a>' if m.group(1) in reg else m.group(1), t)
+
+
+# clauses where the official documents disagree or are silent and the system had to choose: a small "!" next to the
+# title explains the choice in plain words on hover or focus
+WHY = {
+    "TH-2": "Ryde's policy says detours over 2 km go to a person. But Ryde's own example case (DISP-001) had a 4.3 km "
+            "detour and settled it automatically with a $3.44 refund. We follow the example: refunds under $10 are settled "
+            "by the system.",
+    "RD-5": "Ryde's policy says a detour without a traffic reason is refunded, even if the rider was told about it. It also "
+            "says a detour the rider agreed to counts as agreed. We read both together: just telling the rider is not "
+            "enough, but if the rider clearly said yes before the detour, it was the rider's own choice, so there is no refund.",
+    "SURGE-1": "Ryde's policy lists three things a surge notice must say: the new multiplier, the new estimated fare, and that "
+               "the rider can cancel for free. It does not say what happens if one is missing. We count a notice that leaves "
+               "any of them out as no notice, because the rider could not make a real choice without all three.",
+    "DMG-4": "Ryde's policy says a rider who disputes a damage claim goes to a person (§4.4), but it also lets the system decide "
+             "a cleaning fee up to $50 when the photos can be checked (§6.2). We follow the more specific rule: a cleaning fee "
+             "up to $50 with checkable photos is decided by the system; anything else goes to a person (see C2 below).",
+    "NS-1": "Ryde's policy counts the 5-minute free wait from the scheduled pickup time, but its own example case (DISP-002) "
+            "counts from when the driver arrived and uses an 8-minute limit written in the trip record. We do both: the "
+            "5 minutes count from whichever is later, arrival or the scheduled time; a limit written in the trip record "
+            "counts from arrival, as the example does.",
+    "NS-9": "Ryde's policy flags a rider with 3 or more no-shows in 30 days. We add one limit: the history can flag the "
+            "account for review, but it never decides who is right in this dispute. That rests only on this trip's records.",
+}
+
+
+def why_icon(cid: str) -> str:
+    if cid not in WHY:
+        return ""
+    return (f'<span class="why" tabindex="0" role="note" aria-label="Why we chose this: {escape(WHY[cid])}">!'
+            f'<span class="tip"><b>Why we chose this</b>{escape(WHY[cid])}</span></span>')
+
+
+def official_source(c: dict) -> str:
+    """An official clause shown without its implementation detail also drops the source-line tail naming that detail."""
+    m = SYSTEM_TAIL.search(c["source"]) if c["label"] == "Official + system detail" else None
+    return c["source"][:m.start(1)].rstrip() if m else c["source"]
+
+
+def clause_html(c: dict, reg: dict[str, dict]) -> str:
+    colour, label = LABELS.get(c["label"], ("muted", c["label"]))
+    body = c["body"]
+    k = next((i for i, l in enumerate(body) if l.startswith("System detail:")), None)
+    main = body if k is None else body[:k]      # the page lists the rule and its source; implementation detail is not shown
     return f"""
-<li id="{escape(cid)}">
-  <p class="t"><a class="id" href="#{escape(cid)}">{escape(cid)}</a> <b>{escape(r["title"][:1].upper() + r["title"][1:])}</b><span class="kind">{escape(kind)}</span></p>
-  <p class="s">{escape(r["summary_en"])}</p>
-  <details><summary>Full text</summary><p class="full">{escape(r["rule_en"])}</p>{f'<p class="full muted">{escape(r["notes_en"])}</p>' if r.get("notes_en") else ""}</details>
-  {src_line(r["sources"], reg, r["source_kind"])}
+<li id="{escape(c["id"])}">
+  <p class="t"><a class="id" href="#{escape(c["id"])}">{escape(c["id"])}</a> <b>{escape(c["title"])}</b><span class="tag {colour}">{escape(label)}</span>{why_icon(c["id"])}</p>
+  <div class="body">{blocks(main)}</div>
+  {src_line(official_source(c), reg)}
 </li>"""
 
 
-def section(n: int, group: str, anchor: str, name: str, prefix: str, blurb: str, rows: list[dict], reg: dict) -> str:
-    items = "".join(clause(r, reg) for r in rows if r["group"] == group)
+def section_html(s: dict, reg: dict[str, dict]) -> str:
+    if s["clauses"]:
+        inner = f'<ol class="clauses">{"".join(clause_html(c, reg) for c in s["clauses"])}</ol>'
+    else:
+        inner = f'<div class="body">{blocks(s["body"], row_ids=True)}</div>' + src_line(s.get("source", ""), reg)
     return f"""
-<section id="{anchor}">
-  <h2>{n}. {escape(name)}</h2>
-  <p class="blurb">{escape(blurb)}</p>
-  <ol class="clauses">{items}</ol>
+<section id="{s["anchor"]}">
+  <h2>{s["num"]}. {escape(s["name"])}</h2>
+  {inner}
 </section>"""
 
 
-def gaps_section(n: int, rows: list[dict], reg: dict) -> str:
-    items = "".join(
-        f'<li id="{escape(r["id"])}"><p class="t"><a class="id" href="#{escape(r["id"])}">{escape(r["id"])}</a> <b>{escape(r["title"][:1].upper() + r["title"][1:])}</b></p>'
-        f'<p class="s">{escape(r["value_en"])}</p></li>'
-        for r in sorted((r for r in rows if r["group"] == "gap"), key=lambda r: int(r["id"][1:])))
+def sources_html(reg: dict[str, dict], cited: set[str]) -> str:
+    out = []
+    for g in "OAB":
+        items = []
+        for e in (e for e in reg.values() if e["group"] == g and e["id"] in cited):
+            hosts = [re.sub(r"^https?://([^/]+).*$", r"\1", u) for u in e["urls"]]
+            links = [f'<a href="{escape(u)}" target="_blank" rel="noopener">Open on {escape(h)}{f" ({i + 1})" if len(hosts) > 1 else ""} ↗</a>'
+                     for i, (u, h) in enumerate(zip(e["urls"], hosts))]
+            case = re.search(r"DISP-\d{3}", e["title"] + " " + e["file"])
+            if g == "O" and case:
+                links.append(f'<a href="/facts.html?case={case.group(0)}">Open the case in the Facts view</a>')
+            what = f'<p class="s">{inline(cap(e["what"]))}</p>' if e["what"] else ""
+            file = f'<p class="muted">File: {escape(e["file"])}</p>' if e["file"] else ""
+            quote = f'<p class="q">{escape(e["excerpt"])}</p>' if e["excerpt"] else ""
+            items.append(f"""
+<li id="src-{e["id"]}">
+  <p class="t"><span class="id">{e["id"]}</span> <b>{escape(e["title"])}</b></p>
+  {what}{quote}{file}{f'<p class="links">{" · ".join(links)}</p>' if links else ""}
+</li>""")
+        if items:
+            out.append(f'<h3>{escape(GROUP_NAMES[g])}</h3><ol class="clauses srcs">{"".join(items)}</ol>')
     return f"""
-<section id="gaps">
-  <h2>{n}. Thresholds set by the project</h2>
-  <p class="blurb">Ryde and the other published documents give no value for the points below, so the project sets one to let the court rule; Ryde can adjust any of them. None of these is ever cited in a ruling.</p>
-  <ol class="clauses gaps">{items}</ol>
+<section id="sources">
+  <h2>Sources</h2>
+  <p class="blurb">Every document a clause above names. The official documents take priority; Ryde's public help-centre pages fill in where they are silent.</p>
+  {"".join(out)}
 </section>"""
 
 
-# ----------------------------------------------------------------------------------------------- page
+# ----------------------------------------------------------------------------------------------- counts and page
 
-def page(rows: list[dict], reg: dict[str, dict]) -> str:
-    c = counts(rows)
-    premise = next((r for r in rows if r["id"] == "PREMISE"), None)
-    toc = "".join(f'<a href="#{a}">{i + 1}. {escape(n)}</a>' for i, (_, a, n, _, _) in enumerate(GROUPS))
-    k = len(GROUPS)
-    toc += f'<a href="#gaps">{k + 1}. Project thresholds</a>'
-    sections = "".join(section(i + 1, g, a, n, p, b, rows, reg) for i, (g, a, n, p, b) in enumerate(GROUPS))
-    premise_html = ""
-    if premise:
-        premise_html = f"""
-<section id="premise">
-  <h2>Premise. How a Ryde fare works</h2>
-  <p class="s">{escape(premise["summary_en"])}</p>
-  <details><summary>Full text</summary><p class="full">{escape(premise["rule_en"])}</p></details>
-  {src_line(premise["sources"], reg)}
-</section>"""
+def not_specified(doc: dict) -> int:
+    s = next((s for s in doc["sections"] if "not specified" in s["name"]), None)
+    if not s:
+        return 0
+    rows = [l for l in s["body"] if l.startswith("|") and not re.match(r"^\|[\s|:-]+\|$", l.strip())]
+    return max(0, len(rows) - 1)
+
+
+def counts(doc: dict) -> dict:
+    cs = clauses(doc)
+    return {
+        "clauses": len(cs),
+        "groups": sum(1 for s in doc["sections"] if s["clauses"]),
+        "by_label": {k: sum(1 for c in cs if c["label"] == k) for k in LABELS},
+        "not_specified": not_specified(doc),
+        "contradictions": sum(len([l for l in s["body"] if re.match(r"^\| C\d+ \|", l)]) for s in doc["sections"]),
+    }
+
+
+def page(doc: dict, reg: dict[str, dict]) -> str:
+    c = counts(doc)
+    cited = {code for x in clauses(doc) for code in parse_source(x["source"], reg)["codes"]}
+    cited |= {code for s in doc["sections"] for code in parse_source(s.get("source", ""), reg)["codes"]}
+    toc = "".join(f'<a href="#{s["anchor"]}">{escape(s["name"].split(" (")[0])}</a>' for s in doc["sections"]) + '<a href="#sources">Sources</a>'
+    legend = "".join(
+        f'<li><span class="tag {LABELS[k][0]}">{escape(LABELS[k][1])}</span> {inline(v)}</li>' if k in LABELS
+        else f'<li><span class="tag">Set by this system</span> in a source line: {inline(v.replace("set by this system; ", ""))}</li>'
+        for k, v in doc["legend"])
+    n_off = c["by_label"]["Official"] + c["by_label"]["Official + system detail"]
+    sections = "".join(section_html(s, reg) for s in doc["sections"])
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -223,7 +366,7 @@ def page(rows: list[dict], reg: dict[str, dict]) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="/theme.js"></script>
 <link rel="stylesheet" href="/styles/base.css">
-<meta name="description" content="The {c['sourced']} numbered clauses every Akina Court ruling cites, grouped by dispute type, each with its source linked.">
+<meta name="description" content="The {c['clauses']} numbered clauses every Akina Court ruling cites, built on the official Ryde Dispute Resolution Policy, each with its source.">
 <style>
 *{{box-sizing:border-box}}
 html,body{{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}}
@@ -233,41 +376,57 @@ a:focus-visible,summary:focus-visible{{outline:2px solid var(--blue);outline-off
 
 .logo{{width:34px;height:34px;border-radius:9px;display:block;flex:none}}
 h1{{font-size:clamp(28px,5vw,40px);line-height:1.1;letter-spacing:-.02em;margin:34px 0 12px}}
-.lead{{font-size:16.5px;color:var(--ink2);margin:0 0 18px}}
+.lead{{font-size:16.5px;color:var(--ink2);margin:0 0 14px}}
 .lead b{{color:var(--ink)}}
+ul.legend{{list-style:none;margin:0 0 16px;padding:0;font-size:13.5px;color:var(--ink2)}}
+ul.legend li{{margin:4px 0}}
 .toc{{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;font-weight:600;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:8px}}
-section{{padding:22px 0 4px}}
-h2{{font-size:21px;letter-spacing:-.01em;margin:0 0 4px}}
+section{{padding:22px 0 4px;scroll-margin-top:16px}}
+h2{{font-size:21px;letter-spacing:-.01em;margin:0 0 8px}}
+h3{{font-size:15px;margin:16px 0 4px;color:var(--ink2)}}
 .blurb{{color:var(--muted);margin:0 0 10px;font-size:14px}}
 ol.clauses{{list-style:none;margin:0;padding:0}}
 ol.clauses>li{{padding:14px 0;border-top:1px solid var(--line);scroll-margin-top:16px}}
-ol.clauses>li:target{{background:rgba(91,156,255,.07);margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:8px}}
+ol.clauses>li:target,tr:target{{background:rgba(91,156,255,.07)}}
+ol.clauses>li:target{{margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:8px}}
 p{{margin:0}}
-p.t{{font-size:16px;margin-bottom:4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}}
-p.t i{{color:var(--muted);font-size:13px}}
-.id{{font:700 12.5px var(--mono);padding:2px 7px;border-radius:5px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink)}}
-.id:hover{{text-decoration:none;border-color:var(--blue)}}
-.kind{{font:600 11px var(--mono);color:var(--muted);letter-spacing:.03em}}
-p.s{{color:var(--ink);margin-bottom:6px}}
-details{{font-size:13px;margin-bottom:6px}}
-summary{{cursor:pointer;color:var(--muted);list-style:none;display:inline}}
-summary::before{{content:"+ ";font-family:var(--mono)}}details[open] summary::before{{content:"- "}}
-summary:hover{{color:var(--blue)}}
-p.full{{color:var(--ink2);margin:6px 0 4px;font-size:13.5px}}
-.muted{{color:var(--muted)}}
-.src{{font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 1em}}
+p.t{{font-size:16px;margin-bottom:6px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}}
+.id{{font:700 12.5px var(--mono);padding:2px 7px;border-radius:5px;border:1px solid var(--line);background:var(--panel2);color:var(--ink)}}
+a.id:hover{{text-decoration:none;border-color:var(--blue)}}
+.tag{{font:600 11px var(--mono);letter-spacing:.03em;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}}
+.tag.green{{color:var(--green);border-color:color-mix(in srgb,var(--green) 45%,transparent)}}
+.tag.blue{{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 45%,transparent)}}
+.tag.amber{{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 45%,transparent)}}
+.body p,.how p{{margin:0 0 4px}}
+.body ul,.how ul{{margin:2px 0 6px;padding-left:20px}}
+.act{{font-weight:600}}
+code{{font:12.5px var(--mono);padding:0 4px;border-radius:4px;background:var(--panel2)}}
+.why{{position:relative;display:inline-grid;place-items:center;width:17px;height:17px;margin-left:8px;border-radius:50%;background:#fff;color:#111827;border:1px solid var(--line);font:800 11px var(--sans);vertical-align:2px;cursor:help;box-shadow:0 1px 2px rgba(0,0,0,.15)}}
+.why .tip{{display:none;position:absolute;left:50%;top:24px;transform:translateX(-50%);z-index:20;width:min(360px,80vw);padding:10px 12px;border-radius:8px;background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.18);font:400 13.5px/1.5 var(--sans);text-align:left;white-space:normal}}
+.why .tip b{{display:block;margin-bottom:4px;font-size:12px}}
+.why:hover .tip,.why:focus .tip{{display:block}}
+.how{{margin:8px 0 6px;padding:8px 12px;border-left:2px solid var(--line);background:var(--panel2);border-radius:0 6px 6px 0;font-size:14px;color:var(--ink2)}}
+.how p.h{{font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}}
+.tw{{overflow-x:auto;margin:6px 0 8px}}
+table{{border-collapse:collapse;font-size:14px;min-width:100%}}
+th,td{{text-align:left;vertical-align:top;padding:6px 10px;border-bottom:1px solid var(--line)}}
+th{{font-size:12px;color:var(--muted);font-weight:600}}
+tr{{scroll-margin-top:16px}}
+.src{{font-size:13px;color:var(--muted);line-height:1.6;margin:8px 0 2px}}
 .src b{{font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-right:6px;color:var(--muted)}}
 .src a{{color:var(--ink2)}}.src a:hover{{color:var(--blue)}}
-.src details.more{{display:inline}}
-.src details.more summary{{display:inline;cursor:pointer;list-style:none;color:var(--muted);margin-left:8px;padding:1px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px}}
-.src details.more summary::-webkit-details-marker{{display:none}}
-.src details.more summary:hover{{color:var(--ink)}}
-.src details.more[open] summary{{display:none}}
-.src details.more summary::before{{content:none}}
-.src details.more[open]::details-content{{display:inline}}
+details.w{{font-size:13px}}
+summary{{cursor:pointer;color:var(--muted);list-style:none;display:inline}}
+summary::-webkit-details-marker{{display:none}}
+summary::before{{content:"+ ";font-family:var(--mono)}}details[open] summary::before{{content:"- "}}
+summary:hover{{color:var(--blue)}}
+p.full{{color:var(--ink2);margin:6px 0 4px;font-size:13px}}
+p.full a{{color:var(--ink2);text-decoration:underline;text-underline-offset:2px}}
+p.q{{color:var(--ink2);font-size:13.5px;margin:4px 0;padding-left:10px;border-left:2px solid var(--line)}}
+p.links{{font-size:13px;margin-top:4px;word-break:break-word}}
+.muted{{color:var(--muted);font-size:13px}}
 footer{{padding:26px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:28px}}
 footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight:600}}
-@media(max-width:560px){{}}
 </style>
 </head>
 <body>
@@ -279,11 +438,11 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weigh
 </header>
 <main>
 <h1>The rules the court applies</h1>
-<p class="lead">Every ruling cites one or more of the <b>{c['sourced']} numbered clauses</b> below and nothing else. <b>{c['ryde']}</b> are Ryde's own published terms. Each clause ends with the document it comes from; the link opens it.</p>
+<p class="lead">{escape(doc["title"])}: <b>{c['clauses']} numbered clauses</b> in {c['groups']} groups, built on Ryde's official Dispute Resolution Policy v2.1. <b>{n_off}</b> come from the official documents and <b>{c['by_label']['System rule']}</b> are system rules. {escape(doc["lead"])} Every ruling names the clauses it applies, and each clause ends with the document it comes from.</p>
+<ul class="legend">{legend}</ul>
 <nav class="toc" aria-label="Contents">{toc}</nav>
-{premise_html}
 {sections}
-{gaps_section(k + 1, rows, reg)}
+{sources_html(reg, cited)}
 </main>
 <footer>
   <div class="links"><a href="/">Home</a><a href="/report.html">Full results</a></div>
@@ -295,15 +454,14 @@ footer .links{{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weigh
 
 
 def main() -> int:
-    rows = load()
-    reg = load_sources()
-    OUT.write_text(page(rows, reg), encoding="utf-8")
-    c = counts(rows)
-    missing = sorted({s["id"] for r in rows for s in r["sources"] if s["id"] not in reg})
+    doc, reg = load(), load_sources()
+    OUT.write_text(page(doc, reg), encoding="utf-8")
+    missing = sorted({m for x in clauses(doc) for m in parse_source(x["source"], reg)["missing"]})
     print(f"wrote {OUT.relative_to(ROOT)} ({OUT.stat().st_size} bytes)")
-    print(json.dumps(c, indent=2))
+    print(json.dumps(counts(doc), indent=2))
     if missing:
-        print("source ids without an entry in sources.md:", missing)
+        print("source codes without an entry in sources.md:", missing)
+        return 1
     return 0
 
 

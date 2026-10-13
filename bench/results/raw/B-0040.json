@@ -4,38 +4,79 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:59.807232+00:00",
+ "ts": "2026-10-13T15:35:58.172855+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
+  "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee: rider cancelled 6:40 after matching (past the 3-minute window), so the fee stands; close the dispute.",
+  "recommended_action": "Escalate to Ryde Trust & Safety for human review under SAFE-1/SAFE-3: preserve the rider's complaint (sexual/body comments and a question about where she lives, made by the driver after the trip) and the post-cancellation call record; consider interim_suspension of the driver under SAFE-4 pending review. Refer the $5.00 no-show charge to the same reviewer rather than ruling on it, and keep the driver's notification-duty and cancellation conduct on file for the reviewer.",
   "confidence": 0.9,
-  "reasoning": "Safety screen: no threats, harassment, abuse, sexual remarks or dangerous-driving allegations in the chat, complaint or driver statement; dispute is a fee dispute, not a safety case. Safety concern: none.\n\nType: NS-0 routes this to the rider-cancellation branch. cancelled_by = rider, immediate (non-advanced) booking → NS-4.\n\nNS-4 arithmetic: accepted_at 08:40:00, cancelled_at 08:46:40 = 6 min 40 s after matching. This is > 3:00, so the $6.61 cancellation fee stands and the action is no_action. Ryde publishes no \"driver late vs ETA → free cancellation\" rule (NS-8 is informational only and cannot be cited); the rider's own stated reason is a change of plans, which is not a fee-waiver ground.\n\nDriver behaviour re-checked and it doesn't change the outcome for the rider's cancellation: driver_pressed_here_at 08:42:15 and the GPS samples at 08:42:15–08:46:40 sit within 5 m of the pickup (1.2843, 103.85149) — the driver had arrived and was waiting, so this is not an abusive \"stationary and uncontactable\" cancel; no flag_account is warranted. NS-1/NS-2 (driver cancelling for rider no-show) do not apply because the driver did not cancel. The rider's claim that \"$6.61 is unfair\" is rejected: NS-4 turns only on the 3-minute matching window, and the driver had in fact arrived before the cancellation. No GPS gaps (dense, complete trace), no untimed messages; evidence is sufficient. Rider profile (0 upheld disputes) does not affect the fee.",
+  "reasoning": "Safety screen (SAFE-1/SAFE-2). The complaint states that when the rider called the driver about the $5.00 charge \"he kept making comments about my body and asked where I live. I felt very uncomfortable.\" Nothing in the driver statement or chat contradicts it. Read as a careful person would, this is uninvited sexualised commentary plus a request for the rider's home location directed at a lone rider, causing her to feel unsafe — an intimidation/harassment and inappropriate-conduct indicator under SAFE-1. Because any safety indicator requires immediate human escalation regardless of the filed dispute type (here no_show_charge), and SAFE-3 forbids the AI from ruling on fault or outcome in such a case, I do not decide the fare/no-show issue and do not fix the $5.00 either way. Note the call the rider describes is an off-app follow-up call and is not in call_records (the only logged call is the driver's unanswered 08:46:10 call), so the substance rests on the rider's uncontested account and must be investigated by a human.\n\nRecord otherwise (for the reviewer, not a ruling). The driver pressed arrived at 08:44:40 with GPS ~60 m from the pickup point (1.3324, 103.8493 vs pickup 1.33207, 103.8491 — inside 200 m) and stayed stationary there until cancelling at 08:50:20; the 5-minute free wait had run by 08:49:40, he sent two in-app messages (08:45:10, 08:50:10) and placed one in-app call (08:46:10, unanswered). Those elements of NS-1 appear satisfied, but the complaint and the safety escalation take precedence and the post-trip conduct the rider describes is entirely outside the records, so the file should reach a human.",
   "cited_facts": [],
   "cited_policy": [
-   "NS-0",
-   "NS-4"
+   "SAFE-1",
+   "SAFE-2",
+   "SAFE-3",
+   "SAFE-4",
+   "TH-2",
+   "NS-1"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Complaint contains sexual/inappropriate comments about the rider's body and a question about where she lives, made by the driver, leaving her feeling unsafe. SAFE-1 requires immediate human escalation regardless of the no_show dispute type, and SAFE-3 bars the AI from ruling on fault or outcome in a safety case. The referred call to the driver is not in call_records, so a human must investigate the driver's post-trip conduct and decide on interim measures (SAFE-4) and on the $5.00 no-show charge.",
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "safety screen — complaint describes sexual/harassing conduct and a request for the rider's home location (SAFE-1)",
+    "finding": "met",
+    "basis": [],
+    "reason": "The rider's complaint reports the driver made comments about her body and asked where she lives during a follow-up call, leaving her feeling very uncomfortable. No record contradicts this; read in context it is uninvited sexualised/inappropriate conduct and intimidation directed at a lone rider, triggering mandatory escalation regardless of the no_show dispute type."
+   },
+   {
+    "element": "NS-1 element (i) driver arrived at pickup within 200 m (GPS)",
+    "finding": "met",
+    "basis": [],
+    "reason": "driver_arrived event 08:44:40; telemetry at 08:44:30–08:50:20 is stationary at ~1.3324, 103.8493, about 60 m from the pickup point 1.33207, 103.8491 — within the 200 m radius (recorded here only for the reviewer; the safety escalation supersedes a ruling)."
+   },
+   {
+    "element": "NS-1 element (ii) 5-minute free wait elapsed",
+    "finding": "met",
+    "basis": [],
+    "reason": "Arrival 08:44:40; cancellation 08:50:20 is 5 min 40 s later, past the free-wait threshold (no record no-show threshold applies). Recorded for the reviewer."
+   },
+   {
+    "element": "NS-1 element (iii) at least one in-app message and one in-app call before cancelling",
+    "finding": "met",
+    "basis": [],
+    "reason": "Two driver chat messages (08:45:10 and 08:50:10) and one in-app call attempt (08:46:10, unanswered) precede the 08:50:20 cancellation. Recorded for the reviewer."
+   },
+   {
+    "element": "NS-1 element (iv) driver remained at pickup point throughout",
+    "finding": "met",
+    "basis": [],
+    "reason": "All telemetry samples between arrival and cancellation show the vehicle essentially stationary at the pickup location (speeds 0.1–2.2 km/h), with no GPS gap. Recorded for the reviewer."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "rider_claim_unfair_fee",
-    "reason": "NS-4 charges the $6.61 fee for any rider cancellation more than 3 minutes after matching; cancellation came 6:40 after matching. The driver's arrival status is a precondition of NS-1/NS-2 (driver-side no-show cancels), not a waiver ground for a rider-side cancel, and Ryde publishes no late-ETA free-cancellation rule (NS-8 informational)."
+    "id": "driver_statement_wait_more_than_5_min",
+    "reason": "Not rejected on the timing facts — telemetry and events support arrival at 08:44:40 and cancellation at 08:50:20 (5 min 40 s), within 200 m and stationary throughout. It is not the basis of the ruling only because the safety escalation supersedes a decision on the no-show charge."
    }
   ],
   "flag_account": false,
-  "safety_concern": "none",
-  "safety_basis": [],
+  "goodwill_credit": null,
+  "safety_concern": "suspected",
+  "safety_basis": [
+   "Rider complaint: driver 'kept making comments about my body and asked where I live' after she called about the charge; she 'felt very uncomfortable' — harassment / inappropriate conduct indicator under SAFE-1",
+   "Conduct directed at a lone rider and a request for her home address, i.e. intimidation/location-safety concern under SAFE-1",
+   "No chat/statement contradiction; the post-trip call is not in call_records, so the account needs human investigation"
+  ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 3.97,
- "input_tokens": 12566,
- "output_tokens": 824,
+ "latency_s": 9.4,
+ "input_tokens": 13329,
+ "output_tokens": 1627,
  "requests": 1,
  "llm_calls": 1
 }

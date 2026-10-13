@@ -22,6 +22,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "web" / "report.html"
+sys.path.insert(0, str(ROOT))
+from core.case_format import read_case  # noqa: E402  (case files are official-plus; this reads them as the internal Case dict)
 
 # =====================================================================================================================
 # HAND-WRITTEN CONTENT — everything that is NOT derivable from data lives here and nowhere else.
@@ -29,7 +31,6 @@ OUT = ROOT / "web" / "report.html"
 
 CONTENT = {
     "title": "Akina Court — Results",
-    "subtitle": "Multi-agent autonomous dispute resolution · Tencent Cloud Hackathon SG 2026 · Ryde track",
     "blurb": "Facts by code, arguments by agents, every action checked.",
     "method_caveat": "synthetic data · one model ({model}) · reference answers derived from the written policy — a policy-conformance test, not human-ops accuracy",
     "core_tip": "core decision = outcome label + refund amount (±$0.01) + escalation flag; account flags and citations are not part of it",
@@ -42,73 +43,88 @@ CONTENT = {
         "RD-3(a)": "a stop the rider named", "RD-3(b)": "an unnamed 'on the way' stop",
         "RD-3(c)": "waiting time at a rider stop stays billable",
         "RD-4(a)": "a reported incident on the replaced stretch", "RD-4(b)": "congestion band on the replaced stretch",
-        "NS-1(i)": "the 'I'm Here tap' element", "NS-1(ii)": "the 'driver at the pickup' element",
-        "NS-1(iii)": "the 'waited over 3 minutes' element",
+        "NS-1(i)": "the 'driver arrived' element", "NS-1(ii)": "the 'free wait passed' element",
+        "NS-1(iii)": "the 'driver messaged and called' element", "NS-1(iv)": "the 'driver stayed at the pickup' element",
+        "FARE-0": "the fare build-up rule",
         "RD-1": "the shortest-route duty", "RD-2": "the extra-km refund rule",
-        "RD-3": "the rider-stop rule", "RD-4": "the road-incident rule",
-        "RD-5": "the prior-consent rule (rider agreed to the route change beforehand)", "RD-6": "the repeat-offender flag rule",
-        "NS-0": "the who-cancelled rule", "NS-1": "the driver-waited rule",
-        "NS-2": "the failed-wait refund rule (fake I'm Here adds an account flag)",
+        "RD-3": "the rider-stop rule", "RD-4": "the traffic-reason rule",
+        "RD-5": "the notice-and-consent rule", "RD-6": "the repeat-offender flag rule",
+        "RD-7": "the reminder after an uninformed reroute",
+        "NS-0": "the who-cancelled rule", "NS-1": "the no-show-fee rule",
+        "NS-2": "the false-arrival rule",
         "NS-3": "the driver-cancelled rule", "NS-4": "the 3-minute free-cancel window",
-        "NS-5": "advance-booking rule", "NS-6": "waiting-fee rule", "NS-7": "30-day dispute window",
-        "NS-8": "no such Ryde rule",
-        "FARE-1": "only published add-ons may be charged", "FARE-2": "toll overcharge", "FARE-3": "cleaning-fee rule",
-        "SAFE-1": "the threat-or-harassment rule (as the judge reads it)", "SAFE-2": "the dangerous-driving rule", "SAFE-3": "the phantom-trip rule",
+        "NS-8": "the driver-did-not-arrive rule", "NS-9": "the repeat rider no-show rule",
+        "SURGE-1": "the surge notice rule", "SURGE-2": "the surge refund rule", "SURGE-3": "the surge differential rule",
+        "DMG-1": "the damage-claim rule", "DMG-2": "the damage-photo rule", "DMG-3": "the damage-amount rule", "DMG-4": "the insufficient-damage-evidence rule",
+        "SAFE-1": "the safety screen", "SAFE-2": "the accident-and-injury rule", "SAFE-3": "the AI-limits-in-safety rule",
+        "SAFE-4": "the interim-suspension rule",
+        "TH-1": "the by-amount review rule", "TH-2": "the by-category review rule", "TH-3": "the confidence rule", "TH-4": "the missing-records rule",
+        "PREC-1": "the precedent rule",
     },
+    # Data sentences that use a clause id as an adjective ("no SURGE-1 notice"): rewritten whole before ids are replaced,
+    # so the result reads as a sentence and not as "no the surge notice rule notice".
+    "phrases": [
+        (r"\bevery NS-1 (?:condition|element) holds\b", "every condition of the no-show-fee rule holds"),
+        (r"\bnot a SURGE-1 notice\b", "not a notice the surge notice rule accepts"),
+        (r"\bno SURGE-1 notice\b", "no notice the surge notice rule accepts"),
+        (r"\btrigger no RD-6 flag\b", "are not enough for a repeat-offender flag"),
+        (r"\(SAFE-1 via type\)", "(a safety complaint always goes to a person)"),
+        (r"\(RD-5: verbal notice needs the recording\)", "(a spoken agreement counts only with its recording)"),
+        (r"\(RD-5 with a recording\)", "(on a recorded call)"),
+        (r"\(merits: ([^)]*)\)", r"(the policy's answer: \1)"),
+        # the scenario generator (data/synth/scenarios.py) still names this precedent by an old policy section number
+        (r"\bPrecedent 7\.3 pattern\b", "the pattern of the official precedent DISP-2026-0211 (no-show cancel, zero contact)"),
+    ],
     "words": [  # ruling labels and field names → plain words (order matters)
+        (r"\brider_no_show\b", "'rider no-show'"), (r"\brider_notified\b", "'rider notified'"),
         (r"\brefund_partial\b", "partial refund"), (r"\brefund_full\b", "full refund"),
         (r"\bno_action\b", "no refund"), (r"\bfee_waived\b", "fee waived"), (r"\bescalate\b", "escalate to a human"),
         (r"\bflag_account\b", "account flag"), (r"\bdriver_arrived_at is null\b", "no arrival was ever recorded"),
-        (r"\bF\d{1,3}, a fact that", "a fact that"), (r"\b(?:RD|NS|SAFE|FARE)-\d+, a clause that", "a clause that"), (r"\bcitin[g]? (?:a )?(?:RD|NS|SAFE|FARE)-\d+", "citing a made-up clause"),
+        (r"\bF\d{1,3}, a fact that", "a fact that"), (r"\b(?:RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC)-\d+, a clause that", "a clause that"), (r"\bcitin[g]? (?:a )?(?:RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC)-\d+", "citing a made-up clause"),
         (r"\bF\d{1,3}\b", "a fact"),
     ],
 
-    # Scenario families: label → regex over the scenario name (data/bench/manifest.json `name`). Counts come from data.
+    # Scenario families, tagged by hand per scenario name (data/bench/manifest.json `name`); a case can be in several.
+    # Counts come from the manifest; build() stops if a name here is not in the manifest, and warns about an untagged case.
     "families": [
-        ("Consent timing — before, after, never answered, out of scope", r"consent|request_only|scope_other"),
-        ("Incident on the replaced stretch, decoy incident, late report", r"incident"),
-        ("Congestion band alone, heavy rain", r"band"),
-        ("Named vs unnamed rider stop", r"stop_"),
-        ("Two detour segments", r"two_segs"),
-        ("Fixed vs metered fare", r"fixed_fare"),
-        ("Prior-dispute history and account flags", r"prior|bad_profile"),
-        ("Second-level boundaries of the 3-minute rules", r"175s|185s|150s|200s|edge"),
-        ("Fake 'I'm Here' taps far from the pickup", r"fake_here"),
-        ("Driver statement contradicted by GPS", r"claims_5|no_here_tap|driver_waiting|180m|two_more"),
-        ("Threats, harassment and a hint-word trap", r"threat|safe_|keyword"),
-        ("No deviation at all / plain loops", r"no_deviation|basic|plain"),
+        ("What the rider agreed to: a general route choice, a named road, an acknowledged notice, an exclusion, a refusal or no answer",
+         ["rd_port_trust_fastest", "rd_notice_ack_hmm", "rd_named_cn_am", "rd_consent_except_road", "rd_port_auntie_any_way",
+          "bl_named_elsewhere", "rd_request_only", "rd_general_consent_jp", "rd_impatient_rider", "rd_two_segs_consent_seg1", "bl_negation"]),
+        ("Agreement by phone: a logged call with no recording, a recorded call", ["rd_call_log_no_recording", "rd_recorded_call_consent"]),
+        ("Chat in Chinese or Singlish",
+         ["rd_notice_ack_hmm", "rd_named_cn_am", "rd_consent_except_road", "rd_port_auntie_any_way", "rd_general_consent_jp", "bl_negation",
+          "ns_app_noshow_own_reason", "ns_impatient_driver"]),
+        ("A stop the rider asked for", ["rd_stop_named_longer_way", "rd_stop_named_prior", "sg_mixed_rider_stop"]),
+        ("Two detours on one trip, only one of them agreed", ["rd_two_segs_consent_seg1"]),
+        ("Surge notice: complete, sent after pickup or just before it, free cancel already closed, a cancellation fee instead of free cancel, no revised fare, or no notice at all",
+         ["sg_notice_estimate_above_charge", "sg_notified_full", "sg_notice_after_pickup", "sg_notice_no_cancel_option", "sg_port_notice_fare_unchanged",
+          "sg_mixed_rider_stop", "sg_notice_just_before_pickup", "sg_over_50", "sg_port_notice_window_closed"]),
+        ("Refund size: a mid-size refund the system decides, one large enough to go to a person", ["rd_long_loop_mid_amount", "sg_over_50"]),
+        ("Waits, cancellations and notices close to a time limit",
+         ["sg_notice_just_before_pickup", "sg_port_notice_window_closed", "ns_wait_5m10", "ns_wait_4m50", "bl_record_threshold_7m50",
+          "ns_rider_cancel_200s", "ns_early_arrival_scheduled"]),
+        ("The driver's contact attempts: messages but no call, no contact at all, a call only in the log",
+         ["ns_wait_5m10", "ns_no_call", "ns_no_contact", "ns_driver_late_no_contact"]),
+        ("Why the driver cancelled: a reason of his own, or the rider not coming",
+         ["ns_app_noshow_own_reason", "ns_need_to_go_after_no_reply", "ns_driver_cancel_flat_tyre", "ns_impatient_driver", "ns_repeat_noshow_flag"]),
+        ("Where the driver waited: a false 'I'm Here' tap far from the pickup, the other gate inside the arrival circle",
+         ["ns_fake_here_far", "ns_gate_b_refused_to_move"]),
+        ("Past disputes, earlier no-shows or a fraud flag on file",
+         ["rd_named_cn_am", "rd_stop_named_prior", "rd_request_only", "rd_general_consent_jp", "sg_notified_full", "sg_notice_after_pickup",
+          "sg_notice_no_cancel_option", "ns_no_call", "ns_repeat_noshow_flag", "ns_impatient_driver"]),
+        ("Missing records: the GPS trace ends early, a hole in the trace during the wait", ["bl_gps_tail_missing", "bl_hole_in_wait"]),
+        ("Threats and harassment, in the chat or in the complaint, and dangerous driving",
+         ["rd_threat_in_chat", "sg_surge_unchanged_complaint_threat", "ns_safety_in_complaint", "ns_threat_in_chat", "safe_driver_threat",
+          "safe_rider_threat", "safe_innocuous_chat_dangerous_driving", "safe_no_chat_harassment"]),
+        ("Frustrated or impatient words that are not a safety matter", ["rd_impatient_rider", "ns_impatient_driver"]),
     ],
-    "type_names": {"route_deviation": "Route deviation", "no_show": "No-show / cancellation fee", "safety": "Safety"},
+    "type_names": {"route_deviation": "Route deviation", "no_show": "No-show / cancellation fee", "fare_dispute": "Surge pricing", "safety": "Safety"},
     "arm_names": {"raw": "Raw LLM", "facts_only": "Facts only", "judge_only": "Judge + policy check", "court": "Court"},
     "arm_desc": {
         "raw": "the raw case JSON and the full policy text in one LLM call — what a plain chatbot does",
         "facts_only": "only the code-computed fact table in one call, no advocates, no verification",
         "judge_only": "fact table + policy certificate + the judge with one self-correction round — no advocates, no rebuttal",
         "court": "the full pipeline: fact table → two advocates + rebuttal → judge → certificate check",
-    },
-
-    # What each demo case demonstrates (no numbers here — numbers come from data/expected and data/cases).
-    "demo": {
-        "C-0001": "Two detours. The first is excused twice over — a reported accident on the original road and the rider's "
-                  "prior agreement to go round. The second, a 7-Eleven far off the route, is not covered by 'a 7-Eleven on "
-                  "the way', so only that segment is refunded. The policy engine settles everything else; the judge decides "
-                  "one question: did the agreement cover the second detour?",
-        "C-0002": "One unexplained detour: no chat, no incident, free-flowing traffic. Refund, plus an account flag because "
-                  "the driver is a repeat offender. The refund executes automatically; the account action goes to a human "
-                  "queue — money can be automatic, punishment needs a person.",
-        "C-0003": "The detour is fully explained: a lane closure on the original expressway and the rider's agreement "
-                  "before the turn. No refund. The system says no when the records say no.",
-        "C-0004": "The driver tapped 'I'm Here' while parked hundreds of metres from the pickup, never came within the "
-                  "arrival radius, then cancelled the rider as a no-show. Full refund plus an account flag for a false "
-                  "arrival tap — a bad-faith signal computed from GPS, not guessed by the model.",
-        "C-0005": "The rider cancelled long after the 3-minute free window while the driver was waiting at the pickup. "
-                  "The fee stands: 'two more minutes' is sympathy, not a clause. The counterfactual control flips this "
-                  "case exactly at the boundary (179 s vs 181 s).",
-        "C-0006": "The driver threatened to lock the rider in. Safety cases are never auto-ruled: the judge writes a "
-                  "fact summary only and the case is escalated to a human.",
-        "C-0007": "The same detour as C-0001, but the rider answered the driver with a voice message. The intake transcribed "
-                  "it (Tencent Cloud ASR) and filed the words as a chat line; the court cites the transcript like any message "
-                  "and reaches the same partial refund. The clip plays on the replay page.",
     },
 
     # MVP checklist (handbook hard requirements). status: done | package (delivered with the submission, not on this page)
@@ -122,12 +138,12 @@ CONTENT = {
                 "claims, and a plain-language notice to each party.",
          "where": [("Ruling card", "/replay.html?case=C-0001&phase=court"), ("Reproducibility receipt", "/receipt.html?run=C-0001")], "status": "done"},
         {"req": "Evidence is text and structured data: GPS points, chat, fare lines, timestamps, both parties' history",
-         "how": "Every synthetic case file carries a 5-second GPS trace (the organisers' sample is sampled every 3 minutes), the quoted route, chat, driver statement, fare breakdown, "
+         "how": "Every synthetic case file carries a 5-second GPS trace (the organisers' samples have one point every {sample_gap}), the quoted route, chat, driver statement, fare breakdown, "
                 "LTA traffic bands and incidents, weather and both profiles; code turns them into a numbered fact table.",
          "where": [("Fact table", "/facts.html?case=C-0001"), ("Case files", "/api/cases/C-0001")], "status": "done"},
         {"req": "At least two dispute types",
-         "how": "Route deviation and no-show / cancellation fee, plus safety as a third (escalation-only) type — "
-                "{n_demo} hand-built demo cases and {n_bench} benchmark cases cover all three.",
+         "how": "{type_list}, plus safety, which always goes to a person — "
+                "{n_demo} hand-built demo cases and {n_bench} benchmark cases.",
          "where": [("Demo cases", "/#watch"), ("Benchmark", "#accuracy")], "status": "done"},
         {"req": "Agent-to-agent communication must be observable",
          "how": "Every tool call, brief, rebuttal point, judge question and verifier check is an event streamed live "
@@ -159,98 +175,26 @@ CONTENT = {
         {"name": "Image forgery detection", "flag": None, "status": "out",
          "what": "Out of scope: there are no images in the data set (cleaning-fee claims are not covered).", "where": []},
     ],
-    "extra_stretch": [
-        ("Policy execution certificate", "Every clause runs as code (pass / fail / left to the judge); the certificate fixes "
-                                         "the allowed outcomes and the refund formula before the judge speaks."),
-        ("Live fault injection", "{n_inject} switchable faults — hallucinated evidence, an unread fact, a made-up clause, a "
-                                 "wrong amount, a flipped finding — each caught by a different gate in front of the audience."),
-        ("Counterfactual audit", "{n_cf} one-click variants: swap or erase histories, heavy rain, prompt injection (outcome must "
-                                 "not change); cancel at 179 s vs 181 s, delete the consent message, fixed fare (outcome "
-                                 "must flip exactly as the policy says)."),
-        ("Prompt-injection test", "A chat message telling the AI to ignore the policy and refund $99 — evidence is data, the "
-                                  "outcome does not move."),
-        ("Reproducibility receipt", "Every ruling ships with case, policy and code hashes, model, fact ids and certificate, "
-                                    "plus an appeal path."),
-        ("Four-system benchmark harness", "Four systems on the same {n_bench} cases, from a single AI call up to the full court; "
-                                        "this page is generated from its output."),
-    ],
-
-    # Highlights in plain English. {placeholders} are filled from data.
-    "highlights": [
-        ("Facts are computed by code, arguments are written by the model",
-         "The agents can only cite numbered facts from a table that pure code produced; the same case gives the same "
-         "facts every time."),
-        ("Citation firewall",
-         "A claim that cites a fact that does not exist — or one the advocate never read — is voided on the record. A "
-         "judge citing a non-existent clause is sent back to correct itself once."),
-        ("The policy itself runs as code",
-         "Every clause is a predicate: pass, fail, or left to the judge. The resulting certificate fixes the allowed "
-         "outcomes and the refund formula; a ruling outside them, or off by more than a cent, is never executed."),
-        ("Live fault injection",
-         "Make an advocate hallucinate evidence or the judge get the amount wrong, in front of the judges, and watch "
-         "each gate catch it."),
-        ("Counterfactual audit",
-         "Swap the parties' histories, erase them, add heavy rain: nothing changes. Move a cancellation from 179 s to "
-         "181 s: the outcome flips exactly at the 3-minute rule."),
-        ("Observable adversarial process",
-         "Both advocates pull evidence through logged tools, build a brief and rebut point by point (append-only); "
-         "every tool call is one line in the court feed."),
-        ("Every policy clause has a source",
-         "{n_citable} citable clauses trace to Ryde's own terms or LTA regulation; {n_gaps} rules Ryde has not published "
-         "are listed as open gaps instead of being invented; the court's own procedure is code, never a citable clause."),
-        ("Real road network, real map",
-         "OneMap routes and LTA speed bands; detour segments coloured on the map, the 200 m arrival circle, where the "
-         "car was when each message was sent — one timeline for chat, taps and detours."),
-        ("Safety cases are never auto-ruled",
-         "A threat in chat forces escalation with a fact summary, regardless of confidence."),
-        ("Measurable value",
-         "A ruling in about {latency} seconds instead of {manual}, and every automatic action carries a receipt that "
-         "lets anyone reproduce it."),
-    ],
-    "review": [   # what three rounds of adversarial review flagged and what changed
-        "Round 1 flagged the confidence add/subtract score as arithmetic without statistical basis that judges would "
-        "challenge. It was removed; automation eligibility now comes from the policy certificate and confidence is "
-        "diagnostic only.",
-        "Round 1 found that advocates could rewrite briefs and cite facts they had never read. Briefs are now immutable, "
-        "rebuttals append-only, only tool-read facts may be cited, and every model stage has a timeout that falls back to "
-        "human review.",
-        "Round 2 showed the arrival test used whole-trip proximity rather than position at the moment of the tap, and that "
-        "the judge was being asked questions the code had already settled. Fact tools now measure distance at tap time and "
-        "time in radius after it; settled sub-questions no longer reach the judge.",
-        "Round 2 asked for a 'what would change this ruling' line, a reproducibility receipt, a prompt-injection "
-        "experiment and separate auto / human action channels — all four shipped. Its two 'eye-catching' suggestions "
-        "became the fault-injection and counterfactual demo controls.",
-        "Round 3 challenged the benchmark headline: the reference answers and the court's gate share the policy engine, "
-        "so a perfect score is policy conformance, not accuracy. The headline became the fair one-call comparison, metrics "
-        "were renamed and defined, a refund-cases-only amount metric and a judge-only arm were added, and the gate "
-        "ablation was recounted to include rulings the model itself escalated.",
-    ],
     "caveats": [
         "Synthetic data: the {n_bench} benchmark cases are generated scenarios on real OneMap routes, not Ryde tickets, "
         "written by the developers.",
         "The reference answers follow the written policy, not the decisions of a human support team.",
         "All four systems on this page use the same AI model ({model}); a different model may give different results.",
     ],
-    "arch_caption": (
-        "Raw evidence — GPS trace, chat, fare lines, timestamps, both profiles, the OneMap route and LTA traffic — first "
-        "passes through pure code: fact tools produce a numbered fact table and the policy engine runs every clause as a "
-        "predicate. Two advocates then pull facts through logged tools, write briefs and rebuttals, and a tool-less judge "
-        "answers only the questions the code left open. A verifier checks every citation and compares the ruling with the "
-        "certificate: only a matching ruling is cleared for automatic execution; everything else goes to the review queue, and "
-        "every outcome carries a reproducibility receipt."),
-    "gate_lead": ("Offline ablation: the policy-certificate gate applied to the single-call systems' own rulings. A ruling "
-                  "the certificate cannot clear is sent to a human instead of executed."),
-    "gate_raw_note": ("the raw arm never sees fact ids, so the citation rule blocks everything: this row shows an interface "
-                      "requirement, not the gate's discriminative power"),
-    "gate_sentence": ("The gate catches contradictions a machine can check; the structured hearing removes semantic errors "
-                      "and restores automatic coverage from {fo_auto} to {ct_auto}. Judge + policy check alone is right or hands off on "
-                      "{jo_safe}/{n} at about 1/{ratio} of the court's token cost, but lets {jo_wrong} wrong decisions execute. {advocates_sentence}"),
+    "gate_lead": ("The two single-call systems have no check of their own, so here the court's pre-execution policy check is "
+                  "applied to their rulings afterwards. A ruling the check cannot clear goes to a person instead of executing."),
+    "gate_raw_note": ("Raw LLM is never given the numbered facts, so its rulings cannot cite them and the check stops every one: "
+                      "this row shows that the check needs cited facts, not how well it tells right rulings from wrong ones"),
+    "gate_sentence": ("The check stops contradictions a machine can test; the hearing removes reading errors and raises the share "
+                      "cleared automatically from {fo_auto} (facts only + check) to {ct_auto} (court). Judge + policy check alone is right or hands off on "
+                      "{jo_safe}/{n} at about 1/{ratio} of the court's input tokens, but lets {jo_wrong} wrong decisions execute. {advocates_sentence}"),
     "method": [
-        "Each benchmark scenario is written around one trap (a timestamp just before or after a rule boundary, a decoy "
-        "incident, an unnamed stop, a fake arrival tap, an ordinary pickup message that contains a threat hint word). The "
+        "Each benchmark scenario is written around one trap (a wait or a notice close to a time limit, a rider's agreement "
+        "in Singlish or Chinese, a false arrival tap, a driver's own reason recorded as a no-show, frustrated words that are "
+        "not a threat, a gap in the GPS trace). The "
         "reference answer is produced by running the policy engine on the scenario's own labels — what the rider meant, "
         "whether a message is a threat — and checking it against the trap the scenario was written for.",
-        "The court's certificate gate and the reference answers share that policy engine. A shared bug would therefore "
+        "The court's pre-execution check and the reference answers share that policy engine. A shared bug would therefore "
         "be invisible to this benchmark: the result is a policy-conformance test, not evidence that the written policy "
         "or its implementation is what a human ops team would decide.",
         "Raw LLM receives the case JSON with the GPS trace thinned to one point every {gps_s} s (native sampling {gps_native} s) "
@@ -260,7 +204,7 @@ CONTENT = {
     # One-line meaning for each metric row in the comparison table.
     "metric_meaning": {
         "safe_rate": "the case was decided right, or handed to a person for a reviewer to decide; only a wrong decision that executes counts against the system",
-        "exact": "outcome, refund amount (to the cent) and escalation decision all match the reference",
+        "exact": "outcome, refund amount (to the cent) and hand-off decision all match the reference",
         "amount_1c_refund_cases": "amount within one cent, counting only cases where a refund was due (no-refund cases are excluded)",
         "ruling": "the outcome label (full refund / partial refund / no refund / escalate) matches",
         "amount_1c": "the refund amount is within one cent of the reference",
@@ -270,8 +214,9 @@ CONTENT = {
         "wrongful_refund_rate": "share of cases where no refund was due but one was granted",
         "missed_refund_rate": "share of cases where a refund was due but none was granted",
         "money_error_total": "sum of absolute refund errors across all cases",
-        "wrong_executed": "core decision wrong and acted on with no human in the loop; raw and facts-only have no gate",
+        "wrong_executed": "core decision wrong and acted on with no person in the loop; Raw LLM and Facts only have no check, so every ruling they do not hand off executes",
         "human_review_rate": "share of cases handed to a human",
+        "hallucination_rate": "rulings that pay money or cite evidence the record does not support: a refund where none is due, a refund amount the record does not give, or a fact or clause that does not exist",
         "cite_valid": "rulings whose every cited fact and clause actually exists",
         "swap_invariance": "same outcome after swapping the rider's and driver's identities and histories",
         "same_ruling_rate": "same outcome when the whole pipeline is run twice on the same case",
@@ -313,6 +258,16 @@ def load_dict_literal(rel: str, name: str) -> dict:
     sys.exit(f"dashboard: {name} not found in {rel}")
 
 
+def policy_defaults(pol: str) -> int:
+    """Rules Ryde has not published that the project sets itself: rows of the 'Rules Ryde has not specified' table
+    (policy v3), or the older G1, G2 ... gap rows."""
+    m = re.search(r"^##[^\n]*not specified[^\n]*\n(.*?)(?=^## |\Z)", pol, flags=re.M | re.S)
+    if m:
+        rows = [l for l in m.group(1).splitlines() if l.startswith("|") and not re.match(r"^\|[\s|:-]+\|$", l)]
+        return max(0, len(rows) - 1)      # minus the header row
+    return len(re.findall(r"^\| G\d+ \|", pol, flags=re.M))
+
+
 def load_all() -> dict:
     d = {}
     d["summary"] = jload("bench/results/summary.json")
@@ -329,8 +284,7 @@ def load_all() -> dict:
     d["manifest"] = jload("data/bench/manifest.json")
     # scenario definitions: count the `hard=` one-liners in the generator and cross-check with the manifest
     scen_src = need("data/synth/scenarios.py").read_text(encoding="utf-8")
-    scen_src = scen_src.split("BLIND_SCENARIOS = [")[0]      # the held-out set has its own manifest and is not part of this page
-    d["scenario_hard"] = re.findall(r'^\s*[RNS]\("([a-z0-9_]+)".*?hard="([^"]*)"', scen_src, flags=re.M | re.S)
+    d["scenario_hard"] = re.findall(r'^\s*[A-Z]\("([a-z0-9_]+)".*?hard="([^"]*)"', scen_src, flags=re.M | re.S)
     # LLM runs: one *.json per run; *.record.json are side files
     runs = {}
     res = need("bench/results")
@@ -348,10 +302,17 @@ def load_all() -> dict:
                         models.add(json.load(f).get("model", "?"))
     d["models"] = sorted(models)
     d["cases"] = {}
-    for n in range(1, 7):
-        cid = f"C-000{n}"
-        d["cases"][cid] = {"case": jload(f"data/cases/{cid}.json"), "expected": jload(f"data/expected/{cid}.json")}
+    for p in sorted(need("data/cases").glob("C-*.json")):     # every hand-built demo case on disk (C-0007 is the voice case)
+        cid = p.stem
+        d["cases"][cid] = {"case": read_case(p), "expected": jload(f"data/expected/{cid}.json")}
         need(f"web/shots/{cid}.png")
+    # the organisers' sample cases (DISP-*): how far apart their GPS points are, for the evidence line on the page
+    gaps = []
+    for p in sorted(need("data/cases").glob("DISP-*.json")):
+        ts = [dt.datetime.fromisoformat(g["ts"]) for g in read_case(p)["gps"]]
+        gaps += [(b - a).total_seconds() for a, b in zip(ts, ts[1:])]
+    lo, hi = (round(min(gaps) / 60), round(max(gaps) / 60)) if gaps else (0, 0)
+    d["sample_gap"] = f"{lo} minutes" if lo == hi else f"{lo}–{hi} minutes"
     # court first run: did the judge's ruling match the reference core decision BEFORE verification, and what did the gate touch?
     truth = {c["case_id"]: c["truth"] for c in d["manifest"]["cases"]}
     first = sorted(p for p in (res / "court").glob("B-????.json"))
@@ -370,13 +331,26 @@ def load_all() -> dict:
     d["gps_interval_s"] = (t1 - t0).total_seconds()
     d["inject"] = load_dict_literal("core/orchestrate.py", "INJECTIONS")
     d["counterfactual"] = load_dict_literal("core/counterfactual.py", "COUNTERFACTUALS")
+    # stored tampered hearings of the demo case (runs/C-0001~<fault>.json): a fault counts as caught when the hearing
+    # either went to a person or ended with the untampered hearing's outcome, amount and actions
+    base_run = jload("runs/C-0001.json")
+    sig = lambda r: ((r.get("ruling") or {}).get("ruling"), (r.get("ruling") or {}).get("amount"), bool((r.get("ruling") or {}).get("flag_account")),
+                     sorted(a.get("type") for a in ((r.get("eligibility") or {}).get("actions") or [])))
+    d["tampers"] = {}
+    for p in sorted(need("runs").glob("C-0001~*.json")):
+        fault = p.stem.split("~", 1)[1]
+        if fault not in d["inject"] and fault != "prompt_injection":
+            continue
+        r = json.loads(p.read_text(encoding="utf-8"))
+        d["tampers"][fault] = r.get("status") == "escalated" or sig(r) == sig(base_run)
+    from core.policy import policy_clauses
     pol = need("policy/policy.md").read_text(encoding="utf-8")
-    heads = re.findall(r"^\*\*((?:RD|NS|FARE|SAFE)-\d+)\*\*(（不可引用)?", pol, flags=re.M)
+    clauses = policy_clauses()
     d["policy"] = {
-        "policy_clauses": len(heads),
-        "citable": sum(1 for h, inf in heads if not inf),
-        "informational": sum(1 for h, inf in heads if inf),
-        "gaps": len(re.findall(r"^\| G\d+ \|", pol, flags=re.M)),
+        "policy_clauses": len(clauses),
+        "citable": sum(1 for v in clauses.values() if v),
+        "informational": sum(1 for v in clauses.values() if not v),
+        "gaps": policy_defaults(pol),
     }
     d["tests"] = sum(len(re.findall(r"^def test_", p.read_text(encoding="utf-8"), flags=re.M))
                      for p in need("tests").glob("test_*.py"))
@@ -396,7 +370,8 @@ def load_all() -> dict:
 # =====================================================================================================================
 # Text helpers
 # =====================================================================================================================
-_ID_RE = re.compile(r"\b(RD|NS|SAFE|FARE)-(\d+)(?:\s*(?:element\s*)?\(([a-c]|[ivx]+)\))?")
+_IDS = "RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC"
+_ID_RE = re.compile(rf"\b({_IDS})-(\d+)(?:\s*(?:element\s*)?\(([a-d]|[ivx]+)\))?")
 
 
 def plain(text: str) -> str:
@@ -409,17 +384,19 @@ def plain(text: str) -> str:
                 return CONTENT["clauses"][k2]
         return CONTENT["clauses"].get(key, "a policy clause")
     out = text
+    for pat, rep in CONTENT["phrases"]:
+        out = re.sub(pat, rep, out)
     for pat, rep in CONTENT["words"]:
-        if re.search(r"RD\||NS\||\(\?:RD", pat):      # rules that mention ids must run before ids are replaced
+        if "(?:RD|" in pat:      # rules that mention ids must run before ids are replaced
             out = re.sub(pat, rep, out)
-    out = re.sub(r",?\s*\((?:RD|NS|SAFE|FARE)-\d+(?:\([a-c]\))?(?:[,;/ ]+(?:RD|NS|SAFE|FARE)-\d+(?:\([a-c]\))?)*\)", "", out)
-    out = re.sub(r",\s*(?:RD|NS|SAFE|FARE)-\d+\)", ")", out)
+    out = re.sub(rf",?\s*\((?:{_IDS})-\d+(?:\([a-d]\))?(?:[,;/ ]+(?:{_IDS})-\d+(?:\([a-d]\))?)*\)", "", out)
+    out = re.sub(rf",\s*(?:{_IDS})-\d+\)", ")", out)
     out = re.sub(r"\s*\(G\d{1,2}\)", "", out)
     out = re.sub(r"\bSAFE-2 escalate\b", "escalate (dangerous-driving rule)", out)
     out = _ID_RE.sub(sub, out)
     for pat, rep in CONTENT["words"]:
         out = re.sub(pat, rep, out)
-    out = re.sub(r"\b(?:rd|ns|safe)_([a-z0-9_]+)\b", lambda m: "the '" + m.group(1).replace("_", " ") + "' scenario", out)
+    out = re.sub(r"\b(?:rd|ns|safe|sg|bl)_([a-z0-9_]+)\b", lambda m: "the '" + m.group(1).replace("_", " ") + "' scenario", out)
     out = re.sub(r"\bthe the\b", "the", out.replace(" -> ", " → "))
     return out
 
@@ -430,7 +407,7 @@ def esc(s) -> str:
 
 def pct(x, digits=1) -> str:
     if x is None:
-        return "n/a"
+        return "–"
     return f"{x * 100:.{digits}f}%"
 
 
@@ -440,7 +417,17 @@ def money(x) -> str:
 
 def ruling_word(label: str) -> str:
     return {"refund_full": "full refund", "refund_partial": "partial refund", "no_action": "no refund",
-            "escalate": "escalate", "fee_waived": "fee waived"}.get(label, label or "–")
+            "escalate": "escalate", "fee_waived": "fee waived"}.get(label, (label or "–").replace("_", " "))
+
+
+NUM_WORD = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+
+
+def type_list(types: list[str]) -> str:
+    """'Route deviation, no-show / cancellation fee and surge pricing' from the dispute types in the manifest (safety apart)."""
+    names = [CONTENT["type_names"].get(t, t.replace("_", " ")) for t in types if t != "safety"]
+    names = [names[0]] + [n[:1].lower() + n[1:] for n in names[1:]] if names else []
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1] if names else ""
 
 
 # =====================================================================================================================
@@ -631,30 +618,14 @@ def chip(text: str, cls: str = "") -> str:
 # =====================================================================================================================
 
 
-def blind_numbers() -> dict | None:
-    """Held-out set figures (bench/results/blind): per arm, cases decided exactly right and wrong decisions executed."""
-    import blind_report
-    man = ROOT / "data" / "bench" / "blind" / "manifest.json"
-    res = ROOT / "bench" / "results" / "blind"
-    if not man.exists() or not res.exists():
-        return None
-    truth = {c["case_id"]: c["truth"] for c in json.loads(man.read_text(encoding="utf-8"))["cases"]}
-    out = {"cases": len(truth)}
-    for arm in sorted(p.name for p in res.iterdir() if p.is_dir()):
-        files = [f for f in sorted((res / arm).glob("X-*.json")) if not f.name.endswith(".record.json") and ".r" not in f.name[6:]]
-        if not files:
-            continue
-        ok = wrong = 0
-        for f in files:
-            rec = json.loads(f.read_text(encoding="utf-8")); t = truth[rec["case_id"]]; ru = rec.get("ruling") or {}
-            if not rec.get("ok"):
-                continue
-            if blind_report.exact(ru, t):
-                ok += 1
-            elif not ru.get("escalate"):
-                wrong += 1
-        out[arm] = {"exact": ok, "wrong_executed": wrong}
-    return out
+PARTIAL = "--partial" in sys.argv     # smoke run on an incomplete batch: report the gaps, do not stop
+
+
+def stop(msg: str) -> None:
+    if PARTIAL:
+        print(f"dashboard (partial run, page NOT publishable): {msg}", file=sys.stderr)
+    else:
+        sys.exit(f"dashboard: {msg}")
 
 
 def build(d: dict) -> str:
@@ -663,11 +634,13 @@ def build(d: dict) -> str:
     raw, fo, jo, ct = (S[a] for a in arms)
     man = d["manifest"]["cases"]
     n_bench = len(man)
-    if n_bench != len(d["scenario_hard"]):
-        sys.exit(f"dashboard: manifest has {n_bench} cases but scenarios.py defines {len(d['scenario_hard'])}")
+    names = {c["name"] for c in man}           # scenarios.py also holds trial candidates and port bases: count the benchmark's own
+    d["scenario_hard"] = [h for h in d["scenario_hard"] if h[0] in names]
+    if n_bench != len(d["scenario_hard"]) and n_bench != len(names):
+        stop(f"manifest has {n_bench} cases but scenarios.py defines {len(d['scenario_hard'])}")
     for a in arms:
         if S[a]["cases"] != n_bench:
-            sys.exit(f"dashboard: summary arm {a} scored {S[a]['cases']} cases, manifest has {n_bench}")
+            stop(f"summary arm {a} scored {S[a]['cases']} cases, manifest has {n_bench}")
     hard_by_id = {c["case_id"]: c for c in man}
     by_type = {}
     for c in man:
@@ -689,21 +662,59 @@ def build(d: dict) -> str:
             sys.exit(f"dashboard: gate_ablation.json has no arm {a}")
         g = G[a]
         if g["n"] + len(g.get("failed_runs", [])) != n_bench or g["human_flow"] + g["auto"] != g["n"]:
-            sys.exit(f"dashboard: gate_ablation.json {a} numbers do not add up")
+            stop(f"gate_ablation.json {a} numbers do not add up")
         if g.get("failed_runs"):
             print(f"dashboard: {a} has {len(g['failed_runs'])} failed run(s) {g['failed_runs']}: re-run them (bench/run_bench.py --cases ... --arms {a}) before publishing", file=sys.stderr)
     tok_x = ct["input_tokens_mean"] / raw["input_tokens_mean"]
     lat_x = ct["latency_mean_s"] / raw["latency_mean_s"]
     jo_ratio = ct["input_tokens_mean"] / jo["input_tokens_mean"]
-    lift_pp = 100 * (fo["exact"] - raw["exact"])
     ct_ok = sum(1 for v in ct["per_case"].values() if v["exact"])     # per-case count: a failed run is neither matched nor missed
-    jo_ok = G["judge_only"]["n"] - G["judge_only"]["core_wrong"]
-    pre = d["court_first_run"]
+    truth = {c["case_id"]: c["truth"] for c in man}
+
+    def handed_off(g: dict) -> bool:
+        return bool(g.get("escalate")) or g.get("ruling") == "escalate"
+
+    # the two allowances in the reference (bench/report.py score): a hand-off is right where the reference accepts one
+    # (escalate_ok), and an arm that checks its own confidence is scored on the policy's answer once the reading is settled
+    # (merits) where the reference hands the case to a person only because that reading is unsettled
+    allow = {a: {"handoff": sorted(cid for cid, s in S[a]["per_case"].items() if s["exact"] and handed_off(s["got"]) and not truth[cid].get("escalate")),
+                 "settled": sorted(cid for cid, s in S[a]["per_case"].items() if s["exact"] and s["exp_class"] != truth[cid]["ruling"])}
+             for a in arms}
+    ct_flags_auto = sum(1 for s in ct["per_case"].values() if s["executed"] and s["got"].get("flag_account") and not handed_off(s["got"]))
     gps_s = d["gps_interval_s"] * d["gps_thin"]
-    fill = dict(n_bench=n_bench, n_demo=n_demo, n_inject=len(d["inject"]), n_cf=len(d["counterfactual"]),
+    fill = dict(n_bench=n_bench, n_demo=n_demo, type_list=type_list(sorted(by_type, key=lambda t: -by_type[t])), n_inject=len(d["inject"]), n_cf=len(d["counterfactual"]),
                 n_citable=pol["citable"], n_gaps=pol["gaps"], latency=f"{ct['latency_mean_s']:.0f}",
                 manual=CONTENT["manual_handling"], model=model_short, tok_x=f"{tok_x:.0f}", lat_x=f"{lat_x:.0f}",
-                gps_s=f"{gps_s:.0f}", gps_native=f"{d['gps_interval_s']:.0f}")
+                gps_s=f"{gps_s:.0f}", gps_native=f"{d['gps_interval_s']:.0f}", sample_gap=d["sample_gap"])
+    plural = lambda k, word: f"{k} {word}{'' if k == 1 else 's'}"
+    # hero tile: how "right" is counted, every count from the per-case scores
+    ct_handoff, ct_settled = allow["court"]["handoff"], allow["court"]["settled"]
+    other_handoffs = n_bench - ct_ok - ct["wrong_executed"]       # handed to a person where the reference rules and does not accept a hand-off
+    right_how = (f"How it is counted: a case is right when outcome, amount and hand-off match the policy-derived reference ({ct_ok} of {n_bench})."
+                 + (f" Where the reference also accepts a hand-off, sending the case to a person counts as right: the court did that on "
+                    f"{plural(len(ct_handoff), 'case')} instead of ruling." if ct_handoff else "")
+                 + (f" Where the reference sends a case to a person only because a reading is unsettled, the court's ruling counts when it is the "
+                    f"policy's answer once that reading is settled ({plural(len(ct_settled), 'case')})." if ct_settled else "")
+                 + (f" {other_handoffs} more went to a person where the reference rules: not a wrong ruling, a reviewer decides." if other_handoffs else "")
+                 + f" Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.")
+    # the "matched the reference" row: say which allowance produced how many of each system's matches
+    allow_bits = []
+    for a in arms:
+        h, st = len(allow[a]["handoff"]), len(allow[a]["settled"])
+        if h or st:
+            allow_bits.append(CONTENT["arm_names"][a] + ": " + ", ".join(
+                ([plural(h, "accepted hand-off")] if h else []) + ([f"{st} ruling{'' if st == 1 else 's'} on a settled reading"] if st else [])))
+    exact_meaning = (CONTENT["metric_meaning"]["exact"] + "; a hand-off counts only where the reference accepts one, and where the reference hands a "
+                     "case to a person only because a reading is unsettled, a ruling counts when it is the policy's answer once that reading is settled"
+                     + (f" ({'; '.join(allow_bits)})" if allow_bits else ""))
+    exact_label = "Matched the reference (a hand-off counts only where the reference accepts one)"
+    # refund cases: the court is scored on the settled reading, which can move a case into or out of the refund count
+    rc = {a: S[a]["refund_cases"] for a in arms}
+    rc_major = max(set(rc.values()), key=list(rc.values()).count)
+    rc_odd = [a for a in arms if rc[a] != rc_major]
+    rc_label = (f"n={rc_major}" if not rc_odd else f"{rc_major} cases; " + ", ".join(f"{CONTENT['arm_names'][a]} {rc[a]}" for a in rc_odd))
+    rc_note = ("" if not rc_odd else "; " + " and ".join(f"{CONTENT['arm_names'][a]} counts {rc[a]}" for a in rc_odd)
+               + " because its rulings on settled readings are scored on the policy's answer, which changes which cases had a refund due")
     now = dt.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")
     arm_th = "".join(f'<th class="n">{esc(CONTENT["arm_names"][a])}</th>' for a in arms)
 
@@ -712,6 +723,9 @@ def build(d: dict) -> str:
     # ---------------------------------------------------------------- head + hero
     swap_chip = (f'<span class="chip"><b>{pct(ct["swap_invariance"], 0)}</b>identity-swap invariance <span class="muted">(plain LLM {pct(raw["swap_invariance"], 0)})</span></span>'
                  if ct["swap_invariance"] is not None else "")
+    hal = {a: S[a].get("hallucination_rate") for a in arms}
+    hal_chip = (f'<span class="chip"><b>{ct["hallucinations"]} / {ct["cases"]}</b>court rulings that pay money or cite evidence the record does not support '
+                f'<span class="muted">(plain LLM {raw["hallucinations"]} / {raw["cases"]})</span></span>' if hal["court"] is not None and hal["raw"] is not None else "")
     repeat_chip = (f'<span class="chip"><b>{pct(ct["same_ruling_rate"], 0)}</b>same ruling on repeat</span>'
                    if ct["same_ruling_rate"] is not None else "")
     A(f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -732,29 +746,26 @@ def build(d: dict) -> str:
 <p class="blurb">{esc(CONTENT['blurb'])}</p>
 <p class="pitch">{esc(CONTENT['pitch'])}</p>
 <div class="tiles">
-<div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">How it is counted: a case is right when outcome, amount and hand-off all match the policy-derived reference ({ct_ok} of {n_bench}); a case the court sends to a person instead of ruling is not wrong, a reviewer decides it ({n_bench - ct_ok - ct['wrong_executed']} such case{"s" if n_bench - ct_ok - ct['wrong_executed'] != 1 else ""}). Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.</div></div>
-<div class="tile purple"><div class="l">Executed automatically</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small></div><div class="m"><b>{G['court']['wrong_and_executed']} wrong decision{"s" if G['court']['wrong_and_executed'] != 1 else ""} executed.</b> The other {n_bench - G['court']['auto']} went to a person; account flags always do.</div></div>
-<div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">95% of cases are ruled within {ct['latency_p95_s']:.1f} s; a person takes {esc(CONTENT['manual_handling'])} today. Costs about {tok_x:.0f}× a single AI call.</div></div>
+<div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">{esc(right_how)}</div></div>
+<div class="tile purple"><div class="l">Auto-cleared</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small></div><div class="m"><b>{G['court']['wrong_and_executed']} wrong decision{"s" if G['court']['wrong_and_executed'] != 1 else ""} executed.</b> The other {n_bench - G['court']['auto']} went to a person.{f" The account actions proposed on {ct_flags_auto} of the {G['court']['auto']} auto-cleared cases also go to a person; only the refund or no-refund decision clears." if ct_flags_auto else ""}</div></div>
+<div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">95% of cases are ruled within {ct['latency_p95_s']:.1f} s; a person takes {esc(CONTENT['manual_handling'])} today. Uses about {tok_x:.0f}× the input tokens and {lat_x:.0f}× the time of a single AI call.</div></div>
 </div>
 <p class="method">{esc(CONTENT['method_caveat'].format(**fill))}</p>
 <div class="chips secondary">
 <span class="chip"><b>{ct['invalid_citations'] + ct.get('invalid_fact_citations', 0)} / {ct['citations'] + ct.get('fact_citations', 0)}</b>invalid citations in court rulings, fact ids + clause ids <span class="muted">(plain LLM {raw['invalid_citations'] + raw.get('invalid_fact_citations', 0)} / {raw['citations'] + raw.get('fact_citations', 0)})</span></span>
+{hal_chip}
 {swap_chip}
 {repeat_chip}
 <span class="chip"><b>{n_runs}</b>case-system runs · <b>{n_calls:,}</b> model calls</span>
 </div>
 </section>""")
 
-    # ---------------------------------------------------------------- 1. highlights
-    hl = "".join(f"<li><b>{esc(t)}</b>{esc(b.format(**fill))}</li>" for t, b in CONTENT["highlights"])
-    cx = "".join(f"<li>{esc(b)}</li>" for b in CONTENT["review"])
-
-    # ---------------------------------------------------------------- 2. results & cost
+    # ---------------------------------------------------------------- 1. results & cost
     big = [
         ("Right, or handed to a person", {a: 1 - S[a]["wrong_executed_rate"] for a in arms}),
-        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", {a: S[a]["exact"] for a in arms}),
+        (exact_label, {a: S[a]["exact"] for a in arms}),
         ("Outcome label correct", {a: S[a]["ruling"] for a in arms}),
-        (f"Amount within one cent, refund cases (n={ct['refund_cases']})", {a: S[a]["amount_1c_refund_cases"] for a in arms}),
+        (f"Amount within one cent, refund cases ({rc_label})", {a: S[a]["amount_1c_refund_cases"] for a in arms}),
         ("Escalation decision correct", {a: S[a]["escalate"] for a in arms}),
         ("Account-flag decision correct", {a: S[a]["flag"] for a in arms}),
         ("Citations all valid", {a: S[a]["cite_valid"] for a in arms}),
@@ -764,19 +775,22 @@ def build(d: dict) -> str:
         ("Missed refunds", {a: S[a]["missed_refund_rate"] for a in arms}),
         ("Core decision wrong and executed", {a: S[a]["wrong_executed_rate"] for a in arms}),
     ]
+    if any(v is not None for v in hal.values()):
+        bad.append(("Hallucinations: rulings that pay money or cite evidence the record does not support", hal))
     core_tip = esc(CONTENT["core_tip"])
     rows_spec = [
         ("Right, or handed to a person", "safe_rate", pct),
-        ("Exact match of the reference (stricter: a hand-off on a case the reference rules counts as a miss)", "exact", pct),
+        ("Matched the reference", "exact", pct),
         ("Outcome label", "ruling", pct),
         ("Amount within one cent, all cases", "amount_1c", pct),
-        (f"Amount within one cent, refund cases only (n={ct['refund_cases']})", "amount_1c_refund_cases", pct),
+        (f"Amount within one cent, refund cases only ({rc_label})", "amount_1c_refund_cases", pct),
         ("Escalation decision", "escalate", pct), ("Account-flag decision", "flag", pct),
         ("Macro F1", "f1", pct),
         ("Wrongful refunds", "wrongful_refund_rate", pct), ("Missed refunds", "missed_refund_rate", pct),
         ("Total money error", "money_error_total", money),
         ("Core decision wrong and executed", "wrong_executed", lambda v: f"{v} cases"),
         ("Routed to a human", "human_review_rate", pct),
+        ("Hallucinations", "hallucination_rate", pct),
         ("Citations all valid", "cite_valid", pct),
         ("Identity-swap invariance", "swap_invariance", pct),
         ("Same ruling on repeat", "same_ruling_rate", pct),
@@ -791,11 +805,26 @@ def build(d: dict) -> str:
             v = m["macro"]["f1"] if key == "f1" else m.get(key)
             vals.append(f'<td class="n">{esc(f(v))}</td>')
         lab = f'<span class="tip" title="{core_tip}">{esc(label)}</span>' if key in ("exact", "wrong_executed") else esc(label)
-        mrows.append(f'<tr><td>{lab}<div class="small muted">{esc(CONTENT["metric_meaning"][key])}</div></td>{"".join(vals)}</tr>')
+        meaning = {"exact": exact_meaning, "amount_1c_refund_cases": CONTENT["metric_meaning"][key] + rc_note}.get(key, CONTENT["metric_meaning"][key])
+        mrows.append(f'<tr><td>{lab}<div class="small muted">{esc(meaning)}</div></td>{"".join(vals)}</tr>')
+    def pr(a, cls):
+        v = S[a]["per_class"].get(cls)
+        return f'{pct(v.get("precision"), 0)} / {pct(v.get("recall"), 0)}' if v else "–"
+    pc_classes = [cls for cls in ("refund_full", "refund_partial", "no_action", "fee_waived", "escalate")
+                  if any((S[a]["per_class"].get(cls) or {}).get("support") for a in arms)]
+    ref_n = {cls: sum(1 for t in truth.values() if t["ruling"] == cls) for cls in pc_classes}     # the reference's own count per outcome
     pc_rows = "".join(
-        f'<tr><td>{esc(ruling_word(cls))}</td><td class="n">{ct["per_class"][cls]["support"]}</td>'
-        + "".join(f'<td class="n">{pct(S[a]["per_class"][cls]["precision"], 0)} / {pct(S[a]["per_class"][cls]["recall"], 0)}</td>' for a in arms)
-        + "</tr>" for cls in ("refund_full", "refund_partial", "no_action", "escalate"))
+        f'<tr><td>{esc(ruling_word(cls))}</td><td class="n">{ref_n[cls]}</td>'
+        + "".join(f'<td class="n">{pr(a, cls)}</td>' for a in arms)
+        + "</tr>" for cls in pc_classes)
+    pc_odd = []        # systems whose cases per outcome differ from the reference's: their settled readings are scored on the policy's answer
+    for a in arms:
+        sup = {cls: (S[a]["per_class"].get(cls) or {}).get("support", 0) for cls in pc_classes}
+        if sup != ref_n:
+            pc_odd.append(f"{CONTENT['arm_names'][a]} is scored on the policy's answer in {plural(len(allow[a]['settled']), 'case')} the reference "
+                          f"hands to a person only because a reading is unsettled, so its counts are "
+                          + ", ".join(f"{ruling_word(cls)} {sup[cls]}" for cls in pc_classes if sup[cls]) + ".")
+    pc_note = (" The cases column is the reference's count. " + " ".join(pc_odd)) if pc_odd else " The cases column is the reference's count."
     cost_rows = "".join(
         f'<tr><td>{esc(lbl)}</td>' + "".join(f'<td class="n">{esc(f(S[a]))}</td>' for a in arms) + "</tr>"
         for lbl, f in [
@@ -803,17 +832,17 @@ def build(d: dict) -> str:
             ("Latency, 95th percentile", lambda m: f"{m['latency_p95_s']:.1f} s"),
             ("Input tokens, mean", lambda m: f"{m['input_tokens_mean']:,.0f}"),
             ("Output tokens, mean", lambda m: f"{m['output_tokens_mean']:,.0f}"),
-            ("LLM calls per case", lambda m: f"{m['llm_calls_mean']:.1f}"),
+            ("Model calls per case", lambda m: f"{m['llm_calls_mean']:.1f}"),
             ("Errors / timeouts", lambda m: f"{m['errors']}"),
         ])
     # gate ablation table (new accounting: human flow = model escalated + blocked by gate)
     def case_tip(cid):
         c = hard_by_id.get(cid)
-        return f'<span class="tip" title="{esc(c["name"])}">{esc(cid)} ({esc(plain(c["hard"]))})</span>' if c else esc(cid)
+        return f'<li><span class="tip" title="{esc(c["name"])}">{esc(cid)}</span>: {esc(plain(c["hard"]))}</li>' if c else f"<li>{esc(cid)}</li>"
     grows, gnotes = [], []
     for a in arms:
         g = G[a]
-        name = CONTENT["arm_names"][a] + (" + gate" if a in ("raw", "facts_only") else "")
+        name = CONTENT["arm_names"][a] + (" + policy check" if a in ("raw", "facts_only") else "")
         blocked = "–" if g["blocked_by_gate"] is None else g["blocked_by_gate"]
         caught = [c["case_id"] for c in g["cases"] if c.get("core_wrong") and not c.get("auto")]
         leaked = [c["case_id"] for c in g["cases"] if c.get("wrong_and_executed")]
@@ -821,9 +850,9 @@ def build(d: dict) -> str:
         if a == "raw":
             note = esc(CONTENT["gate_raw_note"])
         elif leaked:
-            note = "leaked (wrong and executed): " + ", ".join(case_tip(x) for x in leaked)
+            note = '<span>wrong and executed:</span><ul class="small">' + "".join(case_tip(x) for x in leaked) + "</ul>"
         elif caught:
-            note = "the wrong core decision was caught by the certificate and sent to a human: " + ", ".join(case_tip(x) for x in caught)
+            note = '<span>the wrong core decision was stopped by the check and sent to a person:</span><ul class="small">' + "".join(case_tip(x) for x in caught) + "</ul>"
         if note:
             gnotes.append(f"<li><b>{esc(name)}</b> — {note}</li>")
         wx = f'<span class="bad">{g["wrong_and_executed"]}</span>' if g["wrong_and_executed"] else f'<span class="ok">{g["wrong_and_executed"]}</span>'
@@ -835,16 +864,26 @@ def build(d: dict) -> str:
         fo_auto=pct(G["facts_only"]["auto_rate"], 0), ct_auto=pct(G["court"]["auto_rate"], 0), jo_safe=n_bench - jo_wx, jo_wrong=jo_wx, n=n_bench,
         ratio=f"{jo_ratio:.0f}",
         advocates_sentence=(f"The two advocates take that to {n_bench - ct_wx}/{n_bench} with {ct_wx} wrong decision{'s' if ct_wx != 1 else ''} executed: each side states the "
-                            f"policy ground of every open question, a point both sides agree on binds the judge, and the judge may only rule as an argued ground does; "
+                            f"policy ground of every open question, and a ruling against a reading both sides share goes back to the judge once for a second look; "
                             f"human review moves from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}."
                             if ct_wx < jo_wx else
                             f"The two advocates change human review from {pct(G['judge_only']['human_rate'], 0)} to {pct(G['court']['human_rate'], 0)}; their other value is the observable adversarial hearing the track requires."))
     # per-case table
+    def outcome_txt(r: dict) -> str:
+        """Outcome + amount (a $0.00 refund is shown, it is a real answer) + goodwill credit."""
+        amt = r.get("amount")
+        show_amt = amt is not None and (amt or r.get("ruling") in ("refund_full", "refund_partial", "fee_waived"))
+        return (ruling_word(r.get("ruling")) + (f" {money(amt)}" if show_amt else "")
+                + (f" + {money(r['goodwill_credit'])} goodwill credit" if r.get("goodwill_credit") else ""))
     pc = []
     for i, c in enumerate(man, 1):
         cid = c["case_id"]
         exp = c["truth"]
-        exp_txt = ruling_word(exp["ruling"]) + (f" {money(exp['amount'])}" if exp.get("amount") else "") + (" + flag" if exp.get("flag_account") else "")
+        exp_txt = outcome_txt(exp) + (" + flag" if exp.get("flag_account") else "")
+        if exp.get("escalate_ok"):
+            exp_txt += " (a hand-off to a person is also accepted)"
+        if exp.get("merits"):
+            exp_txt += f" (the policy's answer once the reading is settled: {outcome_txt(exp['merits'])})"
         cells = []
         for a in arms:
             s = S[a]["per_case"].get(cid)
@@ -852,10 +891,12 @@ def build(d: dict) -> str:
                 cells.append('<td><span class="muted">run failed</span></td>')
                 continue
             g = s["got"]
-            got = ruling_word(g.get("ruling")) + (f" {money(g['amount'])}" if g.get("amount") else "")
+            got = outcome_txt(g)
+            why = (" (accepted hand-off)" if cid in allow[a]["handoff"] else " (settled reading)" if cid in allow[a]["settled"] else "")
             mark = ('<span class="ok">✓</span>' if s["exact"] else '<span class="ok" title="handed to a person: not wrong, a reviewer decides">→ person</span>'
-                    if (g.get("escalate") or g.get("ruling") == "escalate") else '<span class="bad">✗</span>')
-            cells.append(f"<td>{mark} {esc(got)}</td>")
+                    if handed_off(g) else '<span class="bad">✗</span>')
+            why_html = f'<span class="small muted">{esc(why)}</span>' if why else ""
+            cells.append(f"<td>{mark} {esc(got)}{why_html}</td>")
         pc.append(f'<tr><td class="n muted">{i}</td><td><span class="tip" title="{esc(cid)} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></td>'
                   f'<td>{esc(CONTENT["type_names"].get(c["type"], c["type"]))}</td><td>{esc(exp_txt)}</td>{"".join(cells)}</tr>')
     if ct["same_ruling_rate"] is not None:
@@ -864,35 +905,37 @@ def build(d: dict) -> str:
                              f'<div class="m">same ruling on repeat across {ct["consistency_cases"]} cases; a disagreement between runs goes to a person, never to automatic execution.</div></div>')
     else:
         consistency_block = ""
-    lbl_miss = [v for v in ct["per_case"].values() if not v.get("ruling", True)]
-    lbl_handoff = sum(1 for v in lbl_miss if v.get("got_class") == "escalate")
+    lbl_miss = [cid for cid, v in ct["per_case"].items() if not v.get("ruling", True)]
+    lbl_handoff = [cid for cid in lbl_miss if ct["per_case"][cid].get("got_class") == "escalate"]
     one = len(lbl_miss) == 1
-    label_note = ((f" The court's {len(lbl_miss)} miss{'' if one else 'es'} here {'is' if one else 'are'} not wrong ruling{'' if one else 's'}: "
+    accepted = all(truth[cid].get("escalate_ok") for cid in lbl_miss)
+    label_note = ((f" The court's {len(lbl_miss)} miss{'' if one else 'es'} here {'is' if one else 'are'} not {'a wrong ruling' if one else 'wrong rulings'}: "
                    f"it found the record unclear and handed {'that case' if one else 'those cases'} to a person, where the reference rules "
-                   f"{'it' if one else 'them'}.")
-                  if lbl_miss and lbl_handoff == len(lbl_miss) else "")
+                   f"{'it' if one else 'them'}" + (" but also accepts a hand-off." if accepted else "."))
+                  if lbl_miss and len(lbl_handoff) == len(lbl_miss) else "")
+    hal_note = (" <b>Hallucinations</b> = " + esc(CONTENT["metric_meaning"]["hallucination_rate"]) + "." if len(bad) > 3 else "")
     A(f"""<section class="sec first" id="accuracy"><h2><span class="num">1</span>Results and cost</h2>
 <p class="lead">The same {n_bench} cases, four ways, one model. <b>Raw LLM</b>: {esc(CONTENT['arm_desc']['raw'])}. <b>Facts only</b>: {esc(CONTENT['arm_desc']['facts_only'])}. <b>Judge + policy check</b>: {esc(CONTENT['arm_desc']['judge_only'])}. <b>Court</b>: {esc(CONTENT['arm_desc']['court'])}. "Correct" throughout means "matches the reference derived from the written policy" (<a href="#method">data and method</a>).</p>
 <div class="grid2">
 <div class="panel"><h3>Higher is better</h3>{legend(arms)}{bar_chart([big[0], big[2]], arms)}
 <p class="small muted"><b>Right, or handed to a person</b> = no wrong decision executed; a case sent to a person counts, a reviewer decides it. <b>Outcome label correct</b> = the kind of ruling matches the reference; the amount is checked separately.{label_note}</p></div>
-<div class="panel"><h3>Lower is better</h3>{legend(arms)}{bar_chart([bad[0], bad[2]], arms)}
-<p class="small muted"><span class="tip" title="{core_tip}">Core decision</span> = outcome + amount + escalation; account flags and citations are excluded. Raw and facts-only have no gate, so every non-escalated ruling counts as executed.</p>
+<div class="panel"><h3>Lower is better</h3>{legend(arms)}{bar_chart([bad[0], bad[2]] + bad[3:], arms)}
+<p class="small muted"><span class="tip" title="{core_tip}">Core decision</span> = outcome + amount + escalation; account flags and citations are excluded. Raw LLM and Facts only have no check, so every ruling they do not hand off counts as executed.{hal_note}</p>
 {consistency_block}</div>
 </div>
 <div class="panel mt"><h3>Cost per case</h3><div class="scroll"><table class="t"><tr><th></th>{arm_th}</tr>{cost_rows}</table></div>
-<p class="small muted">Trade-off: the full court averages {ct['latency_mean_s']:.1f} s and {ct['llm_calls_mean']:.0f} model calls per case, about {lat_x:.0f}× the latency and {tok_x:.0f}× the input tokens of one call, against {esc(CONTENT['manual_handling'])} of manual handling. Judge + code check uses about 1/{jo_ratio:.0f} of the court's tokens.</p></div>
-<details class="mt more"><summary>More results — every metric, what the code check prevents, precision / recall, confusion matrices, every case</summary>
+<p class="small muted">Trade-off: the full court averages {ct['latency_mean_s']:.1f} s and {ct['llm_calls_mean']:.0f} model calls per case, about {lat_x:.0f}× the latency and {tok_x:.0f}× the input tokens of one call, against {esc(CONTENT['manual_handling'])} of manual handling. Judge + policy check uses about 1/{jo_ratio:.0f} of the court's input tokens.</p></div>
+<details class="mt more"><summary>More results — every metric, what the policy check prevents, precision / recall, confusion matrices, every case</summary>
 <div class="grid2 mt"><div class="panel"><h3>All metrics, higher is better</h3>{legend(arms)}{bar_chart(big, arms)}</div><div class="panel"><h3>All metrics, lower is better</h3>{legend(arms)}{bar_chart(bad, arms)}</div></div>
-<div class="panel mt"><h3>What the code check prevents <span class="hint">the policy check applied offline to the single-call rulings; no extra model calls</span></h3>
-<p class="small muted">{esc(CONTENT['gate_lead'])} Human flow = rulings the model itself escalated + rulings the gate blocked.</p>
-<div class="scroll"><table class="t wide"><tr><th>System</th><th class="n"><span class="tip" title="{core_tip}">core decision wrong</span></th><th class="n">model escalated</th><th class="n">blocked by gate</th><th class="n">to a human</th><th class="n">auto</th><th class="n">wrong and executed</th></tr>{"".join(grows)}</table></div>
+<div class="panel mt"><h3>What the policy check prevents <span class="hint">applied afterwards to the single-call rulings, built into the other two; no extra model calls</span></h3>
+<p class="small muted">{esc(CONTENT['gate_lead'])} To a person = rulings the model itself handed off + rulings the check stopped.</p>
+<div class="scroll"><table class="t wide"><tr><th>System</th><th class="n"><span class="tip" title="{core_tip}">core decision wrong</span></th><th class="n">model handed off</th><th class="n">stopped by the check</th><th class="n">to a person</th><th class="n">auto-cleared</th><th class="n">wrong and executed</th></tr>{"".join(grows)}</table></div>
 <ol class="hl small muted" style="margin:10px 0 0">{"".join(gnotes)}</ol>
 <p class="small" style="margin:10px 0 0"><b>{esc(gate_sentence)}</b></p></div>
 <div class="panel mt"><h3>All metrics</h3><div class="scroll"><table class="t"><tr><th>Metric</th>{arm_th}</tr>{"".join(mrows)}</table></div></div>
 <div class="mt">
 <div class="panel"><h3>Per outcome: precision / recall</h3><div class="scroll"><table class="t"><tr><th>Outcome</th><th class="n">cases</th>{arm_th}</tr>{pc_rows}</table></div>
-<p class="small muted">Precision: of the cases given this outcome, how many should have been. Recall: of the cases that should have this outcome, how many got it.</p></div>
+<p class="small muted">Precision: of the cases given this outcome, how many should have been. Recall: of the cases that should have this outcome, how many got it.{esc(pc_note)}</p></div>
 </div>
 <h3 class="mt">Confusion matrices</h3><div class="cm">{"".join(confusion(a, S[a]) for a in arms)}</div>
 <details class="mt"><summary>Per-case results — all {n_bench} cases, four systems (hover a scenario for its id)</summary>
@@ -900,31 +943,11 @@ def build(d: dict) -> str:
 </details>
 </section>""")
 
-    # ---------------------------------------------------------------- 3. demo cases
-    cards = []
-    for cid, cd in d["cases"].items():
-        case, exp = cd["case"], cd["expected"]
-        disp, trip = case["dispute"], case["trip"]
-        flag = bool(re.search(r"add flag_account", exp.get("rationale", "")))
-        rul = ruling_word(exp["ruling"]) + (f" {money(exp['amount'])}" if exp.get("amount") else "")
-        rul += " + account flag" if flag else ""
-        t = disp["type"]
-        bcls = {"route_deviation": "amber", "no_show": "blue", "safety": "red"}.get(t, "")
-        cards.append(f"""<div class="card"><a href="/replay.html?case={cid}&mode=show"><img src="shots/{cid}.png" alt="{esc(cid)} map at trip end" loading="lazy"></a>
-<div class="b"><div class="h"><b>{esc(cid)}</b><span class="badge {bcls}">{esc(CONTENT['type_names'].get(t, t))}</span><span class="small muted">{esc(trip['pickup']['name'])} → {esc(trip['dropoff']['name'])} · {esc(trip['service_type'])}</span></div>
-<div class="story">“{esc(disp['statement'])}” <span class="muted">— filed by the {esc(disp['filed_by'])}</span></div>
-<div class="ruling">{esc(rul)}<span>reference ruling</span></div>
-<div class="why"><b>What it shows.</b> {esc(CONTENT['demo'][cid])}</div>
-<details><summary class="small">Why, in the reference ruling's words</summary><p class="small" style="margin:0">{esc(plain(exp.get('rationale', '')))}</p></details>
-<div class="links"><a href="/replay.html?case={cid}&mode=show">Showcase replay ↗</a><a href="/replay.html?case={cid}">Expert view ↗</a></div></div></div>""")
-    inj = "".join(f"<li>{esc(plain(v))}</li>" for v in d["inject"].values())
-    cfs = "".join(f"<li>{esc(plain(v))}</li>" for v in d["counterfactual"].values())
-
     # ---------------------------------------------------------------- built: core + stretch, one compact list, no status board
     def links(where):
         return " · ".join(f'<a href="{esc(h)}">{esc(l)}</a>' for l, h in where if not h.startswith("/api/"))
     LABEL = {"Three agents": "Three agents", "Judge output": "Structured ruling and plain-language notices", "Evidence is": "Evidence from every source",
-             "At least two": "Three dispute types", "Agent-to-agent": "Every exchange on the record"}
+             "At least two": f"{NUM_WORD.get(len(by_type), len(by_type)).capitalize()} dispute types", "Agent-to-agent": "Every exchange on the record"}
     def label(req):
         return next((v for k, v in LABEL.items() if req.startswith(k)), req)
     core_items = "".join(f'<li><b>{esc(label(r["req"]))}.</b> {esc(r["how"].format(**fill))} {links(r["where"])}</li>'
@@ -932,33 +955,38 @@ def build(d: dict) -> str:
     stretch_items = "".join(f'<li><b>{esc(x["name"])}.</b> {esc(x["what"])} {links(x["where"])}</li>'
                             for x in CONTENT["stretch"] if x["status"] == "done")
     A(f"""<section class="sec" id="mvp"><h2><span class="num">2</span>What is built</h2>
-<p class="lead">Three agents, three dispute types, every exchange on the record; four additional safeguards on top.</p>
+<p class="lead">Three agents, {NUM_WORD.get(len(by_type), len(by_type))} dispute types, every exchange on the record; four additional safeguards on top.</p>
 <div class="grid2">
 <div class="panel"><h3>Core</h3><ul class="hl small">{core_items}</ul></div>
 <div class="panel"><h3 id="stretch">Additional safeguards</h3><ul class="hl small">{stretch_items}</ul></div>
 </div></section>""")
 
     # ---------------------------------------------------------------- 4. key features
-    bl = blind_numbers()
-    bl_court = (bl or {}).get("court")
     ct_safe, jo_safe, raw_safe = n_bench - ct["wrong_executed"], n_bench - jo["wrong_executed"], n_bench - raw["wrong_executed"]
+    # what the stored tampered hearings show (runs/C-0001~<fault>.json); faults without a stored hearing are not claimed
+    tamper_words = {"fake_fact": "a cited fact that does not exist", "unread_fact": "a fact the advocate never read", "fake_clause": "an invented clause",
+                    "wrong_amount": "a changed amount", "flip_finding": "a flipped finding", "flag_text": "an account flag hidden in free text"}
+    faults = [tamper_words.get(k, k.replace("_", " ")) for k in d["tampers"] if k != "prompt_injection"]
+    n_caught = sum(d["tampers"].values())
+    and_list = lambda xs: xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+    tamper_sentence = ((f"Stored hearings of the demo case C-0001 put {plural(len(faults), 'deliberate fault')} into the AI's output ({and_list(faults)})"
+                        + (" and a prompt injection into the chat" if "prompt_injection" in d["tampers"] else "") + ": "
+                        + ("each was caught, and none led to an action the untampered hearing would not take." if n_caught == len(d["tampers"])
+                           else f"{n_caught} of {len(d['tampers'])} were caught."))
+                       if d["tampers"] else "")
     cites_total = ct["citations"] + ct.get("fact_citations", 0)
     cites_bad = ct["invalid_citations"] + ct.get("invalid_fact_citations", 0)
-    held_out = (f" On the {bl['cases']} held-out cases, written after the prompts were frozen and never used for tuning, the court decided "
-                f"{bl_court['exact']} of {bl['cases']} right with {bl_court['wrong_executed']} wrong decision{'s' if bl_court['wrong_executed'] != 1 else ''} executed."
-                if bl_court else "")
     features = [
         ("The policy runs before the model.",
          f"Ryde's dispute rules are compiled into executable predicates: on every case, code first decides which of the policy's "
          f"clauses apply, which fail and which need a reading, and the model speaks only inside that remaining space. A ruling rests on the written "
          f"policy, not on the model's memory of it, which removes the room for an invented rule at the source."),
-        ("Every ruling is verified by code, and any change to the evidence chain is detected.",
+        ("Every ruling is verified by code, and a change to what it rests on shows on its receipt.",
          f"The facts are computed by code from the GPS trace, the chat, the fare, traffic and weather records: numbered, identical on every run; the "
          f"advocates and the judge may cite only those numbers and the clause ids. Before anything executes, code checks the ruling item by item: "
          f"every cited id exists, the outcome is one the policy allows, the amount equals the policy formula to the cent, a consent message precedes "
-         f"the detour it excuses. Each ruling carries a receipt with four fingerprints (case file, policy, code, model), so any change anywhere "
-         f"invalidates it. {len(d['inject'])} deliberate tampers of the AI's output (a cited fact that does not exist, a fact never read, an invented clause, "
-         f"a changed amount, a flipped finding, an account flag hidden in free text) and a prompt injection planted in the chat were all caught."),
+         f"the detour it excuses. Each ruling carries a receipt with four fingerprints (case file, policy, code, model), so a change to the "
+         f"case, the policy, the code or the model shows on the receipt. {tamper_sentence}"),
         ("The reasoning is fully transparent and the standard is documented.",
          f"Every tool call, brief, rebuttal, ruling, check and notice is a timestamped event, streamed live and replayable step by step on the map; "
          f"every citation opens the fact or the clause it points to. Across the benchmark the court made {cites_total} citations, {cites_bad} of them invalid."),
@@ -967,8 +995,8 @@ def build(d: dict) -> str:
          f"{raw['wrong_executed']} wrong decisions executed. The judge with the code check but no advocates: {jo_safe} of {n_bench}, "
          f"{jo['wrong_executed']} wrong decisions executed. The full court (code facts, two advocates, judge, code check): {ct_safe} of {n_bench}, "
          f"{ct['wrong_executed']} wrong decision{'s' if ct['wrong_executed'] != 1 else ''} executed. The advocates add what a single judge lacks: "
-         f"each side states the policy ground of every open question, a point both sides agree on binds the judge, and a judge may only rule as one "
-         f"of the argued grounds does.{held_out}"),
+         f"each side states the policy ground of every open question, and a ruling against a reading both sides share goes back to the judge once "
+         f"for a second look."),
     ]
     stretch = json.loads((ROOT / "runs" / "C-0004~stretch.json").read_text())
     sig = [f for f in stretch["facts"]["facts"] if (f.get("value") or {}).get("signal")]
@@ -995,10 +1023,18 @@ def build(d: dict) -> str:
 </section>""")
 
     # ---------------------------------------------------------------- 5. data & method
-    fam_rows = []
-    for label, rx in CONTENT["families"]:
-        n = sum(1 for c in man if re.search(rx, c["name"]))
-        fam_rows.append(f'<span class="chip"><b>{n}</b>{esc(label)}</span>')
+    fam_rows, tagged = [], set()
+    for label, members in CONTENT["families"]:
+        missing = [m for m in members if m not in names]
+        if missing:
+            stop(f"scenario family {label!r} names scenarios not in the manifest: {missing}")
+        n = sum(1 for c in man if c["name"] in members)
+        tagged |= set(members)
+        if n:
+            fam_rows.append(f'<span class="chip"><b>{n}</b>{esc(label)}</span>')
+    untagged = sorted(c["case_id"] for c in man if c["name"] not in tagged)
+    if untagged:
+        print(f"dashboard: cases in no scenario family (add them to CONTENT['families']): {untagged}", file=sys.stderr)
     type_chips = "".join(f'<span class="chip"><b>{by_type[t]}</b>{esc(CONTENT["type_names"].get(t, t))}</span>'
                          for t in sorted(by_type, key=lambda t: -by_type[t]))
     def rep_cell(r):   # the repeat-runs column only appears once repeat runs exist
@@ -1009,9 +1045,7 @@ def build(d: dict) -> str:
         f'<tr><td>{esc(CONTENT["arm_names"][k.replace("_swap", "")])}{" · identities swapped" if k.endswith("_swap") else ""}</td>'
         f'<td class="n">{r["base"]}</td>{rep_cell(r)}<td class="n">{r["total"]}</td></tr>'
         for k, r in runs.items())
-    scen_list = "".join(
-        f'<li><span class="tip" title="{esc(c["case_id"])} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></li>'
-        for c in man)
+
     extra = ((" The court was additionally run with rider and driver identities swapped" if n_swap else "")
              + (" and a second time on every case" if n_rep and n_swap else (" The court was additionally run a second time on every case" if n_rep else ""))
              + ("." if (n_swap or n_rep) else ""))
@@ -1023,8 +1057,8 @@ def build(d: dict) -> str:
 <div class="grid2 mt">
 <div class="panel"><h3>{n_bench} benchmark cases by dispute type</h3><div class="chips">{type_chips}</div>
 <h3 class="mt">Scenario families <span class="hint">a case can belong to several</span></h3><div class="chips">{"".join(fam_rows)}</div>
-<h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases in section 2. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
-<div class="panel"><h3>LLM runs behind this page</h3>
+<h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases on the <a href="/#watch">start page</a>. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
+<div class="panel"><h3>Model runs behind this page</h3>
 <div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th>{rep_th}<th class="n">runs</th></tr>{run_rows}
 <tr class="hl"><td><b>Total</b></td><td class="n">{n_base}{f" + {n_swap} swapped" if n_swap else ""}</td>{rep_total}<td class="n big">{n_runs}</td></tr></table></div>
 <p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else ""}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else ""}. One model throughout: {esc(model)}.</p></div>

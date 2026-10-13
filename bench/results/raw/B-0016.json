@@ -4,24 +4,26 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:10.334452+00:00",
+ "ts": "2026-10-13T15:35:41.001180+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 0.0,
-  "recommended_action": "Record the RD-1 breach on the trip (driver deviated onto his own route without asking); no monetary refund is payable because RydeX is a fixed-quote service. No account flag (RD-6 not met: route_disputes_upheld_90d = 0).",
+  "amount": 5.22,
+  "recommended_action": "Refund SGD 5.22 (excess distance fare = 2.886 km × $1.81/km) to the rider's original payment method; do not refund time fare, platform fee or tolls; issue the driver a notification-duty reminder and log the notice failure on his route compliance record (RD-7, first infraction, no formal warning); no account flag (no prior upheld deviation in 90 days).",
   "confidence": 0.62,
-  "reasoning": "Service type is RydeX — a non-metered, fixed-quote service (RD-0/A8). The fare breakdown shows pricing \"fixed\", total $34.32 with $0.00 tolls/ERP, no waiting fee, no edit-destination fee and no cancellation fee, so there is no fare item that mileage could have inflated.\n\nGate check RD-2: the driver took a materially different route from the quoted one (quoted ~16.53 km / 21.7 min; the traced path runs out through the Jurong area and back up past the dropoff at ~09:11, i.e. a large unexplained excursion, with several near-stationary/reversal points around 09:09–09:11). Under RD-1 any unexplained deviation breaches the driver's duty to take the shortest and most direct route, and under RD-5 nothing in the record excuses it: the chat contains only pickup logistics, no rider message before any off-route segment consents to a route change, and the driver's \"GPS rerouted me\" is a bare claim without any incident on the replaced optimal route (traffic.incidents is empty; the AYE/CTE records are band 4 with no incident and cannot exempt under RD-4(b)). The deviation therefore counts.\n\nRider-named stops (RD-3): the rider only named the pickup entrance (Victoria Street), not a stop, so no segment is exempt on that ground.\n\nAmount (RD-2, non-metered branch): the remedy for a non-metered service is limited to ERP/toll actually incurred on the unexempted segments plus any unpublished post-trip add-ons (FARE-1). ERP/tolls are $0.00 and no unpublised item was charged, so the refundable amount is $0.00 → no_action in money terms, with the RD-1 breach recorded.\n\nFlag: RD-6 requires an upheld route dispute in the last 90 days; driver's route_disputes_upheld_90d = 0, so no flag_account.\n\nEvidence: the GPS record is complete and covers the whole trip (no gap > 2 min after thinning), the quoted route polyline is present, and both chat messages are timestamped — evidence is sufficient.",
+  "reasoning": "Route deviation: actual 13.51 km vs recommended 10.624 km → deviation 2.886 km, above the 1 km tolerance (RD-1). The GPS track (system record, overriding the rider's \"never agreed\" and the driver's statement) shows the driver drove the recommended corridor (Kent Ridge Rd → Buona Vista → AYE → Central Expressway → Merchant Rd → Church St) to ~9.2 km, then left it around 09:01 by looping north via Tiong Bahru Rd → Alexandra Rd → Prince Charles Crescent → Lower Delta Rd → Jln Bukit Merah before rejoining the recommended path on the Central Expressway at ~09:07 (lat 1.2829, lng 103.8349) — approximately 5.4–5.5 km of off-route driving (vs ~2.7 km on the recommended path over the same stretch), i.e. ~2.9 km of excess distance, consistent with the 2.886 km total deviation.\n\nTraffic reason (RD-4) is not established: the only traffic speed-band records are on the AYE (band 2) — and the AYE is the route both the recommended path and the driver used through that window — and on the Central Expressway (band 7). The replaced recommended portion (the City/Yeo Chu Kang end of the AYE and the Jln Bukit Merah/Bernam corridor) has no incident or closure event and no recorded speed band 1–2 during the segment (08:57–09:04), so the reroute is not traffic-justified. The recorded call (08:47:50, 25 s, no recording_ref, no transcript) and the driver's \"she said ok\" are a claim, not consent: there is no in-app chat, no call recording, and the only pre-trip call has no verifiable content, so rider consent to \"via Prince Charles Crescent\" is unproven (RD-5) — the driver's own words are the only content source and do not decide it. The rider's complaint (\"he never agreed a different route with me\") is met with no documentary counter-evidence, so no segment is exempt.\n\nAmount: excess distance fare only (RD-2). Per-km rate = distance fare ÷ actual distance = $19.05 ÷ 13.51 km = $1.8098/km. Refundable km = 2.886 km. Refund = 2.886 × $1.8098 = $5.22. Time fare ($5.07), platform fee ($1.47, booking fee, not surged), and tolls ($0) are not refunded; surge 1.0 (no differential). Under $10 → system decides (TH-1, C1), precedent DISP-2026-0089 (uninformed reroute).\n\nSafety screen: no threat, harassment, sexual remark, dangerous-driving allegation or accident in any chat, call record, statement or complaint → escalate = false, safety_concern = none. Evidence: sufficient — GPS coverage is continuous (thinned but complete), fare breakdown, timings and the call log are all present; the only unresolved reading (call content) is a claim-vs-record conflict resolved against the claimant under RD-5. No prior upheld deviation in 90 days → no flag.",
   "cited_facts": [],
   "cited_policy": [
-   "RD-0",
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-7",
+   "FARE-0",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -30,29 +32,71 @@
     "fact_id": "seg1",
     "finding": "counts",
     "ground": "consent_after_or_none",
-    "basis": [],
-    "reason": "The driver left the quoted route and drove a long unexplained excursion (trace loops out south-west and back past the dropoff around 09:11) with no rider message before the segment agreeing to any route change; the only consent-type content in the chat is pickup logistics. Under RD-5 a route change is exempt only on the rider's prior agreement, and the driver's verbal/GPS claim is not consent; no RD-4 incident exists. The segment therefore counts as an unexempted deviation under RD-1/RD-2 (RD-3(a) does not apply: the rider named no stop)."
+    "basis": [
+     "call_record_08:47:50"
+    ],
+    "named_road": "Prince Charles Crescent",
+    "reason": "Driver left the recommended AYE/Jalan Bukit Merah–Central Expressway corridor from ~09:01 to ~09:07 and looped via Tiong Bahru Rd → Alexandra Rd → Prince Charles Crescent → Lower Delta Rd → Jln Bukit Merah, ~5.4 km of off-route driving (~2.9 km excess). No traffic reason under RD-4: the AYE (the only band-2 link) is the corridor both routes used, and the Central Expressway is band 7; the replaced recommended portion had no incident or band 1–2 during the segment. Consent to 'go via Prince Charles Crescent' is claimed only in the driver's statement; the recorded call has no recording_ref or transcript and no pre-trip chat exists, so under RD-5 the named-road agreement is unproven (a driver's word alone is a claim, not consent) and the segment counts. Not exempt → refund of the excess distance fare under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Traffic reason for the reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [
+     "traffic_speed_bands"
+    ],
+    "reason": "Only band-2 record is on the Ayer Rajah Expressway, the corridor both the recommended route and the driver used; the Central Expressway (the rejoined link) is band 7. No closure, accident or congestion event on the replaced recommended portion (southern AYE / Jln Bukit Merah–Bernam corridor) during the off-route window 08:57–09:04."
+   },
+   {
+    "element": "Rider notice and consent to the named road 'Prince Charles Crescent' (RD-5)",
+    "finding": "not_met",
+    "basis": [
+     "call_record_08:47:50",
+     "driver_statement",
+     "complaint"
+    ],
+    "reason": "Notice was claimed by phone: the one recorded call (25 s) has recording_ref null, transcript null and details null, and there is no chat log at all. RD-5 requires the call recording to prove verbal notice/acknowledgement; the driver's uncorroborated assertion is a claim. Contrast DISP-2026-0089 (uninformed reroute) — treated as uninformed."
+   },
+   {
+    "element": "Rider's filed claim that no route was agreed and the meter exceeded the estimate",
+    "finding": "met",
+    "basis": [
+     "complaint"
+    ],
+    "reason": "Supported by the GPS deviation of 2.886 km beyond the recommended route with no verified consent or traffic justification; the excess distance fare is refundable."
+   },
+   {
+    "element": "Safety screen (SAFE-1)",
+    "finding": "met",
+    "basis": [
+     "complaint",
+     "driver_statement",
+     "call_records"
+    ],
+    "reason": "No threat, intimidation, harassment, sexual remark, dangerous-driving allegation, accident or expression of feeling unsafe anywhere in the record; screening complete, no escalation."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement",
-    "reason": "The driver's claim that he 'followed my GPS; it rerouted me' is a bare assertion of reasonable cause: no LTA incident exists on the replaced optimal route (traffic.incidents empty; speed bands AYE/CTE are band 4, which cannot exempt alone under RD-4(b)), and no rider message before the deviation agreed to a route change (RD-5). The system GPS trace contradicts a simple GPS reroute."
+    "id": "driver_statement_consent",
+    "reason": "The driver asserts the rider said 'ok' to going via Prince Charles Crescent. The supporting call record carries no recording_ref, transcript or details; no in-app chat exists. Under RD-5 verbal consent needs a call recording — the driver's own statement is a claim, not evidence, so consent is not established."
    },
    {
-    "id": "rider_chat",
-    "reason": "The rider's chat message named only the pickup entrance ('Victoria Street entrance'), not a stop or a route, so it cannot exempt the off-route segment under RD-3."
+    "id": "traffic_justification",
+    "reason": "The driver's claimed jam on the Ayer Rajah Expressway is not the replaced corridor: the recommended route itself runs along the AYE, and the only band-2 record is on that shared AYE link. No RD-4 traffic reason applies to the replaced portion, so the reroute cannot be excused."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.0,
- "input_tokens": 16368,
- "output_tokens": 1154,
+ "latency_s": 12.51,
+ "input_tokens": 14644,
+ "output_tokens": 2016,
  "requests": 1,
  "llm_calls": 1
 }

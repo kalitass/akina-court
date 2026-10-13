@@ -4,85 +4,73 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:18.614037+00:00",
+ "ts": "2026-10-13T15:36:05.806684+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 2.96,
-  "recommended_action": "Refund S$2.96 as a Ryde voucher for the one unexempted detour segment (extra 2.10 km × S$1.41/km); record the RD-1 breach on the trip; no account flag (driver's 90-day upheld route disputes = 0).",
-  "confidence": 0.62,
-  "reasoning": "Service type is RydeTAXI, so the fare is metered and extra kilometres flow straight into the fare (RD-2, policy §0). Rider complaint is route deviation.\n\nRoute vs actual: quoted route 24.445 km / 33.6 min (Jurong Point → Suntec). Driver's GPS trace shows the trip driven 25.67 km in 48.3 min (dep 12:50:00, drop 13:38:20), i.e. ~1.22 km longer than the quote.\n\nOff-route analysis against the quoted corridor (200 m):\n1) Main deviation: from 13:03:45 the car is at (1.31132,103.76359), only ~29 m from the quoted polyline, then leaves it and loops west/south through (1.3048,103.7682) → (1.3045,103.7675) → (1.3047,103.7668) → (1.3047,103.7657) at 10–15 km/h, rejoining the quoted line at (1.30239,103.76554) at 13:08:45. Distance to the join ~1.26 km vs ~0.22 km along the quote → extra_km ≈ 1.04; plus ~0.63 km of the later north-eastward sweep back past the paid section → the segment extra_km ≈ 1.40–1.50 km.\n\nConsent (RD-5): the driver proposed a route change at 13:03:45 (\"Traffic ahead on Ayer Rajah Expressway is building up, shall I take another way?\") and the rider replied at 13:04:25 \"Just take whichever way is faster lah, I'm late.\" That is prior to the deviation (13:03:45 → 13:08:45), so consent exists, but it is only a general route authorisation: it covers a route chosen to reach Suntec, not every subsequent move. The driver named only Ayer Rajah Expressway; no record ties the actual driven roads to that named road, so the named-road branch is not established (RD-5/G13). There is no record of the rider declining any part, and no record that this segment was something other than a through route north-east — so it is exempt under the general_route_consent ground, not \"counts\".\n\n2) Later, from 13:09:00 the trace goes south-east away from the quoted route: (1.29610,103.76967) → (1.29450,103.77074) → (1.29317,103.77283) → (1.29081,103.77341), reaching ~1.10 km off-corridor, rejoining at 13:13:00 (1.28949,103.77624). Distance along the drive 13:09:00→13:13:00 vs along the quote between the join points: 2.32 km vs ~1.60 km → extra_km ≈ 0.70 km. This goes to the north-east, i.e. toward the destination and away from the jammed AYE, so it is a route choice of the type the rider authorised (\"whichever way is faster\") → exempt under general_route_consent.\n\n3) Traffic criterion (RD-4): the AYE band-2 record does not save the driver — its window is 12:41:45–13:07:15 and its geometry covers the AYE stretch (1.3057,103.7687)→(1.2843,103.8008), i.e. from ~19 km to ~24 km into the trip, whereas the deviation occurred at ~18.2 km on Jalan Boon Lay (band 5, free-flowing) before AYE entry; the record also shows the driver stopped and travelled at 10–15 km/h for ~4.5 min, while the free-flowing baseline was ~1.1 km/min.\n\nRecomputation excluding bias: the quote's own 24.445 km / 33.6 min already exceeds the Google-consistent shortest path (~23.7–24.3 km), so it cannot be claimed that the driver went off the best route. But the standard corollary of RD-2 — that the excess beyond the quoted distance is not refunded (corridor wobble, mismatched corridor, sampling) — disposes of the remaining ~0.8 km of unexplained excess. What survives as an unexempted segment is the loop at 13:03:45–13:08:45: ~4 min at 3.2 km/h over roughly 1.5 km of driving, during which the car actually travelled away from Suntec while the record shows no traffic on the roads it was on.\n\nAmount: RydeTAXI per-km rate = fare.distance_fare / fare.distance_km = 42.36 / 30.04 = S$1.41/km. Extra_km for the unexempted segment ≈ 2.10 (loop 1.40 + the ~0.70 of duplicated travel attributable to it). 2.10 × 1.41 = S$2.96 → refund_partial.\n\nNo account flag: the driver's route_disputes_upheld_90d = 0, so RD-6's \"≥ 1 upheld in 90 days\" condition is not met.\n\nSafety screen: no threat, harassment, sexual remark or dangerous-driving allegation in the chat, complaint or driver statement; no safety issue. Evidence is complete (full GPS trace, timed chat, fare breakdown); no missing record.",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Escalate to Ryde Trust & Safety human review; prepare the case file (complaint, driver statement, trip and chat records) and apply interim measures under SAFE-4 pending review; do not rule, assign fault or recommend an outcome (SAFE-3).",
+  "confidence": 0.9,
+  "reasoning": "The safety screen comes first, and it is dispositive. The rider's complaint states the driver \"kept making comments about my body and asked for my number,\" and that she \"felt harassed and unsafe.\" That is an allegation of sexual/inappropriate conduct and harassment, plus an expressed feeling of being unsafe — squarely within SAFE-1 and SAFE-2. Under SAFE-1 every case is screened regardless of the filed dispute type (here safety_incident), and any such indicator goes to immediate human escalation; SAFE-3 bars the AI from ruling, assigning fault or recommending a resolution on a safety incident. The driver's denial (\"I made small talk. Nothing inappropriate happened.\") does not allow me to decide the contested facts — that is for the human reviewer — and the case history (both parties have zero disputes in 90 days, no fraud flags) does not change the screening result.\n\nThe record is otherwise complete for a routing check: actual distance 17.154 km equals the recommended 17.154 km, deviation 0 km, so no RD issue arises; the fare reconciles per FARE-0 (3.90 + 24.19 + 6.14 + 1.47 platform fee = 35.70 at 1.0x surge), and no cancellation fee or tolls were charged. But fare and route questions are not what this case turns on: because a safety allegation is present, the ticket must go to a human reviewer under SAFE-1 / SAFE-2 / SAFE-3, with interim measures per SAFE-4 available.\n\nI therefore do not rule on the merits and do not reach TH-1 / TH-2 amount thresholds. No refund, waiver or credit is issued by the system at this stage.",
   "cited_facts": [],
   "cited_policy": [
-   "RD-1",
-   "RD-2",
-   "RD-4",
-   "RD-5",
-   "G13",
-   "G6"
+   "SAFE-1",
+   "SAFE-2",
+   "SAFE-3",
+   "SAFE-4"
   ],
-  "escalate": false,
-  "escalation_reason": null,
-  "segment_findings": [
+  "escalate": true,
+  "escalation_reason": "The complaint contains allegations of sexual/inappropriate conduct, harassment and an expressed feeling of being unsafe (SAFE-1 / SAFE-2). Under SAFE-3 the AI may not rule on a safety incident; the case file must go to a human reviewer, with interim measures under SAFE-4 available pending review.",
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "seg1",
-    "finding": "exempt",
-    "ground": "general_route_consent",
+    "element": "Safety screen — presence of harassment / inappropriate-conduct allegation (SAFE-1)",
+    "finding": "met",
     "basis": [
-     "chat-2026-09-26T13:03:45",
-     "chat-2026-09-26T13:04:25"
+     "complaint"
     ],
-    "reason": "Driver proposed an alternative at 13:03:45 (AYE traffic building) and the rider replied at 13:04:25 'Just take whichever way is faster lah' — a rider message sent before the deviation began (13:03:45–13:08:45). This is a general route authorisation under RD-5 and covers the north-east sweep chosen to approach Suntec; no record ties the segment to the named road (AYE) and no record places it elsewhere, so it is not counted."
+    "reason": "The rider's filed complaint alleges repeated comments about her body and a request for her number, and states she felt harassed and unsafe — a harassment / inappropriate-conduct indicator on its face, requiring escalation regardless of dispute type and without needing the allegation to be proved."
    },
    {
-    "fact_id": "seg2",
-    "finding": "exempt",
-    "ground": "general_route_consent",
+    "element": "Safety screen — feeling unsafe / dangerous-conduct indicator (SAFE-2)",
+    "finding": "met",
     "basis": [
-     "chat-2026-09-26T13:04:25"
+     "complaint"
     ],
-    "reason": "13:09:00–13:13:00 sweep to the north-east away from the quoted corridor but toward the destination, away from the AYE band-2 stretch. Same general authorisation ('whichever way is faster') covers a route chosen to get there under RD-5; RD-4 incident evidence cannot be used against it because the AYE band-2 window/geometry does not cover this position."
+    "reason": "The complaint expressly states the rider felt unsafe during the trip; SAFE-1/SAFE-2 treat an expressed feeling of being unsafe as an indicator for human escalation."
    },
    {
-    "fact_id": "seg3",
-    "finding": "counts",
-    "ground": "scope_other",
+    "element": "AI authority to rule on a safety incident (SAFE-3)",
+    "finding": "not_met",
     "basis": [
-     "chat-2026-09-26T13:03:45",
-     "chat-2026-09-26T13:04:25"
+     "complaint",
+     "driver_statement"
     ],
-    "reason": "13:03:45–13:08:45, ~1.9 km near (1.3048,103.7682)→(1.3024,103.7655) on Jalan Boon Lay (band 5, free-flowing): ~4 min at 10–15 km/h while the car drove away from the destination and from the jammed AYE the consent was given for. The rider's 'whichever way is faster' is a general route choice to reach the destination (RD-5); this loop of the driver's own was not 'faster' and no traffic/incident fact excuses it (RD-4). Extra km ≈ 2.10; refund 2.10 × S$1.41 = S$2.96 (RD-2)."
-   },
-   {
-    "fact_id": "seg4",
-    "finding": "exempt",
-    "ground": "general_route_consent",
-    "basis": [
-     "chat-2026-09-26T13:04:25"
-    ],
-    "reason": "13:16:00–13:19:45 northward sweep to (1.29500,103.78639), extra_km ≈ 0.5 km, again a route choice toward the destination within the rider's general authorisation (RD-5)."
+    "reason": "The case is a safety incident, so the AI may only gather evidence and prepare the file; it may not issue a ruling, assign fault or recommend a resolution."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver-claim-traffic-justifies-detour",
-    "reason": "The AYE band-2 record (window 12:41:45–13:07:15) is not listed before the deviation began and its geometry covers the AYE corridor from ~19 km onward, not the Jalan Boon Lay position (band 5) where the driver stopped and crawled; RD-4 not satisfied for that stretch."
-   },
-   {
-    "id": "rider-claim-meter-above-estimate-alone",
-    "reason": "The rider approved a general route change at 13:04:25 before the detour (RD-5); most of the extra distance is exempt, and the remainder of the excess over the quoted distance is unrecoverable under RD-2. Only S$2.96 survives."
+    "id": "driver_statement",
+    "reason": "The driver's statement ('I made small talk. Nothing inappropriate happened.') contradicts the rider's complaint, but the record (no chat log, no audio) cannot resolve it; under SAFE-3 the AI may not determine fault on a safety incident — the credibility contest is for the human reviewer."
    }
   ],
   "flag_account": false,
-  "safety_concern": "none",
-  "safety_basis": [],
+  "goodwill_credit": null,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "Rider complaint: driver 'kept making comments about my body'",
+   "Rider complaint: driver 'asked for my number'",
+   "Rider complaint: 'I felt harassed and unsafe'",
+   "Dispute type filed as safety_incident"
+  ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 11.54,
- "input_tokens": 18712,
- "output_tokens": 2380,
+ "latency_s": 7.15,
+ "input_tokens": 14037,
+ "output_tokens": 1220,
  "requests": 1,
  "llm_calls": 1
 }

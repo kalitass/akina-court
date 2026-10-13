@@ -4,49 +4,111 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:39:33.208499+00:00",
+ "ts": "2026-10-13T15:42:59.106528+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
+  "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Uphold the $6.61 cancellation fee; advise rider that cancellation after 3 minutes of matching is chargeable and that disputes must be raised via RydeHELP within 30 days (voucher form only).",
+  "recommended_action": "Route to Ryde Trust & Safety human review: preserve the rider's complaint and the call-back account, retain the driver's phone/chat records, consider interim suspension pending review (SAFE-4); do not rule on the $5.00 no-show fee here.",
   "confidence": 0.9,
-  "reasoning": "This is a rider-initiated cancellation on an immediate (on-demand) RydeX booking, so NS-0 routes the case to NS-4. NS-4: cancellations within 3 minutes of matching are not chargeable; beyond 3 minutes the $6.61 fee stands. F4 shows matching at 08:40:00 and the rider's cancellation at 08:46:40 — 6 min 40 s, far beyond the 3-minute window — so the fee is validly charged [F4][F7]. The rider's stated reason (\"plans changed\", F10) is not a ground for waiver under NS-4; Ryde publishes no \"driver late vs ETA → free cancellation\" rule (NS-8 is informational only and not citable), so the driver's non-arrival at the door does not make the fee refundable. The driver-side conditions are in any event satisfied on the record and do not need to be relied on: driver tapped \"I'm Here\" at 08:42:15 while 40 m from the pickup, and remained within 200 m for 4 min 25 s after the tap [F6], with GPS confirming a stationary presence 41 m away through the cancellation [F1][F2][F3]. Surge 1.0× means no inflated charge component [F8], and the only chat messages are the driver's arrival notice and the rider's own cancellation notice [F9][F10][F11], both timestamped [F11]. No route-deviation facts exist, so RD-2/RD-6 are not engaged; the driver's 2 upheld no-show disputes in 90 days [F17] do not trigger a flag here because the fee is upheld, not refundable (flag_account is only for upheld/abusive cases, and profile facts cannot decide a case). Amount: nil change to the fare — $6.61 remains charged.",
+  "reasoning": "Safety screen first. The rider's complaint states that when he called the driver about the charge, the driver \"kept making comments about my body and asked where I live,\" and that she \"felt very uncomfortable.\" Remarks about a rider's body plus asking where she lives is harassment/inappropriate conduct and an intimidation-adjacent privacy probe, and the rider expressly reports feeling unsafe/uncomfortable. Under SAFE-1 (§5.2) any case whose complaint describes harassment, inappropriate conduct or someone feeling unsafe must be escalated regardless of the dispute type filed, and under SAFE-3 the AI may not rule, assign fault or recommend an outcome on a safety incident. I therefore do not decide the fee.\n\nFactual summary for the human reviewer (the underlying no-show dispute, screened but not ruled): driver accepted 08:40:00 and cancelled 08:50:20 citing rider_no_show [F4]; he tapped \"I'm Here\" at 08:44:40, 40 m from the pickup point, well within the 200 m radius [F7][F3], and his closest approach was 6 m at 08:44:35 [F1], remaining within 200 m for 6 min 50 s before cancelling [F2], stationary from 08:44:40 [F3]. Wait from arrival to cancellation was 5 min 40 s [F6], so the 5-minute free wait had passed, but a record threshold (DISP-002: 8 min) would not be met. Before cancelling he sent 2 in-app messages (first 08:45:10) and made 1 in-app call (08:46:10, not answered) [F5][F10][F11][F13], all timestamped [F12]. No traffic incident or surge factor is relevant [F15][F16][F9][F17]; the drivers' / riders' profiles are clean [F18][F19]. The disputed $5.00 charge [F8] turns on factual conditions the reviewer can verify from GPS and logs [F1]–[F7], but the complaint also contains the separate safety allegation that displaces a system ruling.\n\nEvidence status: sufficient as to the no-show mechanics (GPS, timeline, chat and call log all present and timestamped). Evidence gap: no call recording for the post-cancellation call in which the alleged remarks were made [F13] — a needed record for the safety allegation.",
   "cited_facts": [
-   "F4",
-   "F7",
-   "F10",
-   "F6",
    "F1",
    "F2",
    "F3",
+   "F4",
+   "F5",
+   "F6",
+   "F7",
    "F8",
+   "F10",
    "F11",
-   "F17"
+   "F12",
+   "F13",
+   "F14",
+   "F16",
+   "F18",
+   "F19"
   ],
   "cited_policy": [
+   "SAFE-1",
+   "SAFE-3",
+   "SAFE-4",
    "NS-0",
-   "NS-4"
+   "NS-1",
+   "TH-2",
+   "TH-4"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Complaint contains harassment/inappropriate conduct and a privacy-intrusive question plus the rider's stated discomfort — SAFE-1 (§5.2) mandates immediate human escalation regardless of the no-show dispute type, and SAFE-3 bars an AI ruling, fault-finding or outcome recommendation on safety incidents.",
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "rider_complaint",
-    "reason": "Rider asked to waive the $6.61 because 'plans changed' and 'the driver had not even arrived'. Under NS-4 the fee is chargeable for any rider cancellation made more than 3 minutes after matching, whatever the reason; the record shows 6 min 40 s between acceptance and cancellation [F4], and Ryde publishes no driver-late free-cancellation rule (NS-8 informational only)."
+    "element": "Driver cancelled for rider no-show (NS-0 branch)",
+    "finding": "met",
+    "basis": [
+     "F4",
+     "F14"
+    ],
+    "reason": "App reason selected was rider_no_show [F4] and the driver's statement says he waited then cancelled for no rider [F14]; no contrary chat wording appears in the driver's messages [F10][F11]."
+   },
+   {
+    "element": "Arrival within 200 m of pickup (NS-1(i))",
+    "finding": "met",
+    "basis": [
+     "F1",
+     "F7",
+     "F6"
+    ],
+    "reason": "Driver tapped \"I'm Here\" 40 m from the pickup point [F7] and closest approach was 6 m [F1] — within the 200 m default radius."
+   },
+   {
+    "element": "5-minute free wait elapsed before cancellation (NS-1(ii))",
+    "finding": "met",
+    "basis": [
+     "F6",
+     "F4"
+    ],
+    "reason": "Arrival recorded 08:44:40, cancellation 08:50:20 → 5 min 40 s, past the 5-minute wait; no 8-minute record threshold is present in this case."
+   },
+   {
+    "element": "Prior message and call attempts before cancelling (NS-1(iii))",
+    "finding": "met",
+    "basis": [
+     "F5",
+     "F10",
+     "F11",
+     "F13"
+    ],
+    "reason": "2 in-app messages and 1 in-app call, timestamps 08:45:10 and 08:46:10, all before 08:50:20 cancellation [F5]."
+   },
+   {
+    "element": "Continuous presence at pickup (NS-1(iv))",
+    "finding": "met",
+    "basis": [
+     "F2",
+     "F3",
+     "F7"
+    ],
+    "reason": "Stationary at 40 m from the pickup and within 200 m for the whole 5 min 40 s before cancellation — no GPS gap."
    }
   ],
+  "rejected_claims": [],
   "flag_account": false,
-  "safety_concern": "none",
-  "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "goodwill_credit": null,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "Rider complaint: driver \"kept making comments about my body\" after the trip when she called about the charge",
+   "Rider complaint: driver \"asked where I live\" — unsolicited location questioning",
+   "Rider complaint: \"I felt very uncomfortable\""
+  ],
+  "evidence_status": "insufficient",
+  "evidence_gap": "No call recording of the post-cancellation call to the driver in which the alleged harassment remarks were made (F13 records the trip call was not answered and no recording exists); the safety allegation's key evidence is missing."
  },
- "latency_s": 3.82,
- "input_tokens": 10233,
- "output_tokens": 908,
+ "latency_s": 8.01,
+ "input_tokens": 7808,
+ "output_tokens": 1514,
  "requests": 1,
  "llm_calls": 1
 }

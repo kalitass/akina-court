@@ -29,9 +29,9 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, PrivateAttr, field_validator
 
 from core.notices import fallback_notices
-from core.policy_engine import Certificate, evaluate, expected_amount
+from core.policy_engine import GOODWILL, TH_MANUAL, Certificate, evaluate, expected_amount
 from core.schemas import Case, CaseRecord, Ruling, SegmentFinding
-from core.stretch import feedback, sla
+from core.stretch import feedback, precedent, sla
 from core.stretch._util import RUNS_DIR, now, read_json, write_json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,7 +64,8 @@ class EvidenceItem(BaseModel):
 
 
 class ReviewOption(BaseModel):
-    id: str                                       # segment: exempt | counts; safety: none | misconduct | threat_or_harassment | unsubstantiated
+    id: str                                       # segment: exempt | counts; safety: none | misconduct | threat_or_harassment | unsubstantiated;
+                                                  # decision (trace): the outcome itself (refund_partial | refund_full | no_action)
     label: str
     detail: str
     finding: Optional[str] = None                 # segment finding this option records (exempt / counts)
@@ -89,8 +90,8 @@ class SideView(BaseModel):
 
 
 class ReviewQuestion(BaseModel):
-    id: str                                       # "seg:F3" | "safety"
-    kind: Literal["segment_scope", "safety"]
+    id: str                                       # "seg:F3" | "safety" | "trace"
+    kind: Literal["segment_scope", "safety", "decision"]   # decision: the case outcome itself (a stop no structured field carries)
     subject: str                                  # segment fact id or "case"
     title: str
     escalation_reasons: list[str]
@@ -381,6 +382,79 @@ def _safety_question(record: CaseRecord, base: tuple[str, Optional[float]], gap:
                           focus={"start": min(times), "end": max(times)} if times else None)
 
 
+TRACE_FALLBACK = {"no_show": ["refund_full", "no_action"], "fare_dispute": ["refund_partial", "no_action"],
+                  "route_deviation": ["refund_partial", "no_action"]}      # outcomes when the certificate allows only escalate
+THRESHOLD = re.compile(r"\bTH-[13]\b")
+
+
+def _trace_outcomes(cert: Certificate) -> list[str]:
+    rest = [a for a in cert.allowed if a != "escalate"] or TRACE_FALLBACK.get(cert.dispute_type, [])
+    return sorted(rest, key=lambda a: a == "no_action")                      # a refund first, then no refund
+
+
+def _trace_amount(cert: Certificate, ruling: str, final: dict) -> Optional[float]:
+    """The amount code computes for an outcome picked on the trace question (never the client's)."""
+    if ruling == "refund_full":
+        return cert.amount if cert.amount is not None else cert.fee
+    if ruling == "refund_partial":
+        if cert.dispute_type == "route_deviation" and cert.segments and cert.rate_per_km is not None and all(x is not None for x in final.values()):
+            return expected_amount(cert, final)
+        return cert.amount
+    return None
+
+
+def _trace_question(record: CaseRecord, cert: Certificate, final: dict, gap: Optional[EvidenceGapNote]) -> ReviewQuestion:
+    """Escalated on a ground no segment or safety question carries: an amount above the TH-1 limit, a TH-3 fraud flag, a
+    record with a hole (TH-4). The options are the case outcomes themselves, priced by code. A threshold stop is what the
+    reviewer is there to approve, so its options can be adopted; a record that cannot support any outcome cannot."""
+    r = record.ruling
+    why = list((record.eligibility or {}).get("reasons") or [r.escalation_reason or "escalated"])
+    insufficient = r.evidence_status == "insufficient" or bool(cert.insufficient)
+    threshold = any(THRESHOLD.search(x) for x in why)
+    adoptable = threshold and not insufficient
+    if r.recommended_action:
+        why.append(f"What the court proposed (not carried out; you decide): {r.recommended_action}")
+    stop = ["TH-4"] if insufficient else sorted({m.group(0) for x in why for m in THRESHOLD.finditer(x)})
+    fee_word = f"the ${cert.fee:.2f} cancellation fee"
+    opts = []
+    for ruling in _trace_outcomes(cert):
+        amount = _trace_amount(cert, ruling, final)
+        flag = bool(cert.flag_required and ruling == "no_action")
+        if cert.dispute_type == "no_show":
+            label, clauses = (("Void the fee: refund it to the rider", ["NS-2"]) if ruling == "refund_full"
+                              else ("The fee stands: the driver waited at the pickup long enough", ["NS-1"]))
+            detail = (f"Refund {fee_word} (NS-2)" if ruling == "refund_full" else f"Keep {fee_word} (NS-1)")
+            if cert.goodwill_required and ruling == "refund_full":
+                detail += f", plus the ${GOODWILL:.2f} goodwill credit (NS-8)"
+                clauses.append("NS-8")
+        elif cert.dispute_type == "fare_dispute":
+            label, clauses = (("Approve the refund of the surge part", ["SURGE-2", "SURGE-3"]) if ruling == "refund_partial"
+                              else ("No refund: the higher fare stands", ["SURGE-1"]))
+            detail = (f"Refund {_money(amount)}" + (f": {cert.amount_formula}" if cert.amount_formula else "") + " (SURGE-2)"
+                      if ruling == "refund_partial" else "The in-app notice met SURGE-1, so the higher fare stands")
+        else:
+            label, clauses = (("Refund the extra distance", ["RD-2"]) if ruling == "refund_partial" else ("No refund", ["RD-1"]))
+            detail = (f"Refund {_money(amount)} (RD-2)" if ruling == "refund_partial" and amount is not None
+                      else "Refund the counted extra distance (RD-2); the record does not give an amount" if ruling == "refund_partial"
+                      else "No refund is due")
+        if flag:
+            detail += "; the policy adds an account flag"
+        opts.append(ReviewOption(id=ruling, label=label, detail=detail + ".", clauses=clauses + stop, ruling=ruling, amount=amount,
+                                 flag_account=flag, requires_confirmation=flag))
+    if insufficient:
+        title = "The record has a gap the court could not get past: decide what it supports, or ask for the missing record"
+    elif threshold and any(x.startswith("TH-1") and "above" in x for x in why):
+        amt = next((o.amount for o in opts if o.amount), None)
+        title = f"{_money(amt) if amt else 'The refund'} is above the ${TH_MANUAL:.0f} a refund can be approved without a person: approve it or not"
+    elif threshold:
+        title = "The system may not act on its own here (a fraud flag or a confidence check): approve the outcome or not"
+    else:
+        title = "The policy check stopped this ruling: decide it on the record"
+    ids = list(r.cited_facts) + (gap.facts if gap else [])
+    return ReviewQuestion(id="trace", kind="decision", subject="case", title=title, escalation_reasons=why,
+                          evidence=_items(record, ids), options=opts, adoptable=adoptable, sides=_sides(record))
+
+
 def _settled(record: CaseRecord, cert: Certificate, prior: bool) -> list[SettledItem]:
     out, vals = [], _vals(record)
     judge = {sf.fact_id: sf for sf in record.ruling.segment_findings}
@@ -438,14 +512,19 @@ def build_packet(record: CaseRecord, case: Case) -> ReviewPacket:
     base = _base_outcome(record, cert, final, prior)
     if r.safety_concern in ("suspected", "confirmed") or record.facts.dispute_type == "safety":
         questions.append(_safety_question(record, base, gap))
-    if not questions:      # escalated on a ground no structured field carries (e.g. a failed policy check): a person reads the trace
-        why = (record.eligibility or {}).get("reasons") or [r.escalation_reason or "escalated"]
-        questions.append(ReviewQuestion(id="trace", kind="safety", subject="case", title="The policy check stopped this ruling: decide it on the record",
-                                        escalation_reasons=why, evidence=_items(record, r.cited_facts), options=[], adoptable=False, sides=_sides(record)))
+    if not questions:      # escalated on a ground no structured field carries (TH-1 limit, TH-3 flag, a hole in the record)
+        questions.append(_trace_question(record, cert, final, gap))
     route = _queue(record)
     at = _ruled_at(record)
     settled = _settled(record, cert, prior)
-    settled_amount = round(sum(s.amount for s in settled if s.amount and s.subject.startswith("F")), 2) or None
+    if cert.dispute_type == "route_deviation" and cert.segments and cert.rate_per_km is not None:
+        # RD-2: (deviation − km of exempt segments) × rate, tolerance after exemptions. A segment the court did not settle is
+        # taken as exempt here, so the figure is what is due whatever the open question decides
+        judged = {sf.fact_id: sf.exempt for sf in r.segment_findings if sf.finding != "undetermined"}
+        fill = {fid: (judged.get(fid, True) if sg["exempt"] is None else sg["exempt"]) for fid, sg in cert.segments.items()}
+        settled_amount = expected_amount(cert, fill) or None
+    else:
+        settled_amount = round(sum(s.amount for s in settled if s.amount and s.subject.startswith("F")), 2) or None
     why = (record.eligibility or {}).get("reasons") or [x for x in (r.escalation_reason,) if x]
     basis = sorted({e.fact_id for q in questions for e in q.evidence}, key=lambda x: int(x[1:]))
     ctx = [f.id for f in record.facts.facts if (f.value or {}).get("party") or ("total" in (f.value or {}) and "base_fare" in (f.value or {}))]
@@ -495,10 +574,14 @@ def _combine(packet: ReviewPacket, picked: dict[str, ReviewOption]) -> tuple[str
         if any(x is None for x in findings.values()):
             raise DecisionError("a segment is still open; every undetermined segment needs a finding")
         ruling, amount, flag = _route_outcome(cert, findings, prior)
+    elif "trace" in picked:                      # the outcome itself was picked; its amount is recomputed here
+        ruling = picked["trace"].ruling
+        amount = _trace_amount(cert, ruling, findings)
+        flag = False
     else:
         ruling, amount = _base_outcome(rec, cert, findings, prior)
         flag = False
-    flag = flag or any(o.flag_account for q, o in picked.items() if q == "safety")
+    flag = flag or any(o.flag_account for q, o in picked.items() if q in ("safety", "trace"))
     return ruling, amount, flag, seg
 
 
@@ -535,7 +618,8 @@ def apply_decision(packet: ReviewPacket, decision: HumanDecision) -> Ruling:
         if (formula is None or abs(manual - formula) > 0.005) and not decision.amount_override.confirmed:
             raise DecisionError(f"manual amount ${manual:.2f} differs from the formula ({_money(formula)}): confirm it a second time")
         amount = manual or None
-        ruling = "refund_partial" if amount else "no_action"
+        same = formula is not None and abs(manual - formula) <= 0.005
+        ruling = (ruling if same and ruling.startswith("refund") else "refund_partial") if amount else "no_action"
     if decision.amount is not None and decision.outcome == "own_judgment":
         raise DecisionError("send a manual amount as amount_override {amount, confirmed}")
     if ruling == "no_action":
@@ -563,8 +647,9 @@ def apply_decision(packet: ReviewPacket, decision: HumanDecision) -> Ruling:
     action = f"Human review ({decision.outcome}): {what}; {ruling} {_money(amount)}" + (" + flag_account" if flag else "")
     if decision.outcome == "own_judgment" and decision.amount_override is not None:
         action += f" (manual amount; formula {_money(formula)})"
+    goodwill = GOODWILL if ("trace" in picked and packet._cert.goodwill_required and ruling == "refund_full") else None
     return Ruling(ruling=ruling, amount=amount, recommended_action=action, confidence=1.0, reasoning=reason, cited_facts=cited,
-                  cited_policy=clauses, flag_account=flag, segment_findings=findings, safety_concern=safety,
+                  cited_policy=clauses, flag_account=flag, segment_findings=findings, safety_concern=safety, goodwill_credit=goodwill,
                   safety_basis=list(rec.ruling.safety_basis), evidence_status="sufficient", evidence_gap=None, escalate=False)
 
 
@@ -648,12 +733,28 @@ def request_evidence(packet: ReviewPacket, decision: HumanDecision, runs_dir: Pa
     return {"status": "awaiting_evidence", "request": entry, "queue_item": item.model_dump(mode="json")}
 
 
+def _override(packet: ReviewPacket, ruling: Ruling, reviewer: str, note: str, runs_dir: Path) -> feedback.Override:
+    """feedback.record_override, except for a dispute type the precedent store has no features for (a surge fare dispute,
+    core/stretch/precedent.py FEATURES): the override is written and the queue item resolved, no precedent is indexed."""
+    rec = packet._record
+    if rec.facts.dispute_type in precedent.FEATURES:
+        return feedback.record_override(packet.case_id, ruling, reviewer, note, runs_dir, rec)
+    auto = rec.ruling
+    ov = feedback.Override(case_id=packet.case_id, dispute_type=rec.facts.dispute_type, auto_ruling=auto.ruling if auto else None,
+                           auto_amount=auto.amount if auto else None, human_ruling=ruling.ruling, human_amount=ruling.amount,
+                           changed_outcome=auto is None or auto.ruling != ruling.ruling or (auto.amount or 0) != (ruling.amount or 0),
+                           reviewer=reviewer, note=note, recorded_at=now())
+    write_json(feedback.overrides_path(runs_dir), [o.model_dump(mode="json") for o in feedback.load(runs_dir)] + [ov.model_dump(mode="json")])
+    sla.resolve(packet.case_id, reviewer, note or f"override: {ruling.ruling}", runs_dir)
+    return ov
+
+
 def record_decision(packet: ReviewPacket, decision: HumanDecision, runs_dir: Path = RUNS_DIR) -> dict:
     """adopt_option / own_judgment: the ruling goes through feedback.record_override (overrides.json, precedent re-indexed
     as "human", queue item resolved) and the full decision is kept in runs/human_reviews.json."""
     ruling = apply_decision(packet, decision)
     formula = formula_amount(packet, decision)
-    ov = feedback.record_override(packet.case_id, ruling, decision.reviewer, decision.note or ruling.recommended_action, runs_dir, packet._record)
+    ov = _override(packet, ruling, decision.reviewer, decision.note or ruling.recommended_action, runs_dir)
     entry = {"case_id": packet.case_id, "outcome": decision.outcome, "reviewer": decision.reviewer, "recorded_at": now().isoformat(),
              "status": "decided", "ruling": ruling.model_dump(mode="json"), "formula_amount": formula,
              "amount_override": decision.amount_override.model_dump() if decision.amount_override else None,

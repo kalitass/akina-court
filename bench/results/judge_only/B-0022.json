@@ -4,131 +4,135 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:41:01.895735+00:00",
+ "ts": "2026-10-13T17:47:32.629550+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 6.43,
-  "recommended_action": "Issue a $6.43 Ryde voucher to the rider for the unexempted off-route segment (RD-2, paid as voucher per NS-7); record the RD-1 breach on the driver's file — no account flag as the RD-6 threshold is not met.",
-  "confidence": 0.78,
-  "reasoning": "RydeTAXI is metered, so extra kilometres on an unexempted off-route segment flow straight into the fare under RD-1 and RD-2; the trip drove 18.7 km against a 13.9 km optimal route and billed $6.77 of excess distance [F1][F4][F16-RD-2]. The only measured deviation is one off-route segment, 21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km (+4.56 km) [F3].\n\nRD-4 does not excuse it: the trace shows no qualifying traffic incident on the replaced stretch, and the only traffic facts are central-expressway and Kampong Bahru Road speed band 5 (40–49 km/h), which on their own do not exempt a segment [F12][F13][F14][RD-4(a)][RD-4(b)].\n\nRD-5 / RD-3 turn on what the chat actually says. The driver asked \"Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty.\" [F8] and the rider replied \"Sure, no problem.\" [F9] — that is agreement to a stop the driver proposed, not a route authorisation. The rider never chose the place: the driver named the station and named its location (\"just ahead\"), so this is not RD-3(a) — the rider did not name a place, and the record still shows no measured stop [F8][F9][F3][RD-3(a)]. The driver's own statement confirms the scope was a short stop and that he extended it himself into \"a small change of route\" [F11]; a scope-creep justification in a post-trip statement is a claim, not rider consent [RD-5][G11]. Under RD-5 the agreement covers a short stop, not a 6.27 km loop; no rider message before 21:39:55 authorises the route driven, so the segment counts and the extra km are refundable under RD-2 [F3][F5-F6][RD-5][RD-2].\n\nAmount: rate = $26.31 ÷ 18.66 km = $1.40997.../km (as the fare record states); 4.56 km × $1.40997/km = $6.4295 → $6.43 [F3][F4][F7][RD-2]. The waiting charge $0.11 for 0.4 min is a metered waiting unit and is not refundable [F5][RD-3(c)]. The $1.25/$1.47 platform fee is a published fee [F7][FARE-1]. RD-6 does not attach: the driver's profile shows route_disputes_upheld_90d = 0, so no flag_account [F17][RD-6].",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Refund $4.65 to the rider's original payment method as the surge differential; note in the case file that the notice omitted the free-cancellation statement and remind ops to template the SURGE-1 notice with all three items.",
+  "confidence": 0.86,
+  "reasoning": "The fare rose because of surge alone: the quote was $10.41 at 1× and the charge $15.06 at 1.6×, with the fare $4.65 above the quote and the surge part (1.6 − 1) × $8.63 = $5.18 capped at $4.65 [F6][F7][F8][SURGE-3]. The route gives no refund of its own: billed distance 2.6 km does not exceed the optimal 2.7 km, so deviation is −0.1 km, inside RD-1 tolerance, and there is no off-route segment to assess under RD-2 / RD-5 [F1][F3].\n\nThe surge notice was sent in-app at 21:31:30, before the 21:34 start, so timing under SURGE-1 is met, and the log outweighs the rider's complaint that nothing arrived [F9][F12]. Reading the words of the notice, it states the new multiplier (\"1.6× the usual rate\") and a revised estimated fare ($15.91); the third required item — that the rider may cancel without penalty — is absent [F9][SURGE-1]. Missing any one item means the rider was not notified, so the full surge differential is refunded [SURGE-2].\n\nSafety screen: I read both chat messages and the driver's statement — a pickup arrangement, an ETA, and a statement that the app sets the price [F10][F11][F13]. The complaint is about pricing only. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so safety_concern is \"none\" and no SAFE clause applies.\n\nThe record is complete (timestamped chat, platform notice log, full fare breakdown), so evidence_status is \"sufficient\". The rider's fraud flag raises the TH-3 threshold but does not change the reading, and neither profile decides the case [F14][F15][TH-3].",
   "cited_facts": [
-   "F1",
-   "F3",
-   "F4",
-   "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
-   "F11",
    "F12",
+   "F1",
+   "F3",
+   "F10",
+   "F11",
    "F13",
    "F14",
-   "F17"
+   "F15"
   ],
   "cited_policy": [
-   "RD-1",
-   "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3"
   ],
-  "escalate": false,
-  "escalation_reason": null,
-  "segment_findings": [
+  "escalate": true,
+  "escalation_reason": "code confidence 87% below the 95% needed: a party carries a fraud flag (TH-3: 95%)",
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "F3",
-    "finding": "counts",
-    "ground": "scope_other",
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
     "basis": [
-     "F8",
-     "F9",
-     "F11"
+     "F9"
     ],
-    "reason": "The rider's pre-segment message \"Sure, no problem\" [F9] answers the driver's request to pull in at the petrol station \"just ahead\" for one minute [F8] — consent to a short stop, not to a 6.27 km loop covering 4.56 km more than the optimal route [F3]. The rider named no place, so RD-3(a) does not apply (no stop measured either) [F8][F9][RD-3]; and the driver's own statement that he \"thought a small change of route was fine\" is post-trip scope creep, not consent [F11][RD-5][G11]. Nothing in the chat authorises this route before 21:39:55, so the segment counts and its extra km are refunded at $1.40997/km under RD-2."
+    "reason": "The 21:31:30 in-app notice states the new multiplier (1.6×) and a revised estimated fare ($15.91), but contains no statement that the rider may cancel without penalty; SURGE-1 requires all three items, and missing any item means not notified → refund the surge differential under SURGE-2 [F9][SURGE-1][SURGE-2]."
    }
   ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F8",
-   "F9",
-   "F11"
+   "F10",
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 6.43,
-  "recommended_action": "Issue a $6.43 Ryde voucher to the rider for the unexempted off-route segment (RD-2, paid as voucher per NS-7); record the RD-1 breach on the driver's file — no account flag as the RD-6 threshold is not met.",
-  "confidence": 0.78,
-  "reasoning": "RydeTAXI is metered, so extra kilometres on an unexempted off-route segment flow straight into the fare under RD-1 and RD-2; the trip drove 18.7 km against a 13.9 km optimal route and billed $6.77 of excess distance [F1][F4][F16-RD-2]. The only measured deviation is one off-route segment, 21:39–21:49, 6.27 km driven where the optimal route covers 1.71 km (+4.56 km) [F3].\n\nRD-4 does not excuse it: the trace shows no qualifying traffic incident on the replaced stretch, and the only traffic facts are central-expressway and Kampong Bahru Road speed band 5 (40–49 km/h), which on their own do not exempt a segment [F12][F13][F14][RD-4(a)][RD-4(b)].\n\nRD-5 / RD-3 turn on what the chat actually says. The driver asked \"Mind if I pull in at the petrol station just ahead for one minute? Tank is almost empty.\" [F8] and the rider replied \"Sure, no problem.\" [F9] — that is agreement to a stop the driver proposed, not a route authorisation. The rider never chose the place: the driver named the station and named its location (\"just ahead\"), so this is not RD-3(a) — the rider did not name a place, and the record still shows no measured stop [F8][F9][F3][RD-3(a)]. The driver's own statement confirms the scope was a short stop and that he extended it himself into \"a small change of route\" [F11]; a scope-creep justification in a post-trip statement is a claim, not rider consent [RD-5][G11]. Under RD-5 the agreement covers a short stop, not a 6.27 km loop; no rider message before 21:39:55 authorises the route driven, so the segment counts and the extra km are refundable under RD-2 [F3][F5-F6][RD-5][RD-2].\n\nAmount: rate = $26.31 ÷ 18.66 km = $1.40997.../km (as the fare record states); 4.56 km × $1.40997/km = $6.4295 → $6.43 [F3][F4][F7][RD-2]. The waiting charge $0.11 for 0.4 min is a metered waiting unit and is not refundable [F5][RD-3(c)]. The $1.25/$1.47 platform fee is a published fee [F7][FARE-1]. RD-6 does not attach: the driver's profile shows route_disputes_upheld_90d = 0, so no flag_account [F17][RD-6].",
+  "amount": 4.65,
+  "recommended_action": "Refund $4.65 to the rider's original payment method as the surge differential; note in the case file that the notice omitted the free-cancellation statement and remind ops to template the SURGE-1 notice with all three items.",
+  "confidence": 0.86,
+  "reasoning": "The fare rose because of surge alone: the quote was $10.41 at 1× and the charge $15.06 at 1.6×, with the fare $4.65 above the quote and the surge part (1.6 − 1) × $8.63 = $5.18 capped at $4.65 [F6][F7][F8][SURGE-3]. The route gives no refund of its own: billed distance 2.6 km does not exceed the optimal 2.7 km, so deviation is −0.1 km, inside RD-1 tolerance, and there is no off-route segment to assess under RD-2 / RD-5 [F1][F3].\n\nThe surge notice was sent in-app at 21:31:30, before the 21:34 start, so timing under SURGE-1 is met, and the log outweighs the rider's complaint that nothing arrived [F9][F12]. Reading the words of the notice, it states the new multiplier (\"1.6× the usual rate\") and a revised estimated fare ($15.91); the third required item — that the rider may cancel without penalty — is absent [F9][SURGE-1]. Missing any one item means the rider was not notified, so the full surge differential is refunded [SURGE-2].\n\nSafety screen: I read both chat messages and the driver's statement — a pickup arrangement, an ETA, and a statement that the app sets the price [F10][F11][F13]. The complaint is about pricing only. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so safety_concern is \"none\" and no SAFE clause applies.\n\nThe record is complete (timestamped chat, platform notice log, full fare breakdown), so evidence_status is \"sufficient\". The rider's fraud flag raises the TH-3 threshold but does not change the reading, and neither profile decides the case [F14][F15][TH-3].",
   "cited_facts": [
-   "F1",
-   "F3",
-   "F4",
-   "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
-   "F11",
    "F12",
+   "F1",
+   "F3",
+   "F10",
+   "F11",
    "F13",
    "F14",
-   "F17"
+   "F15"
   ],
   "cited_policy": [
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
    "RD-1",
    "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1",
-   "NS-7"
+   "TH-3"
   ],
   "escalate": false,
   "escalation_reason": null,
-  "segment_findings": [
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "F3",
-    "finding": "counts",
-    "ground": "scope_other",
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
     "basis": [
-     "F8",
-     "F9",
-     "F11"
+     "F9"
     ],
-    "reason": "The rider's pre-segment message \"Sure, no problem\" [F9] answers the driver's request to pull in at the petrol station \"just ahead\" for one minute [F8] — consent to a short stop, not to a 6.27 km loop covering 4.56 km more than the optimal route [F3]. The rider named no place, so RD-3(a) does not apply (no stop measured either) [F8][F9][RD-3]; and the driver's own statement that he \"thought a small change of route was fine\" is post-trip scope creep, not consent [F11][RD-5][G11]. Nothing in the chat authorises this route before 21:39:55, so the segment counts and its extra km are refunded at $1.40997/km under RD-2."
+    "reason": "The 21:31:30 in-app notice states the new multiplier (1.6×) and a revised estimated fare ($15.91), but contains no statement that the rider may cancel without penalty; SURGE-1 requires all three items, and missing any item means not notified → refund the surge differential under SURGE-2 [F9][SURGE-1][SURGE-2]."
    }
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "The rider's implied claim that the whole $4.65 overcharge is a route/fare overcharge is rejected on distance: billed 2.6 km does not exceed the optimal 2.7 km (deviation −0.1 km, within RD-1 tolerance), so no excess-distance refund arises; the disputed amount is payable only as the surge differential under SURGE-2 / SURGE-3 [F1][F3][RD-1][RD-2]."
+   },
+   {
+    "id": "C2",
+    "reason": "The rider's claim that no message about the increase arrived is rejected: the platform log shows an in-app notice at 21:31:30, before the 21:34 start, and system records outweigh statements — but the notice still fails SURGE-1 for omitting the free-cancellation item [F9][F12][SURGE-1][SURGE-2]."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's claim that he should bear no consequence because the app set the price is rejected as to the outcome: the surge notice gap is the platform's, not his, but SURGE-2 still refunds the surge differential to the rider [F8][F9][F13][SURGE-2]."
+   }
+  ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F8",
-   "F9",
-   "F11"
+   "F10",
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "resolved",
+ "status": "escalated",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.78 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this fare_dispute case removed from cited_policy: RD-1, RD-2, TH-3\ndropped rejected_claims not in any live brief: C1, C2, D1\n✓ ruling consistent with the policy certificate\n✗ code confidence 87% below the 95% needed: a party carries a fraud flag (TH-3: 95%)"
  ],
  "record_path": "bench/results/judge_only/B-0022.record.json",
- "latency_s": 7.77,
- "input_tokens": 13813,
- "output_tokens": 1643,
- "requests": 2,
- "llm_calls": 2
+ "latency_s": 6.64,
+ "input_tokens": 10327,
+ "output_tokens": 1336,
+ "requests": 1,
+ "llm_calls": 1
 }

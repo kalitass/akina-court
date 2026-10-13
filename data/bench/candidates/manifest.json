@@ -1,0 +1,868 @@
+{
+ "seed": 20261008,
+ "generated_by": "data/synth/scenarios.py --candidates (readings under trial; not part of the 50)",
+ "reference_version": "2026-10-13 v5b (records: arrival = confirmation, readings as text, road-class speeds; rules as v5) v5: the organisers' policy v2.1 (policy.md v3) - every fare distance-based; RD-1 tolerance after exemptions; a traffic reason decides the violation / reminder, not the amount; named-road consent checked against the GPS road names; NS-1 5-min wait from the later of arrival and scheduled time, message AND call; NS-8 goodwill credit; NS-9 flag; SURGE-1..3; TH-1 bands, TH-3 code confidence, TH-4 missing records",
+ "cases": [
+  {
+   "case_id": "K-0001",
+   "name": "cand_retracted",
+   "type": "route_deviation",
+   "pair": [
+    "Clarke Quay",
+    "Sentosa Beach Station"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.3,
+       0.5
+      ]
+     }
+    ],
+    "consent": "retracted",
+    "stop": "none",
+    "incident": "none",
+    "band": 2,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "complaint_text": "He asked about another road. I said ok, then told him no, please stay on the main road, before he turned. He went anyway and the meter was well above the estimate.",
+    "driver_text": "The rider said ok to the other road, so I took it."
+   },
+   "truth": {
+    "ruling": "refund_partial",
+    "amount": 6.77,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5",
+     "RD-4",
+     "RD-7"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 4.80 km (billed 13.13 km − optimal 8.33 km) over 1 off-route segment(s). segment 1 (09:11:20-09:18:45, +4.67 km): the rider said ok, then took it back ('actually no, please stay on ...') before the turn-off -> counts. Refund = (4.80 − 0.00) km × $1.4097/km = $6.77 (RD-2). Traffic reason on record for segment(s) 1 (speed band 2 on New Bridge Road), but the rider was not informed of this route and did not agree to it beforehand: refund, no violation; the driver gets a notification-duty reminder (RD-2, RD-7).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "'Jam ahead, can I go via X?' / 'ok', then 30 s later, still before the turn-off, 'actually no, please stay on ...'; the car went via X: the yes was withdrawn -> refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "retracted"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-27T09:11:20+08:00",
+     "end": "2026-09-27T09:18:45+08:00",
+     "driven_km": 5.77,
+     "route_km": 1.1,
+     "extra_km": 4.67,
+     "max_off_route_m": 2563
+    }
+   ],
+   "stretch_roads": [
+    "NEW BRIDGE ROAD"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 4.80 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✓ RD-4 traffic reason on the replaced stretch when the segment began [F3] traffic reason on record — no driver violation; the amount still turns on RD-5 (F12)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 09:11:20 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (UPPER PICKERING STREET → PICKERING STREET → CHURCH STREET → CECIL STREET → FINLAYSON GREEN → MARINA BOULEVARD → MARINA LINK → MARINA COASTAL EXPRESSWAY → STRAITS BOULEVARD → MAXWELL ROAD → NEIL ROAD): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 09:07 driver: “Jam ahead, can I go via Marina Boulevard?”; F8: Chat #2 09:08 rider: “ok”; F9: Chat #3 09:08 rider: “actually no, please stay on New Bridge Road.”; F11: Driver statement (written after the trip, not part of the chat): “The rider said ok to the other road, so I took it.” (F7, F8, F9, F11)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8, F9)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F18)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.13 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 4.80 km left > 1 km → refund_partial $6.77",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (4.80 km deviation − km of exempt segments) × $1.4097/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.28793,
+      103.84667
+     ],
+     "via": [
+      [
+       1.270817,
+       103.855722
+      ]
+     ],
+     "rejoin": [
+      1.27726,
+      103.83645
+     ]
+    }
+   ],
+   "geometry_from": "rd_request_only"
+  },
+  {
+   "case_id": "K-0002",
+   "name": "cand_conditional_faster",
+   "type": "route_deviation",
+   "pair": [
+    "Jurong Point",
+    "Suntec City"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.4,
+       0.58
+      ]
+     }
+    ],
+    "consent": "conditional",
+    "stop": "none",
+    "incident": "none",
+    "band": 2,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "slow_detour": 12.0,
+    "complaint_text": "I said ok only if it was faster. It was not: the ride took far longer than the app's estimate and the meter was well above it.",
+    "driver_text": "The rider agreed to the other road. The traffic there was slow too; that is not my fault."
+   },
+   "truth": {
+    "ruling": "refund_partial",
+    "amount": 7.88,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5",
+     "RD-4",
+     "RD-7"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 5.59 km (billed 30.03 km − optimal 24.45 km) over 1 off-route segment(s). segment 1 (12:27:50-12:45:35, +5.03 km): the rider agreed only 'if it's faster', and the trip ran well over the estimate: the condition failed -> counts. Refund = (5.59 − 0.00) km × $1.4099/km = $7.88 (RD-2). Traffic reason on record for segment(s) 1 (speed band 2 on Ayer Rajah Expressway), but the rider was not informed of this route and did not agree to it beforehand: refund, no violation; the driver gets a notification-duty reminder (RD-2, RD-7).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "'can go via X, should be faster?' / 'ok if it's faster'; the trip ran well over the estimate, so the condition failed and there is no consent, although X was driven -> refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "conditional"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-28T12:27:50+08:00",
+     "end": "2026-09-28T12:45:35+08:00",
+     "driven_km": 7.41,
+     "route_km": 2.38,
+     "extra_km": 5.03,
+     "max_off_route_m": 1387
+    }
+   ],
+   "stretch_roads": [
+    "AYER RAJAH EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 5.59 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✓ RD-4 traffic reason on the replaced stretch when the segment began [F3] traffic reason on record — no driver violation; the amount still turns on RD-5 (F11)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 12:27:50 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (CLEMENTI WEST STREET 1 → WEST COAST ROAD → CLEMENTI ROAD → KENT RIDGE CRESCENT → KENT RIDGE DRIVE → ARTS LINK → COMPUTING DRIVE → HENG MUI KENG TERRACE → PASIR PANJANG ROAD → SOUTH BUONA VISTA ROAD): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 12:24 driver: “Jam ahead, can go via West Coast Road, should be faster?”; F8: Chat #2 12:25 rider: “ok if it's faster”; F10: Driver statement (written after the trip, not part of the chat): “The rider agreed to the other road. The traffic there was slow too; that is not my fault.” (F7, F8, F10)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F17)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.56 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 5.59 km left > 1 km → refund_partial $7.88",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (5.59 km deviation − km of exempt segments) × $1.4099/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.30571,
+      103.76874
+     ],
+     "via": [
+      [
+       1.294256,
+       103.770991
+      ],
+      [
+       1.282019,
+       103.787645
+      ]
+     ],
+     "rejoin": [
+      1.28428,
+      103.80081
+     ]
+    }
+   ],
+   "geometry_from": "rd_consent_except_road"
+  },
+  {
+   "case_id": "K-0003",
+   "name": "cand_misattributed_ok",
+   "type": "route_deviation",
+   "pair": [
+    "Compass One",
+    "Kallang Wave Mall"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.4,
+       0.58
+      ]
+     }
+    ],
+    "consent": "misattributed",
+    "stop": "none",
+    "incident": "none",
+    "band": 2,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "complaint_text": "He said he was going another way but I never answered; the only ok I sent was about my luggage. The meter was well above the estimate.",
+    "driver_text": "I told the rider I was going another way and the rider said ok."
+   },
+   "truth": {
+    "ruling": "refund_partial",
+    "amount": 5.95,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5",
+     "RD-4",
+     "RD-7"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 4.22 km (billed 17.55 km − optimal 13.33 km) over 1 off-route segment(s). segment 1 (14:31:55-14:41:50, +4.03 km): the rider's only 'ok' answered a question about luggage; the route notice that followed got no answer -> counts. Refund = (4.22 − 0.00) km × $1.4103/km = $5.95 (RD-2). Traffic reason on record for segment(s) 1 (speed band 2 on Kallang Paya Lebar Expressway), but the rider was not informed of this route and did not agree to it beforehand: refund, no violation; the driver gets a notification-duty reminder (RD-2, RD-7).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "the rider's only 'ok' answered 'Can I put your luggage in the boot?'; the later 'Jam ahead, I go via Y ok?' got no reply -> no consent to the route, refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "misattributed"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-28T14:31:55+08:00",
+     "end": "2026-09-28T14:41:50+08:00",
+     "driven_km": 6.29,
+     "route_km": 2.26,
+     "extra_km": 4.03,
+     "max_off_route_m": 2328
+    }
+   ],
+   "stretch_roads": [
+    "KALLANG PAYA LEBAR EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 4.22 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✓ RD-4 traffic reason on the replaced stretch when the segment began [F3] traffic reason on record — no driver violation; the amount still turns on RD-5 (F12)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 14:31:55 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (KAKI BUKIT ROAD 2 → KAKI BUKIT AVENUE 2 → EUNOS LINK → JALAN EUNOS → CHANGI ROAD → JALAN TURI → GEYLANG SERAI → GEYLANG ROAD → PAYA LEBAR ROAD → CIRCUIT LINK → CIRCUIT ROAD → PIPIT ROAD): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 14:21 driver: “Can I put your luggage in the boot?”; F8: Chat #2 14:21 rider: “ok”; F9: Chat #3 14:28 driver: “Jam ahead, I go via Jalan Eunos ok?”; F11: Driver statement (written after the trip, not part of the chat): “I told the rider I was going another way and the rider said ok.” (F7, F8, F9, F11)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8, F9)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F18)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.19 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 4.22 km left > 1 km → refund_partial $5.95",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (4.22 km deviation − km of exempt segments) × $1.4103/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.33945,
+      103.89768
+     ],
+     "via": [
+      [
+       1.316974,
+       103.897273
+      ]
+     ],
+     "rejoin": [
+      1.3244,
+      103.88435
+     ]
+    }
+   ],
+   "geometry_from": "bl_named_elsewhere"
+  },
+  {
+   "case_id": "K-0004",
+   "name": "cand_buried_general",
+   "type": "route_deviation",
+   "pair": [
+    "AMK Hub",
+    "Marina Bay Sands"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.48,
+       0.66
+      ]
+     }
+    ],
+    "consent": "general_buried",
+    "stop": "none",
+    "incident": "none",
+    "band": 2,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "complaint_text": "I never agreed to any detour. The meter came out well above the estimate.",
+    "driver_text": "Before pickup the rider told me to take whatever way, just get there on time, so I went round the jam."
+   },
+   "truth": {
+    "ruling": "no_action",
+    "amount": null,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 4.06 km (billed 17.95 km − optimal 13.89 km) over 1 off-route segment(s). segment 1 (17:36:05-17:45:20, +3.74 km): the rider gave a general route choice before it started -> the rider's route, exempt (RD-5). Less the exempt 3.74 km, 0.32 km is left: within the 1 km tolerance (RD-1) -> no refund.",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "among 18 pickup messages, the 9th is the rider's 'whatever way you want, just get me there by ...'; the complaint says 'I never agreed to any detour': a general route choice before the detour covers it (RD-5), the rest is within tolerance -> no refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "general_buried"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-29T17:36:05+08:00",
+     "end": "2026-09-29T17:45:20+08:00",
+     "driven_km": 6.23,
+     "route_km": 2.49,
+     "extra_km": 3.74,
+     "max_off_route_m": 1868
+    }
+   ],
+   "stretch_roads": [
+    "CENTRAL EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 4.06 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✓ RD-4 traffic reason on the replaced stretch when the segment began [F3] traffic reason on record — no driver violation; the amount still turns on RD-5 (F27)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 17:36:05 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (JALAN BAHAGIA → KIM KEAT ROAD → BALESTIER ROAD → LAVENDER STREET → KALLANG ROAD → VICTORIA STREET → JALAN SULTAN → NORTH BRIDGE ROAD → ROCHOR ROAD → ROCHOR CANAL ROAD → BUKIT TIMAH ROAD): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 17:24 rider: “Hi, I'm at the taxi stand, in a red cap.”; F8: Chat #2 17:24 rider: “Are you the grey Kia Niro?”; F9: Chat #3 17:25 driver: “Yes, grey Kia Niro. Coming.”; F10: Chat #4 17:25 driver: “Traffic a bit slow here.”; F11: Chat #5 17:25 rider: “No problem.”; F12: Chat #6 17:25 rider: “I have one small luggage.”; F13: Chat #7 17:25 driver: “Ok, boot has space.”; F14: Chat #8 17:25 driver: “About 2 min more.”; F15: Chat #9 17:26 rider: “whatever way you want, just get me there by 6”; F16: Chat #10 17:26 rider: “Thanks!”; F17: Chat #11 17:26 rider: “It's quite hot today.”; F18: Chat #12 17:26 rider: “I'll wait under the shelter.”; F19: Chat #13 17:26 rider: “Near the taxi queue.”; F20: Chat #14 17:26 rider: “Can see the traffic from here, quite bad.”; F21: Chat #15 17:27 rider: “No rush.”; F22: Chat #16 17:27 rider: “I see a car coming, is that you?”; F23: Chat #17 17:27 rider: “Oh not you.”; F24: Chat #18 17:27 rider: “Ok I see you now.”; F26: Driver statement (written after the trip, not part of the chat): “Before pickup the rider told me to take whatever way, just get there on time, so I went round the jam.” (F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F26)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8, F9, F10, F11, F12, F13, F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F33)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.32 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 4.06 km left > 1 km → refund_partial $5.72",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (4.06 km deviation − km of exempt segments) × $1.4100/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.32556,
+      103.86026
+     ],
+     "via": [
+      [
+       1.302099,
+       103.85895
+      ]
+     ],
+     "rejoin": [
+      1.31022,
+      103.84422
+     ]
+    }
+   ],
+   "geometry_from": "rd_named_cn_am"
+  },
+  {
+   "case_id": "K-0005",
+   "name": "cand_phone_claim_chat_consent",
+   "type": "route_deviation",
+   "pair": [
+    "Clarke Quay",
+    "Bedok Mall"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.55,
+       0.72
+      ]
+     }
+    ],
+    "consent": "before",
+    "stop": "none",
+    "incident": "none",
+    "band": 0,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "yes": "ok go via {road}",
+    "extra_unrecorded_call": true,
+    "driver_text": "I told her on the phone before the turn and she said ok.",
+    "complaint_text": "I never agreed to anything on the phone. The meter came out well above the estimate."
+   },
+   "truth": {
+    "ruling": "no_action",
+    "amount": null,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5",
+     "RD-3"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 3.87 km (billed 19.34 km − optimal 15.47 km) over 1 off-route segment(s). segment 1 (18:43:55-18:53:00, +3.29 km): the rider agreed beforehand to go via Sims Avenue, and the segment drove it (Kallang Paya Lebar Expressway, Sims Way, Sims Avenue, Jalan Eunos, Eunos Link, Ubi Avenue 2, Ubi Avenue 1) -> exempt (RD-5). Less the exempt 3.29 km, 0.58 km is left: within the 1 km tolerance (RD-1) -> no refund.",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "the driver relies on an unrecorded phone call, which proves nothing; but the chat holds the rider's own 'ok go via X' before the turn-off, and X was driven: the chat consent decides (RD-5) -> no refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "before"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-29T18:43:55+08:00",
+     "end": "2026-09-29T18:53:00+08:00",
+     "driven_km": 6.34,
+     "route_km": 3.06,
+     "extra_km": 3.29,
+     "max_off_route_m": 749
+    }
+   ],
+   "stretch_roads": [
+    "PAN ISLAND EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 3.87 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✗ RD-4 traffic reason on the replaced stretch when the segment began [F3] no incident or congestion on record for the replaced stretch — a driver violation if not exempt (no evidence)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 18:43:55 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (KALLANG PAYA LEBAR EXPRESSWAY → SIMS WAY → SIMS AVENUE → JALAN EUNOS → EUNOS LINK → UBI AVENUE 2 → UBI AVENUE 1): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 18:40 driver: “Traffic ahead on Pan Island Expressway is building up, ok if I go round via Sims Avenue?”; F8: Chat #2 18:41 rider: “ok go via Sims Avenue”; F11: Driver statement (written after the trip, not part of the chat): “I told her on the phone before the turn and she said ok.” (F7, F8, F11)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F17)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.58 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 3.87 km left > 1 km → refund_partial $5.46",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (3.87 km deviation − km of exempt segments) × $1.4100/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.32004,
+      103.87661
+     ],
+     "via": [
+      [
+       1.315126,
+       103.883913
+      ],
+      [
+       1.31767,
+       103.895565
+      ]
+     ],
+     "rejoin": [
+      1.32541,
+      103.90243
+     ]
+    }
+   ],
+   "geometry_from": "rd_cte_consent_connector"
+  },
+  {
+   "case_id": "K-0006",
+   "name": "cand_wrong_7eleven",
+   "type": "route_deviation",
+   "pair": [
+    "Jurong East MRT",
+    "Junction 8"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "place": "Rifle Range Road 7-Eleven"
+     }
+    ],
+    "consent": "none",
+    "stop": "named_missed",
+    "incident": "none",
+    "band": 0,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "named_place": "Bukit Timah Plaza",
+    "stop_text": "Can stop at the 7-Eleven at {place}?"
+   },
+   "truth": {
+    "ruling": "refund_partial",
+    "amount": 3.58,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-3"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 2.54 km (billed 18.30 km − optimal 15.76 km) over 1 off-route segment(s). segment 1 (21:47:30-21:55:40, +2.14 km): the rider named one 7-Eleven and the car stopped at another, off the route (RD-3 not met) -> counts. Refund = (2.54 − 0.00) km × $1.4098/km = $3.58 (RD-2). No traffic reason for segment(s) 1: a driver violation is recorded (RD-2).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "the rider asked for the 7-Eleven at Bukit Timah Plaza; the car stopped at a different 7-Eleven ~290 m away, off the route: not the place she named (RD-3 not met) -> refund",
+   "readings": [
+    {
+     "element": "RD-3 rider-requested stop",
+     "decide": "Did the rider name the place the car stopped at?",
+     "label": "named_missed"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-09-30T21:47:30+08:00",
+     "end": "2026-09-30T21:55:40+08:00",
+     "driven_km": 2.95,
+     "route_km": 0.81,
+     "extra_km": 2.14,
+     "max_off_route_m": 692
+    }
+   ],
+   "stretch_roads": [
+    "PAN ISLAND EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 2.54 km (billed − optimal); 1 off-route segment(s) (F5, F4)",
+    "✗ RD-4 traffic reason on the replaced stretch when the segment began [F4] no incident or congestion on record for the replaced stretch — a driver violation if not exempt (no evidence)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F4] RULE: exempt only if a RIDER message sent by 21:47:30 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (KISMIS ROAD → TOH YI DRIVE → JALAN JURONG KECHIL → UPPER BUKIT TIMAH ROAD → DUNEARN ROAD → RIFLE RANGE ROAD → BUKIT TIMAH ROAD → JALAN ANAK BUKIT): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F8: Chat #1 21:43 rider: “Can stop at the 7-Eleven at Bukit Timah Plaza?”; F9: Chat #2 21:43 driver: “Ok can”; F11: Driver statement (written after the trip, not part of the chat): “The rider asked for a 7-Eleven, so I went to the 7-Eleven I know there and waited.” (F8, F9, F11)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F4] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. Stops in this segment: F2. (F8, F9, F2)",
+    "? RD-3 [RD-3:F4] a RIDER message before 21:47:30 NAMED this specific place, and the car stopped there (F2) [F4] met → the whole segment is exempt (the way there included — do not split it); not_met (no rider message named a place, e.g. 'a 7-Eleven on the way', or the car stopped somewhere else) → RD-3 does not apply and the segment turns on RD-5 (F8, F9, F2)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F17)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F4 exempt → 0.40 km left ≤ 1 km → no_action (no refund)",
+    "if F4 counts → 2.54 km left > 1 km → refund_partial $3.58",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (2.54 km deviation − km of exempt segments) × $1.4098/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.33357,
+      103.77148
+     ],
+     "via": [
+      [
+       1.33862,
+       103.7807
+      ]
+     ],
+     "rejoin": [
+      1.3437,
+      103.78496
+     ]
+    }
+   ]
+  },
+  {
+   "case_id": "K-0007",
+   "name": "cand_coming_down",
+   "type": "no_show",
+   "pair": [
+    "Bedok Mall",
+    "Raffles Place"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeX",
+    "weather": "fair",
+    "prior_ns": 0,
+    "threat": null,
+    "by": "driver",
+    "park_m": 40,
+    "within_s": 310,
+    "here": true,
+    "chat": "coming_down",
+    "reason_reading": "no_show"
+   },
+   "truth": {
+    "ruling": "no_action",
+    "amount": null,
+    "cited_policy": [
+     "NS-0",
+     "NS-1"
+    ],
+    "escalate": false,
+    "rationale": "(i) Arrival confirmed 40 m from the pickup: within 200 m. (ii) 310 s continuously at the pickup against 300 s (the 5-minute free wait, counted from the arrival confirmation): reached. (iii) Before cancelling the driver sent 2 in-app message(s) and made 1 call(s): both present. All NS-1 conditions hold -> the $5.00 fee stands.",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "at minute 4 the rider wrote 'coming down in 1 min'; the driver waited to 5:10, had messaged and called, and cancelled as a no-show: a promise to come is not coming, NS-1 holds -> fee stands",
+   "readings": [
+    {
+     "element": "NS-0 cancellation reason",
+     "decide": "From the driver's own words, did he cancel because the rider did not come, or for his own reason?",
+     "label": "no_show"
+    }
+   ],
+   "segments": [],
+   "stretch_roads": [],
+   "certificate": [
+    "✓ NS-0 who cancelled [case] cancelled_by = driver (F4)",
+    "✓ NS-1 (i) arrived: arrival confirmed (driver_tap) within 200 m of the pickup [case] driver_tap at 22:51:30, 40 m from pickup (closest approach overall 38 m) (F7, F1)",
+    "✓ NS-1 (ii) waited at least 5 min from the later of arrival and the scheduled time (NS-1 free wait: at least 5 min) [case] 310 s continuously at the pickup counted from arrival; threshold 300 s (≥) (F7)",
+    "✓ NS-1 (iii) before cancelling, the driver sent ≥ 1 in-app message AND made ≥ 1 in-app call [case] 2 message(s), 1 call(s) (F5)",
+    "✗ NS-9 rider's 3rd no-show within 30 days → flag_account [case] no prior no-show(s) in 30 days on record (F19)",
+    "? NS-0 [NS-0:reason] the driver cancelled BECAUSE the rider did not show (NS-1), not for a reason of his own (NS-3) [case] app reason: rider_no_show (the driver's claim); read his messages and statement: met → NS-1 holds, the fee stands; not_met ONLY when his own words give a reason of his own for cancelling — car trouble, a personal or family matter, another job, refusing the trip — → NS-3, refund the fee; undetermined → escalate. Where the car or the rider waited, and whether he was at the pickup, are not reasons of his own: NS-1 (i)–(iv) above already settle them (F4, F10, F12, F15)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "allowed outcomes: no_action, refund_full, escalate"
+   ],
+   "identity": "v1",
+   "plan": []
+  },
+  {
+   "case_id": "K-0008",
+   "name": "cand_cant_find_you",
+   "type": "no_show",
+   "pair": [
+    "Tampines Mall",
+    "Changi Airport T1"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeX",
+    "weather": "fair",
+    "prior_ns": 0,
+    "threat": null,
+    "by": "driver",
+    "park_m": 40,
+    "wait_s": 360,
+    "here": true,
+    "reason_reading": "no_show",
+    "cancel_text": "Can't find you, cancelling."
+   },
+   "truth": {
+    "ruling": "no_action",
+    "amount": null,
+    "cited_policy": [
+     "NS-0",
+     "NS-1"
+    ],
+    "escalate": false,
+    "rationale": "(i) Arrival confirmed 40 m from the pickup: within 200 m. (ii) 360 s continuously at the pickup against 300 s (the 5-minute free wait, counted from the arrival confirmation): reached. (iii) Before cancelling the driver sent 2 in-app message(s) and made 1 call(s): both present. All NS-1 conditions hold -> the $5.00 fee stands.",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "after 6 min at the pickup, messages and a call: 'Can't find you, cancelling.' means the rider did not show (NS-0), not a reason of his own; NS-1 holds -> fee stands",
+   "readings": [
+    {
+     "element": "NS-0 cancellation reason",
+     "decide": "From the driver's own words, did he cancel because the rider did not come, or for his own reason?",
+     "label": "no_show"
+    }
+   ],
+   "segments": [],
+   "stretch_roads": [],
+   "certificate": [
+    "✓ NS-0 who cancelled [case] cancelled_by = driver (F4)",
+    "✓ NS-1 (i) arrived: arrival confirmed (driver_tap) within 200 m of the pickup [case] driver_tap at 08:58:00, 40 m from pickup (closest approach overall 38 m) (F7, F1)",
+    "✓ NS-1 (ii) waited at least 5 min from the later of arrival and the scheduled time (NS-1 free wait: at least 5 min) [case] 360 s continuously at the pickup counted from arrival; threshold 300 s (≥) (F7)",
+    "✓ NS-1 (iii) before cancelling, the driver sent ≥ 1 in-app message AND made ≥ 1 in-app call [case] 2 message(s), 1 call(s) (F5)",
+    "✗ NS-9 rider's 3rd no-show within 30 days → flag_account [case] no prior no-show(s) in 30 days on record (F18)",
+    "? NS-0 [NS-0:reason] the driver cancelled BECAUSE the rider did not show (NS-1), not for a reason of his own (NS-3) [case] app reason: rider_no_show (the driver's claim); read his messages and statement: met → NS-1 holds, the fee stands; not_met ONLY when his own words give a reason of his own for cancelling — car trouble, a personal or family matter, another job, refusing the trip — → NS-3, refund the fee; undetermined → escalate. Where the car or the rider waited, and whether he was at the pickup, are not reasons of his own: NS-1 (i)–(iv) above already settle them (F4, F10, F11, F14)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. hint word in F11 — a locator, not a finding; read it in context (F11)",
+    "allowed outcomes: no_action, refund_full, escalate"
+   ],
+   "identity": "v1",
+   "plan": []
+  },
+  {
+   "case_id": "K-0009",
+   "name": "cand_sarcastic",
+   "type": "route_deviation",
+   "pair": [
+    "Jurong East MRT",
+    "NUS"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeTAXI",
+    "loops": [
+     {
+      "frac": [
+       0.35,
+       0.6
+      ]
+     }
+    ],
+    "consent": "sarcastic",
+    "stop": "none",
+    "incident": "none",
+    "band": 2,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null,
+    "complaint_text": "He announced another detour and I made clear I was not happy about it. He went anyway and the meter was well above the estimate.",
+    "driver_text": "I told the rider I was going another way because it was faster, and the rider did not object."
+   },
+   "truth": {
+    "ruling": "refund_partial",
+    "amount": 3.55,
+    "cited_policy": [
+     "RD-1",
+     "RD-2",
+     "RD-5",
+     "RD-4",
+     "RD-7"
+    ],
+    "escalate": false,
+    "rationale": "Deviation 2.52 km (billed 10.95 km − optimal 8.43 km) over 1 off-route segment(s). segment 1 (09:08:35-09:14:25, +2.31 km): the rider's reply is a sarcastic objection, not an acknowledgement -> counts. Refund = (2.52 − 0.00) km × $1.4100/km = $3.55 (RD-2). Traffic reason on record for segment(s) 1 (speed band 2 on Ayer Rajah Expressway), but the rider was not informed of this route and did not agree to it beforehand: refund, no violation; the driver gets a notification-duty reminder (RD-2, RD-7).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "'I'm going via Z. Faster.' / 'wow great, another detour, love it 🙄': a sarcastic objection, not an acknowledgement -> refund",
+   "readings": [
+    {
+     "element": "RD-5 rider's agreement",
+     "decide": "Do the rider's words before the segment agree to this route, and to which road (the code then checks that road against the GPS road names)?",
+     "label": "sarcastic"
+    }
+   ],
+   "segments": [
+    {
+     "start": "2026-10-01T09:08:35+08:00",
+     "end": "2026-10-01T09:14:25+08:00",
+     "driven_km": 4.2,
+     "route_km": 1.89,
+     "extra_km": 2.31,
+     "max_off_route_m": 1025
+    }
+   ],
+   "stretch_roads": [
+    "AYER RAJAH EXPRESSWAY"
+   ],
+   "certificate": [
+    "✓ RD-1 deviation over 1 km [case] deviation 2.52 km (billed − optimal); 1 off-route segment(s) (F4, F3)",
+    "✓ RD-4 traffic reason on the replaced stretch when the segment began [F3] traffic reason on record — no driver violation; the amount still turns on RD-5 (F11)",
+    "? RD-5 rider informed and agreed before the deviation; scope of that agreement [F3] RULE: exempt only if a RIDER message sent by 09:08:35 agrees AND the agreement covers this segment. (1) GENERAL route choice ('take whichever way is faster') covers a route chosen to get there, not an errand of the driver's own (a stop away from the route, a loop that reaches nothing: counts). (2) A SPECIFIC named road or area ('go via X'): put X in named_road; code checks it against the roads this segment drove (FABER DRIVE → JALAN LEMPENG → CLEMENTI AVENUE 6 → COMMONWEALTH AVENUE WEST → CLEMENTI AVENUE 4 → CLEMENTI AVENUE 5 → CLEMENTI AVENUE 2 → WEST COAST ROAD → JUBILEE ROAD): X among them → named_road_tied (exempt), otherwise named_road_elsewhere (counts). (3) Scope unclear: undetermined. A driver's claim of agreement that appears only in his statement is not consent; a complete chat record with no rider agreement before the segment: counts. This finding changes the amount. Evidence — F7: Chat #1 09:04 driver: “I'm going via Clementi Avenue 2. Faster.”; F8: Chat #2 09:05 rider: “wow great, another detour, love it 🙄”; F10: Driver statement (written after the trip, not part of the chat): “I told the rider I was going another way because it was faster, and the rider did not object.” (F7, F8, F10)",
+    "? RD-3 rider asked for this stop or route; whether the rider named this place [F3] RULE (RD-3): exempt if a RIDER message before the segment named a specific place or route and the car went there. A stop the rider asked for without naming a place ('a 7-Eleven on the way') does not excuse the driver's choice of a far one → counts. No stop measured in this segment. (F7, F8)",
+    "✗ RD-6 prior upheld route dispute in 90 d (repeated breach → flag_account) [case] route_disputes_upheld_90d = 0 (F17)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "if F3 exempt → 0.21 km left ≤ 1 km → no_action (no refund)",
+    "if F3 counts → 2.52 km left > 1 km → refund_partial $3.55",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (2.52 km deviation − km of exempt segments) × $1.4100/km, rounded to cents; no refund when what is left is 1 km or less",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": [
+    {
+     "leave": [
+      1.32082,
+      103.75486
+     ],
+     "via": [
+      [
+       1.319764,
+       103.767861
+      ]
+     ],
+     "rejoin": [
+      1.30671,
+      103.76748
+     ]
+    }
+   ],
+   "geometry_from": "rd_notice_ack_hmm"
+  },
+  {
+   "case_id": "K-0010",
+   "name": "cand_notice_paren",
+   "type": "fare_dispute",
+   "pair": [
+    "Orchard Road",
+    "Marina Bay Sands"
+   ],
+   "reused_from": "new",
+   "conditions": {
+    "service": "RydeX",
+    "m0": 1.0,
+    "m1": 1.3,
+    "notice": "paren",
+    "loops": [],
+    "consent": "none",
+    "stop": "none",
+    "incident": "none",
+    "band": 0,
+    "prior": 0,
+    "weather": "fair",
+    "threat": null
+   },
+   "truth": {
+    "ruling": "no_action",
+    "amount": null,
+    "cited_policy": [
+     "SURGE-1",
+     "SURGE-2"
+    ],
+    "escalate": false,
+    "rationale": "Surge rose 1.0x -> 1.3x and the rider was notified in-app before pickup with the new multiplier, the revised fare and the free-cancel option (\"Fares are higher than usual right now (1.3× surge). New estimate $16.15. Cancel free anytime.\", SURGE-1); the rider rode -> the higher fare applies, no refund (SURGE-2).",
+    "flag_account": false,
+    "escalate_ok": true
+   },
+   "hard": "the in-app notice before pickup: 'Fares are higher than usual right now (1.3× surge). New estimate $X. Cancel free anytime.': the multiplier in brackets is still stated, with the fare and free cancellation -> no refund",
+   "readings": [
+    {
+     "element": "SURGE-1 notice content",
+     "decide": "Does the notice text state the new multiplier, the revised fare and a free-cancel option?",
+     "label": {
+      "multiplier": true,
+      "revised_fare": true,
+      "cancel_option": true
+     }
+    }
+   ],
+   "segments": [],
+   "stretch_roads": [],
+   "certificate": [
+    "✓ SURGE-2 surge increased between quote and trip start [case] 1× → 1.3× (F8)",
+    "✓ SURGE-1 rider notified in-app at or before pickup [case] notified in-app at or before pickup (F9)",
+    "? SURGE-1 [SURGE-1:notice] the notice states ALL THREE: the new multiplier, the revised fare, and that the rider may cancel without penalty [case] read the quoted notice text: met → the higher fare stands (no_action); not_met (any of the three missing, vague or contradicted within the notice itself, e.g. 'fees may apply') → refund the surge part; undetermined → escalate. The clause asks the notice to STATE a revised estimated fare; an estimate that differs from the fare finally charged is still a stated estimate, and a rider's statement that no notice arrived does not outweigh the platform's log (F9)",
+    "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
+    "allowed outcomes: refund_partial, no_action, escalate; amount = (1.3 − 1) × surgeable subtotal = $2.40",
+    "flag_account required: False"
+   ],
+   "identity": "v1",
+   "plan": []
+  }
+ ]
+}

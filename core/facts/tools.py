@@ -173,6 +173,49 @@ def keyword_hint(text: str) -> Optional[str]:
     return next((w for w in THREAT_HINT_WORDS if w in low), None)
 
 
+_ABBR = {"rd": "road", "ave": "avenue", "av": "avenue", "st": "street", "dr": "drive", "hwy": "highway", "expy": "expressway",
+         "blvd": "boulevard", "pkwy": "parkway", "expwy": "expressway", "ave.": "avenue", "cres": "crescent", "pl": "place", "ctr": "centre", "jln": "jalan", "lor": "lorong", "upp": "upper"}
+
+
+_EXPRESSWAYS = {"aye": "ayer rajah expressway", "bke": "bukit timah expressway", "cte": "central expressway", "ecp": "east coast parkway",
+                "kje": "kranji expressway", "kpe": "kallang paya lebar expressway", "mce": "marina coastal expressway",
+                "pie": "pan island expressway", "sle": "seletar expressway", "tpe": "tampines expressway"}
+
+
+def norm_road(name: str) -> str:
+    """Lower-case road name with common Singapore abbreviations spelled out ('Nicoll Hwy' → 'nicoll highway', 'PIE' →
+    'pan island expressway')."""
+    words = re.sub(r"[^a-z0-9 ]", " ", (name or "").lower()).split()
+    return " ".join(_EXPRESSWAYS.get(w, _ABBR.get(w, w)) for w in words)
+
+
+def road_names(text: str) -> list[str]:
+    """The names one road label carries: 'PIE (Pan-Island Expressway)' → ['pie', 'pan island expressway']."""
+    parts = [text] + re.findall(r"\(([^)]*)\)", text or "")
+    out = [norm_road(re.sub(r"\([^)]*\)", " ", p)) for p in parts]
+    return [o for o in out if o]
+
+
+def road_match(name: str, labels: list[str]) -> bool:
+    """Does a named road appear in any label (whole words, either way round)? 'Geylang Rd' matches 'Geylang Rd / Old Airport Rd'."""
+    names = road_names(name)
+    for lab in labels:
+        for ln in [norm_road(lab)] + road_names(lab):
+            for n in names:
+                if n and ln and (re.search(rf"\b{re.escape(n)}\b", ln) or re.search(rf"\b{re.escape(ln)}\b", n)):
+                    return True
+    return False
+
+
+def _roads_between(points: list[GpsPoint], start: datetime, end: datetime) -> list[str]:
+    """Road names on the samples from start to end, in driving order, each once."""
+    out: list[str] = []
+    for p in points:
+        if start <= p.ts <= end and p.road and p.road not in out:
+            out.append(p.road)
+    return out
+
+
 def _hole_threshold_s(points: list[GpsPoint]) -> tuple[float, Optional[float]]:
     """(hole threshold in seconds, median sampling interval or None).
 
@@ -286,12 +329,14 @@ def get_route_facts(case: Case) -> list[Fact]:
             value={"actual_min": round(actual_min, 1), "estimated_min": trip.estimated_min, "delta_min": round(delta, 1)},
         ))
     for k, d in enumerate(_detours(pts, case.route.polyline), 1):
+        roads = _roads_between(pts, d["start"], d["end"])
         facts.append(Fact(
             id=f"gps-detour-{k}", source="gps",
             text=(f"Off-route segment {_t(d['start'])}–{_t(d['end'])}: {d['driven_km']:.2f} km driven where the optimal "
                   f"route covers {d['route_km']:.2f} km, adding {d['extra_km']:.2f} km "
-                  f"(up to {d['max_off_route_m']} m from the optimal route)."),
-            value={**d, "start": d["start"].isoformat(), "end": d["end"].isoformat()},
+                  f"(up to {d['max_off_route_m']} m from the optimal route)."
+                  + (f" Roads driven: {' → '.join(roads)}." if roads else " The record names no roads for this stretch.")),
+            value={**d, "start": d["start"].isoformat(), "end": d["end"].isoformat(), "roads": roads},
         ))
     return facts
 
@@ -351,10 +396,21 @@ def get_no_show_facts(case: Case) -> list[Fact]:
         facts.append(Fact(
             id="tl-cancel", source="timeline",
             text=(f"Accepted {_t(trip.accepted_at, True)}. Cancelled by {trip.cancelled_by} at "
-                  f"{_t(trip.cancelled_at, True)} ({_dur(since_accept)} after acceptance).{fee_txt}"),
+                  f"{_t(trip.cancelled_at, True)} ({_dur(since_accept)} after acceptance)."
+                  + (f" Reason picked in the app: {trip.cancellation_reason}." if trip.cancellation_reason else " No cancellation reason was picked in the app.")
+                  + fee_txt),
             value={"accepted_at": trip.accepted_at.isoformat(), "cancelled_at": trip.cancelled_at.isoformat(),
-                   "cancelled_by": trip.cancelled_by, "s_after_accept": round(since_accept), "cancellation_fee": fee},
+                   "cancelled_by": trip.cancelled_by, "s_after_accept": round(since_accept), "cancellation_fee": fee,
+                   "app_reason": trip.cancellation_reason},
         ))
+        facts.append(contact_fact(case, trip.cancelled_at))
+        if trip.scheduled_at:
+            facts.append(Fact(
+                id="tl-scheduled", source="timeline",
+                text=f"Scheduled pickup time {_t(trip.scheduled_at, True)}; cancelled {_dur(_secs(trip.scheduled_at, trip.cancelled_at))} "
+                     f"{'after' if trip.cancelled_at >= trip.scheduled_at else 'before'} it.",
+                value={"scheduled_at": trip.scheduled_at.isoformat(), "s_scheduled_to_cancel": round(_secs(trip.scheduled_at, trip.cancelled_at))},
+            ))
         if trip.driver_arrived_at:
             gap = _secs(trip.driver_arrived_at, trip.cancelled_at)
             facts.append(Fact(
@@ -423,6 +479,26 @@ def get_no_show_facts(case: Case) -> list[Fact]:
     return facts
 
 
+def driver_contacts(case: Case, before: datetime) -> tuple[list, list]:
+    """(messages, calls) the driver sent / made in-app before `before` (NS-1 contact duty). A call is a chat line of kind
+    "call" or an entry in the platform's call log; the same call logged in both (within 60 s) counts once."""
+    msgs = [m for m in case.chat if m.sender == "driver" and m.kind == "message" and m.ts and m.ts < before]
+    calls = [m.ts for m in case.chat if m.sender == "driver" and m.kind == "call" and m.ts and m.ts < before]
+    for c in case.calls:
+        if c.caller == "driver" and c.ts and c.ts < before and not any(abs(_secs(c.ts, t)) <= 60 for t in calls):
+            calls.append(c.ts)
+    return msgs, sorted(calls)
+
+
+def contact_fact(case: Case, before: datetime) -> Fact:
+    msgs, calls = driver_contacts(case, before)
+    return Fact(id="tl-contact", source="timeline",
+                text=(f"Before {_t(before, True)} the driver sent {len(msgs)} in-app message(s)"
+                      + (f" (first {_t(msgs[0].ts, True)})" if msgs else "")
+                      + f" and made {len(calls)} in-app call(s)" + (f" (first {_t(calls[0], True)})" if calls else "") + "."),
+                value={"driver_messages": len(msgs), "driver_calls": len(calls), "until": before.isoformat()})
+
+
 def get_fare_facts(case: Case) -> list[Fact]:
     """Fare facts from the billing record (source: fare).
 
@@ -433,8 +509,11 @@ def get_fare_facts(case: Case) -> list[Fact]:
     f, facts = case.fare, []
     rates, note = _load_rates()
     rate_km = float(rates["rate_km"])
+    fd = case.fare_detail
     if f.distance_km and f.distance_fare:
         rate_km, note = f.distance_fare / f.distance_km, ", this trip's distance fare ÷ distance km"   # the rate RD-2 uses; rates.json only when the fare record cannot give one
+    elif fd and fd.excess_distance_fare and f.distance_km and f.distance_km > case.route.total_km:
+        rate_km, note = fd.excess_distance_fare / (f.distance_km - case.route.total_km), ", the record's excess distance fare ÷ excess km"
     if f.distance_km or f.distance_fare:
         excess_km = round(f.distance_km - case.route.total_km, 2)
         amount = round(max(excess_km, 0) * rate_km, 2)          # from the printed km, so a reader's arithmetic reproduces it
@@ -456,7 +535,11 @@ def get_fare_facts(case: Case) -> list[Fact]:
     facts.append(Fact(id="fare-surge", source="fare",
                       text=f"Surge multiplier {surge:.1f}×{' (no surge)' if surge == 1 else ''}.",
                       value={"surge_multiplier": surge}))
-    if f.total:
+    if f.total and not any((f.base_fare, f.distance_fare, f.time_fare, f.waiting_fee, f.platform_fee, f.discount)):
+        facts.append(Fact(id="fare-total", source="fare",
+                          text=f"Total charged ${f.total:.2f} {f.currency}" + (f" for {f.distance_km:.2f} km" if f.distance_km else "") + "; the record gives no line-item breakdown.",
+                          value=f.model_dump()))
+    elif f.total:
         facts.append(Fact(
             id="fare-total", source="fare",
             text=(f"Total charged ${f.total:.2f} {f.currency}: base ${f.base_fare:.2f}, distance ${f.distance_fare:.2f} "
@@ -464,6 +547,58 @@ def get_fare_facts(case: Case) -> list[Fact]:
                   f"platform ${f.platform_fee:.2f}, discount ${f.discount:.2f}."),
             value=f.model_dump(),
         ))
+    return facts
+
+
+def get_surge_facts(case: Case) -> list[Fact]:
+    """Surge facts (source: fare): the upfront quote and its multiplier, the trip-start multiplier, the surgeable
+    subtotal and booking fee of the actual fare, the surge part of the difference (SURGE-3), and whether and when the
+    rider was notified and what the notice stated (SURGE-1)."""
+    f, fd, sl, facts = case.fare, case.fare_detail, case.surge, []
+    q = fd.upfront_quote if fd else None
+    m0 = (q.surge_multiplier if q else None) or (sl.quote_time_surge if sl else None)
+    m1 = (sl.trip_start_surge if sl else None) or (f.surge_multiplier if f.surge_multiplier else None)
+    s1 = fd.surgeable_subtotal if fd else None
+    if f.quoted_total is not None and m0 is not None:
+        facts.append(Fact(id="surge-quote", source="fare",
+                          text=f"Upfront quote ${f.quoted_total:.2f} at surge {m0:g}×" + (f" (surgeable subtotal ${q.surgeable_subtotal:.2f})." if q and q.surgeable_subtotal else "."),
+                          value={"quoted_total": f.quoted_total, "quote_multiplier": m0, "quote_subtotal": q.surgeable_subtotal if q else None}))
+    if m1 is not None:
+        bf = fd.booking_fee if fd else None
+        facts.append(Fact(id="surge-actual", source="fare",
+                          text=(f"Actual fare ${f.total:.2f} at surge {m1:g}× from trip start"
+                                + (f"; surgeable subtotal ${s1:.2f}" if s1 is not None else "")
+                                + (f"; booking fee ${bf:.2f} not surged" if bf else "") + "."),
+                          value={"actual_total": f.total, "trip_multiplier": m1, "actual_subtotal": s1, "booking_fee": bf}))
+    if m0 is not None and m1 is not None:
+        diff = round(f.total - f.quoted_total, 2) if f.quoted_total is not None else None
+        part = round((m1 - m0) * s1 + 1e-9, 2) if (s1 is not None and m1 > m0) else 0.0
+        if diff is not None and part > 0:
+            part = min(part, max(diff, 0.0))   # §3.3/§3.4: the refund is the surge differential, never more than the fare's excess over the quote
+        facts.append(Fact(id="surge-diff", source="fare",
+                          text=("Surge " + ("rose" if m1 > m0 else ("fell" if m1 < m0 else "did not change")) + f" from {m0:g}× to {m1:g}×"
+                                + (f"; the fare is ${diff:.2f} above the quote" if diff is not None and diff > 0 else (f"; the fare is ${-diff:.2f} below the quote" if diff and diff < 0 else ""))
+                                + (f"; surge part = ({m1:g} − {m0:g}) × ${s1:.2f} = ${round((m1 - m0) * s1 + 1e-9, 2):.2f}" if m1 > m0 and s1 is not None else "")
+                                + (f", capped at the ${diff:.2f} the fare exceeds the quote" if (m1 > m0 and s1 is not None and diff is not None and part < round((m1 - m0) * s1 + 1e-9, 2)) else "") + "."),
+                          value={"quote_multiplier": m0, "trip_multiplier": m1, "difference": diff, "surge_part": part,
+                                 "rose": m1 > m0}))
+    if sl is not None:
+        start = case.trip.pickup_at
+        when = sl.notification_timestamp
+        timely = bool(when and start and when <= start)
+        # what the notice SAYS is quoted, never summarised: whether it states the new multiplier, the revised fare and a
+        # free-cancel option is a reading of its words (the court's), not a field code fills in
+        if not sl.rider_notified:
+            text = "Surge log: the rider was not notified of the surge change."
+        else:
+            text = (f"Surge log: rider notified via {sl.notification_method or 'unknown method'} at {_t(when, True) if when else 'an unrecorded time'}"
+                    + (f", {'before' if timely else 'after'} the trip started ({_t(start, True)})" if when and start else "")
+                    + (f". Notice text: “{sl.notification_text}”" if sl.notification_text else ". The text of the notice is not on record") + ".")
+        facts.append(Fact(id="surge-notice", source="fare", text=text,
+                          value={"rider_notified": bool(sl.rider_notified), "notified_at": when.isoformat() if when else None,
+                                 "before_trip_start": timely, "in_app": (sl.notification_method or "in_app").replace("-", "_") in ("in_app", "push", "in_app_notification"),
+                                 "has_text": bool(sl.notification_text),
+                                 "surge_activated_at": sl.surge_activated_at.isoformat() if sl.surge_activated_at else None}))
     return facts
 
 
@@ -499,6 +634,18 @@ def get_chat_facts(case: Case) -> list[Fact]:
         facts.append(Fact(id="chat-calls", source="chat",
                           text=f"Call attempts logged in the chat: driver {by['driver']}, rider {by['rider']}; messages sent: driver {replies['driver']}, rider {replies['rider']}.",
                           value={"calls_driver": by["driver"], "calls_rider": by["rider"], "messages_driver": replies["driver"], "messages_rider": replies["rider"]}))
+    for k, c in enumerate(case.calls, 1):
+        # the platform's call log: who called whom, when, whether it connected and, where the trip call was recorded,
+        # what was said (RD-5: a verbal notice counts only with the call recording)
+        said = f" Recording transcript: “{c.transcript}”" if c.transcript else (" Recorded." if c.recording_ref else " No recording on record.")
+        hint = keyword_hint(c.transcript or "")
+        facts.append(Fact(id=f"chat-callrec-{k}", source="chat",
+                          text=(f"Call log {_t(c.ts) if c.ts else 'time not recorded'}: {c.caller} called {c.callee or 'the other party'}"
+                                + ("" if c.answered is None else (", answered" if c.answered else ", not answered"))
+                                + (f", {c.duration_s:.0f} s" if c.duration_s else "") + "." + said),
+                          value={"from": c.caller, "ts": c.ts.isoformat() if c.ts else None, "kind": "call_log",
+                                 "answered": c.answered, "recorded": bool(c.recording_ref or c.transcript),
+                                 **({"transcript": True} if c.transcript else {}), **({"keyword_hint": hint} if hint else {})}))
     if case.driver_statement:
         hint = keyword_hint(case.driver_statement)
         facts.append(Fact(id="chat-driver-statement", source="chat",
@@ -511,7 +658,7 @@ def get_traffic_facts(case: Case) -> list[Fact]:
     """Traffic facts: LTA speed bands translated to km/h ranges, incidents with their distance from
     the optimal route, and the weather record (sources: traffic, weather).
 
-    Speed band 1 (0–9 km/h) is reported as severe congestion, which is what RD-4 asks for.
+    Speed bands 1–2 (under 20 km/h) are reported as congestion, which RD-4 counts as a traffic reason.
     Emits an explicit "none recorded" fact when there are no bands or incidents so the
     absence is citable.
     """
@@ -519,11 +666,11 @@ def get_traffic_facts(case: Case) -> list[Fact]:
     for k, sb in enumerate(case.traffic.speed_bands, 1):
         lo, hi = SPEED_BANDS[sb.speed_band]
         rng = f"{lo}–{hi} km/h" if hi is not None else f"{lo}+ km/h"
-        severe = sb.speed_band == 1
+        severe = sb.speed_band <= 2          # RD-4: bands 1–2 (under 20 km/h) count as congestion
         facts.append(Fact(
             id=f"traffic-band-{k}", source="traffic",
             text=(f"{sb.road_name} (category {sb.road_category}) speed band {sb.speed_band} ({rng}) during "
-                  f"{_t(sb.window_start)}–{_t(sb.window_end)}.{' Severe congestion.' if severe else ''}"),
+                  f"{_t(sb.window_start)}–{_t(sb.window_end)}.{' Congestion (band 1–2).' if severe else ''}"),
             value={"road_name": sb.road_name, "speed_band": sb.speed_band, "kmh_min": lo, "kmh_max": hi,
                    "severe": severe, "window_start": sb.window_start.isoformat(), "window_end": sb.window_end.isoformat()},
         ))
@@ -540,7 +687,21 @@ def get_traffic_facts(case: Case) -> list[Fact]:
             value={"type": inc.type, "lat": inc.lat, "lon": inc.lon, "reported_at": inc.reported_at.isoformat(),
                    "m_from_route": None if d_route == math.inf else round(d_route), "m_from_pickup": round(d_pick)},
         ))
-    if not case.traffic.incidents:
+    route_labels = [r.get("name", "") for r in case.route.roads]
+    for k, ri in enumerate(case.traffic.road_incidents, 1):
+        on_route = bool(ri.road) and road_match(ri.road, route_labels)
+        when = (f"reported {_t(ri.reported_at)}" if ri.reported_at else "time not recorded") + (f", cleared {_t(ri.cleared_at)}" if ri.cleared_at else ", not cleared in the record")
+        facts.append(Fact(
+            id=f"traffic-road-{k}", source="traffic",
+            text=(f"{(ri.incident_type or 'incident').replace('_', ' ')} on {ri.road}" + (f" {ri.direction}" if ri.direction else "")
+                  + (f" ({ri.stretch})" if ri.stretch else "") + f", {when}"
+                  + (f", severity {ri.severity}" if ri.severity else "") + f". {'On' if on_route else 'Not on'} the optimal route."
+                  + (f" {ri.description}" if ri.description else "")),
+            value={"road": ri.road, "incident_type": ri.incident_type, "severity": ri.severity, "on_route": on_route,
+                   "reported_at": ri.reported_at.isoformat() if ri.reported_at else None,
+                   "cleared_at": ri.cleared_at.isoformat() if ri.cleared_at else None},
+        ))
+    if not case.traffic.incidents and not case.traffic.road_incidents:
         facts.append(Fact(id="traffic-incident-none", source="traffic",
                           text="No traffic incidents recorded near the route during the trip window.", value={"count": 0}))
     w = case.weather
@@ -551,25 +712,40 @@ def get_traffic_facts(case: Case) -> list[Fact]:
     return facts
 
 
+def _account_txt(a) -> tuple[str, dict]:
+    if a is None:
+        return "", {}
+    bits, val = [], {}
+    if a.fraud_flags is not None:
+        bits.append(f"fraud flags {a.fraud_flags}" + (f" ({a.fraud_flag_details})" if a.fraud_flag_details else ""))
+        val["fraud_flags"] = a.fraud_flags
+    if a.no_shows_30d is not None:
+        bits.append(f"{a.no_shows_30d} no-show cancellation(s) in the last 30 days before this one")
+        val["no_shows_30d"] = a.no_shows_30d
+    return (" " + "; ".join(bits).capitalize() + "." if bits else ""), val
+
+
 def get_profile_facts(case: Case) -> list[Fact]:
     """Profile facts for both parties: account age, rating, 90-day dispute counts (source: profile).
 
     Profile facts may support an outcome or an account flag (RD-6, NS-2), never decide the case alone.
     """
     r, d = case.profiles.rider, case.profiles.driver
+    rx, rv = _account_txt(case.profiles.rider_account)
+    dx, dv = _account_txt(case.profiles.driver_account)
     win = ((case.provenance or {}).get("history_window") if isinstance(getattr(case, "provenance", None), dict) else None) or "90 d"
     w = f"in {win}" if win == "90 d" else f"on record ({win})"
     return [
         Fact(id="profile-rider", source="profile",
              text=(f"Rider: account age {r.account_age_days} d ({r.account_age_days / 365:.1f} y), rating {r.rating}, "
                    f"{r.disputes_90d} disputes {w}, {r.disputes_upheld_90d} upheld "
-                   f"(route: {r.route_disputes_upheld_90d}, no-show: {r.no_show_disputes_upheld_90d})."),
-             value={"party": "rider", "history_window": win, **r.model_dump()}),
+                   f"(route: {r.route_disputes_upheld_90d}, no-show: {r.no_show_disputes_upheld_90d}).{rx}"),
+             value={"party": "rider", "history_window": win, **r.model_dump(), **rv}),
         Fact(id="profile-driver", source="profile",
              text=(f"Driver: account age {d.account_age_days} d ({d.account_age_days / 365:.1f} y), rating {d.rating}, "
                    f"{d.trips_90d} trips {w}, {d.disputes_90d} disputes, {d.disputes_upheld_90d} upheld "
-                   f"(route: {d.route_disputes_upheld_90d}, no-show: {d.no_show_disputes_upheld_90d})."),
-             value={"party": "driver", "history_window": win, **d.model_dump()}),
+                   f"(route: {d.route_disputes_upheld_90d}, no-show: {d.no_show_disputes_upheld_90d}).{dx}"),
+             value={"party": "driver", "history_window": win, **d.model_dump(), **dv}),
     ]
 
 
@@ -583,6 +759,7 @@ TOOLS_BY_TYPE: dict[DisputeType, tuple[FactTool, ...]] = {
     "route_deviation": (get_route_facts, get_fare_facts, get_chat_facts, get_traffic_facts, get_profile_facts),
     "no_show": (get_no_show_facts, get_fare_facts, get_chat_facts, get_traffic_facts, get_profile_facts),
     "safety": (get_chat_facts, get_route_facts, get_profile_facts),
+    "fare_dispute": (get_route_facts, get_fare_facts, get_surge_facts, get_chat_facts, get_profile_facts),
 }
 
 # Which FactTable sources each agent-facing tool name returns (spec 3.x: advocates read slices).

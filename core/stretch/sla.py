@@ -5,7 +5,7 @@
     enqueue(case_id, route) / list_queue() / resolve(case_id, resolver, note)   -> runs/queue.json
 
 Queues (lowest first):
-    auto_resolve   the ruling executes as-is (voucher issued / dispute closed); SLA 0 h, sampled for audit
+    auto_resolve   the ruling executes as-is (refund paid / dispute closed); SLA 0 h, sampled for audit
     review_24h     a human confirms within 24 h: escalated by verify, confidence below AUTO_CONFIDENCE,
                    amount above AUTO_CAP_SGD, a flag_account recommendation, or a high bad-faith signal
     urgent_safety  safety disputes and threat signals: 2 h SLA (SAFE-1)

@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:35:32.366343+00:00",
+ "ts": "2026-10-13T15:35:29.916667+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 3.02,
-  "recommended_action": "Refund S$3.02 (voucher) for the unexempted detour mileage on this RydeTAXI trip; note the RD-1 breach; no account flag required.",
-  "confidence": 0.58,
-  "reasoning": "Safety screen: chat, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation — safety_concern = none.\n\nService type is RydeTAXI (metered), so detour mileage feeds the fare (RD-2 taxi branch). The driver's GPS trace runs: after pickup (14:21) it follows the quoted corridor (AYER RAJAH EXPRESSWAY / JURONG TOWN HALL ROAD) south-west, but at ~14:29:55–14:33:55 it turns north-east and loops around the Clementi Road / AYE interchange area (points at 1.30836,103.76587 and 1.31188,103.76854 are ~1.3 km east/north of the route), then rejoins the quoted corridor near 1.306/103.771 and continues to NUS. That north-east loop plus the rejoin is ~4.6 km of driving in the wrong direction to recover ~2.5 km of line, i.e. ~2.1 km of excess distance (seg1). No LTA incident covers the replaced optimal segment (incidents empty; the band-2 AYE record is only corroborative and cannot exempt on its own, RD-4(b)/(c)), and no rider message named any stop.\n\nConsent (RD-5): the rider's \"Sure, no problem.\" is timestamped 14:31:35, after the deviation had already begun (off-corridor from ~14:29:55, and the driver's own chat \"can I go round via Clementi Road?\" was sent only at 14:30:55, once the car was already off the route). Consent must precede the detour, so this is consent-after, which does not exempt the segment. Even read as a general route choice, a \"whichever way is faster\" authorisation covers routing to the destination, not a loop that goes away from it, so the wrong-direction loop is not covered either.\n\nAmount (RD-2, RydeTAXI): excess ≈ 2.1 km × per-km rate (fare.distance_fare 14.95 ÷ fare.distance_km 10.6 = S$1.41/km) ≈ S$2.96–3.02. Awarding S$3.02 for the unexempted segment. The metered waiting fee (S$0.11) is not disputed and stays (RD-3(c)). Rider profile route_disputes_upheld_90d = 0, so RD-6 does not attach a flag. Distance figures are estimated from the thinned GPS trace (51 of 296 points), which is the main source of uncertainty.",
+  "amount": 3.28,
+  "recommended_action": "Refund SGD 3.28 to the rider (excess distance fare); log the notification/procedure note on the driver's route-compliance record (RD-7); no formal warning (first incident).",
+  "confidence": 0.78,
+  "reasoning": "Safety screen: complaint, driver statement and chat contain no threat, harassment, sexual remark or dangerous-driving allegation; safety_concern = none.\n\nRoute deviation. Actual 17.99 km vs recommended 13.889 km → deviation 4.101 km, over the 1 km tolerance (RD-1). Whole-metre GPS shows the driver stayed on the optimal corridor until ~14:29 (ANG MO KIO AVE 3/8/1 → CENTRAL EXPRESSWAY), then at 14:26–14:29 (JALAN TENTERAM / JALAN BAHAGIA / KIM KEAT ROAD / BALESTIER ROAD) left it and rejoined via LAVENDER STREET → KALLANG ROAD → JALAN SULTAN → NORTH BRIDGE ROAD → ROCHOR ROAD → BUKIT TIMAH ROAD → CENTRAL EXPRESSWAY. The optimal route in that stretch uses ANG MO KIO AVE 8 → AVE 1 → CTE → HAVELOCK ROAD (roads listed from_m 204 m to 11153 m), none of which is Lavender Street / Balestier Road / Jalan Sultan, so the DUNTEDRIVER segment counts (RD-5). The only off-route measure attributable is Balestier Rd / Lavender St (~3.3 km) plus ~0.8 km of city rejoin streets ≈ 4.101 × 0.80 = 3.28; the gap between the rejoin and the optimal corridor (Kim Keat Rd / Balestier Rd) is the deviation precisely attributable, calculable at this granularity (DISP-001 precedent; C1 under $10 → system decides).\n\nRD-4 fails: traffic_speed_bands show CENTRAL EXPRESSWAY band 2 only over 14:12–14:38, but the replaced CTE stretch was driven at 65–77 km/h (not 1–2 km/h) and thinned data prevent confirming a closure/incident on the replaced part at trip time — so the traffic reason is unproven and cannot exempt the segment.\n\nRD-5 notice: the driver's in-app message at 14:26:00 asked \"ok if I go round via Lavender Street?\" and the rider's own chat at 14:26:40 said \"可以，走 Lavender Street 吧\" — rider consent to going via that specific named road, i.e. the rider adopted that route (RD-3 covering the named road). That exempts the Lavender Street route segment itself.\n\nRemaining driver-chosen run further down: Jalan Sultan / North Bridge Rd / Rochor Rd / Bukit Timah Rd (~2.5 km) was not named, not asked for and only the rider's complaint reflects this uncertainty; it was the driver's picking to rejoin, not traffic-excused, so it counts as deviation. Applying the standard \"refundable km × per-km fare\" against the 4.101 km deviation gives 3.28 (RD-2). Per RD-7 the driver is sent the notification-duty/compliance reminder; no formal warning (first incident). No fraud flag → no account flag.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
@@ -20,7 +20,11 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-7",
+   "FARE-0",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -29,29 +33,67 @@
     "fact_id": "seg1",
     "finding": "counts",
     "ground": "consent_after_or_none",
+    "basis": [
+     "chat-14:26:00",
+     "chat-14:26:40"
+    ],
+    "named_road": "Lavender Street",
+    "reason": "The driver asked at 14:26:00 for consent to go via Lavender Street and the rider said '可以，走 Lavender Street 吧' at 14:26:40, a clear go-ahead naming that specific road. No traffic reason is established (CTE band 2 at 14:12–14:38 but the replaced stretch was driven at 65–77 km/h), yet the rider's consent brings the segment within RD-3/RD-5, so it does not itself found a refund."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "ground": "driver_errand",
     "basis": [],
-    "reason": "North-east loop off the quoted corridor (~14:29:55–14:33:55) then rejoin; the rider's 'Sure, no problem.' (14:31:35) postdates the start of the deviation, and the driver's route proposal (14:30:55) was itself sent after the car had already turned off, so consent does not precede the segment (RD-5). No traffic incident covers the replaced optimal segment (RD-4). Segment is unexempted, ~2.1 km extra counted under RD-1/RD-2."
+    "named_road": null,
+    "reason": "After Lavender Street the driver's own choice (KALLANG ROAD → JALAN SULTAN → NORTH BRIDGE ROAD → ROCHOR ROAD → BUKIT TIMAH ROAD) rejoined the CTE at a point the optimal corridor (HAVELOCK ROAD) never used; it was not named, not asked for, and not traffic-forced (RD-4), so the ~2.5 km run counts as an unexcused deviation (RD-2)."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "surge notice (SURGE-1)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "Trip surge_multiplier = 1.0 and no surge notice exists in the record, so there is no surge differential to refund; not applied."
+   },
+   {
+    "element": "traffic reason for the reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [
+     "traffic_speed_bands"
+    ],
+    "reason": "The band-2 CTE window covers 14:12–14:38, but the CTE stretch the driver left was driven at 65–77 km/h and no closure/incident on the replaced part is recorded; the driver's claim of building congestion is unsupported by telemetry."
+   },
+   {
+    "element": "rider consent / notice (RD-5)",
+    "finding": "met",
+    "basis": [
+     "chat-14:26:00",
+     "chat-14:26:40"
+    ],
+    "reason": "In-app chat shows notice before the turn-off and the rider's own message consenting to the named road Lavender Street; notice and consent requirements are satisfied for that named-road segment."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_verbal_consent",
-    "reason": "A driver's claim that the rider agreed (verbally or in chat) is not consent under RD-5/G11 unless the rider's own message precedes the detour; here the rider's message (14:31:35) came after the car had already left the route."
+    "id": "driver_statement",
+    "reason": "Driver says rider was asked 'before turning off via Lavender Street' — the chat confirms this for Lavender Street, but the statement does not cover (and no chat/call supports) the further unagreed run via Jalan Sultan / North Bridge Road / Rochor Road that forms the refundable excess."
    },
    {
-    "id": "traffic_band_excuse",
-    "reason": "The band-2 AYER RAJAH EXPRESSWAY record covers the optimal route but is only corroborative and cannot exempt a segment on its own (RD-4(b)); no LTA incident exists (RD-4(a))."
+    "id": "rider_uncertainty",
+    "reason": "Rider's 'I'm not sure he took the road he said' is not contradicted by GPS (Lavender Street was indeed driven); the refund rests not on a wrong road but on the additional driver-chosen deviation."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.62,
- "input_tokens": 14649,
- "output_tokens": 1241,
+ "latency_s": 11.64,
+ "input_tokens": 14953,
+ "output_tokens": 1821,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,41 +4,53 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:05.970762+00:00",
+ "ts": "2026-10-13T15:36:01.622007+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to Ryde Trust & Safety for human review + flag_account: the driver's chat message \"Sit down or I lock the doors.\" is an intimidation/threat directed at the rider (driver_statement corroborates: \"I told her to sit down for her own safety and drove on\"). Review the full (unthinned) GPS trace and any in-cabin audio. Remind the driver of the Code of Conduct bar on threats/intimidation and on taking matters into his own hands; advise the rider of the RydeHELP report path and 995 if needed.",
+  "recommended_action": "Refer to Trust & Safety for human review of the driver's threatening chat message; preserve chat/call records and trip telemetry; consider interim suspension of the driver pending review; hold the $5.00 no-show fee pending outcome.",
   "confidence": 0.9,
-  "reasoning": "Safety screen (SAFE-1): the rider's request was benign — at 17:09:35 she wrote \"Please stop the car, I want to get out here.\" The driver replied at 17:10:30: \"Sit down or I lock the doors.\" Read in context this is not a pickup arrangement or a route instruction; it is a threat to confine the rider, conditioned on her non-compliance, aimed at the other party, and the driver's own statement confirms the substance (\"I told her to sit down ... and drove on\"). That is intimidation/harassment under Ryde's Code of Conduct and SAFE-1 (\"Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation\"). Because this is a safety dispute, I do not rule on the merits: escalate = true. Where the rider was when she asked is not established: the GPS is thinned to every 6th sample (30 s grid), and the rider's own 17:09:35 message is not asserted as dangerous, while the driver's account places the incident \"at the lights\", consistent with the 17:10:20 sample showing 0.0 km/h near (1.3015, 103.84235); the thinned trace is not precise enough to fix location or elapsed time, and the driver's statement cannot fill that gap. No fare dispute is in issue: the fare is a fixed RydeX quote (total $32.86, waiting_fee 0.00, cancelled_by null, trip completed), so no route-deviation refund applies (RD-2 non-metered branch); the record also shows no off-route segments and no traffic incidents. This escalation is for the rider's safety allegation against the driver, and the account flag is a safety action, not the RD-6 repeated-route-violation flag (driver's route_disputes_upheld_90d = 0). Evidence status: sufficient for the safety screen (the threat is documented verbatim in the chat and echoed in the driver's statement); the precise location/safety-of-the-vehicle behind the driver's excuse is left to the human reviewer.",
+  "reasoning": "Safety screen (SAFE-1): the driver's chat message at 17:15:10 — \"Hurry up or I will find you and you will regret it.\" — is a threat directed at the rider, sent just before he cancelled. This is a safety indicator, and the rider's complaint (\"the driver threatened me in the chat\") confirms the rider's own perception. Under SAFE-1 the case must be escalated for human review regardless of the filed dispute type (no_show_charge), and under SAFE-3 the AI may not rule on the merits or recommend an outcome for the safety element.\n\nFactual summary for the reviewer (no fault finding): trip T-2044, Bugis Junction → Jurong East MRT, driver assigned 17:08:00, driver_arrived event 17:10:00 and GPS shows the vehicle stationary at the pickup point (≈1.29927, 103.85585 vs pickup 1.2994, 103.8555 — within ~30 m) from 17:10 to 17:15:30. Rider messaged \"2 min, coming\" at 17:12:00. The driver's only call attempt at 17:11:30 was unanswered (0 s), and he sent one in-app message (17:10:30). Driver cancelled at 17:15:30 for rider_no_show; a $5.00 cancellation fee was recorded. Note the timings (whether the free-wait/no-show threshold was actually met, in light of the unanswered call and the 17:12 \"2 min\" message) should be assessed by the human reviewer alongside the safety question; this ruling assigns no fault.\n\nEvidence status: sufficient for the safety escalation (the threat is recorded in the system chat log with a timestamp), so no outcome-relevant record is missing for the escalation decision itself.",
   "cited_facts": [],
   "cited_policy": [
-   "SAFE-1"
+   "SAFE-1",
+   "SAFE-2",
+   "SAFE-3",
+   "SAFE-4"
   ],
   "escalate": true,
-  "escalation_reason": "Safety dispute (dispute.type = safety) with a documented threat: the driver's own chat message \"Sit down or I lock the doors.\" after the rider asked to be let out, corroborated by his statement that he told her to sit down and drove on. SAFE-1 requires escalation to a human reviewer rather than an automated ruling.",
+  "escalation_reason": "Threatening message from driver to rider in in-app chat immediately before cancellation — mandatory SAFE-1 human escalation regardless of dispute type; AI is barred from ruling on the merits (SAFE-3).",
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver_safety_excuse",
-    "reason": "The driver's claim that telling her to sit down was \"for her own safety\" is not supported by the record: the rider's 17:09:35 message is a simple request to be let out, not a dangerous act, and the GPS is thinned to 30 s samples so it cannot establish that the rider was doing something unsafe. A safety rationale stated only by the driver does not convert an explicit threat into acceptable conduct."
+    "element": "safety indicator in chat (SAFE-1)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Driver's chat message of 17:15:10 — \"Hurry up or I will find you and you will regret it.\" — is a threat of harm directed at the rider, read in context, and is not a pickup arrangement or harmless wording."
    }
   ],
-  "flag_account": true,
+  "rejected_claims": [
+   {
+    "id": "driver_no_show_claim",
+    "reason": "Not adjudicated: escalation under SAFE-1/SAFE-3 bars the AI from ruling on the merits; fee held pending human review. Timings noted for reviewer (call at 17:11:30 unanswered, rider '2 min' at 17:12:00, cancel 17:15:30)."
+   }
+  ],
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "confirmed",
   "safety_basis": [
-   "Driver chat 2026-09-23T17:10:30: \"Sit down or I lock the doors.\" — threat/intimidation directed at the rider after she asked to get out",
-   "Driver statement: \"I told her to sit down for her own safety and drove on\" — corroborates he refused to stop and continued driving",
-   "Rider complaint: \"The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.\""
+   "Driver chat 2026-09-23T17:15:10+08:00: \"Hurry up or I will find you and you will regret it.\"",
+   "Rider complaint: \"The driver threatened me in the chat and then cancelled and charged me $5.00.\"",
+   "Threat sent seconds before the driver cancelled and triggered the $5.00 no-show charge."
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 5.75,
- "input_tokens": 16560,
- "output_tokens": 1158,
+ "latency_s": 6.22,
+ "input_tokens": 11625,
+ "output_tokens": 1094,
  "requests": 1,
  "llm_calls": 1
 }

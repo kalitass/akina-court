@@ -1,141 +1,253 @@
-# Ryde 纠纷裁决政策（带编号条款）
+# Ryde Dispute Resolution Policy — Akina Court edition
 
-> 版本 2026-09-28 v2（全条款溯源版）。本文档是 agent 唯一可引用的规则来源；agent 只能引用条款号（如 `NS-1`），不得自创规则。
-> 每条格式：**条件 → 结果**。条件中的数值与事实表（spec 1.5）里的数值直接比对。
-> 每条末尾 `来源：` 只允许三种写法，编号指向 `policy/sources.md` 中带访问日期与原文摘录的条目：
-> - **Ryde 一手**：Ryde 帮助中心 / Terms of Use 原文直接规定；
-> - **派生自 X**：Ryde 未公开，条款由 X（新加坡法规、LTA/PTC、Grab/Gojek/ComfortDelGro 公开条款、有出处的行业/技术文档）推导；
-> 事实如何从原始数据算出（到达半径 200 m、绕路测量、路况匹配 300 m、GPS 断档与聊天记录完整性检查）以及法官的程序规则（引用校验、置信度门槛、系统记录优先于口供、画像不单独定案）属于本系统实现，写在 `core/` 代码里，**不是政策，裁决不得引用**；带数值的参数列在第 6 节空缺清单，待 Ryde 给出官方口径后替换。
-> 找不到任何文档支撑的规则不在可引用集合里，而是列在第 6 节"待 Ryde 确认的规则空缺"。条款行含"不可引用"字样的，只作信息，Judge 不得引用（`data/synth/validate.py` 以此校验 `data/expected/`）。
+The official documents take priority; where they are silent, this system sets the rule.
 
-## 0. 前提：Ryde 的车费模型
+- **[Official]**: stated in an official document.
+- **[Official + system detail]**: the rule is official; how this system applies it to the records is ours or from a Ryde help-centre page.
+- **[System rule]**: not in the official documents; quoted from a Ryde help-centre page where one states it.
+- **system rule** in a Source line = set by this system; neither the official documents nor Ryde's public pages specify it.
 
-- **非计价器服务（RydeX / XL / LUXE / FLASH / POOL / PET）**：车费在下单时按上下车点一次性报价，行程中里程变化不改变车费；行程结束后只能叠加已公布的附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费）。
-- **RydeTAXI**：按所属出租车公司的计价器计费（"Key in the fare as indicated on your meter"），计价器结构由 LTA 公布：里程单位（每 400 m / 350 m）+ 等待时间单位（每 45 s）；因此绕路里程直接进入车费。
-- 因此 RD 组条款中"多出费用"的计算随服务类型不同（见 RD-2）。
+Source codes refer to `policy/sources.md`.
 
-<sub>来源：Ryde 一手 A7、A8、A18（"Fares quoted for our services are generally fixed, except for RydeTAXI"；"all fees for Standard and/or Premium taxis follow that of the respective taxi company"）；计价器结构 B5（LTA）、B6（PTC "Ride-hailed taxi metered fares must follow the metered fare structure and amounts of the taxi company"）。</sub>
-
----
-
-## 1. RD — 绕路（Route Deviation）
-
-**RD-1** 事实表中每一个"off-route segment"（偏离最优路线并多出里程的路段，`gps-detour-*` 事实）构成一段绕路，逐段接受 RD-3 / RD-4 / RD-5 审查；未被任何一条豁免的段为**未豁免绕路段**。本条不设百分比或绝对公里门槛：司机的义务是"在无合理事由时走最短最直接路线"，任何未被解释的偏离都违反该义务；事实工具剔除小于 0.2 km 的匹配噪声属数据层参数（`core/facts/tools.py`），不是政策门槛。
-<sub>来源：派生自 B1（Road Traffic (Public Service Vehicles) Rules r.23(1)(c)："in the absence of any reasonable cause to do otherwise, proceed to the destination named by a passenger … by the shortest and most direct route"）、B2（该义务对应 LTA 扣分表第 16 项，3 分）、C2（Grab 司机行为准则 "ensure that the shortest and most direct route is taken"）、C4（CDG Zig "the driver is obligated to follow the most direct route … in accordance with the Road Traffic Act"）、D1（NYC TLC §80-16(a)(2) "shortest reasonable route"）；Ryde 自身只规定司机可按 GPS 选"最快或最高效路线"（A7），无阈值（见空缺 G1）。</sub>
-
-**RD-2** 存在未豁免绕路段 → **RydeTAXI**：`refund_partial`，金额 = Σ(未豁免段 `extra_km`) × 本行程每公里费率（`fare.distance_fare ÷ fare.distance_km`），四舍五入到分；只退里程单位，停靠等待按 RD-3 处理，未豁免段以外的里程差额（`fare-excess` 与各段之和的差：路线走廊 200 m 内的来回、地图匹配抖动等未归入任何段的里程）不退。**非计价器服务**：车费为一口价不受里程影响，只退未豁免段上产生的 ERP/过路费及司机行程后手动追加的任何未公布项（并入 FARE-1）。可退金额为 0 → `no_action`，但记录司机违反 RD-1 义务。
-<sub>来源：派生自 B5（LTA 计价器按里程单位累计，多出里程即多出费用）、B1 r.23(1)(c) 与 B4（LTA 对"collected a fare … above the metered fare"记 12/21 分并处罚，说明超出应付计价器车费的部分不属司机应得）、A10（Ryde："Drivers who overcharge riders … may face account suspension"）、A11（"Overcharging of additional fees" 被算法标记）、D3（Uber 对"route deviates from the predicted route"导致的多收"happy to review these cases if you feel you were overcharged"）。退款公式本身 Ryde 未公开（空缺 G5）。非计价器分支：A8（ERP 按实际发生收取）、B6（附加费须公布）。</sub>
-
-**RD-3** 乘客指定的停靠 / 改道（聊天中由乘客提出、司机接受；或 app 内"编辑目的地 / 加停靠点"请求且司机接受）：
-(a) 乘客**指名了地点**，或未指名地点但司机选择的停靠点位于最优路线沿线（未产生 `gps-detour-*` 段） → 该段不构成绕路；
-(b) 乘客未指名地点、司机自行选择了一个使轨迹产生 off-route segment 的地点且**事前未告知乘客该地点** → 该段的 `extra_km` 不因乘客的停靠请求而豁免（乘客同意的是"停一下"，不是该路线变更；同意范围按 RD-5 判断），停靠时长仍按 (c) 处理；
-(c) 停靠时长：**RydeTAXI** 按计价器等待时间单位照收（事实表 `fare-wait`），不退；**非计价器服务**：Ryde 公布的等待费只有上车点 $5 一项，行程中停靠没有已公布的收费项，不得收取；app 内改目的地成立时只加已公布的 $3.00（RydeTAXI / 多站 / POOL 不支持 app 内改目的地，只能与司机聊天约定）。
-<sub>来源：(a)(b) 派生自 B1 r.23(1)(c)（义务指向"the destination named by a passenger"，乘客指名的地点即新的目的地）、D1（NYC TLC §80-16(a)(1) "comply with all reasonable and lawful routing requests of the Passenger"）、C4（Zig："passengers have the option to select the route upon boarding"）、C2（Grab："Changing route without passenger's permission"属违规）；(c) RydeTAXI 等待单位 B5（LTA "26 cents for every 45 sec of waiting time"）与 C6（CDG "Every 45 seconds of waiting or less"）、A18（RydeTAXI 按计价器）；非计价器 Ryde 一手 A1（仅公布上车点 $5 等待费）+ 派生自 B6（PTC："waiting time charge and other fees must be published"）；$3.00 与 RydeTAXI 不支持改目的地 Ryde 一手 A9。</sub>
-
-**RD-4** 司机主张因封路 / 事故 / 严重拥堵改道（"合理事由"） → 必须有 traffic 事实佐证，且佐证针对**被替代的那一段最优路线**：
-(a) `traffic-incident-*`：LTA DataMall 事件（Accident / Roadwork / Vehicle breakdown / Road Block / Heavy Traffic 等 DataMall 类型）位于最优路线上（`m_from_route` ≤ 300 m，数据层匹配半径），`reported_at` 早于该绕路段开始且在行程窗口内仍被列出 → 该段豁免，`no_action`（对该段）；
-(b) `traffic-band-*`：最优路线上道路的速度档位记录为 band 1 或 2（LTA 定义 0 < 9 km/h、10 < 19 km/h）且时间窗覆盖该段 → 作为 (a) 的佐证；单独出现时是否足以豁免待 Ryde 确认（空缺 G3），MVP 不据此单独豁免；
-(c) 无 (a) → 该段按 RD-2 处理。
-<sub>来源：派生自 B1 r.23(1)(c) 的"reasonable cause"例外；事件类型与档位定义 B7（LTA DataMall API User Guide v6.9："SpeedBand … 1 – indicates speed range from 0 < 9 2 – indicates speed range from 10 < 19"；Traffic Incidents 数据集）；Ryde 只允许司机"按 GPS 选最快或最高效路线"（A7）、未规定举证方式。</sub>
-
-**RD-5** 聊天记录显示司机在离开最优路线**之前**提出路线变更、乘客明确同意 → 该路线变更对应的段不构成绕路（对该段 `no_action`）。判定"之前"= 乘客同意消息的时间戳早于该 `gps-detour-*` 段的 `start`；司机改道后才告知、乘客未回复、或同意的内容不含该段（如只同意"走 PIE"，不含去远处便利店）→ 该段不视为同意。同意须是乘客本人发出的消息：司机陈述中"乘客口头同意了"的主张不构成同意（G11）。消息是否表示同意、同意到哪一段，由法庭阅读原文判定。同意的范围分三种：**一般路线授权**（"哪条快走哪条"）覆盖为到达目的地而选的路线，不覆盖司机自己的事（偏离路线的停留、到不了任何地方的绕圈仍计）；**指定路线授权**（"好，走 X 路"）只覆盖在 X 路上的行驶，须有记录把该段与 X 路对应起来（该路上的停留、把车定位在该路上的消息、事实表里的路名）——仅凭时间先后不能证明实际走的就是 X 路，没有对应记录则判 `undetermined`（G13）；**范围读不出**的，判 `undetermined`。`undetermined` 的段若影响金额或账号标记，案件转人工；聊天记录不完整（消息无时间戳、记录未导入）而无法判定时亦然（G12）。
-<sub>来源：Ryde 一手 A7（"reach a mutual agreement before you go"）；派生自 C2（Grab："Discuss and agree with the user before taking an alternative route"，"Changing route without passenger's permission"列为违规）。"改道后告知不算同意"是 "before you go" / "before taking" 的直接推论。</sub>
-
-**RD-6** 本案对司机成立（RD-2 退款 > 0 或记录 RD-1 违规），且画像 `route_disputes_upheld_90d ≥ 1`（近 90 天已有成立的绕路纠纷，本案使之成为"repeated"） → 裁决附加 `flag_account`（送交 Ryde 账号审查）；画像事实只能作为附加动作的依据，不能单独用于判定本案绕路成立。
-<sub>来源：Ryde 一手 A10（"Repeated or severe breaches may lead to permanent suspension from the Ryde platform"；"Where Ryde reasonably suspects serious or repeated violations, it may report such conduct to … Land Transport Authority (LTA)"）、A11（"Unusual trip patterns"由算法标记）；派生自 B2/B4（LTA 扣分累计 6 分暂停、21 分吊销，绕路每次 3 分）。"repeated"的计数口径与 90 天窗口 Ryde 未公开（空缺 G4）。</sub>
+| Code | File | Content |
+|---|---|---|
+| O1 | `Document 2 — Ryde Dispute Resolution Policy v2.1 (Markdown).md` | Ryde Dispute Resolution Policy v2.1, effective 2026-01-01 |
+| O2 | `RydeResolve Route Deviation Dataset — DISP-001.md` | Route-deviation sample; official ruling `partial_refund` $3.44 |
+| O3 | `RydeResolve Sample Dataset — DISP-002 No-Show Charge Dispute (SG).md` | No-show sample; official ruling: fee upheld |
+| O4 | `Document 1 — Fare Dispute Sample Data (JSON).md` | Surge sample (DISP-003); 1.0x → 1.5x without notice, rider asks for $4.50 |
 
 ---
 
-## 2. NS — 爽约（No-Show）与取消费
+## 0. Fare
 
-**NS-0** 取消费 $6.61 只在 Ryde 公布的两种情形之一下成立，按 `cancelled_by` 分支，其余 NS 条款只能经本条进入：
-- `cancelled_by = rider` → 即时单看 NS-4，预约单看 NS-5；
-- `cancelled_by = driver` 且司机主张乘客爽约 → NS-1 / NS-2；司机以其他理由取消 → NS-3；
-- 行程完成后的等待费争议 → NS-6。
-取消政策适用于除 RydeTAXI 外的全部服务；争议时限与退款形式见 NS-7。
-<sub>来源：Ryde 一手 A1（"Rider will be charged a Cancellation Fee of $6.61* if: Rider cancels after 3 minutes of matching OR The driver presses 'I'm Here', waits for > 3 minutes for the rider to arrive at the pick-up point and cancels the trip (Rider NO SHOW and no trip completion)"）、A18（"Cancellation Policy applies to all Service Types* … *All services except RydeTAXI"）、A16（ToU "If you decide to cancel your ride booking or do not show up at the designated location, you may be charged a Cancellation Fee"）。</sub>
-
-**NS-1** 司机以乘客爽约取消，且同时满足：(i) 司机已按下"I'm Here"（或平台自动确认到达）；(ii) 按下那一刻 GPS 显示司机位于上车点（`tl-here` 的 `m_from_pickup_at_tap` ≤ 200，200 m 为数据层参数，见空缺 G2）；(iii) 按下之后在上车点**连续**等待超过 3 分钟直至取消（≥ 3:01，`tl-here` 的 `within_200m_after_tap_s` > 180；按下之前在附近停留的时间不计） → 乘客取消费 $6.61 成立（其中 $4.50 归司机），`no_action`。案件记录自带爽约阈值时（如官方样例 `no_show_threshold_min = 8`，其时间线写"threshold reached"），(iii) 按该记录的阈值与口径执行（达到即成立，≥ 8:00），执行记录标明来源；记录无阈值则用本条默认（超过 3 分钟）。记录里的免费等待时长（`free_wait_time_min`）是等候费起算点，不是爽约阈值，不得代入 (iii)。到达确认是司机按键（`driver_tap`）还是平台自动判定（`platform_auto`），按记录原样写明，不得把自动判定写成"司机按了按钮"。等待期间 GPS 有断档（间隔超过该轨迹正常采样间隔两倍且超过 2 分钟）或轨迹未覆盖到取消时刻的，(iii) 不能从两次采样之间推定为"一直在等"，案件转人工（G12）。
-<sub>来源：Ryde 一手 A1、A3（"Drivers are only allowed to indicate arrival and impose the Waiting Time Fee only if he/she: Is at the pick-up location according to GPS data AND Has waited for more than 3 mins"）、A2/A5（司机得 $4.50）。"位于上车点"的米数 Ryde 未公开（空缺 G2）。</sub>
-
-**NS-2** 司机以乘客爽约取消，但 NS-1 (i)(ii)(iii) 任一不成立（未按"I'm Here"；按"I'm Here"那一刻不在上车点范围内；按下后在范围内连续等待 ≤ 3 分钟） → 取消费 $6.61 全额退还，`refund_full`。若司机按了"I'm Here"而那一刻 GPS 显示其不在上车点（`tl-here` 的 `m_from_pickup_at_tap` > 200）→ 另附 `flag_account`（Ryde 列为滥用取消/等待按钮的欺诈行为）。
-<sub>来源：Ryde 一手 A3（"Otherwise, you will not be charged the $6.61 Waiting Time Fee if any of the above are not fulfilled"）、A10（欺诈行为清单："Remaining stationary and uncontactable after accepting a ride to trigger cancellation or waiting fees"、"Abuse of Cancellation and Waiting Fee Policy"）、A11（"Abuse of the cancellation and waiting time button"）；同构规则见 C1（Grab "You will not be charged the $4 cancellation fee if any of the above are not fulfilled"）、C5（CDG）。</sub>
-
-**NS-3** 司机取消且不主张乘客爽约（或主张但不满足 NS-1） → 乘客不承担任何取消费；已扣则 `refund_full`。司机侧该次取消计入取消率，取消率 > 17.5% 由 Ryde 暂停账号（账号动作，由 Ryde 的取消率机制处理，不是本案裁决，本条不产生 `flag_account`）。
-<sub>来源：Ryde 一手 A13（"Refusing or cancelling a trip without a valid reason at pick-up may result in account action"）、A16（ToU "the cancellation shall be based on acceptable cancellation reasons as shown in the Application"）、A10（"Cancellation Rate (CR) > 17.5%" 暂停）；派生自 B1 r.25 / B2 第 10 项（无合理理由拒载 6 分，出租车）。</sub>
-
-**NS-4** 即时单、乘客取消：匹配后 **3 分钟内**（≤ 3:00）取消 → 不收费；匹配后超过 3 分钟取消 → 取消费 $6.61 成立，`no_action`。Ryde 未公布"司机迟于 ETA 则免费取消"的规则（见 NS-8），因此司机尚未到达不构成乘客免费取消的理由；乘客的救济是 NS-7 的人工申诉。
-<sub>来源：Ryde 一手 A1（"All cancellations made within 3 minutes of matching are not chargeable"）、A2（司机侧同文）。</sub>
-
-**NS-5**（不可引用·信息性：本数据集无预约单字段） 预约单：乘客在预约时间 15 分钟以前取消 → 不收费；15 分钟内取消 → 取消费成立；司机在预约时间前 15 分钟之后才接单的，乘客自匹配起有 3 分钟免费取消期。
-<sub>来源：Ryde 一手 A1（"All cancellations made > 15 minutes before the scheduled trip time are not chargeable … If the advanced trip request is accepted only after 5:45 PM, riders will have a 3 minute grace period"）。</sub>
-
-**NS-6** 等待费 $5.00 成立条件：司机按下"I'm Here"、GPS 位于上车点（同 NS-1 (ii)）、等待超过 3 分钟后乘客上车且行程完成、司机在行程内（下车时）按下等待费按钮。任一条件不满足 → `fee_waived`（退 $5.00）。
-<sub>来源：Ryde 一手 A1（"Riders may be charged a Waiting Time Fee of $5 at the end of the trip if: The driver presses 'I'm Here', waits for > 3 minutes for the rider to board, and continues the trip"）、A3、A5（"Drivers are required to tap on the $5* Waiting Time Fee button upon Drop-off" / "we are unable to charge the rider once the trip is completed"）。</sub>
-
-**NS-7** 取消费或等待费的争议须在行程后 **30 天内**提出 → 逾期 `no_action`；成立的退款以 Ryde 代金券（取消费 $6.61 / 等待费 $5.00）形式发放，不退现金；Ryde 对最终退款保留裁量权，本系统裁决为建议而非终局。
-<sub>来源：Ryde 一手 A4（"submit a fee waiver request via RydeHELP in our app within 30 days of the trip … we will issue you a voucher with a unique code worth $6.61 [/ $5.00] as a refund … This voucher is non-refundable and cannot be exchanged for cash"）、A16（ToU "Ryde reserves its absolute discretion to any refunds to you … or to your RydeCoins wallet"）。</sub>
-
-**NS-8**（不可引用·信息性：Ryde 无此规则，且案件文件无 ETA 字段） 其他运营商的规则：司机比 app 显示的预计到达时间晚超过 5 分钟仍未到达，乘客可免费取消（Grab 另有"首次显示 ETA 后 3 分钟内未到则免取消费"）。
-<sub>来源：C1（Grab："if you're made to wait for more than 5 minutes after the indicated ETA, you'll be allowed to cancel your ride with no fee" / "Cancellation fees are waived if your driver does not arrive within 3 minutes after the first-shown estimated time of arrival"）、C3（Gojek："If more than 5 minutes has passed from the initial indicated ETA, and the driver hasn't arrived"）。空缺 G7。</sub>
+**FARE-0** — Fare build-up [Official + system detail]
+Actual fare = (base + distance + time fare) × surge multiplier at trip start + booking fee (not surged) + tolls / ERP (at cost) + published add-on fees. All service types.
+<sub>Source: O1 Appendix A "calculated using actual distance, actual time, and the surge multiplier in effect at trip start"; O1 §3.5 "Booking fee" surge-exempt; O2 "Tolls are passed through at cost." Add-on fees: A9 "a $3.00 add/edit destination fee will apply".</sub>
 
 ---
 
-## 3. FARE — 车费明细争议
+## 1. RD — Route deviation
 
-**FARE-1** 非计价器服务的最终车费 = 下单报价 + 已公布附加费（ERP/过路费、等待费 $5、改目的地费 $3、取消费 $6.61、平台费 $1.25/$1.47）；出现任何未公布或不满足对应条款的追加项 → 退还该项，`refund_partial`。
-<sub>来源：Ryde 一手 A8（"Fares quoted for our services are generally fixed, except for RydeTAXI. However, please note that there may be additional charges such as tolls"）、A6（平台费两档）、A9（$3.00）；派生自 B6（PTC："this amount must be provided upfront to the commuter prior to the booking … additional stop charge, waiting time charge and other fees must be published"）。</sub>
+**RD-1** — Distance and tolerance [Official + system detail]
+Deviation = actual distance − recommended distance. ≤ 1 km → no refund.
+System detail: the code splits the trip into off-route segments (times, roads, extra km) so each can be checked under RD-3, RD-4, RD-5. Departures under 0.2 km are map-matching noise.
+<sub>Source: O1 §1.4 "actual_route_distance − recommended_route_distance"; §1.3 "deviation ≤ 1km … No refund (within tolerance)". Segments, 0.2 km: system rule.</sub>
 
-**FARE-2** 收取的 ERP/过路费高于实际路线在该时段应缴闸门费之和 → 退还差额，`refund_partial`；ERP 差额若源于未豁免绕路段则并入 RD-2。本数据集无 `tolls` 字段时不触发。
-<sub>来源：Ryde 一手 A8（"I was overcharged for ERP/toll"：ERP 按实际发生收取）；闸门核验方法 Ryde 未公开（空缺 G9）。</sub>
+**RD-2** — Refund matrix [Official + system detail]
+Deviation over 1 km:
 
-**FARE-3**（不可引用·信息性：本数据集无清洁费索赔数据） 司机清洁费索赔成立条件：照片证据（至少一张含车牌）、事发 24 小时内专业清洁、行程后 48 小时内经 app 提交、附收据；上限：食物/饮料 $40，体液/污渍 $120，呕吐 $200。任一条件缺失 → `fee_waived`。
-<sub>来源：Ryde 一手 A15（"Your vehicle must be professionally cleaned within 24 hours from the incident. Submit your claim via the driver app within 48 hours … At least one photo must show the vehicle's car plate number"）、A16（ToU "cleaning fee of up to S$200"）。</sub>
-
----
-
-## 4. SAFE — 安全事件
-
-**SAFE-1** 聊天记录、投诉陈述或司机申诉中出现威胁、恐吓、骚扰、性骚扰、人身攻击言论（是否构成由法庭阅读原文判定，记录于 `Ruling.safety_concern`；代码不判定语义，只在事实值里标出含提示词的句子供阅读） → 不做自动裁决，`escalate`，输出事实摘要供人工处理。每个案件法官都须做此筛查，不以提示词命中为前提。
-<sub>来源：Ryde 一手 A13（Code of Conduct："Assault, harassment, or abuse of any kind will not be tolerated … This includes … Threats and Intimidation, Unwanted Sexual Advances … Violations of these guidelines will result in immediate termination and legal action where applicable"；"In any dispute, drivers must not take matters into their own hands but follow the appropriate reporting procedures"）。</sub>
-
-**SAFE-2** 案件涉及交通事故、人身伤害或危险驾驶指控 → `escalate`；摘要中注明 995 / 司机商业保险 / RydeHELP 报告路径。
-<sub>来源：Ryde 一手 A14（"If you're in need of medical assistance, please call 995 … You may file a medical claim through your driver's commercial motor insurance. Report to us swiftly via RydeHELP"）。</sub>
-
-**SAFE-3**（不可引用·信息性：六案中无此情形，Judge 不据此裁决） GPS 与时间线显示行程在乘客未上车的情况下被"完成"并收费 → `refund_full` 并 `flag_account`（Ryde 定义为欺诈行为）。
-<sub>来源：Ryde 一手 A10（"Completing trips without the rider onboard"属欺诈）、A12（"If your rider has been charged for a trip that you could not cancel, please let us know"）。</sub>
-
----
-
-## 5. 裁决动作词表（Judge 输出 schema 用）
-
-| 动作 | 定义 |
+| Situation | Outcome |
 |---|---|
-| `refund_full` | 争议项（取消费 / 等待费 / 整段被投诉的费用）全额退还乘客。 |
-| `refund_partial` | 只退还争议项中经条款认定多收的部分，金额由事实表数值算出，裁决须注明计算所依据的事实编号。 |
-| `fee_waived` | 某项附加费（等待费、清洁费、改目的地费）因不满足成立条件而取消；等同于对该单项的全额退还，用于附加费争议。 |
-| `no_action` | 投诉不成立，原车费与已收费用维持不变。 |
-| `escalate` | 不输出裁决，转人工处理并附事实摘要；用于安全事件、置信度不足或证据不足以适用任何条款。 |
-| `flag_account` | 附加动作，可与上述任一动作并列：将司机或乘客账号送交 Ryde 审查（欺诈、多次违规）。不单独作为裁决结果。 |
+| Traffic reason, rider informed and agreed | `no_action` |
+| Traffic reason, rider **not** informed | Refund excess distance fare, `refund_partial` |
+| **No** traffic reason | Refund excess distance fare, `refund_partial`; record a driver violation |
 
-退款动作统一以 Ryde 代金券发放（NS-7），金额单位 SGD。
+Amount = refundable km × this trip's per-km distance fare (or `excess_distance_fare` if given). Tolls, time fare and surge are not refunded.
+System detail: refundable km = deviation − km of segments exempt under RD-3 / RD-5.
+<sub>Source: O1 §1.3 "rider informed and agrees … No refund", "rider not informed … Partial refund of excess distance fare", "without traffic justification … Full refund of excess distance fare"; O2 "calculated at $0.80/km … $3.44", "Only the excess distance fare is refunded." Exempt km: system rule.</sub>
+
+**RD-3** — Rider-requested stops or routes [System rule]
+Rider named a place or route in chat and the driver accepted, or an in-app destination change / added stop was accepted → that segment is not a deviation. Driver chose an off-route place the rider did not name, without saying so beforehand → not exempt. Stop time is charged as time fare. An accepted destination change adds $3.00.
+<sub>Source: A7 "reach a mutual agreement before you go"; A9 "If the driver accepts your edit destination request, a $3.00 … fee will apply". Driver-chosen places, stop time: system rule.</sub>
+
+**RD-4** — Traffic reason [Official + system detail]
+A reroute needs traffic data showing closure, incident or congestion on the replaced part of the recommended route at trip time.
+System detail: a segment has a traffic reason if (a) a traffic event (accident, closure, fire, roadworks, heavy congestion) is on the recommended route — within 300 m, or on a road the route uses — started before the segment and was still active; or (b) the route's speed band there is 1 or 2 (under 9 / 10–19 km/h) during the segment. Otherwise none.
+<sub>Source: O1 §1.1 "in response to real-time traffic conditions, road closures, or congestion"; §1.4 "verified via historical traffic API data for the route segment"; B7 "1 – indicates speed range from 0 < 9 2 – … 10 < 19". 300 m, road names, bands 1–2: system rule.</sub>
+
+**RD-5** — Notice and consent [Official + system detail]
+The driver must tell the rider before or at the point of deviation, by in-app chat or phone; a brief reason is enough. Chat or call recording shows the rider acknowledged → agreed.
+System detail:
+- Notice after the segment began does not count, nor does an explanation given only after the rider asks (DISP-001).
+- Verbal notice needs a call recording; the driver's word alone does not count.
+- Rider agreed to "go via X" → the code checks X against the roads driven on that segment: present → covered; absent → not covered. No road names in the record → escalate.
+- Driver proposed a reroute with no traffic reason and the rider clearly agreed beforehand → treated as the rider's route (RD-3), no refund.
+<sub>Source: O1 §1.2 "MUST inform the rider … via in-app chat or verbally (with the trip call recording as evidence) before or at the point of deviation"; §1.4 "call recording confirms rider acknowledgment, the deviation is considered agreed"; A7 "reach a mutual agreement before you go". Late notice, road-name check: system rule.</sub>
+
+**RD-6** — Repeat deviations [System rule]
+Upheld against the driver, and the driver had an upheld deviation in the last 90 days → add `flag_account`. The profile never decides the current case.
+<sub>Source: A10 "Repeated or severe breaches may lead to permanent suspension". 90 days: system rule.</sub>
+
+**RD-7** — Reminder after uninformed reroute [Official]
+Refund for not informing the rider → also send the driver a notification-duty reminder and log it on the driver's route compliance record; no formal warning for a first such incident.
+<sub>Source: O2 actions "Issue a reminder to the driver … No formal warning given as this is a first notification-related incident", "Log the notification failure".</sub>
 
 ---
 
-## 6. 待 Ryde 确认的规则空缺
+## 2. NS — No-show and cancellation
 
-| # | 空缺 | 为什么需要 | 当前采用 / 建议值 | 缺什么依据 |
-|---|---|---|---|---|
-| G1 | 绕路的量化门槛（百分比 / 绝对公里）与噪声容差 | 区分真实绕路与地图匹配误差 | 不设政策门槛（RD-1），数据层 0.2 km 噪声容差（`core/facts/tools.py`） | Ryde / LTA / PTC / Grab / Gojek / CDG 均无量化阈值（B1、C2、C4、D1 只说"最短最直接"；Uber D3 只说 "significantly"） |
-| G2 | "at the pick-up location according to GPS data" 的半径 | NS-1/NS-2/NS-6 的 (ii) 要件需要米数 | 200 m（数据层参数）；建议 Ryde 按其 app 的到达判定给出 | Ryde A3、Grab C1、CDG C5 均无米数；Tada 报道称约 500 m（C7，二手来源）；GPS.gov 只给精度 4.9 m（D5） |
-| G3 | "严重拥堵"的档位门槛；路况记录与路线的匹配半径 | RD-4 (b) 能否单独豁免 | band ≤ 2 只作佐证（RD-4）；匹配 300 m（数据层参数） | LTA 只定义档位区间（B7），未定义"拥堵"；OneMotoring 图例无 km/h 门槛 |
-| G4 | "repeated" 违规的计数口径与时间窗 | RD-6 的 `flag_account` | 近 90 天 ≥ 1 起已成立 + 本案（RD-6）；画像字段本身以 90 天为窗（spec §1.3） | Ryde A10 只说 "Repeated or severe"；评分用"last 100 trips"，违规窗口未公开；LTA 扣分累计（B4）是官方惩戒口径而非本系统裁决 |
-| G5 | 绕路退款公式 | RD-2 金额 | 未豁免段 extra_km × 每公里费率（只退里程单位） | Ryde 无 fare review 条款（R1 搜索：longer route / detour / fare review / fare adjustment 均无）；公式派生自 LTA 计价器结构 B5 |
-| G6 | 非计价器服务行程中停靠是否可收费 | RD-3 (c) | 不可收（Ryde 只公布上车点 $5 等待费，PTC 要求附加费须公布） | Ryde 无行程中等待费说明（R5 NOT FOUND） |
-| G7 | 司机迟于 ETA 的免费取消 | 乘客侧公平性（NS-8） | 不采用（Ryde 无此规则，无 ETA 字段） | Grab C1 / Gojek C3 有，Ryde A1 无 |
-| G8 | Judge 置信度是否该作为门槛 | spec §5.4/§5.6 要求有置信度阈值 | 不作门槛：置信度只记录，能否自动执行由政策执行记录（第 3 节的代码核查）决定，与置信度无关（`core/verify.py`） | spec 只要求有阈值、未定值；本系统改为按证据与条款核查，待 Ryde 确认是否需要额外的置信度门槛 |
-| G9 | ERP 闸门核验方法 | FARE-2 | 按实际路线与时段查闸门表 | Ryde A8 无核验方法；数据集无 `tolls` |
-| G11 | 口头 / 未记录的同意是否可接受 | RD-5：司机常称乘客"口头同意了" | 不接受：仅见于司机陈述的同意主张不构成同意；法官无法从聊天记录判定时转人工 | Ryde A7 只说 "reach a mutual agreement before you go"，未说明同意须以何种形式留痕 |
-| G12 | 证据缺失时的处理（GPS 缺失、断档或首尾未覆盖、消息无时间戳、计价器行程无里程费、取消方未记录） | RD-1/RD-2/RD-5/NS-0/NS-1 都以这些记录为前提 | 不裁决：转人工并注明缺少什么；缺失不推定对任何一方有利。"断档"= 相邻采样间隔超过 2 分钟且超过该轨迹正常采样间隔的两倍（官方样例按约 3 分钟采样，3 分钟间隔不是断档） | Ryde 无相应规定；本系统规则，待 Ryde 确认 |
-| G13 | 乘客同意的指定路线与实际行驶段的对应证据 | RD-5：同意"走 X 路"只覆盖 X 路；记录里没有实际行驶路径的路名 | 不推定：没有把该段与所同意路线对应起来的记录（该路上的停留、定位消息、路名事实）时，法官判 `undetermined`，影响结果则转人工；时间先后只是线索。待接入路径路名匹配或由 Ryde 确认推定规则 | Ryde A7 只说 "mutual agreement before you go"，未涉及同意范围与实际路线如何对应 |
-| G10 | RydeTAXI 单位费率 | RD-2 每公里费率 | `data/rates.json` 假定 $1.41/km、$0.26/min（非 LTA 计价器单位 26¢/400 m） | Ryde 不公布单位费率；实际应取所属出租车公司计价器（B5、B6、A18） |
+**NS-0** — Which clause [System rule]
+Driver cancelled for rider no-show → NS-1 / NS-2; driver cancelled for another reason → NS-3; rider cancelled → NS-4; driver did not arrive → NS-8.
+<sub>Source: system rule.</sub>
+
+**NS-1** — No-show fee stands [Official + system detail]
+Driver cancels for rider no-show: the **$5.00 fee** stands (paid to the driver) only if all hold:
+(i) driver arrived: pressed "I'm Here" or arrival was auto-confirmed, with GPS within 200 m of the pickup point;
+(ii) the **5-minute free wait** passed, counted from the later of scheduled pickup time and arrival; a no-show threshold in the record (DISP-002: 8 min) applies instead;
+(iii) before cancelling, the driver sent **≥ 1 in-app message and made ≥ 1 in-app call**;
+(iv) the driver stayed at the pickup point throughout; a GPS gap that leaves this unproven → escalate.
+<sub>Source: O1 §2.1 "free wait time of 5 minutes from the scheduled pickup time"; §2.2 "$5.00 … transferred to the driver"; §2.3 "At least 1 in-app chat message, AND … At least 1 phone call"; A3 "at the pick-up location according to GPS data"; O3 "Auto-arrival confirmed", "no_show_threshold_min": 8. 200 m, later-of-two, continuous presence, GPS gap: system rule.</sub>
+
+**NS-2** — No-show fee voided [Official + system detail]
+Any NS-1 condition fails → `refund_full` of $5.00. Driver marked arrival while GPS was not at the pickup point → also `flag_account`.
+<sub>Source: O1 §2.3 "the cancellation fee is voided and the rider is not charged"; A10 "Fraudulent behavior … 8. Abuse of Cancellation and Waiting Fee Policy".</sub>
+
+**NS-3** — Driver cancelled for another reason [System rule]
+→ No fee; if charged, `refund_full`.
+<sub>Source: A1 lists the only chargeable cases: "Rider cancels after 3 minutes of matching OR The driver presses "I'm Here", waits … and cancels the trip (Rider NO SHOW …)".</sub>
+
+**NS-4** — Rider cancelled [System rule]
+Within 3 minutes of matching → free; later → $5.00 fee (Ryde's help centre says $6.61; this system uses the official $5.00).
+<sub>Source: A1 "within 3 minutes of matching are not chargeable"; O1 §2.2 "cancellation fee of $5.00".</sub>
+
+**NS-8** — Driver did not arrive [Official]
+Driver not at pickup by scheduled time + 5 min → rider may cancel free; a fee charged → `refund_full`. Driver also made no contact attempt → add $5.00 `goodwill_credit`.
+<sub>Source: O1 §2.4 "scheduled pickup time + 5 minutes), the rider may cancel at no charge", "fails to attempt contact … $5.00 goodwill credit".</sub>
+
+**NS-9** — Repeat rider no-shows [Official]
+≥ 3 no-show cancellations in a rolling 30 days → `flag_account` (upfront payment; suspension pending Trust & Safety review). The profile never decides the current case.
+<sub>Source: O1 §2.5 "3 or more no-show cancellations within a 30-day rolling window … flagged".</sub>
+
+---
+
+## 3. SURGE — Surge pricing
+
+**SURGE-1** — Quote lock and notice [Official]
+The quote is binding at the multiplier when quoted. Multiplier rises before trip start → in-app notice before or at pickup stating the new multiplier, the revised estimated fare, and free cancellation. Missing any item → not notified.
+<sub>Source: O1 §3.1 "binding at the surge multiplier in effect at quote time"; §3.2 "new surge multiplier … revised estimated fare … option to cancel without penalty".</sub>
+
+**SURGE-2** — Surge refund [Official]
+
+| Situation | Outcome |
+|---|---|
+| Surge rose, rider notified, rode | `no_action` |
+| Surge rose, rider **not** notified | Refund full surge differential, `refund_partial` |
+| Surge fell | Lower fare applies |
+| Unchanged | Quoted fare applies |
+
+<sub>Source: O1 §3.3 "rider not notified … Full refund of the surge differential"; O4 "rider_notified": false.</sub>
+
+**SURGE-3** — Differential [Official + system detail]
+Differential = actual fare − quote, when the whole difference comes from surge.
+System detail: if other causes (e.g. a deviation) are mixed in, refund only (trip multiplier − quote multiplier) × surgeable subtotal (booking fee excluded); the rest goes to RD or other clauses.
+<sub>Source: O1 §3.4 "actual_fare − upfront_quote … attributable solely to a surge multiplier change"; O4 "surgeable_subtotal": 9.00. Mixed causes: system rule.</sub>
+
+---
+
+## 4. DMG — Vehicle damage
+
+**DMG-1** — Claims [Official]
+Driver may claim cleaning or repair for rider-caused damage: spills, vomit, stains; interior damage (seats, doors, windows); exterior damage while boarding or alighting.
+<sub>Source: O1 §4.1 "cleaning or repair fees resulting from rider-caused damage".</sub>
+
+**DMG-2** — Evidence [Official]
+Photos within 24 hours of trip end, taken and auto-timestamped in the Ryde driver app (no external uploads), linked to the trip by GPS and trip time.
+<sub>Source: O1 §4.2 "within 24 hours", "built-in camera, not external uploads", "via GPS telemetry and trip timestamp".</sub>
+
+**DMG-3** — Amounts [Official]
+Cleaning up to $50.00 on photos alone. Repair at cost, with a certified workshop's written quote within 7 days.
+<sub>Source: O1 §4.3 "Up to $50.00", "written quote from a certified workshop; quote must be submitted within 7 days".</sub>
+
+**DMG-4** — Insufficient evidence [Official]
+No timestamp, external photo, or not linked to the trip → claim rejected, `fee_waived`. Rider disputes the damage → see TH-2.
+<sub>Source: O1 §4.4 "If evidence is insufficient … the claim is rejected".</sub>
+
+---
+
+## 5. SAFE — Safety
+
+**SAFE-1** — Safety screen [Official + system detail]
+Any case, whatever type was filed: chat, complaint or appeal describes dangerous driving, harassment, assault or threats, inappropriate conduct, an accident, or someone feeling unsafe → `escalate`.
+System detail: the court decides by reading the text; the code only highlights hint-word sentences. Every case is screened, hint words or not.
+<sub>Source: O1 §5.2 "flag any dispute that contains safety-related keywords or indicators for immediate human escalation, regardless of the dispute type". Court reading: system rule.</sub>
+
+**SAFE-2** — Accident and injury [Official + system detail]
+Accident, injury or dangerous driving → `escalate`; the summary lists 995, the driver's commercial motor insurance and RydeHELP.
+<sub>Source: O1 §5.1 "Traffic accidents during the trip"; A14 "call 995 … driver's commercial motor insurance … via RydeHELP".</sub>
+
+**SAFE-3** — AI limits in safety cases [Official]
+The AI may only gather evidence, summarise accounts and prepare the case file; it may not rule, assign fault or recommend an outcome.
+<sub>Source: O1 §5.2 "CANNOT issue rulings, determine fault, or recommend resolutions on safety incidents".</sub>
+
+**SAFE-4** — Interim measures [Official]
+After escalation the system may suspend the accused party (no trip acceptance / no booking) until human review; lifted if no violation is found. Action `interim_suspension`.
+<sub>Source: O1 §5.3 "Temporary suspension of the accused party's account", "lifted if the human reviewer determines no safety violation occurred".</sub>
+
+---
+
+## 6. TH — System decision or human review
+
+**TH-1** — By amount [Official]
+
+| Amount | Path |
+|---|---|
+| Under $10 | System ruling final |
+| $10–$50 | System rules at confidence ≥ 80%, else escalate |
+| Over $50 | Human review; system prepares the case file |
+
+<sub>Source: O1 §6.1 table.</sub>
+
+**TH-2** — By category [Official]
+Safety → human. No-show / cancellation → system final ($5.00 fixed). Fare → TH-1. Route deviation → by amount as TH-1, following DISP-001 (section 9, C1). Damage → cleaning ≤ $50 with verifiable photos: system; repair over $50: human.
+<sub>Source: O1 §6.2 table; O2 "assigned_to": "RydeResolve_Auto_Resolution".</sub>
+
+**TH-3** — Confidence [Official + system detail]
+Based on evidence completeness, policy clarity, precedent alignment, party credibility. Any party with fraud flag ≥ 1 → threshold 95%, any amount.
+System detail: the code computes it; the AI does not score itself. Complete = needed records present (GPS coverage, timestamped messages, who cancelled); clear = exactly one rule row applies; aligned = a similar precedent reached the same outcome; credibility = both profiles.
+<sub>Source: O1 §6.3 "evidence completeness, policy clarity, precedent alignment, and party credibility", "fraud flag ≥ 1 … raised to 95%". Computation: system rule.</sub>
+
+**TH-4** — Missing records [System rule]
+A missing or broken GPS track, untimestamped messages, no record of who cancelled, etc. leaves an outcome-relevant condition undecidable → escalate, stating what is missing. Missing records favour neither party.
+<sub>Source: system rule.</sub>
+
+---
+
+## 7. PREC — Precedents
+
+**PREC-1** — Citing precedents [Official + system detail]
+Search precedents by dispute type and key facts and cite them in the reasons. Loaded: DISP-2026-0089 (uninformed reroute, $3.20), DISP-2026-0142 (surge without notice, $3.20), DISP-2026-0211 (no-show cancel, zero contact, $5.00).
+System detail: human-confirmed rulings join the store.
+<sub>Source: O1 §7 "search precedent rulings by dispute type and key facts, and cite the relevant precedent". Store: system rule.</sub>
+
+---
+
+## 8. Ruling actions
+
+| Action | Meaning |
+|---|---|
+| `refund_full` | Refund the disputed item in full |
+| `refund_partial` | Refund only the overcharge, with the calculation |
+| `fee_waived` | Fee or claim voided |
+| `no_action` | Not upheld; charge stands |
+| `escalate` | Human review with the case file |
+| `flag_account` | Add-on: account review (fraud, repeat violations) |
+| `goodwill_credit` | Add-on: $5.00 rider credit (NS-8) |
+| `interim_suspension` | Add-on: suspension until human review (SAFE-4) |
+
+Refunds go to the original payment method, in SGD. Every ruling cites its clause IDs with the official section (e.g. RD-2 / §1.3).
+<sub>Source: O2 "method": "original_payment_method"; O1 closing note "must cite the applicable policy section".</sub>
+
+---
+
+## 9. Contradictions in the official documents
+
+| # | Contradiction | This system |
+|---|---|---|
+| C1 | §6.2 sends deviations over 2 km to human review, but DISP-001 (4.3 km) is resolved automatically with $3.44; §6.1 makes rulings under $10 final. | Follows DISP-001: under $10 the system decides (TH-1, TH-2). |
+| C2 | §4.4 sends disputed damage claims to human review; §6.2 lets the system decide cleaning ≤ $50 with verifiable photos. | Follows §6.2 (more specific). |
+| C3 | §1.3 calls the refund "partial" with a traffic reason but no notice, "full" with no traffic reason; both are the excess distance fare (DISP-001's "partial" is all of it). | Same amount; no traffic reason also records a violation (RD-2). |
+| C4 | §2.1 counts the free wait from scheduled time; DISP-002 counts from arrival (2 min early) and adds an 8-min threshold. | Later of the two; a record threshold applies (NS-1). DISP-002 is upheld either way. |
+| C5 | §6.3 raises the threshold to 95% on a fraud flag; §6.2 makes no-show rulings final. DISP-002's rider has one flag. | The flag only raises the threshold; the system still decides at ≥ 95% (TH-3). |
+| C6 | DISP-001 cites "Driver Policy §4.2"; v2.1 has it at §1.2. | Cite v2.1 §1.2. |
+
+---
+
+## 10. Rules Ryde has not specified (system defaults)
+
+| Topic | Default | Clause |
+|---|---|---|
+| "At the pickup point" radius | 200 m | NS-1 |
+| "Repeat" driver deviation | One upheld deviation in 90 days | RD-6 |
+| Per-km refund rate | Trip's distance fare ÷ distance (DISP-001: $0.80/km) | RD-2 |
+| Missing or broken records | Escalate, no presumption | TH-4 |
+| Agreed route, no road names in record | Escalate | RD-5 |

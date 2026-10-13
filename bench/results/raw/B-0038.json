@@ -4,40 +4,91 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:55.144369+00:00",
+ "ts": "2026-10-13T15:35:57.863289+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no driver account flag warranted (tap position was within the pickup radius).",
-  "confidence": 0.93,
-  "reasoning": "Cancellation-branch check (NS-0): the trip was cancelled by the driver who claims rider no-show, so NS-1/NS-2 apply. Service is RydeX (non-taxi).\n\nNS-1 elements, computed from the trip timeline and GPS:\n(i) Arrival indication: driver_pressed_here_at = 21:29:45 (driver_tap; the record's arrival_confirmed_by is null, so I take the timeline's press timestamp at face value). Satisfied.\n(ii) At-pickup at the tap: pickup is (1.33218, 103.74155). The 21:29:30 fix (21:29:29.75 from the 5 s grid) is (1.332348, 103.741243). Δlat = 0.000168° ≈ 18.7 m, Δlon = 0.000307° ≈ 34.2 m → ≈ 39 m from the pickup point, well inside 200 m. Satisfied.\n(iii) Continuous wait > 3 minutes after the tap until cancellation: cancel is at 21:31:30, only 1 min 45 s after the 21:29:45 tap. Even counting from driver_arrived_at (21:28:35) it is 2 min 55 s, still under 3:00. The GPS shows the car stationary (~0–2 km/h) at the pickup from 21:29:30 through 21:31:30, so the driver was present but the required duration was not met. NOT satisfied.\n\nBecause (iii) fails, NS-2 applies: the $6.61 cancellation fee must be refunded in full. The driver's statement (\"waited at least 5 minutes\") is contradicted by the GPS and timeline, which are the authoritative system records (arrival 21:28:35 → cancel 21:31:30 = 2:55; tap → cancel = 1:45).\n\nNS-2's flag trigger (GPS > 200 m from pickup at the tap) does not fire — the tap fix is ~39 m from the pickup — so no account flag.\n\nSafety screen: the chat contains only a pickup identification (\"I'm here, white BYD e6\") and a cancellation notice; the complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation. Nothing to escalate on safety.\n\nNo evidence gaps: GPS covers the whole stationary window at ~30 s spacing with no gap over 2 minutes; the fare and cancellation timestamps are recorded. Evidence is sufficient.\n\nAmount: $6.61 = the cancellation fee charged, refunded in full → refund_full.",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 cancellation fee to the rider (original payment method); no driver action — driver cancelled nothing and is not at fault beyond ETD, so no flag on either account.",
+  "confidence": 0.9,
+  "reasoning": "Classification (NS-0): the trip record is unambiguous — cancelled_by = \"rider\", cancellation_reason = \"driver_taking_too_long\", actual distance 0.0 km, driver still 3.9 km from the NUS pickup (lat 1.27772, lng 103.76925) at the 21:29:20 cancellation. So this is a rider cancellation under NS-4, not a no-show cancellation under NS-1/NS-2.\n\nNS-4 reads: a rider cancellation is free within 3 minutes of matching; later, the $5.00 fee applies. Here matching/assignment was at 21:26:00 and the rider cancelled at 21:29:20 — 3 min 20 s, i.e. past the 3-minute grace window. On its face that satisfies the chargeable condition (A1), so the fee stands.\n\nThe countervailing rule is NS-8 / §2.4: if the driver is not at the pickup point by scheduled pickup time + 5 minutes, the rider may cancel free. The record gives no scheduled pickup time, so the driver's position must be judged from arrival capability: GPS at 21:29:00 shows the driver 3.90 km away, still moving away from the pickup along Pasir Panjang Drive 3 at ~49–57 km/h. Against the optimal route (10.624 km in 16.5 min ≈ 38.6 km/h achieved), 3.9 km needs ~6 minutes; in the available 5 the driver could not have arrived, and the driver's own chat at 21:27:15 (\"About 5 min, traffic\") confirms arrival was not imminent — it would have landed ~21:32, ≈ 6 min after the 21:26:00 matching. The traffic speed band for the driver's link (road category 3, speed_band 6) also shows his approach was not obstructed enough to excuse this. Because the driver could not have reached the pickup within the §2.4 window, the rider's free cancellation right under NS-8 is triggered and a fee charged must be refunded in full.\n\nAmount: $5.00 cancellation fee, refunded in full (NS-8; refund_full). No NS-8 goodwill credit applies because the driver did attempt contact (in-app message at 21:27:15), so the second limb of NS-8 is not met. The rider's clean history (0 disputes/90d, rating 4.9) and the driver's single upheld no-show dispute in 90d (NS-9 is a rider-clause and RD-6 concerns deviation) play no part in the outcome. No safety indicators in the chat or complaint — screened, SAFE-1/SAFE-2 not triggered. Evidence is complete for every element (who cancelled, GPS track, timestamps, chat, fee), so the case is decided by the system under TH-1/TH-2.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7"
+   "NS-4",
+   "NS-8",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "Who cancelled the trip (NS-0 branch selection)",
+    "finding": "met",
+    "basis": [
+     "trip_data.cancelled_by",
+     "trip_data.cancellation_reason",
+     "app_events"
+    ],
+    "reason": "cancelled_by = rider, cancellation_reason = driver_taking_too_long; the driver did not cancel, so NS-1/NS-2 (no-show) do not apply and NS-4 governs the fee."
+   },
+   {
+    "element": "Rider cancelled within 3 minutes of matching (NS-4 free window)",
+    "finding": "not_met",
+    "basis": [
+     "app_events",
+     "trip_data.cancellation_time"
+    ],
+    "reason": "Matching/assignment at 21:26:00, cancellation at 21:29:20 = 3 min 20 s, past the 3-minute grace period, so the base charge condition of NS-4 is satisfied."
+   },
+   {
+    "element": "Driver at pickup by scheduled pickup time + 5 minutes (NS-8 free-cancel right)",
+    "finding": "not_met",
+    "basis": [
+     "gps_telemetry",
+     "chat_logs",
+     "optimal_route"
+    ],
+    "reason": "At 21:29:00 the driver was 3.90 km from the NUS pickup, moving away at ~49 km/h; at the optimal route pace (~38.6 km/h) that needs ~6 minutes, and the driver's own 21:27:15 message said 'About 5 min', implying arrival ~21:32 — beyond matching + 5 min. The rider therefore had a free-cancellation right under §2.4 and the fee must be refunded."
+   },
+   {
+    "element": "Driver contact attempt (NS-8 goodwill credit limb)",
+    "finding": "met",
+    "basis": [
+     "chat_logs"
+    ],
+    "reason": "Driver sent an in-app message at 21:27:15 in response to the rider's query, so the 'fails to attempt contact' limb of NS-8 is not triggered and no $5.00 goodwill credit is added."
+   },
+   {
+    "element": "Safety indicators in complaint, statement or chat (SAFE-1/SAFE-2)",
+    "finding": "not_met",
+    "basis": [
+     "dispute_ticket.description",
+     "driver_statement",
+     "chat_logs"
+    ],
+    "reason": "No threat, harassment, sexual remark, dangerous-driving or accident content; the complaint is purely about waiting time and the fee."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "driver_statement_wait_5min",
-    "reason": "Contradicted by system records: driver_arrived_at 21:28:35 → cancelled_at 21:31:30 is 2 min 55 s, and the 'I'm Here' press at 21:29:45 leaves only 1 min 45 s before cancellation. NS-1(iii) requires > 3 minutes continuous waiting at the pickup; the GPS confirms the car was stationary at the pickup the whole time but for under the required duration."
+    "id": "driver_statement",
+    "reason": "The driver's statement 'I was on my way when the rider cancelled' is true but immaterial: the question is whether he could have reached the pickup within scheduled time + 5 min. GPS at 21:29:00 puts him 3.90 km out and driving away, and his own chat concedes a further ~5 min, so the NS-8 window was not met."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.89,
- "input_tokens": 12018,
- "output_tokens": 981,
+ "latency_s": 8.77,
+ "input_tokens": 11079,
+ "output_tokens": 1633,
  "requests": 1,
  "llm_calls": 1
 }
