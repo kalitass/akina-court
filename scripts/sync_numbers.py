@@ -163,9 +163,14 @@ def gen(name: str, n: dict) -> str:
         c = n["court"]
         text = (f"A ride dispute settled in {round(c['latency_mean_s'])} seconds, every ruling on the record. Multi-agent dispute resolution for ride-hailing: "
                 f"code computes the facts, two AI advocates and a judge argue, and a pre-execution policy check blocks any unsupported outcome or amount. "
-                f"3 agents, 2 adjudicated dispute categories plus safety escalation, {c['latency_mean_s']:.1f} s per case, {c['auto']}/{n['cases']} cleared automatically, "
+                f"3 agents, 3 dispute types (safety always goes to a person), {c['latency_mean_s']:.1f} s per case, {c['auto']}/{n['cases']} cleared automatically, "
                 f"{n['arms']['court']['wrong_and_executed_with_gate']} wrong decisions executed.")
-        return f'<!--gen:meta--><meta name="description" content="{text}"><!--/gen-->'
+        secs = round(c["latency_mean_s"])   # link previews show attribute text raw, so numbers go in here, not as <!--n:--> markers
+        og_title = f"Akina Court — a ride dispute settled in {secs} seconds, every ruling on the record"
+        og_desc = (f"Two AI advocates and a judge settle ride-hailing disputes in {secs} seconds; code computes the facts and blocks any ruling "
+                   "the policy does not support. Tencent Cloud AI CAN DO IT Hackathon SG 2026, Ryde track.")
+        return (f'<!--gen:meta--><meta name="description" content="{text}">\n<meta property="og:title" content="{og_title}">\n'
+                f'<meta property="og:description" content="{og_desc}"><!--/gen-->')
     raise KeyError(f"unknown block {name}")
 
 

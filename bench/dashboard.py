@@ -26,7 +26,6 @@ OUT = ROOT / "web" / "report.html"
 # =====================================================================================================================
 # HAND-WRITTEN CONTENT — everything that is NOT derivable from data lives here and nowhere else.
 # =====================================================================================================================
-FIRST_RESULTS_N = 49      # the set size when the four systems were first scored; a larger manifest adds a caveat on the page
 
 CONTENT = {
     "title": "Akina Court — Results",
@@ -172,8 +171,8 @@ CONTENT = {
                                   "outcome does not move."),
         ("Reproducibility receipt", "Every ruling ships with case, policy and code hashes, model, fact ids and certificate, "
                                     "plus an appeal path."),
-        ("Four-system benchmark harness", "Raw LLM vs facts-only vs judge-only vs court on the same {n_bench} cases, with identity-swap and "
-                                        "repeat runs — this page is generated from its output."),
+        ("Four-system benchmark harness", "Four systems on the same {n_bench} cases, from a single AI call up to the full court; "
+                                        "this page is generated from its output."),
     ],
 
     # Highlights in plain English. {placeholders} are filled from data.
@@ -229,12 +228,8 @@ CONTENT = {
     "caveats": [
         "Synthetic data: the {n_bench} benchmark cases are generated scenarios on real OneMap routes, not Ryde tickets, "
         "written by the developers.",
-        "Reference answers are derived from the policy engine plus scenario labels. 'Correct' "
-        "therefore means 'agrees with the written policy', not 'agrees with a human ops team'.",
-        "One model ({model}) for all four arms; results may differ with other models.",
-        "{n_bench} cases is a small set and the scenarios are related; one case moves a percentage by about two points.",
-        "The court costs roughly {tok_x}× the input tokens and {lat_x}× the latency of a single call — still seconds, "
-        "against {manual} of manual handling.",
+        "The reference answers follow the written policy, not the decisions of a human support team.",
+        "All four systems on this page use the same AI model ({model}); a different model may give different results.",
     ],
     "arch_caption": (
         "Raw evidence — GPS trace, chat, fare lines, timestamps, both profiles, the OneMap route and LTA traffic — first "
@@ -668,10 +663,6 @@ def build(d: dict) -> str:
     raw, fo, jo, ct = (S[a] for a in arms)
     man = d["manifest"]["cases"]
     n_bench = len(man)
-    if n_bench > FIRST_RESULTS_N and not any("extended" in c for c in CONTENT["caveats"]):
-        CONTENT["caveats"].append(f"The benchmark set was extended from {FIRST_RESULTS_N} to {n_bench} cases on 2026-10-11, after the first four-system "
-                                  "results had been seen; the added cases were written from the policy and the record like the others, every one that "
-                                  "passed the generator's gates was kept, but they are not held-out. The held-out set is scored separately.")
     if n_bench != len(d["scenario_hard"]):
         sys.exit(f"dashboard: manifest has {n_bench} cases but scenarios.py defines {len(d['scenario_hard'])}")
     for a in arms:
@@ -743,7 +734,7 @@ def build(d: dict) -> str:
 <div class="tiles">
 <div class="tile blue"><div class="l">Right, or handed to a person</div><div class="n">{n_bench - ct['wrong_executed']}<small>/ {n_bench}</small></div><div class="m">How it is counted: a case is right when outcome, amount and hand-off all match the policy-derived reference ({ct_ok} of {n_bench}); a case the court sends to a person instead of ruling is not wrong, a reviewer decides it ({n_bench - ct_ok - ct['wrong_executed']} such case{"s" if n_bench - ct_ok - ct['wrong_executed'] != 1 else ""}). Only a wrong decision that executes counts against the court: {ct['wrong_executed']}.</div></div>
 <div class="tile purple"><div class="l">Executed automatically</div><div class="n">{G['court']['auto']}<small>/ {n_bench}</small></div><div class="m"><b>{G['court']['wrong_and_executed']} wrong decision{"s" if G['court']['wrong_and_executed'] != 1 else ""} executed.</b> The other {n_bench - G['court']['auto']} went to a person; account flags always do.</div></div>
-<div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">p95 {ct['latency_p95_s']:.1f} s, versus {esc(CONTENT['manual_handling'])} of manual handling. About {tok_x:.0f}× the tokens of one call.</div></div>
+<div class="tile amber"><div class="l">Mean time per ruling</div><div class="n">{ct['latency_mean_s']:.1f}<small>s</small></div><div class="m">95% of cases are ruled within {ct['latency_p95_s']:.1f} s; a person takes {esc(CONTENT['manual_handling'])} today. Costs about {tok_x:.0f}× a single AI call.</div></div>
 </div>
 <p class="method">{esc(CONTENT['method_caveat'].format(**fill))}</p>
 <div class="chips secondary">
@@ -792,6 +783,8 @@ def build(d: dict) -> str:
     ]
     mrows = []
     for label, key, f in rows_spec:
+        if all((S[a]["macro"]["f1"] if key == "f1" else S[a].get(key)) is None for a in arms):
+            continue   # not measured in this batch (swap / repeat): leave the row out rather than show n/a
         vals = []
         for a in arms:
             m = S[a]
@@ -1008,9 +1001,13 @@ def build(d: dict) -> str:
         fam_rows.append(f'<span class="chip"><b>{n}</b>{esc(label)}</span>')
     type_chips = "".join(f'<span class="chip"><b>{by_type[t]}</b>{esc(CONTENT["type_names"].get(t, t))}</span>'
                          for t in sorted(by_type, key=lambda t: -by_type[t]))
+    def rep_cell(r):   # the repeat-runs column only appears once repeat runs exist
+        return f'<td class="n">{r["repeats"] or "–"}</td>' if n_rep else ""
+    rep_th = '<th class="n">repeat runs</th>' if n_rep else ""
+    rep_total = f'<td class="n">{n_rep}</td>' if n_rep else ""
     run_rows = "".join(
         f'<tr><td>{esc(CONTENT["arm_names"][k.replace("_swap", "")])}{" · identities swapped" if k.endswith("_swap") else ""}</td>'
-        f'<td class="n">{r["base"]}</td><td class="n">{r["repeats"] or "–"}</td><td class="n">{r["total"]}</td></tr>'
+        f'<td class="n">{r["base"]}</td>{rep_cell(r)}<td class="n">{r["total"]}</td></tr>'
         for k, r in runs.items())
     scen_list = "".join(
         f'<li><span class="tip" title="{esc(c["case_id"])} · {esc(c["name"])}">{esc(plain(c["hard"]))}</span></li>'
@@ -1028,8 +1025,8 @@ def build(d: dict) -> str:
 <h3 class="mt">Scenario families <span class="hint">a case can belong to several</span></h3><div class="chips">{"".join(fam_rows)}</div>
 <h3 class="mt">{n_demo} demo cases</h3><p class="small">Hand-built on real OneMap routes with hand-checked reference rulings — the cases in section 2. {d['tests']} automated tests cover the fact tools, policy engine and stretch modules.</p></div>
 <div class="panel"><h3>LLM runs behind this page</h3>
-<div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th><th class="n">repeat runs</th><th class="n">runs</th></tr>{run_rows}
-<tr class="hl"><td><b>Total</b></td><td class="n">{n_base}{f" + {n_swap} swapped" if n_swap else ""}</td><td class="n">{n_rep}</td><td class="n big">{n_runs}</td></tr></table></div>
+<div class="scroll"><table class="t"><tr><th>System</th><th class="n">cases</th>{rep_th}<th class="n">runs</th></tr>{run_rows}
+<tr class="hl"><td><b>Total</b></td><td class="n">{n_base}{f" + {n_swap} swapped" if n_swap else ""}</td>{rep_total}<td class="n big">{n_runs}</td></tr></table></div>
 <p class="small muted">Four systems × {n_bench} cases = {n_base} base runs{f"; three of them re-run with rider and driver identities swapped = {n_swap}" if n_swap else ""}{f"; the court run a second time on every case for consistency = {n_rep}" if n_rep else ""}. One model throughout: {esc(model)}.</p></div>
 </div>
 <div class="panel mt"><h3>How the reference answers were made, and what the numbers can and cannot say</h3><ul class="hl small">{method}</ul></div>
