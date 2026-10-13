@@ -397,7 +397,7 @@ function setTime(t, force){
 function frame(w){
   if (RAIN) rainDraw();
   pulse(w);
-  if (playing) { const dt = (w - lastWall) / 1000; lastWall = w; setTime(now + dt * SPEED); if (now >= t1) { playing = false; $('play').textContent = '↻ Replay'; if (!LIVE) setPill('idle', 'trip ended'); if (MINI) miniResult(); else if (!courtStarted) { toast('Trip ends · convening the court', 1800); setTimeout(startCourt, 1900); } } }
+  if (playing) { const dt = (w - lastWall) / 1000; lastWall = w; setTime(now + dt * SPEED); if (now >= t1) { playing = false; $('play').textContent = '↻ Replay'; if (!LIVE) setPill('idle', 'trip ended'); if (MINI) miniResult(); else { toast(courtStarted ? 'Trip ends · returning to the court' : 'Trip ends · convening the court', 1800); setTimeout(startCourt, 1900); } } }
   requestAnimationFrame(frame);
 }
 let flashes = [];
@@ -465,7 +465,7 @@ function bubble(m){
   if (threat) { $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 900); }
 }
 function toast(txt, ms){ $('toastTxt').textContent = txt; $('toast').classList.add('on'); setTimeout(() => $('toast').classList.remove('on'), ms); }
-function showTab(n){ for (const t of document.querySelectorAll('#panel .tab')) { t.classList.toggle('on', t.dataset.tab === n); t.setAttribute('aria-selected', t.dataset.tab === n ? 'true' : 'false'); } $('feed').style.display = n === 'feed' ? '' : 'none'; $('court').style.display = n === 'court' ? '' : 'none'; $('courtbar').style.display = n === 'court' && courtStarted ? '' : 'none'; }
+function showTab(n){ for (const t of document.querySelectorAll('#panel .tab')) { t.classList.toggle('on', t.dataset.tab === n); t.setAttribute('aria-selected', t.dataset.tab === n ? 'true' : 'false'); } $('courtGuide').style.display = n === 'court' ? '' : 'none'; $('feed').style.display = n === 'feed' ? '' : 'none'; $('court').style.display = n === 'court' ? '' : 'none'; $('courtbar').style.display = n === 'court' && courtStarted ? '' : 'none'; }
 document.querySelectorAll('#panel .tab').forEach(t => { t.onclick = () => showTab(t.dataset.tab); t.onkeydown = e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { const tabs = [...document.querySelectorAll('#panel .tab')]; const i = tabs.indexOf(t); const nx = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; nx.focus(); showTab(nx.dataset.tab); e.preventDefault(); } }; });
 
 // ---------------- fact geometry ----------------
@@ -534,7 +534,15 @@ function courtEnd(){
 $('skip').onclick = () => { clearTimeout(courtTimer); courtStep(); };
 $('skipAll').onclick = () => { instant = true; clearTimeout(courtTimer); courtStep(); };
 function who(e){ return (SHOW ? WHO_SHOW : { rider:'Rider Advocate', driver:'Driver Advocate', judge:'Judge', verify:'Verifier', system:'System' })[e.actor] || e.actor; }
-function head(e, ttl){ return `<div class="hd"><span class="el">${esc(e.elapsed||'')}</span><span class="who ${esc(e.actor)}">${esc(who(e))}</span><span class="ttl">${ttl != null ? ttl : esc(e.title)}</span></div>`; }
+function eventStage(e){
+  if (e.kind === 'brief') return [2, 'Both sides argue · round 1: opening statements'];
+  if (e.kind === 'rebuttal') return [2, 'Both sides argue · round 2: responses'];
+  if (e.kind === 'ruling') return [3, 'Judge proposes a ruling · awaiting code check'];
+  if (['notify', 'escalate', 'summary'].includes(e.kind)) return [4, 'Checked outcome · notices or human hand-off'];
+  if (e.kind === 'check') return [0, 'Code check · valid references do not prove a claim is correct'];
+  return [1, 'Prepare evidence · collect records and apply policy'];
+}
+function head(e, ttl){ const stage = eventStage(e); return `<div class="eventStage stage${stage[0]}">${stage[0] ? stage[0] + ' · ' : ''}${esc(stage[1])}</div><div class="hd"><span class="el">${esc(e.elapsed||'')}</span><span class="who ${esc(e.actor)}">${esc(who(e))}</span><span class="ttl">${ttl != null ? ttl : esc(e.title)}</span></div>`; }
 function parseNotices(body){ const out = []; const re = /(RIDER|DRIVER):\s*([\s\S]*?)(?=\n\s*(?:RIDER|DRIVER):|$)/g; let m; while ((m = re.exec(body||''))) out.push({ to:m[1].toLowerCase(), text:m[2].trim() }); return out; }
 function renderEvent(e, inst){
   if (SHOW) return renderShow(e, inst);
