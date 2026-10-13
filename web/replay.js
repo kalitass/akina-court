@@ -397,7 +397,7 @@ function setTime(t, force){
 function frame(w){
   if (RAIN) rainDraw();
   pulse(w);
-  if (playing) { const dt = (w - lastWall) / 1000; lastWall = w; setTime(now + dt * SPEED); if (now >= t1) { playing = false; $('play').textContent = '↻ Replay'; if (!LIVE) setPill('idle', 'trip ended'); if (MINI) miniResult(); else if (!courtStarted) { toast('Trip ends · convening the court', 1800); setTimeout(startCourt, 1900); } } }
+  if (playing) { const dt = (w - lastWall) / 1000; lastWall = w; setTime(now + dt * SPEED); if (now >= t1) { playing = false; $('play').textContent = '↻ Replay'; if (!LIVE) setPill('idle', 'trip ended'); if (MINI) miniResult(); else { toast('Trip complete · the hearing starts next', 1800); setTimeout(() => startCourt(true), 1900); } } }
   requestAnimationFrame(frame);
 }
 let flashes = [];
@@ -410,7 +410,7 @@ function pulse(w){
   if (flashes.length) { const t = performance.now(); flashes = flashes.filter(f => t - f.born < 1600); map.getSource('flash').setData(fc(flashes.map(f => { const a = (t - f.born)/1600; const op = a < .15 ? a/.15 : 1 - (a-.15)/.85; return Object.assign({}, f.geo, { properties:{ op: Math.max(0, op), r: .4 + a*.8 } }); }))); }
 }
 requestAnimationFrame(w => { lastWall = w; frame(w); });
-function play(on){ if (on == null) on = !playing; if (on && now >= t1) setTime(t0, true); playing = on; lastWall = performance.now(); $('play').textContent = on ? '❚❚ Pause' : '▶ Play'; if (!LIVE) setPill(on ? '' : 'idle', on ? `replaying ${SPEED}×` : 'paused'); if (on) showTab('feed'); }
+function play(on){ if (on == null) on = !playing; if (on && now >= t1) setTime(t0, true); playing = on; lastWall = performance.now(); $('play').textContent = on ? '❚❚ Pause' : '▶ Play full case'; if (!LIVE) setPill(on ? '' : 'idle', on ? `replaying ${SPEED}×` : 'paused'); if (on) showTab('feed'); }
 $('play').onclick = () => play();
 $('speeds').onclick = e => { const b = e.target.closest('button'); if (!b) return; SPEED = +b.dataset.s; for (const x of $('speeds').children) x.classList.toggle('on', x === b); if (playing && !LIVE) setPill('', `replaying ${SPEED}×`); };
 for (const x of $('speeds').children) x.classList.toggle('on', +x.dataset.s === SPEED);
@@ -465,7 +465,7 @@ function bubble(m){
   if (threat) { $('flash').classList.add('on'); setTimeout(() => $('flash').classList.remove('on'), 900); }
 }
 function toast(txt, ms){ $('toastTxt').textContent = txt; $('toast').classList.add('on'); setTimeout(() => $('toast').classList.remove('on'), ms); }
-function showTab(n){ for (const t of document.querySelectorAll('#panel .tab')) { t.classList.toggle('on', t.dataset.tab === n); t.setAttribute('aria-selected', t.dataset.tab === n ? 'true' : 'false'); } $('feed').style.display = n === 'feed' ? '' : 'none'; $('court').style.display = n === 'court' ? '' : 'none'; $('courtbar').style.display = n === 'court' && courtStarted ? '' : 'none'; }
+function showTab(n){ for (const t of document.querySelectorAll('#panel .tab')) { t.classList.toggle('on', t.dataset.tab === n); t.setAttribute('aria-selected', t.dataset.tab === n ? 'true' : 'false'); } $('courtStages').style.display = n === 'court' ? '' : 'none'; $('feed').style.display = n === 'feed' ? '' : 'none'; $('court').style.display = n === 'court' ? '' : 'none'; $('courtbar').style.display = n === 'court' && courtStarted ? '' : 'none'; }
 document.querySelectorAll('#panel .tab').forEach(t => { t.onclick = () => showTab(t.dataset.tab); t.onkeydown = e => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { const tabs = [...document.querySelectorAll('#panel .tab')]; const i = tabs.indexOf(t); const nx = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; nx.focus(); showTab(nx.dataset.tab); e.preventDefault(); } }; });
 
 // ---------------- fact geometry ----------------
@@ -506,20 +506,87 @@ function pushEvent(e){ courtQ.push(e); expected = Math.max(expected, seen + cour
 function visibleCount(){ return courtEl.querySelectorAll('.ev.show').length; }
 function updateCount(){ if (SHOW) { const shown = visibleCount(); $('courtCount').textContent = `${shown} card${shown===1?'':'s'}${LIVE && !streamDone ? ' · live' : streamDone && !courtQ.length ? ' · done' : ''}`; $('courtProg').style.width = (expected ? seen/expected*100 : 0) + '%'; return; }
   $('courtCount').textContent = `${seen} / ${expected}${LIVE && !streamDone ? ' · live' : ''}`; $('courtProg').style.width = (expected ? seen/expected*100 : 0) + '%'; }
-function startCourt(){
+function startCourt(restart = false){
+  if (restart && courtStarted && !LIVE) { clearTimeout(courtTimer); courtQ.length = 0; courtDone = false; courtBusy = false; instant = false; seen = 0; expected = 0; streamDone = false; courtStarted = false; }
   if (courtStarted) { showTab('court'); return; }
-  courtStarted = true; courtEl.innerHTML = ''; showTab('court'); $('courtbar').style.display = '';
+  courtStarted = true; resetHearingView(); showTab('court'); $('courtbar').style.display = '';
   document.documentElement.style.setProperty('--panelW', '640px'); setTimeout(() => fitAll(700), 520);
   $('toCourt').style.display = 'none';
-  if (!RECORD && !LIVE) { courtEl.innerHTML = `<div class="empty">No run on record for ${esc(RUN_ID)}.<br><br>Press <b>▶ Run live</b> to let the three agents argue this case now — the court fills in as events stream from the backend.</div>`; setPill('idle', 'no run yet'); return; }
+  if (!RECORD && !LIVE) { $('courtbar').style.display = 'none'; setActiveStage(0); courtEl.innerHTML = `<div class="empty">No run on record for ${esc(RUN_ID)}.<br><br>${controls && controls.live_runs === false ? 'Choose another stored case. Live runs are disabled on this deployment.' : 'Choose another stored case, or press <b>▶ Run live</b> to start a fresh hearing.'}</div>`; setPill('idle', 'no run yet'); return; }
   if (!LIVE) { setPill('', 'court in session · replaying last run'); if (!courtQ.length && RECORD) { RECORD.events.forEach(pushEvent); streamDone = true; } }
   courtStep();
 }
+let hearingStage = 1, followingHearing = true, jumpingToStage = false, activeHearingStage = 0, hearingScrollTimer;
+function setActiveStage(n){
+  if (activeHearingStage === n) return;
+  activeHearingStage = n;
+  for (const b of document.querySelectorAll('#courtStages button')) {
+    b.classList.toggle('active', +b.dataset.stage === n);
+    if (+b.dataset.stage === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  }
+}
+function resumeHearingFollow(){ followingHearing = true; jumpingToStage = false; clearTimeout(hearingScrollTimer); setActiveStage(hearingStage); }
+function resetHearingView(){
+  hearingStage = 1; resumeHearingFollow(); courtEl.innerHTML = '';
+  toolCard = null; toolSeen.rider.clear(); toolSeen.driver.clear();
+  $('skip').disabled = $('skipAll').disabled = false;
+  for (const b of document.querySelectorAll('#courtStages button')) { b.disabled = true; b.title = 'This stage has not been reached'; }
+}
+
+
+const CHAPTERS = {
+  1: ['Evidence & open questions', 'Code gathers the record and identifies what the judge needs to decide.', '#64748b'],
+  2: ['Both sides argue', 'Blue represents the rider. Orange represents the driver. Opening statements come first, then each side responds. CHECKED validates references, not which side is right.', '#2563eb'],
+  3: ['Judge proposes a ruling', 'A proposed decision with reasons. It is not the final checked outcome yet.', '#7c3aed'],
+  4: ['Code check & final outcome', 'Code checks the proposed ruling. The record then shows the outcome or a hand-off to a person.', '#15803d']
+};
+function appendChapter(node, event){
+  let n = !event ? 4 : event.kind === 'ruling' ? 3 : ['notify', 'escalate', 'summary'].includes(event.kind) ? 4 : ['brief', 'rebuttal'].includes(event.kind) ? 2 : event.kind === 'check' && /Ruling verification/i.test(event.title || '') ? 4 : event.kind === 'check' && /Ruling citation|returned to judge/i.test(event.title || '') ? 3 : ['intake', 'facts', 'tool'].includes(event.kind) ? 1 : hearingStage;
+  hearingStage = n;
+  let section = courtEl.lastElementChild;
+  if (!section || section.dataset.stage !== String(n)) {
+    const [title, description, color] = CHAPTERS[n];
+    section = el('section', 'chapter', `<header class="chapterHeader"><span class="num">${n}</span><div><h2>${title}</h2><p>${description}</p></div></header><div class="chapterBody"></div>`);
+    section.dataset.stage = String(n);
+    const previous = courtEl.querySelectorAll('.chapter[data-stage="' + n + '"]').length;
+    section.id = 'chapter' + n + (previous ? '-' + (previous + 1) : ''); section.style.setProperty('--chapterColor', color); courtEl.appendChild(section);
+  }
+  if (event && ['brief', 'rebuttal'].includes(event.kind)) node.prepend(el('div','roundLabel', event.kind === 'brief' ? 'ROUND 1 · OPENING STATEMENT' : 'ROUND 2 · RESPONSE TO THE OTHER SIDE'));
+  section.querySelector('.chapterBody').appendChild(node);
+  const stageButton = document.querySelector('#courtStages button[data-stage="' + n + '"]');
+  stageButton.disabled = false; stageButton.title = 'Open this stage';
+  if (followingHearing) setActiveStage(n);
+}
+for (const b of document.querySelectorAll('#courtStages button')) b.onclick = () => {
+  const matches = courtEl.querySelectorAll('.chapter[data-stage="' + b.dataset.stage + '"]');
+  const section = matches[matches.length - 1];
+  if (!section) return;
+  followingHearing = false; jumpingToStage = true; clearTimeout(hearingScrollTimer);
+  setActiveStage(+b.dataset.stage);
+  courtEl.scrollTo({top:courtEl.scrollTop + section.getBoundingClientRect().top - courtEl.getBoundingClientRect().top - 12, behavior:'auto'});
+};
+function manualHearingScroll(){ followingHearing = false; jumpingToStage = false; }
+courtEl.addEventListener('wheel', manualHearingScroll, {passive:true});
+courtEl.addEventListener('touchstart', manualHearingScroll, {passive:true});
+courtEl.addEventListener('pointerdown', manualHearingScroll);
+courtEl.addEventListener('keydown', e => { if (['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(e.key)) manualHearingScroll(); });
+courtEl.addEventListener('scroll', () => {
+  if (followingHearing || jumpingToStage) return;
+  clearTimeout(hearingScrollTimer);
+  hearingScrollTimer = setTimeout(() => {
+    if (followingHearing || jumpingToStage) return;
+    const sections = [...courtEl.querySelectorAll('.chapter')];
+    const line = courtEl.getBoundingClientRect().top + 50;
+    const current = sections.filter(s => s.getBoundingClientRect().top <= line).pop() || sections[0];
+    if (current) setActiveStage(+current.dataset.stage);
+  }, 120);
+});
+
 function courtStep(){
   clearTimeout(courtTimer);
   if (!courtQ.length) { courtBusy = false; if (streamDone) courtEnd(); return; }
   courtBusy = true; const e = courtQ.shift(); seen++;
-  const node = renderEvent(e, instant); if (node) courtEl.appendChild(node); courtEl.scrollTop = courtEl.scrollHeight; updateCount();
+  const node = renderEvent(e, instant); if (node) appendChapter(node, e); if (followingHearing) courtEl.scrollTop = courtEl.scrollHeight; updateCount();
   // story pacing, but never fall behind the stream: shrink the dwell when events are queued up
   const ahead = courtQ.length; const d = instant || !node ? 0 : Math.max(250, durOf(e) / (ahead > 0 ? Math.min(6, 1 + ahead) : 1));
   courtTimer = setTimeout(courtStep, d);
@@ -527,12 +594,12 @@ function courtStep(){
 function courtEnd(){
   if (courtDone) return; courtDone = true; courtTimer = null; $('skip').disabled = $('skipAll').disabled = true;
   const r = RECORD && RECORD.ruling; setPill('idle', LIVE ? `done · ${MODEL||''} · ${liveElapsed()} s` : 'adjourned');
-  if (r) courtEl.appendChild(el('div','ev',`<div class="banner ${r.ruling==='escalate'?'esc':'done'}">${r.ruling==='escalate'?'⚠':'✓'} Case ${esc(C.id)} ${r.ruling==='escalate'?(SHOW?'sent to a human reviewer':'escalated to RydeHELP'):'resolved'} · ${OUT[r.ruling]||esc(r.ruling)}${r.amount!=null?' $'+r.amount.toFixed(2):''}</div>`));
-  if (RECORD && RECORD.eligibility) { const e = RECORD.eligibility; courtEl.appendChild(el('div','ev',`<div class="elig"><b>${SHOW ? 'What happens now' : e.auto ? '⚡ Eligible for automation' : '👤 Needs a human'}</b><div class="chips">${(e.actions||[]).map(a => SHOW ? actionChip(a) : `<span class="badge ${a.mode==='auto'?'green':'amber'}">${esc(a.type)} · ${esc(a.mode)}${a.detail?' · '+esc(a.detail):''}</span>`).join('')}</div>${(e.reasons||[]).map(x => SHOW && x.length > 160 ? `<div class="reasons">${cite(clip(x, 160))}${more('full reason', `<div>${cite(x)}</div>`)}</div>` : `<div class="reasons">${SHOW ? cite(x) : esc(x)}</div>`).join('')}${(e.what_would_change||[]).map(x => `<div class="reasons">↳ ${cite(x)}</div>`).join('')}<div style="margin-top:6px"><a href="/receipt.html?run=${encodeURIComponent(RUN_ID)}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Reproducibility receipt ↗</a></div></div>`)); renderEligibility(RECORD); }
-  courtEl.scrollTop = courtEl.scrollHeight;
+  if (r) appendChapter(el('div','ev',`<div class="banner ${r.ruling==='escalate'?'esc':'done'}">${r.ruling==='escalate'?'⚠':'✓'} Case ${esc(C.id)} ${r.ruling==='escalate'?(SHOW?'sent to a human reviewer':'escalated to RydeHELP'):'resolved'} · ${OUT[r.ruling]||esc(r.ruling)}${r.amount!=null?' $'+r.amount.toFixed(2):''}</div>`));
+  if (RECORD && RECORD.eligibility) { const e = RECORD.eligibility; appendChapter(el('div','ev',`<div class="elig"><b>${SHOW ? 'What happens now' : e.auto ? '⚡ Eligible for automation' : '👤 Needs a human'}</b><div class="chips">${(e.actions||[]).map(a => SHOW ? actionChip(a) : `<span class="badge ${a.mode==='auto'?'green':'amber'}">${esc(a.type)} · ${esc(a.mode)}${a.detail?' · '+esc(a.detail):''}</span>`).join('')}</div>${(e.reasons||[]).map(x => SHOW && x.length > 160 ? `<div class="reasons">${cite(clip(x, 160))}${more('full reason', `<div>${cite(x)}</div>`)}</div>` : `<div class="reasons">${SHOW ? cite(x) : esc(x)}</div>`).join('')}${(e.what_would_change||[]).map(x => `<div class="reasons">↳ ${cite(x)}</div>`).join('')}<div style="margin-top:6px"><a href="/receipt.html?run=${encodeURIComponent(RUN_ID)}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Reproducibility receipt ↗</a></div></div>`)); renderEligibility(RECORD); }
+  if (followingHearing) courtEl.scrollTop = courtEl.scrollHeight;
 }
-$('skip').onclick = () => { clearTimeout(courtTimer); courtStep(); };
-$('skipAll').onclick = () => { instant = true; clearTimeout(courtTimer); courtStep(); };
+$('skip').onclick = () => { resumeHearingFollow(); clearTimeout(courtTimer); courtStep(); };
+$('skipAll').onclick = () => { resumeHearingFollow(); instant = true; clearTimeout(courtTimer); courtStep(); };
 function who(e){ return (SHOW ? WHO_SHOW : { rider:'Rider Advocate', driver:'Driver Advocate', judge:'Judge', verify:'Verifier', system:'System' })[e.actor] || e.actor; }
 function head(e, ttl){ return `<div class="hd"><span class="el">${esc(e.elapsed||'')}</span><span class="who ${esc(e.actor)}">${esc(who(e))}</span><span class="ttl">${ttl != null ? ttl : esc(e.title)}</span></div>`; }
 function parseNotices(body){ const out = []; const re = /(RIDER|DRIVER):\s*([\s\S]*?)(?=\n\s*(?:RIDER|DRIVER):|$)/g; let m; while ((m = re.exec(body||''))) out.push({ to:m[1].toLowerCase(), text:m[2].trim() }); return out; }
@@ -676,7 +743,7 @@ async function startLiveRun(){
   LIVE = true; $('runBtn').disabled = true; $('runBtn').textContent = '● Running…'; $('drawer').classList.remove('open');
   // reset the court for the new run
   clearTimeout(courtTimer); courtQ.length = 0; seen = 0; expected = 0; courtDone = false; courtBusy = false; instant = false; streamDone = false; RECORD = null;
-  if (courtStarted) { courtEl.innerHTML = ''; $('skip').disabled = $('skipAll').disabled = false; }
+  if (courtStarted) resetHearingView();
   $('hudElig').style.display = 'none';
   try {
     const res = await api(`/api/runs/${encodeURIComponent(CID)}`, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ rebuttal:true, inject:injectAll, counterfactual: CF }) });
