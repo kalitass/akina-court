@@ -109,10 +109,10 @@ def test_existing_benchmark_is_unchanged_and_does_not_fetch(path):
     assert evaluate(updated, build_fact_table(updated)).lines() == cert_before
 
 
-def test_current_sample_and_held_out_replays_remain_available():
+def test_current_sample_and_benchmark_replays_remain_available():
     client = TestClient(app)
     assert client.get('/api/runs/DISP-002').status_code == 200
-    from app.main import stored_run_path, BLIND_RUNS_DIR
-    paths = sorted(BLIND_RUNS_DIR.glob('*.record.json'))
+    from app.main import stored_run_path, BENCH_RUNS_DIR
+    paths = sorted(BENCH_RUNS_DIR.glob('*.record.json'))
     assert paths
     assert stored_run_path(paths[0].name.removesuffix('.record.json')) == paths[0]

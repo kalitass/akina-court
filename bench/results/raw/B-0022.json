@@ -4,63 +4,64 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:23.543540+00:00",
+ "ts": "2026-10-13T15:35:43.257432+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Refer to a human reviewer: the off-route loop's extra distance cannot be measured on the thinned (30 s) GPS trace; obtain the full 5 s trace (or the detour fact with extra_km) to quantify the RD-2 refund, the RD-3(c) waiting-unit analysis and any RD-6 flag.",
-  "confidence": 0.62,
-  "reasoning": "Safety screen: the chat is a polite request for a petrol stop and a one-word assent; the complaint and driver statement contain no threat, insult, harassment or dangerous-driving allegation. safety_concern = none.\n\nRoute/deviation reading (RydeTAXI, metered): the quoted route is 13.86 km / 20.5 min via Toa Payoh -> the CTE corridor -> Kampong Bahru Rd -> Telok Blangah Rd to VivoCity. The driver's trace branches off at Telok Blangah (≈1.3298,103.8555) and runs a large northeast/east loop (Tiong Bahru, Bukit Merah, Lower Delta, Kampong Bahru, Telok Blangah Rise) before rejoining the corridor near 1.3290,103.8649 — i.e. an off-route loop of several km, later than the path it left. The two chat messages lie inside that loop: at 21:35:40 the driver asks \"Mind if I pull in at the petrol station just ahead for one minute?\", the rider replies \"Sure, no problem.\" at 21:36:15.\n\nConsent scope (RD-5): the rider agreed to a specific stop (\"the petrol station just ahead\", one minute), not to a route choice. So the first movement off the optimal route qualifies under RD-3(a) (rider accepted a stop; the driver named the place) — the segment driven to reach the station is exempt. But the loop did not end there: the trace continues for a further ~11 km past 21:36:15 (Bukit Merah, Lower Delta, Kampong Bahru, Telok Blangah Rise) before rejoining the corridor, and, per the rider's account, no petrol stop actually occurred. That continuation is not covered by the words of the agreement: it is at most scope_other / a driver's own manoeuvre → counts. The driver's statement (\"I thought a small change of route was fine\") relies on a verbal/implied consent, which is a claim, not consent (RD-5/G11).\n\nAmount cannot be computed. RD-2 for RydeTAXI = Σ(unexempt extra_km) × (distance_fare ÷ distance_km) = extra_km × (26.31 ÷ 18.66) = extra_km × 1.4100 SGD/km. The case record provides no fact table: there are no gps-detour-* facts with extra_km, and the GPS supplied is thinned to every 6th sample (30 s grid, 71 of 419 points). Straight-line vertex sums on that thinned trace are misleading (chord shortening); by the driver's own statement the car was largely stationary during the 21:36-21:52 stretch while the recorded samples jump hundreds of metres, so a straight-line estimate of the loop (≈10-11 km vs a corridor of ≈6-7 km, ≈+4 km) is not reliable enough to found a refund. The element \"extra_km of the unexempt segment\" is therefore a missing record, not a value I may approximate.\n\nRelated items also fall to the human reviewer: (i) RD-3(c) stop-time — the driver is claiming the stop but the assertion it was \"one minute\" is contradicted by the trace, and for RydeTAXI stop time is charged as meter waiting units, so the waiting component needs the untruncated trace; (ii) RD-6 — refund is expected > 0 and the driver's profile shows route_disputes_upheld_90d = 0, so the flag_account condition is not met on the rider-named/this-trip facts as they stand, but it should be re-checked after quantification. Missing evidence is not read in either party's favour (G12).\n\nDecision: evidence_status = insufficient (thinned GPS, no detour facts / extra_km) → escalate rather than rule a refund amount; the substantively contested segments are set out in segment_findings.",
+  "ruling": "refund_partial",
+  "amount": 5.36,
+  "recommended_action": "Refund $5.36 to the rider (surge differential for the un-notified multiplier increase) to the original payment method; remind driver-surge ops that surge change notices must state the new multiplier, the revised estimated fare and the free-cancellation right; no driver violation to record (no route deviation).",
+  "confidence": 0.86,
+  "reasoning": "Fare build-up (FARE-0): the trip was metered, base 3.90 + distance 3.69 + time 1.04 = 8.63 surgeable subtotal; × 1.6 surge = 13.81, + booking/platform fee 1.25 = 15.06 — so the whole increase over the $10.41 quote ($9.16 × 1.0 + 1.25) is attributable to surge, no deviation component (actual 2.62 km vs recommended 2.696 km, i.e. −0.08 km, within RD-1 tolerance, so no RD refund).\n\nSURGE screen: the multiplier rose 1.0 → 1.6 between quote and trip start, so SURGE-1 requires the in-app notice to state the new multiplier, the revised estimated fare and the rider's option to cancel without penalty. The logged notice (21:31:30, before pickup) states the multiplier (1.6×) and a revised fare ($15.91, itself inconsistent with the actual $15.06), but says nothing about free cancellation. The rider's complaint (\"nothing said I could still cancel for free\") matches the record; a notice missing any item is \"not notified\" (SURGE-1), so the case is \"surge rose, rider not notified\" → full refund of the surge differential (SURGE-2).\n\nDifferential (SURGE-3, mixed-cause rule): (trip multiplier 1.6 − quote multiplier 1.0) × surgeable subtotal 8.63 = 0.6 × 8.63 = $5.178 ≈ $5.18, excluding the $1.25 booking fee, which is surge-exempt. The rider's claimed $4.65 (whole fare difference) is not the correct measure: the policy refunds the surge differential only, so the claim is granted in part. $5.18 exceeds the $4.65 claimed, but the item disputed is the surge increase and the rider's own complaint disputes the full price rise, so refunding the computed differential is the policy outcome. Precedent DISP-2026-0142 (surge without notice) is aligned: a partial refund of the surge differential.\n\nRider's fraud flag (repeated fare disputes) raises the TH-3 threshold to 95%; the record still settles the issue (timestamped notice text, surge log), so the system decides. No safety content in chat, complaint or statement.",
   "cited_facts": [],
   "cited_policy": [
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
    "RD-1",
-   "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "G11",
-   "G12"
+   "TH-3",
+   "PREC-1"
   ],
-  "escalate": true,
-  "escalation_reason": "Evidence does not settle the RD-2 amount: the unexempt off-route segment's extra_km cannot be measured from the thinned GPS trace and no fact table was provided, so refund_full/refund_partial/no_action cannot be safely chosen. Human reviewer to obtain full-resolution GPS / detour facts, quantify the refund, verify whether any petrol stop actually occurred, and re-check RD-3(c) waiting units and RD-6.",
-  "segment_findings": [
+  "escalate": false,
+  "escalation_reason": null,
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "seg1",
-    "finding": "exempt",
-    "ground": "rider_named_stop",
-    "basis": [],
-    "reason": "Before this deviation the driver asked in-chat (21:35:40) to pull in at 'the petrol station just ahead for one minute' and the rider replied 'Sure, no problem.' (21:36:15) while the car sat at the station coordinates (≈1.3298,103.8555). RD-3(a): rider named/accepted the place and the car stopped there, so the segment driven to reach the stop is exempt. The rider's own complaint confirms she agreed to a quick petrol stop."
+    "element": "Surge increase notice states the new multiplier, the revised estimated fare and the free-cancellation right (SURGE-1)",
+    "finding": "not_met",
+    "basis": [
+     "notification_text"
+    ],
+    "reason": "The in-app notice at 21:31:30 states the new multiplier (1.6×) and a revised fare ($15.91) but contains no statement that the rider may cancel without penalty; a notice missing any required item means the rider was not notified."
    },
    {
-    "fact_id": "seg2",
-    "finding": "counts",
-    "ground": "scope_other",
+    "element": "Whether the whole fare difference comes from surge or is mixed with other causes (SURGE-3)",
+    "finding": "met",
     "basis": [],
-    "reason": "After 21:36:15 the trace continues off the optimal route for roughly 11 km (Bukit Merah, Lower Delta, Kampong Bahru Rd, Telok Blangah Rise) before rejoining the corridor at ≈1.3290,103.8649 — re-covering ~2.5-3 km of ground it had already passed. RD-5 reads consent by its words: the rider agreed to a one-minute petrol stop at the station just ahead, not to a route choice or a loop, and per the rider no petrol was actually taken, so the continuation is not covered by the agreement (driver's 'I thought a small change of route was fine' is a claim, not consent — G11). This segment counts as an unexempt detour under RD-1; its extra_km could not be quantified on the thinned trace and is escalated. No RD-4 defence: the LTA band records (speed_band 5 on CTE and Kampong Bahru Rd) are slow-traffic evidence on the optimal route, which cannot excuse a more circuitous deviation, and there are no traffic incidents."
+    "reason": "Actual distance 2.62 km is within RD-1 tolerance of the 2.696 km recommended route, so there is no refundable deviation; the excess over the quote is entirely the surge multiplier change, with the booking fee excluded from the differential."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_verbal_consent",
-    "reason": "The driver's assertion that 'the rider agreed to a short stop so I thought a small change of route was fine' is only in his statement; the recorded chat consent is limited to a one-minute stop at a named petrol station, and per RD-5/G11 a driver's claim of verbal/implied agreement to a route change does not constitute consent. The chat also shows the car was stationary at 21:35:30 and 21:35:40-21:36:15 — prior to, not after, the long loop."
+    "id": "rider_claim_4.65_full_fare_difference",
+    "reason": "The quoted-vs-actual total difference ($4.65) includes the surge-exempt $1.25 booking fee and is not the policy measure; SURGE-3 refunds only (trip multiplier − quote multiplier) × surgeable subtotal, i.e. $5.18."
    },
    {
-    "id": "rider_claim_never_stopped",
-    "reason": "Partly accepted: the complaint's 'he never stopped for petrol anyway' is consistent with the driver's own statement (a stop that was intended, not completed) and with the fare having no attached fuel-stop item; but the sole GPS sample inside the loop (21:35:30, 0 km/h at the station coordinates) shows the car did halt there, so I treated that halt as a stop for RD-3(a) rather than treating the whole deviation as unexplained."
+    "id": "driver_statement_app_sets_price",
+    "reason": "The driver's statement is not in dispute and does not affect the ruling; no route deviation arises (actual distance is below the recommended distance), so no driver violation or RD-6 flag applies."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "insufficient",
-  "evidence_gap": "No fact table: the off-route loop's extra_km is unavailable. The only GPS supplied is down-sampled (\"gps thinned to every 6th sample, 71 of 419 points, 5 s grid -> 30 s\"), and it is internally inconsistent with the driver's own statement of a ~1-minute stop (samples jump hundreds of metres while the car is said to be stationary), so extra distance cannot be measured reliably from it. Needed: the full-resolution GPS trace and/or the gps-detour-* facts with extra_km, plus the meter waiting-unit split (fare-wait) to separate stop time from distance."
+  "evidence_status": "sufficient",
+  "evidence_gap": null
  },
- "latency_s": 10.85,
- "input_tokens": 17096,
- "output_tokens": 2149,
+ "latency_s": 6.84,
+ "input_tokens": 10305,
+ "output_tokens": 1264,
  "requests": 1,
  "llm_calls": 1
 }

@@ -3,7 +3,7 @@
 Every benchmark scenario makes claims about its record ("accident on the bypassed stretch", "rider agreed before the
 segment", "driver tapped I'm Here 600 m away"). data/synth/contract.py turns the scenario's conditions into a table of
 those claims and measures the record against them with its own geometry (nothing from core/). This file runs that
-contract over every committed case (bench, blind, the six demo cases and the organisers' sample), checks that the
+contract over every committed case (the benchmark, the six demo cases and the organisers' sample), checks that the
 one-line `hard` label promises the reference answer, and re-derives every reference answer from the raw record and
 the scenario labels without the engine, so an engine bug and a reference bug cannot hide each other.
 
@@ -20,12 +20,16 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "data" / "synth"))
 import contract  # noqa: E402
 
+from core.case_format import read_case  # noqa: E402
+
 MAIN = json.loads((ROOT / "data" / "bench" / "manifest.json").read_text())
-BLIND = json.loads((ROOT / "data" / "bench" / "blind" / "manifest.json").read_text())
-BENCH = [(ROOT / "data" / "bench" / "cases", c) for c in MAIN["cases"]] + [(ROOT / "data" / "bench" / "blind" / "cases", c) for c in BLIND["cases"]]
+CAND_MANIFEST = ROOT / "data" / "bench" / "candidates" / "manifest.json"
+CAND = json.loads(CAND_MANIFEST.read_text()) if CAND_MANIFEST.exists() else {"cases": []}
+BENCH = [(ROOT / "data" / "bench" / "cases", c) for c in MAIN["cases"]] + [(ROOT / "data" / "bench" / "candidates" / "cases", c) for c in CAND["cases"]]
 LOC = {  # the named stop places of data/synth/scenarios.py (the contract needs the coordinates, not the generator)
     "Paya Lebar Square": (1.3176, 103.8929), "Clementi Mall": (1.3149, 103.7645), "Parkway Parade": (1.3012, 103.9052),
     "Northpoint City": (1.4295, 103.8355), "Great World City": (1.2936, 103.8319), "Changi City Point": (1.3345, 103.9623),
+    "Tiong Bahru Market": (1.28506, 103.83265), "Bukit Timah Plaza": (1.33914, 103.77830), "Rifle Range Road 7-Eleven": (1.33862, 103.78070),
 }
 
 # Committed records that do not yet tell their story. Regenerating them needs the OneMap token (new legs), so the gate
@@ -44,7 +48,7 @@ def spec_of(entry: dict) -> dict:
 
 
 def failures(case_dir: Path, entry: dict) -> list[str]:
-    raw = json.loads((case_dir / f"{entry['case_id']}.json").read_text())
+    raw = read_case(case_dir / f"{entry['case_id']}.json")
     return contract.check(raw, contract.contract_for(spec_of(entry), LOC))
 
 
@@ -73,9 +77,13 @@ def test_contract_covers_every_scenario_condition():
     """Every condition key a scenario can carry is read by contract_for (a new condition cannot go unchecked)."""
     read = {"kind", "loops", "service", "consent", "stop", "incident", "band", "prior", "threat", "weather", "gps_tail_cut_s",
             "by", "park_m", "wait_s", "within_s", "here", "cancel_s", "driver", "prior_ns", "chat", "gps_hole_s", "policy", "recorded_by",
-            "statement_threat", "name"}
+            "statement_threat", "name", "m0", "m1", "notice", "complaint", "fraud", "no_shows_30d", "contact", "scheduled_after_tap_s",
+            "scheduled_after_accept_s", "min_extra_km", "speeding", "tail_request", "wait_from_scheduled_s", "app_reason", "cancel_text",
+            "complaint_safety", "ported"}
+    knobs = {"target", "max_excess_km", "claim", "yes", "own_reason", "allow_loopback", "stop_text", "dstmt_extra", "ask", "complaint_text", "driver_text", "slow_detour", "extra_unrecorded_call", "named_place",   # generation knobs (target amount, tolerance search, wording)
+             "reason_reading"}                                         # a reading label: what the driver's words mean (reference.py, not the contract)
     seen = {k for _, c in BENCH for k in c["conditions"]}
-    assert seen <= read, seen - read
+    assert seen <= read | knobs, seen - read - knobs
 
 
 # ---------------------------------------------------------------------------- the hand-scripted demo cases and the organisers' sample
@@ -94,7 +102,7 @@ DEMO = {
                "wait_after_tap_s": (0, 0), "prior_ns": 0, "fee_in_statement": True},
     "C-0005": {"kind": "no_show", "cancelled_by": "rider", "by": "rider", "cancel_s": 540, "driver": "at_pickup", "tap": True,
                "tap_distance_m": (0, 60), "prior_ns": 0, "fee_in_statement": True},
-    "C-0006": {"kind": "safety", "chat": "driver_threat", "statement_threat": False, "segments": 0, "no_stops": True, "pricing": "fixed"},
+    "C-0006": {"kind": "safety", "chat": "driver_threat", "statement_threat": False, "segments": 0, "no_stops": True, "pricing": "metered"},   # FARE-0
     # the organisers' sample: 3-min sampling, platform-confirmed arrival at the pin, 8 min at the pin, record-stated parameters
     "DISP-002": {"kind": "no_show", "cancelled_by": "driver", "by": "driver", "tap": True, "tap_distance_m": (0, 10), "wait_after_tap_s": (480, 480),
                  "prior_ns": 0, "fee_in_statement": True, "grid_s": None, "fare_recomputed": False, "estimate_equals_route": False,
@@ -110,7 +118,7 @@ def _demo_contract(cid: str) -> dict:
 
 @pytest.mark.parametrize("cid", sorted(DEMO))
 def test_demo_case_meets_its_hand_written_contract(cid):
-    raw = json.loads((ROOT / "data" / "cases" / f"{cid}.json").read_text())
+    raw = read_case(ROOT / "data" / "cases" / f"{cid}.json")
     c = _demo_contract(cid)
     errs = contract.check(raw, c)
     # the demo chat is hand-written prose, not the generator's templates: the consent / stop lines are checked here by hand
@@ -159,7 +167,7 @@ def test_every_hard_label_names_an_outcome():
         assert contract.label_implications(c["hard"])["ruling"], f"{c['case_id']}: hard label does not state the expected outcome"
     import re
     src = (ROOT / "data" / "synth" / "scenarios.py").read_text()
-    for name, hard in re.findall(r'^\s*[RNS]\("([a-z0-9_]+)".*?hard="([^"]*)"', src, flags=re.M | re.S):
+    for name, hard in re.findall(r'^\s*[RNSG]\("([a-z0-9_]+)".*?hard="([^"]*)"', src, flags=re.M | re.S):
         assert contract.label_implications(hard)["ruling"], f"scenarios.py {name}: hard label does not state the expected outcome"
 
 
@@ -170,9 +178,10 @@ import reference  # noqa: E402
 
 @pytest.mark.parametrize("case_dir,entry", BENCH, ids=lambda x: x["case_id"] if isinstance(x, dict) else "")
 def test_reference_answer_re_derives_without_the_engine(case_dir, entry):
-    raw = json.loads((case_dir / f"{entry['case_id']}.json").read_text())
+    raw = read_case(case_dir / f"{entry['case_id']}.json")
     want = json.loads((case_dir.parent / "expected" / f"{entry['case_id']}.json").read_text())
     got = reference.derive_reference(raw, entry["conditions"], entry["type"])
+    assert {k: v for k, v in got.items() if not k.startswith("_")} == {k: v for k, v in want.items() if k != "escalate_ok"}, entry["case_id"]   # the whole answer
     assert got["ruling"] == want["ruling"], (entry["case_id"], got, want["ruling"])
     assert bool(got["flag_account"]) == bool(want["flag_account"]), entry["case_id"]
     if got["amount"] is None:
@@ -188,9 +197,8 @@ def test_every_scenario_states_its_expected_answer_and_the_reference_keeps_it():
     """`expect` is the scenario's typed promise (ruling, flag); the manifest truth must keep it. The free-text `hard`
     label stays for the reader and is no longer parsed for the check."""
     import scenarios as S
-    for blind, specs in ((False, S.SCENARIOS), (True, S.BLIND_SCENARIOS)):
-        by_name = {c["name"]: c for _, c in BENCH if c["case_id"].startswith("X-" if blind else "B-")}
-        for sp in specs:
-            assert sp.get("expect"), f"{sp['name']}: no expect= in the scenario line"
-            if sp["name"] in by_name:
-                assert contract.check_expect(sp["expect"], by_name[sp["name"]]["truth"]) == [], (sp["name"], sp["expect"], by_name[sp["name"]]["truth"]["ruling"])
+    by_name = {c["name"]: c for _, c in BENCH}
+    for sp in S.SCENARIOS + S.CANDIDATES:
+        assert sp.get("expect"), f"{sp['name']}: no expect= in the scenario line"
+        if sp["name"] in by_name:
+            assert contract.check_expect(sp["expect"], by_name[sp["name"]]["truth"]) == [], (sp["name"], sp["expect"], by_name[sp["name"]]["truth"]["ruling"])

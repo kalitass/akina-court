@@ -20,7 +20,7 @@ import sys
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from fare import fixed_fare, load_rates, metered_fare, slice_gps  # noqa: E402
+from fare import estimate_subtotal, fixed_fare, load_rates, metered_fare, platform_fee, r2, slice_gps, surgeable_subtotal  # noqa: E402
 
 OFF_ROUTE_M = 200           # mirrors core/facts/tools.py (a point farther than this from the optimal polyline is off-route)
 DETOUR_MERGE_S = 120
@@ -39,8 +39,11 @@ SG_BOUNDS = (1.15, 1.48, 103.55, 104.1)
 WEATHER = {"fair": {"rain_mm": 0, "description": "Fair"},
            "light": {"rain_mm": 1.8, "description": "Light rain"},
            "heavy": {"rain_mm": 18.5, "description": "Heavy rain, thundery showers"}}
-ROAD_NAMING_CONSENT = ("before", "after", "before_seg1", "request_only", "named_singlish", "named_cn", "named_elsewhere", "negation")
-GENERAL_CONSENT = ("general", "general_cn", "general_errand")
+ROAD_NAMING_CONSENT = ("before", "after", "before_seg1", "request_only", "named_singlish", "named_cn", "named_elsewhere", "negation",
+                       "qualified", "recorded_call", "verbal_unrecorded", "unrecorded_call", "notice_ack", "excluded_not_driven",
+                       "retracted", "conditional", "misattributed", "sarcastic")
+CALL_CONSENT = ("recorded_call", "verbal_unrecorded", "unrecorded_call")       # the route was raised on a phone call before pickup
+GENERAL_CONSENT = ("general", "general_cn", "general_errand", "general_buried", "general_rider")
 
 
 class ContractError(AssertionError):
@@ -113,6 +116,22 @@ def segments(gps, poly):
     return out
 
 
+LOOPBACK_GAP_S = 40         # a moving car back within LOOPBACK_NEAR_M of where it was at least this long before has turned back
+LOOPBACK_NEAR_M = 35        # covers the two carriageways of a road
+
+
+def loops_back(points, near_m: float = LOOPBACK_NEAR_M) -> bool:
+    """The moving samples of a detour revisit a place: an out-and-back spur, a U-turn or a closed loop (a detour that
+    goes round a stretch never comes back over its own path)."""
+    mv = [p for p in points if p["speed_kmh"] >= 5]
+    for i, a in enumerate(mv):
+        ta = ts(a)
+        for b in mv[i + 1:]:
+            if (ts(b) - ta).total_seconds() >= LOOPBACK_GAP_S and hav_m((a["lat"], a["lon"]), (b["lat"], b["lon"])) <= near_m:
+                return True
+    return False
+
+
 def stops(gps, exclude=()):
     """Stationary runs (within STOP_RADIUS_M of their first point for >= STOP_MIN_S), skipping those within
     ENDPOINT_RADIUS_M of any point in `exclude` (pickup / drop-off)."""
@@ -148,6 +167,37 @@ def continuous_after_tap_s(gps, P, tap: datetime) -> int:
     return t
 
 
+def norm_road(name: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper().replace("'S", "S"))).strip()
+
+
+def road_match(name: str, roads) -> bool:
+    """`name` is one of `roads` (case and punctuation ignored; a whole-word containment either way counts)."""
+    n = norm_road(name)
+    for r in roads:
+        m = norm_road(r)
+        if n and m and (n == m or re.search(rf"\b{re.escape(n)}\b", m) or re.search(rf"\b{re.escape(m)}\b", n)):
+            return True
+    return False
+
+
+def gps_roads(gps, start: str | None = None, end: str | None = None) -> list[str]:
+    out = []
+    for p in gps:
+        if (start is None or start <= p["ts"] <= end) and p.get("road") and p["road"] not in out:
+            out.append(p["road"])
+    return out
+
+
+def asked_road(chat) -> str | None:
+    for m in chat:
+        if m["from"] == "driver":
+            x = re.search(r"(?:go round via|can go via|going via) (.+?)[?.]", m["text"])
+            if x:
+                return x.group(1)
+    return None
+
+
 def road_runs(route, lo_km, hi_km):
     """[(road name, metres of it inside the along-track window lo..hi of the optimal route)], longest first."""
     tot = {}
@@ -163,28 +213,49 @@ def road_runs(route, lo_km, hi_km):
 def contract_for(spec: dict, loc: dict | None = None) -> dict:
     """The checkable claims a scenario's conditions make about its record. Keys are check names, values parameters;
     `check()` knows every key. `loc` resolves a named stop place to coordinates."""
-    c = {"kind": spec["kind"], "grid_s": 5, "chat_in_window": True, "estimate_equals_route": True, "fare_recomputed": True,
-         "weather": WEATHER[spec.get("weather", "fair")], "templates": True}   # templates: the chat / incident / band texts follow scenarios.py
-    if spec["kind"] == "route_deviation":
+    c = {"kind": spec["kind"], "ported": bool(spec.get("port") or spec.get("ported")), "grid_s": 5, "chat_in_window": True, "estimate_equals_route": True, "fare_recomputed": True,
+         "weather": WEATHER[spec.get("weather", "fair")], "templates": True,   # templates: the chat / incident / band texts follow scenarios.py
+         "road_names": True, "fraud": dict(spec.get("fraud") or {})}
+    if spec["kind"] == "fare_dispute":
         n = len(spec["loops"])
-        c.update({"segments": n, "pricing": "fixed" if spec["service"] == "RydeX" else "metered",
+        c.update({"m0": spec["m0"], "m1": spec["m1"], "notice": spec["notice"], "complaint": spec.get("complaint"), "pricing": "metered",
+                  "complaint_safety": bool(spec.get("complaint_safety")),
+                  "surge_threat": bool(spec.get("threat")), "segments": n, "consent": spec["consent"], "stop": spec["stop"],
+                  "incident": spec["incident"], "band": spec["band"], "prior": spec["prior"], "threat": None})
+        if n == 0:
+            c["no_stops"] = True
+        if spec["stop"] == "named":
+            c["stop_place"] = (spec["loops"][0]["place"], (loc or {}).get(spec["loops"][0]["place"]))
+    elif spec["kind"] == "route_deviation":
+        n = len(spec["loops"])
+        c.update({"segments": n, "pricing": "fixed" if spec["service"] == "RydeX" else "metered", "min_extra_km": spec.get("min_extra_km", 0.5),
                   "prior": spec["prior"], "consent": spec["consent"], "stop": spec["stop"], "incident": spec["incident"],
                   "band": spec["band"], "threat": spec["threat"], "statement_consistent": True})
         if n == 0:
             c["no_stops"] = True
         if spec.get("gps_tail_cut_s"):
-            c.update({"tail_cut_s": spec["gps_tail_cut_s"], "fare_recomputed": False})
-        if n and (spec["incident"] in ("on_stretch", "seg1", "late") or spec["consent"] in ROAD_NAMING_CONSENT + ("general", "general_cn")):
+            c.update({"tail_cut_s": spec["gps_tail_cut_s"], "fare_recomputed": False, "tail_request": bool(spec.get("tail_request"))})
+        if n and (spec["incident"] in ("on_stretch", "seg1", "late") or spec["consent"] in ROAD_NAMING_CONSENT + ("general", "general_cn", "general_buried")):
             # the story says the loop goes ROUND a stretch (an accident on it, "go round via X", "take another way"):
             # an out-and-back spur bypasses nothing, and the car would still drive the whole stretch it claims to avoid
             c["route_km_min"] = {0: MIN_REPLACED_KM}
             c["stretch_driven_max"] = {0: 0.5}
         if spec["stop"] == "named":
             c["stop_place"] = (spec["loops"][0]["place"], (loc or {}).get(spec["loops"][0]["place"]))
+        if spec["stop"] == "named_missed":
+            c["named_place"] = (spec["named_place"], (loc or {}).get(spec["named_place"]))
     elif spec["kind"] == "no_show":
-        c.update({"cancelled_by": spec.get("recorded_by", "driver") if spec["by"] == "driver" else "rider", "by": spec["by"],
-                  "prior_ns": spec["prior_ns"], "fee_in_statement": True, "chat": spec.get("chat")})
-        if spec["by"] == "driver":
+        c.update({"cancelled_by": spec.get("recorded_by", "driver") if spec["by"] == "driver" else ("driver" if spec["by"] == "driver_other" else "rider"),
+                  "by": spec["by"], "prior_ns": spec["prior_ns"], "fee_in_statement": True, "chat": spec.get("chat"),
+                  "no_shows_30d": spec.get("no_shows_30d"), "scheduled": None, "complaint_safety": bool(spec.get("complaint_safety")),
+                  "app_reason": (spec.get("app_reason", "rider_no_show") if spec.get("recorded_by", "driver") is not None else None) if spec["by"] == "driver"
+                  else ("driver_vehicle_issue" if spec["by"] == "driver_other" else ("driver_taking_too_long" if spec["driver"] in ("late", "en_route") else "rider_changed_plans")),
+                  "cancel_text": spec.get("cancel_text")})
+        if (spec["by"] == "driver" and spec.get("recorded_by", "driver") is not None) or spec.get("driver") == "late":
+            c["contact"] = spec.get("contact", "both")
+        if spec["by"] == "driver_other":
+            c.update({"cancel_s": spec["cancel_s"], "driver": "en_route", "tap": False})
+        elif spec["by"] == "driver":
             park = spec["park_m"]
             c["tap"] = spec["here"]
             if spec["here"]:
@@ -194,8 +265,10 @@ def contract_for(spec: dict, loc: dict | None = None) -> dict:
                 c["wait_after_tap_s"] = (0, 0)
             elif "within_s" in spec:
                 c["wait_after_tap_s"] = (spec["within_s"], spec["within_s"])
+            elif spec.get("wait_from_scheduled_s"):
+                c["wait_from_scheduled_s"] = spec["wait_from_scheduled_s"]
             elif spec["here"]:
-                c["wait_after_tap_s"] = (spec["wait_s"] - 30, spec["wait_s"] - 15)     # the tap comes 20 s after parking
+                c["wait_after_tap_s"] = (spec["wait_s"] - 5, spec["wait_s"])          # the arrival is confirmed as the car parks
             else:
                 c["wait_at_pin_s"] = spec["wait_s"] - 10
             if spec.get("gps_hole_s"):
@@ -203,12 +276,16 @@ def contract_for(spec: dict, loc: dict | None = None) -> dict:
                 c["grid_s"] = None
             if spec.get("policy"):
                 c["policy"] = dict(spec["policy"])
+            if spec.get("scheduled_after_tap_s"):
+                c["scheduled"] = ("after_tap", spec["scheduled_after_tap_s"])
         else:
             c["cancel_s"] = spec["cancel_s"]
             c["driver"] = spec["driver"]
             c["tap"] = spec["driver"] == "at_pickup"
+            if spec["driver"] == "late":
+                c["scheduled"] = ("after_accept", spec.get("scheduled_after_accept_s", 300))
     else:
-        c.update({"chat": spec["chat"], "statement_threat": bool(spec.get("statement_threat")), "segments": 0, "no_stops": True,
+        c.update({"chat": spec["chat"], "statement_threat": bool(spec.get("statement_threat")), "segments": 0, "no_stops": True, "speeding": bool(spec.get("speeding")),
                   "pricing": "fixed" if spec["service"] == "RydeX" else "metered"})
     return c
 
@@ -258,13 +335,29 @@ def check(case: dict, c: dict) -> list[str]:
     if c.get("fare_recomputed") and t["pickup_at"]:
         rates = load_rates()
         f = case["fare"]
-        want = metered_fare(trip_gps, rates, f["surge_multiplier"], f["discount"]) if f["pricing"] == "metered" else fixed_fare(route, rates, f["surge_multiplier"], f["discount"])
-        if want != f:
+        want = metered_fare(trip_gps, rates, f["surge_multiplier"], f["discount"], fold_waiting=f.get("waiting_fee_basis") == "in_time_fare") \
+            if f["pricing"] == "metered" else fixed_fare(route, rates, f["surge_multiplier"], f["discount"])
+        if want != {k: v for k, v in f.items() if k != "quoted_total"}:
             bad("fare does not recompute from the trace / rate card")
     if c.get("pricing") and case["fare"]["pricing"] != c["pricing"]:
         bad(f"fare.pricing {case['fare']['pricing']} != {c['pricing']}")
 
-    if kind == "route_deviation":
+    if c.get("road_names"):
+        named = sum(1 for p in gps if p.get("road"))
+        if named < 0.9 * len(gps):
+            bad(f"only {named} of {len(gps)} GPS samples carry a road name")
+    prof = case["profiles"]
+    for side in (("rider", "driver") if "fraud" in c else ()):
+        got = ((prof.get(f"{side}_account") or {}).get("fraud_flags") or 0)
+        if bool(got) != bool((c.get("fraud") or {}).get(side)):
+            bad(f"{side} fraud_flags = {got}, scenario says {(c.get('fraud') or {}).get(side)!r}")
+    if kind == "fare_dispute":
+        _check_surge(case, c, errs, trip_gps, poly)
+        if c["segments"]:
+            _check_route(case, c, errs, trip_gps, poly, P, D)
+        elif segments(trip_gps, poly):
+            bad("surge script: the trace leaves the optimal route")
+    elif kind == "route_deviation":
         _check_route(case, c, errs, trip_gps, poly, P, D)
     elif kind == "no_show":
         _check_noshow(case, c, errs, P)
@@ -280,6 +373,9 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
         tail = (datetime.fromisoformat(t["dropoff_at"]) - ts(case["gps"][-1])).total_seconds()
         if abs(tail - c["tail_cut_s"]) > 5:
             bad(f"gps tail cut is {tail:.0f} s, scenario says {c['tail_cut_s']}")
+        asks = [m for m in chat if m["from"] == "rider" and "drop me" in m["text"]]
+        if c.get("tail_request") and not (asks and 0 < (ts(case["gps"][-1]) - ts(asks[0])).total_seconds() <= 90):
+            bad("tail_request: no rider request for another road / drop-off just before the trace ends")
     segs = segments(trip_gps, poly)
     if len(segs) != c["segments"]:
         bad(f"{len(segs)} off-route segment(s) measured, scenario has {c['segments']} loop(s): {[(s['route_km'], s['extra_km']) for s in segs]}")
@@ -287,7 +383,7 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
     st_all = stops(trip_gps, exclude=(P, D))
     seg_start = [ts({"ts": s["start"]}) for s in segs]
     for k, s in enumerate(segs):
-        if s["extra_km"] < 0.5:
+        if s["extra_km"] < c.get("min_extra_km", 0.5):
             bad(f"segment {k + 1} adds only {s['extra_km']} km (noise floor 0.2 km)")
     for k, s in zip(range(len(segs) - 1), segs):
         if ts({"ts": segs[k + 1]["start"]}) <= ts({"ts": s["end"]}):
@@ -309,9 +405,35 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
 
     # ---- consent: the exchange exists, is timed as the label says, and names the roads the geometry shows
     consent = c["consent"]
-    asks = [m for m in chat if m["from"] == "driver" and re.search(r"go round via|another way|pull in at the petrol", m["text"])]
-    replies = [m for m in chat if m["from"] == "rider" and re.search(r"Sure|Can lah|可以|随便|whichever way|No, I'm not", m["text"])]
-    if consent == "none":
+    asks = [m for m in chat if m["from"] == "driver" and re.search(r"go round via|can go via|can I go via|I go via|going via|another way|pull in at the petrol", m["text"])]
+    replies = [m for m in chat if m["from"] == "rider" and re.search(r"Sure|Can lah|Ok can|Ok, take|ok lor|^ok\b|可以|随便|whichever way|whatever way|wow great|No, I'm not", m["text"])]
+    if consent in CALL_CONSENT:
+        if asks or replies:
+            bad(f"consent={consent} but the chat holds a route exchange (the story is a phone call)")
+        calls = [x for x in case.get("calls", []) if x.get("caller") == "driver"]
+        if consent == "verbal_unrecorded" and calls:
+            bad("consent=verbal_unrecorded but the record holds a call (the claim is the driver's word only)")
+        elif consent == "unrecorded_call" and (len(calls) != 1 or calls[0].get("recording_ref") or calls[0].get("transcript") or not calls[0].get("answered")):
+            bad(f"consent=unrecorded_call needs one answered driver call with no recording: {calls}")
+        elif consent == "recorded_call" and (len(calls) != 1 or ts(calls[0]) >= ts({"ts": t["pickup_at"]})):
+            bad(f"consent={consent} needs exactly one driver call before pickup: {calls}")
+        elif consent == "recorded_call":
+            X = asked_road([{"from": "driver", "text": calls[0].get("transcript") or ""}])
+            if not calls[0].get("recording_ref") or not X or "Rider: Ok" not in (calls[0].get("transcript") or ""):
+                bad("consent=recorded_call but the call has no recording / transcript with the request and the rider's yes")
+            elif not road_match(X, gps_roads(trip_gps, segs[0]["start"], segs[0]["end"])):
+                bad(f"consent=recorded_call: the rider agreed to {X} but segment 1 drove {gps_roads(trip_gps, segs[0]['start'], segs[0]['end'])}")
+        if consent in ("verbal_unrecorded", "unrecorded_call") and "said ok" not in (case["driver_statement"] or ""):
+            bad("consent=verbal_unrecorded but the driver's statement does not claim the spoken agreement")
+    elif consent == "general_rider":
+        # the rider offered the route choice herself; the record names no road and the driver asked nothing
+        if asks or not any(m["from"] == "rider" and ts(m) < seg_start[0] for m in chat):
+            bad("consent=general_rider: needs the rider's own message before the segment and no driver route request")
+    elif consent == "general_buried":
+        buried = [m for m in chat if m["from"] == "rider" and "whatever way" in m["text"]]
+        if asks or not buried or ts(buried[0]) >= seg_start[0] or chat.index(buried[0]) != 8 or len(chat) < 18:
+            bad("consent=general_buried: the general route choice must be the 9th of 18+ messages, before the segment, with no route request")
+    elif consent == "none":
         if asks or replies:
             bad("consent=none but the chat holds a route exchange")
     else:
@@ -331,6 +453,29 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
                     bad(f"driver names {jam.title()} as jammed but the loop bypasses no road at all")
                 elif runs[0][0] != jam:
                     bad(f"driver names {jam.title()} as jammed but the bypassed stretch is mostly {runs[0][0].title()}")
+        X = asked_road(chat)
+        if consent in ("before", "named_singlish", "named_cn", "before_seg1", "after", "notice_ack") and X:
+            seg_roads = gps_roads(trip_gps, segs[0]["start"], segs[0]["end"])
+            if not road_match(X, seg_roads):
+                bad(f"consent={consent}: the driver asks to go via {X} but segment 1 drove {seg_roads}")
+        if consent == "misattributed" and asks and not (len(replies) == 1 and ts(replies[0]) < ts(asks[0])
+                                                        and not any(m["from"] == "rider" and ts(asks[0]) < ts(m) < seg_start[0] for m in chat)):
+            bad("consent=misattributed: the rider's only 'ok' must come before the route notice, and nothing after it")
+        if consent == "retracted" and not any("actually no" in m["text"] and ts(m) < seg_start[0] for m in chat):
+            bad("consent=retracted: no retraction before the segment")
+        if consent == "excluded_not_driven":
+            Y = next((re.search(r"不要走 (.+?)。", m["text"]).group(1) for m in replies if re.search(r"不要走 (.+?)。", m["text"])), None)
+            if not Y or road_match(Y, gps_roads(case["gps"])):
+                bad(f"consent=excluded_not_driven: the rider excluded {Y}, which the trace drives (or no exclusion)")
+        if consent == "qualified":
+            Y = next((re.search(r"not via (.+?)\.", m["text"]).group(1) for m in replies if re.search(r"not via (.+?)\.", m["text"])), None)
+            if not Y or not road_match(Y, gps_roads(trip_gps, segs[0]["start"], segs[0]["end"])):
+                bad(f"consent=qualified: the rider excluded {Y}, which segment 1 does not drive")
+        if consent == "named_elsewhere":
+            if not X:
+                bad("consent=named_elsewhere but the driver's request names no road")
+            elif road_match(X, gps_roads(case["gps"])):
+                bad(f"consent=named_elsewhere: the rider agreed to {X}, but the trace drives it")
         if consent == "request_only":
             if any(m["from"] == "rider" and asks and ts(asks[0]) < ts(m) < seg_start[0] for m in chat):
                 bad("consent=request_only but the rider replied before the segment")
@@ -358,8 +503,8 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
     else:
         if not in_seg:
             bad(f"stop={stop} but no stop (>= {STOP_MIN_S} s) inside segment {sk + 1}; stops: {[(x['duration_s'], x['start'][11:19]) for x in st_all]}")
-        req = [m for m in chat if m["from"] == "rider" and re.search(r"stop at", m["text"])]
-        if stop in ("named", "unnamed"):
+        req = [m for m in chat if m["from"] == "rider" and re.search(r"stop (at|by)", m["text"])]
+        if stop in ("named", "unnamed", "named_missed"):
             if not req:
                 bad(f"stop={stop} but the rider never asked for a stop")
             elif ts(req[0]) >= seg_start[0]:
@@ -372,6 +517,12 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
                 d = hav_m((in_seg[0]["lat"], in_seg[0]["lon"]), latlon)
                 if d > STOP_PLACE_M:
                     bad(f"stop=named: the car stopped {d:.0f} m from {name} (needs <= {STOP_PLACE_M} m)")
+        if stop == "named_missed" and in_seg:
+            name, latlon = c["named_place"]
+            if req and name not in req[0]["text"]:
+                bad(f"stop=named_missed but the rider's message does not name {name}")
+            if latlon and not 200 <= hav_m((in_seg[0]["lat"], in_seg[0]["lon"]), latlon) <= 600:
+                bad(f"stop=named_missed: the car stopped {hav_m((in_seg[0]['lat'], in_seg[0]['lon']), latlon):.0f} m from {name} (story: a different shop 200-600 m away)")
         if stop == "unnamed" and in_seg:
             d = project(in_seg[0]["lat"], in_seg[0]["lon"], poly)[0]
             if d < 500:
@@ -429,8 +580,8 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
             if c.get("templates"):      # scenarios.py puts the band on the stretch's main road and backs it with a crawl before the detour
                 if runs and b["road_name"] != runs[0][0]:
                     bad(f"band {band} is on {b['road_name']} but the bypassed stretch is mostly {runs[0][0]}")
-                if datetime.fromisoformat(b["window_end"]) > seg_start[0] + timedelta(seconds=5):
-                    bad(f"band window ends {b['window_end'][11:19]}, after the segment start")
+                if datetime.fromisoformat(b["window_end"]) < ts({"ts": segs[0]["end"]}) - timedelta(seconds=5):
+                    bad(f"band window ends {b['window_end'][11:19]}, before the segment ends: the jam must last the detour")
                 pre = [p["speed_kmh"] for p in trip_gps if seg_start[0] - timedelta(seconds=150) <= ts(p) < seg_start[0] and p["speed_kmh"] >= 5]
                 lo, hi = {1: (0, 9), 2: (10, 19)}[band]
                 if pre and not lo <= statistics.median(pre) <= hi + 1:
@@ -442,7 +593,7 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
     if got != c["prior"]:
         bad(f"prior={c['prior']} but driver.route_disputes_upheld_90d = {got}")
     th = c["threat"]
-    lines = {"driver": "Shut up", "trap": "find you"}
+    lines = {"driver": "Shut up", "trap": "find you", "impatient": "late already"}
     for key, needle in lines.items():
         has = any(needle in m["text"] for m in chat)
         if th == key and not has:
@@ -451,9 +602,10 @@ def _check_route(case, c, errs, trip_gps, poly, P, D):
             bad(f"chat holds '{needle}' but threat={th}")
     if c.get("statement_consistent"):
         st, ds = case["dispute"]["statement"], case["driver_statement"]
-        m = re.search(r"estimated (\d+) km .*?(\d+) km", st)
-        if m and (int(m.group(1)) != round(route["total_km"]) or int(m.group(2)) != round(case["fare"]["distance_km"])):
-            bad(f"rider statement quotes {m.group(1)} / {m.group(2)} km, record has {route['total_km']:.0f} / {case['fare']['distance_km']:.0f}")
+        m = re.search(r"estimated (?:about )?([\d.]+) km .*?([\d.]+) km", st)
+        quoted = lambda txt, km: abs(float(txt) - (round(km, 1) if "." in txt else round(km))) < 1e-9   # noqa: E731
+        if m and not (quoted(m.group(1), route["total_km"]) and quoted(m.group(2), case["fare"]["distance_km"])):
+            bad(f"rider statement quotes {m.group(1)} / {m.group(2)} km, record has {route['total_km']:.1f} / {case['fare']['distance_km']:.1f}")
         if case["fare"]["pricing"] == "fixed" and re.search(r"\bmeter\b|than the estimate|above the estimate|difference back", st):
             bad("fixed-fare trip but the rider's statement talks about the meter / paying more than the estimate")
         if "agreed" in ds and consent in ("none", "request_only") and stop == "none" and inc_kind == "none":
@@ -485,6 +637,12 @@ def _check_noshow(case, c, errs, P):
         lo, hi = c.get("tap_distance_m", (0, 10 ** 9))
         if not lo <= d_tap <= hi:
             bad(f"at the tap the car is {d_tap:.0f} m from the pickup, story says {lo}-{hi} m")
+        if t.get("driver_arrived_at") != t["driver_pressed_here_at"] and c.get("road_names"):
+            bad("the arrival on record is not the arrival confirmation")
+        if "wait_from_scheduled_s" in c and t.get("scheduled_at"):
+            got = continuous_after_tap_s(gps, P, tap) - int((datetime.fromisoformat(t["scheduled_at"]) - tap).total_seconds())
+            if got != c["wait_from_scheduled_s"]:
+                bad(f"{got} s at the pickup after the scheduled time, story says {c['wait_from_scheduled_s']}")
         if "wait_after_tap_s" in c:
             lo, hi = c["wait_after_tap_s"]
             got = continuous_after_tap_s(gps, P, tap)
@@ -526,8 +684,42 @@ def _check_noshow(case, c, errs, P):
         fee = case["fare"]["cancellation_fee"]
         if f"${fee:.2f}" not in case["dispute"]["statement"]:
             bad(f"rider statement does not name the ${fee:.2f} fee charged")
+    if "contact" in c:
+        n_msg = sum(1 for m in chat if m["from"] == "driver" and m.get("kind", "message") == "message" and ts(m) <= canc)
+        n_call = sum(1 for x in case.get("calls", []) if x.get("caller") == "driver" and ts(x) <= canc)
+        want = {"both": (True, True), "message_only": (True, False), "call_only": (False, True), "none": (False, False)}[c["contact"]]
+        if (n_msg > 0, n_call > 0) != want:
+            bad(f"contact={c['contact']} but the driver sent {n_msg} message(s) and made {n_call} call(s) before cancelling")
+    sch = t.get("scheduled_at")
+    if c.get("scheduled"):
+        how, sec = c["scheduled"]
+        base = tap if how == "after_tap" else acc
+        lo = sec - 30 if how == "after_tap" else sec        # a scheduled time is a whole minute: the tap lands up to 30 s either side
+        got = int((datetime.fromisoformat(sch) - base).total_seconds()) if (sch and base is not None) else None
+        if got is None or not lo <= got <= sec + (30 if how == "after_tap" else 0) or datetime.fromisoformat(sch).second:
+            bad(f"scheduled_at {sch} is not a whole minute {sec} s (+-30 s) after the {'tap' if how == 'after_tap' else 'acceptance'}")
+    elif sch and "scheduled" in c:
+        bad("the story has no scheduled time but the record carries one")
+    if c.get("driver") == "late":
+        if nearest <= PICKUP_RADIUS_M:
+            bad(f"driver=late but the trace comes within {nearest:.0f} m of the pickup")
+        if dists[-1] >= dists[0]:
+            bad("driver=late but the car ends farther from the pickup than it started")
+        if sch and canc <= datetime.fromisoformat(sch) + timedelta(minutes=5):
+            bad("driver=late but the rider cancelled before scheduled + 5 min")
+    if "app_reason" in c and t.get("cancellation_reason") != c["app_reason"]:
+        bad(f"cancellation_reason {t.get('cancellation_reason')!r}, scenario says {c['app_reason']!r}")
+    if c.get("cancel_text"):
+        last = [m for m in chat if m["from"] == "driver" and ts(m) <= canc]
+        if not last or last[-1]["text"] != c["cancel_text"]:
+            bad("the driver's last message before cancelling is not the scenario's own words")
+    if "complaint_safety" in c and c["complaint_safety"] != ("comments about my body" in case["dispute"]["statement"]):
+        bad("complaint_safety: the complaint text and the scenario disagree on the safety allegation")
+    acct = case["profiles"].get("rider_account") or {}
+    if "no_shows_30d" in c and acct.get("no_shows_30d") != c["no_shows_30d"]:
+        bad(f"rider no_shows_30d = {acct.get('no_shows_30d')}, scenario says {c.get('no_shows_30d')}")
     kind = c.get("chat")
-    need = {"two_more": "2 more minutes", "driver_claims": None, "threat": "regret"}.get(kind)
+    need = {"two_more": "2 more minutes", "driver_claims": None, "threat": "regret", "impatient": "Still waiting ah", "gate": "double yellow line", "coming_down": "coming down in 1 min"}.get(kind)
     if need and not any(need in m["text"] for m in chat):
         bad(f"chat={kind} but no '{need}' line")
     if kind == "driver_claims" and "5 minutes" not in (case["driver_statement"] or ""):
@@ -549,6 +741,67 @@ def _check_noshow(case, c, errs, P):
             bad("fare.cancellation_fee differs from the record-stated fee")
 
 
+NOTICE_CONTENT = {"full": (True, True, True), "no_cancel": (True, True, False), "no_fare": (True, False, True), "no_multiplier": (False, True, True),
+                  "cancel_fee": (True, True, False), "full_timed": (True, True, True), "full_at_pickup": (True, True, True), "paren": (True, True, True),
+                  "window_closed": (True, True, False), "fare_unchanged": (True, False, True), "after_pickup": (True, True, True), "sms": (True, True, True)}   # (multiplier, revised fare, free cancel)
+
+
+def notice_states(text: str) -> tuple[bool, bool, bool]:
+    """What a notice text states, read the way the scenario wrote it: a multiplier ('1.5×'), a fare ('$16.50'), a free-cancel option."""
+    t = text or ""
+    return (bool(re.search(r"\d\.\d×", t)), bool(re.search(r"\$\d+\.\d\d", t)),
+            bool(re.search(r"cancel for free|cancel free|at no charge|without (a )?fee", t, re.I)) and not re.search(r"fees? may apply", t, re.I))
+
+
+def _check_surge(case, c, errs, trip_gps, poly):
+    """A fare dispute: the surge log, the quote and the fare tell the scenario's multipliers and notice."""
+    bad = errs.append
+    t, f = case["trip"], case["fare"]
+    sg, fd = case.get("surge") or {}, case.get("fare_detail") or {}
+    m0, m1, notice = c["m0"], c["m1"], c["notice"]
+    if sg.get("quote_time_surge") != m0 or sg.get("trip_start_surge") != m1 or f.get("surge_multiplier") != m1:
+        bad(f"surge log {sg.get('quote_time_surge')} -> {sg.get('trip_start_surge')} (fare {f.get('surge_multiplier')}) != scenario {m0} -> {m1}")
+    q = fd.get("upfront_quote") or {}
+    if q.get("surge_multiplier") != m0:
+        bad(f"quote multiplier {q.get('surge_multiplier')} != {m0}")
+    s1 = surgeable_subtotal(f)
+    if fd.get("surgeable_subtotal") != s1 or fd.get("booking_fee") != f["platform_fee"] or not fd.get("booking_fee_surge_exempt"):
+        bad("fare_detail does not match the fare (surgeable subtotal / booking fee)")
+    rates = load_rates()
+    qs = q.get("surgeable_subtotal")
+    if qs is None or f.get("quoted_total") != r2(r2(qs * m0) + platform_fee(r2(qs * m0), rates)):
+        bad(f"quoted total {f.get('quoted_total')} does not price the quote subtotal {qs} at {m0}x plus the booking fee")
+    if qs != estimate_subtotal(case["route"], rates):
+        bad(f"the quote subtotal {qs} is not the route estimate priced on the rate card ({estimate_subtotal(case['route'], rates)})")
+    if f.get("waiting_fee") or f.get("waiting_fee_basis") != "in_time_fare":
+        bad("FARE-0: a surge fare has no separate waiting line (base + distance + time is what surges)")
+    if c["segments"] and qs is not None and qs >= s1:
+        bad("mixed causes: the trip should have grown beyond the quote")
+    if m1 > m0:
+        if sg.get("surge_activated_at") is None or not (t["accepted_at"] < sg["surge_activated_at"] < t["pickup_at"]):
+            bad("surge rose but its activation is not between acceptance and pickup")
+        want = NOTICE_CONTENT.get(notice)
+        if "notification_content" in sg:
+            bad("the surge log carries content booleans: the notice is its text, read by the court")
+        if notice == "none" and (sg.get("rider_notified") is not False or sg.get("notification_text")):
+            bad("notice=none but the log records a notice")
+        if notice == "missing" and sg.get("rider_notified") is not None:
+            bad("notice=missing but the log says whether the rider was notified")
+        if want:
+            if not sg.get("rider_notified") or (not c.get("ported") and notice_states(sg.get("notification_text")) != want):
+                bad(f"notice={notice} but the log has {sg.get('rider_notified')} / {sg.get('notification_text')!r}")
+            when = sg.get("notification_timestamp")
+            if not when or (when > t["pickup_at"]) != (notice == "after_pickup"):
+                bad(f"notice={notice} but the notice is timed {when} against pickup {t['pickup_at']}")
+            if (sg.get("notification_method") == "sms") != (notice == "sms"):
+                bad(f"notice={notice} but the method is {sg.get('notification_method')}")
+    has = any("find you" in m["text"] for m in case["chat"])
+    if has != c["surge_threat"]:
+        bad(f"threat={c['surge_threat']} but the chat {'holds' if has else 'lacks'} the threat line")
+    if c.get("complaint_safety") != ("where I live" in case["dispute"]["statement"]):
+        bad("complaint_safety: the complaint text and the scenario disagree on the safety allegation")
+
+
 def _check_safety(case, c, errs, trip_gps, poly, P, D):
     bad = errs.append
     chat, kind = case["chat"], c["chat"]
@@ -564,6 +817,11 @@ def _check_safety(case, c, errs, trip_gps, poly, P, D):
     if kind == "innocuous" and any(re.search(r"lock|punch|stupid|shut up|regret", x, re.I) for x in texts):
         bad("chat=innocuous but a line carries a threat hint")
     ds = case["driver_statement"] or ""
+    if c.get("speeding"):
+        sp = [p["speed_kmh"] for p in trip_gps]
+        brakes = sum(1 for a, b in zip(sp, sp[1:]) if a - b >= 40)
+        if max(sp) < 90 or brakes < 2 or "speeding" not in case["dispute"]["statement"]:
+            bad(f"speeding story: max {max(sp):.0f} km/h, {brakes} hard braking(s), statement {'names' if 'speeding' in case['dispute']['statement'] else 'lacks'} it")
     if c.get("statement_threat") != ("stupid" in ds):
         bad(f"statement_threat={c.get('statement_threat')} but the driver's statement {'has' if 'stupid' in ds else 'lacks'} the insult")
     if segments(trip_gps, poly):
@@ -605,6 +863,8 @@ def check_expect(expect: dict, truth: dict) -> list[str]:
         errs.append(f"expect promises no amount but the reference carries {truth['amount']}")
     if "flag" in expect and bool(truth.get("flag_account")) != bool(expect["flag"]):
         errs.append(f"expect says flag={expect['flag']} but the reference flag_account is {truth.get('flag_account')}")
+    if (expect.get("goodwill_credit") or 0) != (truth.get("goodwill_credit") or 0):
+        errs.append(f"expect says goodwill_credit={expect.get('goodwill_credit')} but the reference carries {truth.get('goodwill_credit')}")
     return errs
 
 

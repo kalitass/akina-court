@@ -4,45 +4,80 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:07.466458+00:00",
+ "ts": "2026-10-13T15:36:01.727842+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
+  "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Route to Ryde Trust & Safety for human review of the rider's threat; preserve the in-app chat (18:24:05 driver request, 18:24:35 rider threat) and the driver's statement; no automatic fare adjustment; contact the driver to confirm he is safe and remind him of the RydeHELP reporting path (and 995 if he feels unsafe), and note the rider's smoking-in-vehicle conduct issue for the rider side.",
-  "confidence": 0.95,
-  "reasoning": "Safety screen: dispute type is \"safety\" and the record itself contains a threat. The in-app chat shows the driver, at 18:24:05, sending \"Please do not smoke in the car.\", and the rider at 18:24:35 replying \"Say that again and I will punch you.\" The driver's statement is consistent: he asked the passenger not to smoke and was told he would be punched if he said it again; he kept driving and did not respond. Read in context this is not a pickup arrangement or banter — it is a direct threat of physical violence aimed at the driver, i.e. a threat/intimidation and abuse of a person on the platform. Under SAFE-1 the judge must not issue an automated ruling: ruling = escalate, safety_concern = \"confirmed\". (Nothing in the record supports a driving-safety or injury allegation, so SAFE-2 is not relied on; there is no route-deviation, no-show, waiting-fee or fare issue in this case, so RD/NS/FARE clauses do not apply and no amount is computed. Both profiles are clean — rider disputes_90d 0, driver disputes_90d 0 — so RD-6/NS-2 account-flag conditions are not met and no flag_account is attached.) Evidence status: sufficient for the safety finding (both chat messages are timestamped and the statement corroborates), and the escalation is solely mandated by SAFE-1, not by any missing record.",
+  "recommended_action": "Uphold the $5.00 no-show fee paid to the driver; no refund. No further action required.",
+  "confidence": 0.9,
+  "reasoning": "Type: no-show charge, driver cancelled. NS-0 → NS-1. Testing each NS-1 condition.\n\n(i) Arrival: app event \"driver_arrived\" at 18:17:45 and GPS at ~18:18 shows the driver at 1.369154,103.847849 ≈ 95 m from the pickup (AMK Hub 1.3688,103.84792) — inside the 200 m radius. Met.\n\n(ii) Free wait: counted from the later of scheduled pickup and arrival. Arrival 18:17:45; the record's threshold-free wait is 5 minutes, so 18:22:45. Cancellation at 18:23:25 — the wait had passed. Met.\n\n(iii) Contact: one in-app message at 18:20:15 (\"Still waiting ah, so slow\") and one in-app call at 18:19:15 (unanswered). At least 1 message AND 1 call — met. The driver's \"so slow\" is brusque but not a threat, intimidation or harassment (SAFE-1 not triggered); the rider's complaint contains no safety indicator.\n\n(iv) Continuous presence: GPS shows the driver stationary (0.2–2.0 km/h) at the same point on Ang Mo Kio Ave 3 from 18:18:00 to 18:23:25, no gap. Met.\n\nAll four conditions hold, so the $5.00 no-show fee stands (NS-1, §2.1–2.3; precedent DISP-2026-0211 — no-show cancel upheld). The rider's profile carries 1 fraud flag raised for frequent late cancellations, but per TH-3 that only lifts the confidence threshold to 95%, and the four conditions are independently satisfied here, so no refund. Note: the fee arises under the no-show clause, not the rider's own cancellation, so NS-4/NS-9 are not engaged (no_shows_30d is null; no repeat no-show count in the record).",
   "cited_facts": [],
   "cited_policy": [
-   "SAFE-1"
+   "NS-0",
+   "NS-1",
+   "TH-3",
+   "SAFE-1",
+   "PREC-1"
   ],
-  "escalate": true,
-  "escalation_reason": "Threat of physical violence (threatened assault) by the rider against the driver, evidenced in the in-app chat; SAFE-1 requires escalation to a human reviewer instead of an automated ruling.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver_route_deviation_claim",
-    "reason": "Not raised and not supported: GPS traces a normal Tampines Mall → Changi Airport T3 run (18:15:00–18:28:15) against the quoted 8.535 km / 16.3 min route, with no off-route segment or detour fact present; no RD-2 amount exists."
+    "element": "Driver arrived at pickup within 200 m (NS-1(i))",
+    "finding": "met",
+    "basis": [],
+    "reason": "driver_arrived 18:17:45; GPS 18:18 at 1.369154,103.847849 ≈ 95 m from AMK Hub (1.3688,103.84792)."
    },
    {
-    "id": "account_flag",
-    "reason": "Both profiles show disputes_90d = 0 and route_disputes_upheld_90d = 0, so RD-6 and NS-2 flag conditions are not met."
+    "element": "5-minute free wait elapsed before cancellation (NS-1(ii))",
+    "finding": "met",
+    "basis": [],
+    "reason": "Wait from arrival 18:17:45 → 18:22:45; cancellation at 18:23:25."
+   },
+   {
+    "element": "≥1 in-app message and ≥1 in-app call before cancelling (NS-1(iii))",
+    "finding": "met",
+    "basis": [],
+    "reason": "Message 18:20:15; call 18:19:15 (unanswered)."
+   },
+   {
+    "element": "Driver remained at pickup point throughout (NS-1(iv))",
+    "finding": "met",
+    "basis": [],
+    "reason": "Continuous GPS at 0.2–2.0 km/h on Ang Mo Kio Ave 3 from 18:18 to 18:23:25, no gap."
+   },
+   {
+    "element": "Reason the driver cancelled (NS-0)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Cancelled for rider no-show per chat 18:23:15 and statement; consistent with the elapsed wait."
+   },
+   {
+    "element": "Surge notice / differential (SURGE-1, SURGE-2)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "No surge applied (multiplier 1.0); actual fare 0. Not engaged."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "rider_complaint",
+    "reason": "The rider's account that the driver 'cancelled just as I was coming down' does not defeat the fee: the systems record shows arrival, a full 5-minute wait, one message and one call before cancellation, and continuous presence at the pickup point (NS-1). The driver's rushing messages were unprofessional but not a safety issue and do not void a valid no-show fee."
    }
   ],
   "flag_account": false,
-  "safety_concern": "confirmed",
-  "safety_basis": [
-   "Rider chat message 2026-09-23T18:24:35+08:00: \"Say that again and I will punch you.\" — threat of physical violence directed at the driver",
-   "Driver chat message 2026-09-23T18:24:05+08:00: \"Please do not smoke in the car.\" — the request the threat responded to",
-   "Driver's statement: asked the passenger politely not to smoke; passenger said he would punch him if he said it again"
-  ],
+  "goodwill_credit": null,
+  "safety_concern": "none",
+  "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.69,
- "input_tokens": 14092,
- "output_tokens": 998,
+ "latency_s": 6.33,
+ "input_tokens": 9991,
+ "output_tokens": 1181,
  "requests": 1,
  "llm_calls": 1
 }

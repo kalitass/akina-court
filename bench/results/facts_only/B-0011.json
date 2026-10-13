@@ -4,74 +4,105 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:38:28.872890+00:00",
+ "ts": "2026-10-13T15:36:12.959188+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 2.4,
-  "recommended_action": "Issue a voucher of $2.40 to the rider for the unexempt detour mileage (1.70 km × $1.41/km); the $1.15 metered waiting charge stands as it corresponds to the rider-named stop at Clementi Mall. Record the RD-1 breach on the driver's file.",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: the chat messages [F9][F10] and the driver's statement [F12] contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is fare/route, not safety. No SAFE-1/SAFE-2 trigger.\n\nEvidence: GPS and timeline are complete and consistent (chat fully timestamped, F11); nothing needed is missing → sufficient.\n\nThe disputed segment. One off-route segment [F4] 14:21–14:31, 3.81 km driven vs 2.11 km optimal, +1.70 km, up to 554 m off route. It is bracketed by the stationary period [F2] 14:23–14:27 at (1.3149, 103.7641) — not a pickup/drop-off point, ~2.5 km from NUS. The rider's own message [F9] at 14:17, before the segment, named the place: \"Can you stop at Clementi Mall? I need to grab a parcel\" and the driver accepted [F10]. Under RD-3(a) a rider-named stop is exempt, and per RD-3's \"do not split the stop from the way there\" rule the whole segment driven to reach Clementi Mall is exempt — the +1.70 km detour is the way to the named stop, and the 4-minute halt at 14:23–14:27 matches the parcel stop. The detour is not a driver errand or unrouted choice: no traffic incident exists on the alternative [F15], the speed bands [F13][F14] are on other roads and under RD-4(b) do not exempt on their own, but they are irrelevant since no exemption is needed. So the segment is exempt and forms no unexempt detour → no RD-2 refund under the route-deviation branch.\n\nThe real overcharge. RydeTAXI bills by meter, so mileage and waiting units enter the fare directly (RD-2/RD-3(c)). Billed distance 10.39 km [F8] against GPS-measured travel of 10.4 km [F1]; distance fare $14.65 + time $4.16 + waiting $1.15. The rider-named stop is exempt, so the extra mileage to Clementi Mall is not refundable mileage, and the waiting charge of $1.15 [F6] (4.4 min × $0.26/min) is a metered waiting unit properly incurred at the rider's requested stop — RD-3(c) says waiting at a stop is charged and not refunded.\n\nThe discrepancy. The billing includes an \"excess distance billed $2.76 (1.96 km × $1.41/km)\" [F5] on top of the metered 10.39 km distance fare [F8], i.e. the rider is charged the metered distance AND a separate excess-distance line for essentially the same detour kilometres that the fare already captured; F5's 1.96 km also exceeds the 1.70 km actually extra [F4] and the 2.0 km total delta [F1]. That double-counted excess-distance charge [F5] is an unpublished/unfounded add-on for a RydeTAXI trip (RD-2/FARE-1): refund the portion not accounted for by the exempt detour, i.e. $2.76 − (1.70 km × $1.41 = $2.40) = $0.36, plus the double-charging effect. Refunding the whole excess-distance line $2.76 minus the $0.36 already represented in legitimately metered detour mileage gives a partial refund of the remaining unexplained $2.40 [F5][F4]. Rounding to the cent: 1.70 × 1.4100 = $2.3970 ≈ $2.40.\n\nAmount: refund_partial $2.40.\n\nDriver flag. RD-2 refund > 0 and driver profile shows 2 route disputes upheld in 90 d [F18], so RD-6 applies: the case adds to a \"repeated\" pattern → flag_account for Ryde account review. The profile fact is used only for this add-on action, not to establish the deviation itself.",
+  "amount": 3.4,
+  "recommended_action": "Refund $3.40 excess distance fare to the rider's original payment method and log the route-deviation with a reminder to the driver; no formal warning (first notification incident). Do not flag the driver account (the only profile entries outstanding are a no-show dispute, not an upheld route deviation within 90 days).",
+  "confidence": 0.62,
+  "reasoning": "Safety screen: chat and complaint contain no threat, harassment, sexual remark, dangerous-driving or accident allegation — no SAFE-1/SAFE-2 trigger, so the case can be ruled on the merits.\n\nRoute deviation: the record shows a real, measured off-route stretch at 14:27–14:29 — 1.90 km driven where the optimal route covers 0.67 km, adding ~1.23 km and reaching up to 874 m from the optimal route [F4]. The overall GPS deviation of +0.3 km [F2] is only the netted residual of a trip whose trace is partly missing, so it does not cancel the measured segment; the billed excess is 2.41 km / $3.40 [F5].\n\nConsent (RD-5 / RD-3): the only rider message about routing is Chat #3 at 14:29 [F10], asking to go via Canning Lane after the off-route segment had already begun; notice or consent after the segment began does not count, so it cannot exempt any part of the 14:27–14:29 segment. The driver's post-trip statement that \"the GPS rerouted\" [F12] is an explanation given only after the fact — it is not notice in-app or by recorded call before or at the point of deviation, and there is no call recording.\n\nTraffic (RD-4): no traffic incidents were recorded near the route during the window [F15], and the only speed-band data is for EU TONG SEN STREET (band 4) and KAMPONG BAHRU ROAD (band 5) [F13][F14] — neither is band 1–2, and neither sits on the replaced part of the recommended route (Cantonment Rd / Lim Teck Kim Rd / Bernam St / Anson Rd / Maxwell Rd / Wallich St / Cecil St). So there is no traffic justification; RD-2 gives a partial refund of the excess distance fare and a recorded driver violation.\n\nAmount: refundable km = deviation − exempt km. No segment is exempt, so refundable km = 1.23 km of extra distance on the measured segment; the trip's own rate is $1.4099/km, giving $1.73. The fare record already bills the excess as $3.40 (2.41 km × $1.4099/km) [F5] (the 2.41 km figure is the stored excess-distance computation, which includes the map-matching residual); per RD-2 the refund is of the excess distance fare as given, so $3.40. This is the whole overcharge and excludes time fare, platform fee and tolls.\n\nAction level: $3.40 is under $10, so the system ruling is final (TH-1, TH-2, C1, consistent with DISP-001's automatic $3.44 deviation refund). The driver's earlier upheld dispute was a no-show, not a route deviation, so RD-6's 90-day repeat-deviation flag does not apply [F18].\n\nEvidence caveat (does not affect the outcome): the GPS trace leaves the last 4 minutes of the trip uncovered [F1], but the discrepancy and the segment are both measured within the covered stretch and the fare is fully recorded [F5][F7], so the refund computation does not depend on the missing portion.",
   "cited_facts": [
    "F1",
    "F2",
    "F4",
    "F5",
    "F6",
-   "F8",
-   "F9",
+   "F7",
    "F10",
-   "F11",
    "F12",
+   "F13",
+   "F14",
    "F15",
    "F18"
   ],
   "cited_policy": [
+   "RD-1",
    "RD-2",
    "RD-3",
-   "RD-1",
-   "RD-6",
-   "FARE-1",
-   "RD-4"
+   "RD-4",
+   "RD-5",
+   "RD-7",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F4",
-    "finding": "exempt",
-    "ground": "rider_named_stop",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
     "basis": [
-     "F9",
-     "F10"
+     "F10",
+     "F12"
     ],
-    "reason": "RD-3(a): the rider messaged at 14:17, before the 14:21–14:31 segment, naming the place — 'Can you stop at Clementi Mall? I need to grab a parcel, 3-4 minutes' [F9] — and the driver accepted [F10]; the car stopped there 14:23–14:27 [F2], matching the parcel stop. Under RD-3 the whole segment driven to reach the named place is exempt (the stop is not split from the way there), so the +1.70 km is not an unexempt detour. RD-4 provides no basis on its own here (no incident, F15; bands are on other roads, F13/F14) but no exemption is needed."
+    "named_road": null,
+    "reason": "The 14:27–14:29 segment (1.90 km vs 0.67 km optimal, +1.23 km, up to 874 m off route) was driven before any rider routing request: Chat #3 asking to go via Canning Lane came at 14:29, i.e. only after the segment began, and no consent for the segment appears before it [F10]. The driver's post-trip statement that the GPS rerouted [F12] is not notice in-app or by recorded call before or at the point of deviation (RD-5), there is no traffic reason (no incident [F15]; the only speed bands are 4 and 5 on unrelated roads [F13][F14]) (RD-4), and no rider-named road/stop covers it (RD-3). Segment therefore counts as deviation and its 1.23 km of extra distance is refundable (RD-2)."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Notice and consent for the reroute (RD-5: in-app chat or recorded call before/at the point of deviation)",
+    "finding": "not_met",
+    "basis": [
+     "F10",
+     "F12"
+    ],
+    "reason": "No driver notice appears before or at 14:27; the only rider routing message is Chat #3 at 14:29, after the segment began, and the driver's written statement [F12] is a post-trip explanation with no call recording. Late notice/consent does not count."
+   },
+   {
+    "element": "Traffic reason for the reroute (RD-4: incident within 300 m/on the route, or speed band 1–2)",
+    "finding": "not_met",
+    "basis": [
+     "F13",
+     "F14",
+     "F15"
+    ],
+    "reason": "No traffic incidents recorded on or near the route during the trip window [F15]; the recorded bands are 4 (EU TONG SEN STREET) and 5 (KAMPONG BAHRU ROAD), neither band 1–2 nor on the replaced part of the recommended route."
+   },
+   {
+    "element": "Reason the driver took the other way (RD-2 matrix / RD-3): rider-requested route vs driver/other cause",
+    "finding": "met",
+    "basis": [
+     "F10",
+     "F12"
+    ],
+    "reason": "No rider request covers the segment before it began and the driver offers only a GPS reroute claim, so the segment is attributable to the driver's own routing, not to a rider-requested route or stop (RD-3 not applicable)."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider-detour-refund",
-    "reason": "The rider's premise that the whole detour was an unauthorised overcharge fails: the detour existed to reach a place the rider named before the segment [F9][F10], so it is exempt under RD-3(a) and no RD-2 mileage refund arises for it."
+    "id": "driver_statement_F12",
+    "reason": "The claim that the GPS sent him that way is an after-the-fact explanation with no in-app notice before or at the point of deviation and no call recording, so it neither satisfies RD-5 notice nor exempts the segment; system records (GPS segment times/distances, absence of any traffic event) override it."
    },
    {
-    "id": "waiting-fee-refund",
-    "reason": "The $1.15 waiting charge [F6] is a metered waiting unit on a RydeTAXI trip incurred during the rider-requested stop; RD-3(c) keeps metered waiting at a stop chargeable, so it is not refunded."
-   },
-   {
-    "id": "driver-traffic-defence",
-    "reason": "The driver's implicit reliance on congestion is not made out: no traffic incident near the route [F15] and the speed bands [F13][F14] are on roads not matching the replaced optimal segment, so RD-4 gives no exemption."
+    "id": "rider_chat_F10_Canning_Lane",
+    "reason": "The rider's request to go via Canning Lane was sent at 14:29, after the off-route segment had already begun, so it cannot exempt that segment under RD-5/RD-3 (consent after the fact is not consent)."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_gap": "GPS trace stops 4 min 0 s before drop-off [F1]; the uncovered tail is named but is not outcome-relevant because the discrepancy, the off-route segment and the full fare build-up are all recorded."
  },
- "latency_s": 8.07,
- "input_tokens": 10370,
- "output_tokens": 1725,
+ "latency_s": 11.2,
+ "input_tokens": 7809,
+ "output_tokens": 1931,
  "requests": 1,
  "llm_calls": 1
 }

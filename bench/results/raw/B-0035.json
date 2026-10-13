@@ -4,39 +4,79 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:50.201901+00:00",
+ "ts": "2026-10-13T15:35:55.349274+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Reverse the $6.61 cancellation fee and issue the rider a Ryde voucher for $6.61 (NS-7); no driver account flag warranted.",
-  "confidence": 0.9,
-  "reasoning": "Cancellation branch (NS-0): cancelled_by = rider on an on-demand RydeX booking, so NS-4 governs. accepted_at 14:05:00, cancelled_at 14:07:55 → elapsed 2 min 55 s, i.e. ≤ 3:00 from matching (\"all cancellations made within 3 minutes of matching are not chargeable\"). The $6.61 cancellation fee was therefore not chargeable; refund_full of $6.61 (voucher form per NS-7).\n\nThe rider's stated ground (\"driver was nowhere near\") is not itself the basis: Ryde has no ETA-based free-cancellation rule (NS-8 informational), and the GPS trace in fact shows the driver moving toward the pickup, ~2 km away (1.3157,103.8260 area at 14:07:55) when the rider cancelled. The fee fails purely on the 3-minute rule, which is independent of driver proximity.\n\nNo-show elements (NS-1) never arise: no driver_pressed_here_at, no arrival confirmation, and the driver did not cancel. Evidence (timestamps, GPS, fare record) is complete for the elements needed — no gaps — so evidence_status = sufficient. Safety screen: chat is a neutral ETA exchange, complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation → safety_concern = none. Driver profile shows no prior upheld disputes, so RD-6 does not apply and no account flag is raised by this case.",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show cancellation fee to the rider; do not penalise the driver (no fraud indicator — arrival was genuine), but remind the driver that the free-wait requirement is not met unless a call is actually answered.",
+  "confidence": 0.93,
+  "reasoning": "No-show charge of $5.00 (trip T-2035, driver cancelled at 14:13:40 for \"rider_no_show\"). Driver arrived 14:07:40 (app event driver_arrived) and GPS places him ~0.01 km from Buona Vista MRT (1.30633, 103.78995 vs pickup 1.3063, 103.7903) — well within 200 m. Counting the 5-minute free wait from the later of scheduled pickup time and arrival (14:07:40), the wait expired 14:12:40; cancellation at 14:13:40 is past it, so NS-1(i) and (ii) hold. But NS-1(iii) requires, before cancelling, at least 1 in-app message AND at least 1 in-app call. The record shows one chat message (14:08:10) and one call attempt at 14:09:10 that was NOT answered (answered:false, duration 0). An unanswered call is not the required in-app call contact, so condition (iii) fails. Under NS-2 any failed NS-1 condition voids the fee: refund_full of $5.00. Because the driver was genuinely at the pickup point and arrival is corroborated by GPS and app event, there is no fraudulent-arrival basis for flag_account. Evidence is otherwise complete (GPS coverage, timestamped messages, call records, who cancelled), so the system may decide rather than escalate; amount $5.00 is below $10 and no-show/cancellation is a system-final category (TH-1, TH-2).",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7"
+   "NS-1",
+   "NS-2",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "NS-1(i) driver arrived at pickup (I'm Here / auto-arrival with GPS within 200 m)",
+    "finding": "met",
+    "basis": [
+     "app_events 14:07:40 driver_arrived",
+     "gps 14:07:40 lat 1.306335 lng 103.789949 vs pickup 1.3063/103.7903"
+    ],
+    "reason": "Arrival event plus GPS ~0.01 km from the pickup point satisfies the 200 m rule."
+   },
+   {
+    "element": "NS-1(ii) 5-minute free wait elapsed before cancellation",
+    "finding": "met",
+    "basis": [
+     "driver_arrival_time 14:07:40",
+     "cancellation_time 14:13:40"
+    ],
+    "reason": "Wait runs from the later of scheduled time and arrival (14:07:40) and expired 14:12:40; cancellation at 14:13:40 is past it."
+   },
+   {
+    "element": "NS-1(iii) before cancelling, driver sent ≥1 in-app message AND made ≥1 in-app call",
+    "finding": "not_met",
+    "basis": [
+     "chat_logs 14:08:10 driver message",
+     "call_records 14:09:10 answered:false duration 0"
+    ],
+    "reason": "One in-app message exists, but the only call attempt was unanswered (duration 0 s, no recording/transcript) — no contact was actually made, so the cumulative condition fails."
+   },
+   {
+    "element": "NS-1(iv) driver stayed at the pickup point throughout",
+    "finding": "met",
+    "basis": [
+     "gps 14:08:00–14:13:40 all at North Buona Vista Rd, speed ~0–2 km/h"
+    ],
+    "reason": "Telemetry shows the vehicle stationary at the pickup point from arrival until cancellation; the 14:09–14:12 sampling gap is thinning of a continuous trace, not evidence of departure."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "rider_eta_claim",
-    "reason": "Rider's assertion that the driver was 'nowhere near' is factually contradicted by the GPS trace (driver en route, ~2 km from pickup) and is legally irrelevant: Ryde publishes no ETA-based free-cancellation rule (NS-8 is informational only). The fee is refunded on the 3-minute rule, not on proximity."
+    "id": "driver_statement_wait5min",
+    "reason": "The 5-minute wait did elapse (14:07:40–14:13:40), but the driver states he waited rather than that he contacted the rider; the record shows his only call went unanswered, so the NS-1(iii) contact requirement is not established and his no-show claim fails."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 3.78,
- "input_tokens": 11860,
- "output_tokens": 760,
+ "latency_s": 7.0,
+ "input_tokens": 12411,
+ "output_tokens": 1264,
  "requests": 1,
  "llm_calls": 1
 }

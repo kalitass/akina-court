@@ -4,22 +4,28 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:35:38.984974+00:00",
+ "ts": "2026-10-13T15:50:19.489031+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": 0.0,
-  "recommended_action": "Uphold the metered fare; no refund due — the deviation is exempt under RD-4(a) (LTA vehicle-breakdown incident on the optimal route) and the extra distance therefore stands. No account flag (driver profile shows no prior upheld route dispute, so RD-6 is not engaged).",
-  "confidence": 0.72,
-  "reasoning": "Safety screen: the chat log is empty; the rider's complaint and the driver's statement contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation (SAFE-1/SAFE-2). No safety concern; dispute type is route_deviation, not safety. Proceed to the merits.\n\nService type is RydeTAXI, so the meter applies: the fare is billed per 400 m / 45 s (policy §0, RD-2), and the rider's claim is over-distance: app estimate 21.47 km vs metered 23.64 km, fare $47.97 (distance_fare $33.33 ÷ 23.64 km ⇒ ≈ $1.41/km).\n\nDeviation identified from the GPS trace: the quoted optimal route runs up the East Coast Parkway corridor (link SYB-0008: […] → 1.29965,103.90404 → 1.30093,103.90803 → 1.3032,103.91615 → 1.3093,103.93514 …) reaching the breakdown point (1.3093,103.93514) at ≈18:57. The trace instead reaches Tanglin/east-of-ECP near (1.2992,103.8977) at 18:46:55, makes a small eastbound excursion east to (1.3018,103.8966)/(1.3015,103.8956)/(1.3019,103.8933)/(1.3012,103.8938) between ≈18:47:25 and 18:49:00, then returns west/south at (1.3053,103.9101)/(1.3026,103.9116)/(1.3026,103.9142) before rejoining the ECP around (1.3035,103.9172) at 18:53:25, after which it follows the quoted corridor (1.30435,103.92021 … 1.31148,103.9429 …) and comes back on-route by (1.30904,103.93424)/18:56:25. Measured against the corridor, this reversal/loop accounts for roughly 1.5–2.5 km, consistent with the ≈2.2 km metered excess.\n\nExemption: the driver claims a breakdown on the route and points to the LTA feed. The record confirms an LTA DataMall incident — \"Vehicle breakdown on East Coast Parkway (towards Changi)\" at (1.3093,103.93514), reported_at 18:27:00, inside the trip window (18:24:25–19:10:40). That coordinate lies exactly on the optimal route polyline (vertices 1.3093,103.93514 / 1.30991,103.93734), i.e. m_from_route ≈ 0 ≤ 300 m, and the report time precedes the segment (≈18:45–18:50). The swept segment is the ECP stretch immediately preceding the breakdown point, so the corroboration is directed at the replaced portion of the optimal route. RD-4(a) is therefore satisfied and the segment is exempt; consequently there is no unexempted detour and no RD-2 refund. (The ECP speed bands are band 5, i.e. free-flow — so they neither add nor subtract; and per RD-4(b) band evidence alone could not exempt in any event.) The rider's premise that \"he never asked me\" does not help: where there is a reasonable cause, no rider consent is required (RD-4).\n\nAmount: $0.00 — no unexempted extra_km to refund; the metered fare stands (no_action). Evidence status is sufficient: I was able to locate the deviation from the trace and to verify the incident's location against the optimal-route geometry. Confidence 0.72 (trace thinned to 30 s sampling and the segment boundary is approximate; the deviation quantum is a range, not an exact figure).",
+  "ruling": "refund_partial",
+  "amount": 8.58,
+  "recommended_action": "Refund $8.58 (excess distance fare) to the rider's original payment method; send the driver a notification-duty reminder and log the notification failure on his route-compliance record (no formal warning, first such incident).",
+  "confidence": 0.8,
+  "reasoning": "Route deviation, no safety content in the complaint, driver statement or chat — screened, nothing found.\n\nDeviation: actual 29.98 km vs recommended 24.445 km = 5.54 km, well over the 1 km tolerance (RD-1). Per-km distance fare = 42.27 / 29.98 = $1.41/km. No traffic justification exists for the detoured part of the recommended route: the only speed-band events are a band-2 (10–19 km/h) window on AYER RAJAH EXPRESSWAY — which the actual trip drove anyway — and a band-7 event on CENTRAL EXPRESSWAY, which the recommended route also uses; traffic_conditions is empty. So RD-2 \"no traffic reason\" applies: refund excess distance fare, record a driver violation.\n\nConsent check (RD-5 / RD-3): the driver asked at 18:45:20 \"Jam ahead, shall I take another way?\"; the rider replied at 18:46:00 \"可以，不要走 Clementi Avenue 2\" — a qualified yes (general consent to another way, but off Clementi Avenue 2). Under RD-5 this covers only segments that did not drive Clementi Avenue 2. The segment from ~18:45 to ~18:51.75 (AYER RAJAH EXPRESSWAY → CLEMENTI WEST STREET 1 → WEST COAST ROAD) did not use Clementi Avenue 2, so the rider's consent exempts it: ~2.49 km (11.16 min at speeds consistent with the low-speed band; consistent with the GPS gap at 18:45:15, which falls in this stretch). The remaining ~3.05 km — the jog via Clementi Road / Kent Ridge Crescent / Arts Link / Kent Ridge Drive / Pasir Panjang Road plus the reversed SOUTH BUONA VISTA ROAD loop (18:51:45–19:00:30) rejoining AYE, and the later Sheares Avenue detour (19:09:45–19:11:00) — is not covered by the rider's words: it drove a route she never agreed to in place of the expressway, and no traffic reason existed. Refundable km = 5.54 − 2.49 = 3.05 km → 3.05 × $1.41 = $8.58. Tolls (nil), time fare and surge are not refunded (RD-2). Driver's verbally-claimed \"kept off one road\" consent is a claim, not consent (RD-5).\n\nAmount $8.58 is under $10, so the system ruling is final (TH-1 / TH-2, per DISP-001). Precedent DISP-2026-0089 (uninformed reroute) is aligned. No repeat driver deviation in the last 90 days, so no RD-6 flag.",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
-   "safe-1",
-   "safe-2"
+   "RD-5",
+   "RD-7",
+   "FARE-0",
+   "SAFE-1",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -27,30 +33,61 @@
    {
     "fact_id": "seg1",
     "finding": "exempt",
-    "ground": "incident",
+    "ground": "general_route_consent",
     "basis": [],
-    "reason": "GPS 18:45–18:52:55 shows an eastward overshoot and U-turn around (1.301–1.302, 103.893–103.898) before rejoining the East Coast Parkway at (1.3035, 103.9172)/18:53:25, ≈1.5–2.5 km beyond the quoted corridor. RD-4(a): the LTA incident 'Vehicle breakdown on East Coast Parkway (towards Changi)' at (1.3093, 103.93514), reported 18:27:00, sits on the optimal route (m_from_route ≈ 0 ≤ 300 m) and antedates the segment, which is the ECP stretch immediately preceding that point; the reasonable-cause exception is therefore made out and the segment's extra_km does not count (RD-4(a) → no_action for this segment)."
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "Rider's 18:46:00 \"可以，不要走 Clementi Avenue 2\" gave a qualified general consent to an alternative way; this stretch (AYE → Clementi West Street 1 → West Coast Road, ~18:45–18:51.75, ~2.49 km) did not drive the excluded road, so it is covered and not a deviation (RD-3/RD-5). The road-name words provided (Clementi Avenue 2) are absent from the driven roads, confirming the exclusion was honoured here."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "counts",
+    "ground": "scope_other",
+    "basis": [],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The 18:51:45–19:00:30 jog via Clementi Road / Kent Ridge Crescent / Arts Link / Kent Ridge Drive / Pasir Panjang Road and the reversed South Buona Vista Road loop (~2.65 km) goes a way the rider never named; her qualified yes only covered 'another way' that avoided Clementi Avenue 2 and cannot stretch to this long detour off the expressway. No traffic reason on the replaced part of the recommended route (RD-4 not met) and no notice or consent (RD-5). Counts as deviation (RD-2)."
+   },
+   {
+    "fact_id": "seg3",
+    "finding": "counts",
+    "ground": "consent_after_or_none",
+    "basis": [],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The 19:09:45–19:11:00 Sheares Avenue / East Coast Parkway approach (~0.40 km) replaces the recommended Marina Boulevard / Temasek Boulevard tail; no rider message and no traffic event covers it (RD-5). Counts as deviation (RD-2)."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Traffic reason for the reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "traffic_conditions is empty. The AYE band-2 window (speed_band 2, 18:25:45–18:59:15) lies on the replaced stretch but the actual trip drove that same AYE stretch, and the CENTRAL EXPRESSWAY band-7 window (10–19 km/h) is on a road the recommended route also uses; under RD-4 these are not traffic events, and the detour offers no justification (and no improvement) for those stretches."
+   },
+   {
+    "element": "Rider consent / qualified yes (RD-5)",
+    "finding": "met",
+    "basis": [],
+    "reason": "Rider's 18:46:00 message is a qualified yes: general agreement to another way but expressly excluding Clementi Avenue 2. Consent exists for the alternative-way segment that kept off Clementi Avenue 2; it does not cover the segments driven a way she did not name."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_claim_extra_distance",
-    "reason": "The rider is correct that the meter (23.64 km) exceeds the app estimate (21.47 km) and that the driver never asked, but the deviation is excused by a verifiable LTA vehicle-breakdown incident on the optimal ECP route (RD-4(a)); the metered extra distance is therefore not refundable under RD-2."
-   },
-   {
-    "id": "driver_claim_no_consent_needed",
-    "reason": "Accepted only in the RD-4 sense: a reasonable cause (documented incident on the optimal route) removes the need for rider consent, so this claim is not a basis for a detour refund but does defeat the rider's 'he never asked me' point."
+    "id": "driver_statement",
+    "reason": "The driver claims the rider allowed 'another way as long as I kept off one road'. The chat confirms only a qualified yes excluding Clementi Avenue 2, which does not authorise the long detour via Clementi Road / Pasir Panjang Road / South Buona Vista Road and Sheares Avenue that the telemetry shows; a claimed verbal agreement is not consent under RD-5."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.75,
- "input_tokens": 17164,
- "output_tokens": 1601,
+ "latency_s": 11.25,
+ "input_tokens": 18010,
+ "output_tokens": 1755,
  "requests": 1,
  "llm_calls": 1
 }

@@ -14,9 +14,12 @@ const AUTOPLAY = Q.get('autoplay') !== '0' && !REDUCED;   // respects the OS red
 const AUTORUN = Q.get('autorun') === '1';
 const CF = Q.get('cf') || null;
 const SHOW = Q.get('mode') !== 'expert';   // judge view (plain language) unless ?mode=expert
-const TITLES = {   // judge-facing names; the C-000n id stays in Expert view and the URL
-  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'Five dollars over the estimate',
-  'C-0004': '"Arrived" 613 m away', 'C-0005': 'Two minutes away, $6.61 fee', 'C-0006': '"Sit down or I lock the doors"', 'C-0007': 'The rider replied by voice', 'DISP-002': "Organisers' sample: the Tiong Bahru no-show" };
+const TITLES = {   // judge-facing names, no figures (amounts come from the record); the case id stays in Expert view and the URL
+  'DISP-001': "Organisers' sample: a fire on the PIE", 'DISP-002': "Organisers' sample: the Tiong Bahru no-show", 'DISP-003': "Organisers' sample: the surge nobody announced",
+  'C-0001': 'The 7-Eleven detour', 'C-0002': 'Off the PIE at Paya Lebar', 'C-0003': 'The long way round via the ECP',
+  'C-0004': '"Arrived" far from the pickup', 'C-0005': 'Two minutes away, then cancelled', 'C-0006': '"Sit down or I lock the doors"', 'C-0007': 'The rider replied by voice',
+  'B-0001': '"Whatever road is fastest, I trust you"', 'B-0007': '"Any way also can, you decide"', 'B-0023': 'A surge notice without the new fare',
+  'B-0028': 'Free cancellation, offered too late', 'B-0039': 'A flat tyre, then cancelled' };
 const caseTitle = id => TITLES[id] || (id.startsWith('B-') ? `Benchmark case ${id.slice(2).replace(/^0+/, '')}` : id);
 const $ = id => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
@@ -67,6 +70,7 @@ function compact(c, ft, run){
     gps,
     bands: (c.traffic.speed_bands||[]).map(b => ({ road:b.road_name, band:b.speed_band, ws:sec(b.window_start), we:sec(b.window_end), geometry:(b.geometry||[]).map(g => [g[1], g[0]]) })),
     incidents: (c.traffic.incidents||[]).map(i => ({ lat:i.lat, lon:i.lon, type:i.type, msg:i.message, at:sec(i.reported_at) })),
+    roadIncidents: (c.traffic.road_incidents||[]).map(i => ({ road:i.road, msg:i.description || i.incident_type || '', at:sec(i.reported_at) })),   // named-road incidents carry no coordinates: feed only
     weather: c.weather || { rain_mm:0, description:'' }, fare: c.fare || {},
     chat: (c.chat||[]).map(m => ({ t:sec(m.ts), from:m.sender || m.from, text:m.text })),
     driver_statement: c.driver_statement || '', profiles: c.profiles || {},
@@ -86,10 +90,17 @@ const CLR = () => ({ink:css('--ink'), bg:css('--bg'), blue:css('--blue'), amber:
 let K = CLR();
 
 // ---------------- plain language (judge view) ----------------
-const CLAUSE = { 'RD-1':'driver must take the direct route', 'RD-2':'refund for extra kilometres', 'RD-3':'rider-requested stop', 'RD-4':'reroute justified by traffic or an incident', 'RD-5':'rider agreed to the route beforehand', 'RD-6':'repeat offender → account flag',
-  'NS-0':'when a cancellation fee applies', 'NS-1':'driver waited 3 min at pickup after "I\'m Here"', 'NS-2':'no-show not proven → fee refunded', 'NS-3':'driver cancelled → no fee', 'NS-4':'3-minute free-cancel window', 'NS-6':'waiting-fee conditions', 'NS-7':'30-day dispute window',
-  'FARE-1':'fixed fare: only published extras', 'FARE-2':'toll overcharge', 'FARE-3':'cleaning-fee claim (not in this data)', 'NS-5':'advance-booking cancellation (not in this data)', 'NS-8':'driver-late free cancel (no such Ryde rule)', 'SAFE-3':'trip completed without the rider (fraud)', 'SAFE-1':'threat or harassment → human review', 'SAFE-2':'accident or dangerous driving → human review' };
-const OUTW = { refund_partial:'Partial refund', refund_full:'Full refund', no_action:'No refund', fee_waived:'Fee waived', escalate:'Human review', flag_account:'Account flag' };
+const CLAUSE = { 'FARE-0':'how the fare is built up',
+  'RD-1':'extra distance over the recommended route; small detours tolerated', 'RD-2':'refund the extra distance fare', 'RD-3':'stop or route the rider asked for', 'RD-4':'reroute justified by traffic or an incident',
+  'RD-5':'driver must tell the rider before the detour', 'RD-6':'repeat detours → account flag', 'RD-7':'reminder to the driver after an untold reroute',
+  'NS-0':'which cancellation rule applies', 'NS-1':'no-show fee stands: driver arrived, waited the free time, messaged and called', 'NS-2':'no-show not proven → fee refunded', 'NS-3':'driver cancelled for his own reason → no fee',
+  'NS-4':'rider cancelled: free only soon after matching', 'NS-8':'driver never arrived → free cancel', 'NS-9':'repeat rider no-shows → account flag',
+  'SURGE-1':'quote is binding; a surge rise must be announced', 'SURGE-2':'surge not announced → refund the surge part', 'SURGE-3':'how the surge part is worked out',
+  'DMG-1':'damage claims', 'DMG-2':'damage photos', 'DMG-3':'damage amounts', 'DMG-4':'damage claim without proof → rejected',
+  'SAFE-1':'safety concern → human review', 'SAFE-2':'accident or injury → human review', 'SAFE-3':'the AI never rules on safety', 'SAFE-4':'suspension until a person reviews',
+  'TH-1':'which amounts the system may settle', 'TH-2':'which dispute types the system may settle', 'TH-3':'confidence needed to settle', 'TH-4':'missing records → a person decides',
+  'PREC-1':'similar past rulings' };
+const OUTW = { refund_partial:'Partial refund', refund_full:'Full refund', no_action:'No refund', fee_waived:'Fee waived', escalate:'Human review', flag_account:'Account flag', goodwill_credit:'Goodwill credit', interim_suspension:'Suspended until review' };
 const ROAD = s => title(String(s || ''));
 function factLabel(f){
   if (!f) return null; const v = f.value || {}, src = f.source;
@@ -114,7 +125,7 @@ function factLabel(f){
   return f.text.slice(0, 40);
 }
 const plainId = id => { const base = id.replace(/\([a-z]\)$/, ''); if (/^F\d+$/.test(id)) return factLabel(FACT[id]); return CLAUSE[base] || null; };
-const stripIds = s => String(s || '').replace(/\s*\((?:RD|NS|SAFE|FARE)-\d+(?:\([a-z]\))?(?:[,\s]+(?:RD|NS|SAFE|FARE)-\d+(?:\([a-z]\))?)*\)/g, '');
+const stripIds = s => String(s || '').replace(/\s*\((?:RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC)-\d+(?:\([a-z]\))?(?:[,\s]+(?:RD|NS|SAFE|FARE|SURGE|DMG|TH|PREC)-\d+(?:\([a-z]\))?)*\)/g, '');
 const WHO_SHOW = { rider:"Rider's advocate", driver:"Driver's advocate", judge:'Judge', verify:'Code check', system:'System' };
 const clip = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1).replace(/[\s,;:(-]+$/, '') + '…' : t; };
 
@@ -159,6 +170,7 @@ const addFE = (t, kind, html, cls) => { if (t == null) return; feedEvents.push({
 addFE(t0, 'sys', `Driver accepted the booking · ${esc(T.service_type)}`, 'good');
 for (const b of C.bands) if (b.band <= 2) addFE(Math.max(t0, b.ws), 'sys', `LTA speed band ${b.band} on ${esc(title(b.road))} (${b.band===1?'0–9':'10–19'} km/h) · severe congestion`, 'bad');
 for (const i of C.incidents) addFE(Math.max(t0, i.at), 'sys', `LTA incident · ${esc(i.msg)}`, 'bad');
+for (const i of C.roadIncidents) addFE(Math.max(t0, i.at), 'sys', `Traffic incident · ${esc(i.road || '')}${i.road ? ': ' : ''}${esc(i.msg)}`, 'bad');
 if (C.weather.rain_mm > 0) addFE(t0, 'sys', `Weather · ${esc(C.weather.description)}, ${C.weather.rain_mm} mm rain`, 'info');
 for (const m of C.chat) if (m.t >= t0 && m.t <= t1 + 60) addFE(m.t, 'chat', m, '');
 if (T.arrived) addFE(T.arrived, 'sys', `Driver GPS within 200 m of pickup`, 'good');
@@ -173,11 +185,11 @@ feedEvents.sort((a,b) => a.t - b.t);
 // ---------------- HUD ----------------
 (function hud(){
   const sel = $('caseSel');
-  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')], [`Held-out set · ${cases.filter(c => c.group === 'held-out').length} cases`, cases.filter(c => c.group === 'held-out')]];
-  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = (c.group === 'benchmark' || c.group === 'held-out') && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
+  const groups = [['Demo cases', cases.filter(c => c.group === 'demo' || !c.group)], ["Organisers' sample dataset", cases.filter(c => c.group === 'sample')], [`Benchmark · ${cases.filter(c => c.group === 'benchmark').length} cases`, cases.filter(c => c.group === 'benchmark')]];
+  for (const [label, list] of groups) { if (!list.length) continue; const g = el('optgroup'); g.label = label; for (const c of list) { const name = c.group === 'benchmark' && c.title ? `${c.case_id} · ${c.title}` : (SHOW ? caseTitle(c.case_id) : c.case_id); const o = el('option', '', name); o.value = c.case_id; o.title = c.type; if (c.case_id === CID) o.selected = true; g.appendChild(o); } sel.appendChild(g); }
   if (!cases.some(c => c.case_id === CID)) { const o = el('option', '', CID); o.value = CID; o.selected = true; sel.appendChild(o); }
   sel.onchange = () => { const q = new URLSearchParams(); q.set('case', sel.value); if (THEME === 'light') q.set('theme', 'light'); location.search = q.toString(); };
-  const TYPE = { route_deviation:['Route deviation','amber'], no_show:['No-show','purple'], safety:['Safety','red'] }[C.type] || [C.type, ''];
+  const TYPE = { route_deviation:['Route deviation','amber'], no_show:['No-show','purple'], fare_dispute:['Surge pricing','green'], safety:['Safety','red'] }[C.type] || [C.type, ''];
   $('hudBadges').innerHTML = `<span class="badge ${TYPE[1]}">${TYPE[0]}</span><span class="badge">${SHOW ? esc(caseTitle(C.id)) : esc(C.id) + ' · ' + esc(T.trip_id)}</span><span class="badge">${esc(T.service_type)}</span><span class="badge">${esc(C.weather.description)}${C.weather.rain_mm>0?' · '+C.weather.rain_mm+' mm':''}</span>`
     + (CF ? `<span class="badge cf" title="${esc(controls.counterfactual[CF]||'')}">counterfactual · ${esc(CF)}</span>` : '');
   $('hudStops').innerHTML = `<div class="stop"><i></i><div class="n">${esc(T.pickup.name)}</div><div class="m">${MODE==='no_show' ? 'pickup point · ' + (T.arrived ? 'reached ' + hm(T.arrived) : 'never reached') : 'pickup ' + hm(PICK)}</div></div><div class="stop b"><i></i><div class="n">${esc(T.dropoff.name)}</div><div class="m">${DROP ? 'drop-off ' + hm(DROP) : CANCEL ? 'cancelled ' + hm(CANCEL) + ' by ' + esc(T.cancelled_by) : ''}</div></div>`;
@@ -191,7 +203,7 @@ feedEvents.sort((a,b) => a.t - b.t);
   renderLegend();
 })();
 function renderLegend(){
-  const L = [['<i></i>', MODE==='no_show' ? 'Driver track' : 'Actual track'], ['<i class="dash"></i>', 'Optimal route (OneMap)']];
+  const L = [['<i></i>', MODE==='no_show' ? 'Driver track' : 'Actual track'], ['<i class="dash"></i>', 'Optimal route']];
   if (MODE==='route') L.push(['<i class="dot"></i>', 'Approach to pickup']);
   if (segs.length) { if (segs.some(s => s.exempt === null)) L.push(['<i style="background:var(--purple);height:4px"></i>', SHOW ? 'Detour · awaiting the judge' : 'Off-route · awaiting ruling']); L.push(['<i class="amb"></i>', SHOW ? 'Detour · excused' : 'Off-route · exempt']); L.push(['<i class="red"></i>', SHOW ? 'Detour · not excused' : 'Off-route · not exempt']); }
   if (C.bands.some(b => b.band <= 2 && b.geometry.length)) L.push(['<i class="cong"></i>', 'LTA severe congestion']);
@@ -201,9 +213,9 @@ function renderLegend(){
 function actionChip(a){
   if (!SHOW) return `<span class="badge ${a.mode === 'auto' ? 'green' : 'amber'}" title="${esc(a.detail||'')}">${a.mode === 'auto' ? '⚡' : '👤'} ${esc(a.type)}${a.detail ? ' · ' + esc(a.detail) : ''}</span>`;
   if (a.type === 'escalate') return `<span class="badge red" title="${esc(a.detail||'')}">Sent to a human reviewer · no automatic action</span>`;
-  const money = /^(refund_full|refund_partial|fee_waived)$/.test(a.type) && a.detail && (a.detail.match(/\$\d+(?:\.\d+)?/)||[])[0];
+  const money = /^(refund_full|refund_partial|fee_waived|goodwill_credit)$/.test(a.type) && a.detail && (a.detail.match(/\$\d+(?:\.\d+)?/)||[])[0];
   const what = (OUTW[a.type] || a.type) + (money ? ' ' + money : '');
-  return `<span class="badge ${a.mode === 'auto' ? 'green' : 'amber'}" title="${esc(a.detail||'')}">${esc(what)} → ${a.mode === 'auto' ? (a.type === 'no_action' ? 'auto-cleared · dispute closed' : 'auto-cleared · voucher') : 'human review'}</span>`;
+  return `<span class="badge ${a.mode === 'auto' ? 'green' : 'amber'}" title="${esc(a.detail||'')}">${esc(what)} → ${a.mode === 'auto' ? (a.type === 'no_action' ? 'auto-cleared · dispute closed' : /^refund_/.test(a.type) ? 'auto-cleared · back to the original payment method' : 'auto-cleared') : 'human review'}</span>`;
 }
 function renderEligibility(rec){
   const e = rec && rec.eligibility; const box = $('hudElig'); if (!e) { box.style.display = 'none'; return; }
@@ -594,7 +606,7 @@ function courtStep(){
 function courtEnd(){
   if (courtDone) return; courtDone = true; courtTimer = null; $('skip').disabled = $('skipAll').disabled = true;
   const r = RECORD && RECORD.ruling; setPill('idle', LIVE ? `done · ${MODEL||''} · ${liveElapsed()} s` : 'adjourned');
-  if (r) appendChapter(el('div','ev',`<div class="banner ${r.ruling==='escalate'?'esc':'done'}">${r.ruling==='escalate'?'⚠':'✓'} Case ${esc(C.id)} ${r.ruling==='escalate'?(SHOW?'sent to a human reviewer':'escalated to RydeHELP'):'resolved'} · ${OUT[r.ruling]||esc(r.ruling)}${r.amount!=null?' $'+r.amount.toFixed(2):''}</div>`));
+  if (r) appendChapter(el('div','ev',`<div class="banner ${r.ruling==='escalate'?'esc':'done'}">${r.ruling==='escalate'?'⚠':'✓'} Case ${esc(C.id)} ${r.ruling==='escalate'?'sent to a human reviewer':'resolved'} · ${OUT[r.ruling]||esc(r.ruling)}${r.amount!=null?' $'+r.amount.toFixed(2):''}</div>`));
   if (RECORD && RECORD.eligibility) { const e = RECORD.eligibility; appendChapter(el('div','ev',`<div class="elig"><b>${SHOW ? 'What happens now' : e.auto ? '⚡ Eligible for automation' : '👤 Needs a human'}</b><div class="chips">${(e.actions||[]).map(a => SHOW ? actionChip(a) : `<span class="badge ${a.mode==='auto'?'green':'amber'}">${esc(a.type)} · ${esc(a.mode)}${a.detail?' · '+esc(a.detail):''}</span>`).join('')}</div>${(e.reasons||[]).map(x => SHOW && x.length > 160 ? `<div class="reasons">${cite(clip(x, 160))}${more('full reason', `<div>${cite(x)}</div>`)}</div>` : `<div class="reasons">${SHOW ? cite(x) : esc(x)}</div>`).join('')}${(e.what_would_change||[]).map(x => `<div class="reasons">↳ ${cite(x)}</div>`).join('')}<div style="margin-top:6px"><a href="/receipt.html?run=${encodeURIComponent(RUN_ID)}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">Reproducibility receipt ↗</a></div></div>`)); renderEligibility(RECORD); }
   if (followingHearing) courtEl.scrollTop = courtEl.scrollHeight;
 }
@@ -716,7 +728,7 @@ function renderShow(e, inst){
     case 'summary': return null;
     case 'notify': { if (/Notices sent/i.test(e.title)) { const ns = C.notices.length ? C.notices : parseNotices(body); return card(e, 'Plain-language notices to both parties', ns.map(n => `<div class="notice"><div class="to who ${esc(n.to)}">To the ${esc(n.to)}</div>${esc(n.text)}</div>`).join('')); }
       if (/skipped/i.test(e.title)) return card(e, e.title, `<div class="card"><div class="line muted">${esc(body)}</div></div>`);
-      const q = (e.title.match(/Routed to (\w+)/)||[])[1]; const Q_ = { auto_resolve:['⚡ Executed automatically', 'done'], review_24h:['👤 Queued for a human reviewer · 24 h service level', 'route'], urgent_safety:['🚨 Urgent safety queue · 2 h service level', 'esc'], review_urgent:['👤 Urgent human review', 'esc'] }[q] || [e.title, 'route'];
+      const q = (e.title.match(/Routed to (\w+)/)||[])[1]; const Q_ = { auto_resolve:['⚡ Auto-cleared', 'done'], review_24h:['👤 Queued for a human reviewer · 24 h service level', 'route'], urgent_safety:['🚨 Urgent safety queue · 2 h service level', 'esc'], review_urgent:['👤 Urgent human review', 'esc'] }[q] || [e.title, 'route'];
       const plainBody = stripIds(body).replace(/\b(refund_partial|refund_full|no_action|fee_waived|escalate|flag_account)\b/g, m => OUTW[m] || m).replace(/at confidence ([\d.]+)/, 'model confidence $1 (diagnostic only)').replace(/execute automatically/, 'the certificate allows automatic execution');
       return card(e, 'Routing', `<div class="banner ${Q_[1]}">${esc(Q_[0])}<span class="sub">${cite(plainBody)}</span></div>`); }
     case 'escalate': return card(e, 'Sent to a human reviewer', `<div class="banner esc">⚠ <span class="txt">${cite(stripIds(body) || e.title)}</span></div>`);
@@ -788,7 +800,9 @@ function miniResult(){
   const what = (OUTW[r.ruling] || r.ruling) + money;
   const ok = e ? e.auto : !r.escalate;
   d.className = ok ? 'ok' : 'warn';
-  d.innerHTML = `<b>${ok ? '✓ Policy check passed' : '⚠ Sent to a person'}</b><span>${esc(what)}${ok ? ' · voucher cleared' : ' · no automatic action'}</span><em>${ok ? 'facts by code · 2 advocates · judge · code check, 23 s' : 'code could not clear it; a reviewer gets the prepared file'}</em>`;
+  const last = ((RECORD.events || []).slice(-1)[0] || {}).elapsed || '', mm = /^(\d+):(\d+(?:\.\d+)?)$/.exec(last);
+  const secs = mm ? ', ' + Math.round(+mm[1] * 60 + +mm[2]) + ' s' : '';   // this run's own time on record
+  d.innerHTML = `<b>${ok ? '✓ Policy check passed' : '⚠ Sent to a person'}</b><span>${esc(what)}${ok ? (/refund/.test(r.ruling) ? ' · refund cleared' : ' · dispute closed') : ' · no automatic action'}</span><em>${ok ? 'facts by code · 2 advocates · judge · code check' + secs : 'code could not clear it; a reviewer gets the prepared file'}</em>`;
   document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('in'));
 }
 })().catch(err => { console.error(err); const s = document.getElementById('status'); if (s) s.textContent = 'Load failed: ' + err.message; document.getElementById('pill').querySelector('span').textContent = 'error'; });

@@ -3,13 +3,13 @@
  "dispute": {
   "type": "no_show",
   "filed_by": "rider",
-  "filed_at": "2026-09-18T14:55:55+08:00",
-  "statement": "The driver was nowhere near, so I cancelled less than 3 minutes after matching and still got charged $6.61."
+  "filed_at": "2026-09-18T15:00:40+08:00",
+  "statement": "I got downstairs a minute after he cancelled and was charged $5.00 for nothing."
  },
  "trip_summary": {
-  "text": "RydeX Orchard Road → Marina Bay Sands, accepted 14:05:00, cancelled by rider at 14:07:55; cancellation fee $6.61"
+  "text": "RydeX Buona Vista MRT → Suntec City, accepted 14:05:00, cancelled by driver at 14:13:40; cancellation fee $5.00"
  },
- "status": "resolved",
+ "status": "escalated",
  "facts": {
   "case_id": "B-0035",
   "dispute_type": "no_show",
@@ -17,52 +17,100 @@
    {
     "id": "F1",
     "source": "gps",
-    "text": "Driver's closest approach to pickup: 2189 m at 14:07:55. Driver never came within 200 m.",
+    "text": "GPS trace has no samples between 14:09:10 and 14:12:30 (3 min 20 s).",
     "value": {
-     "nearest_m": 2189,
-     "at": "2026-09-18T14:07:55+08:00",
-     "within_200m": false
+     "gps_gap_s": 200,
+     "gap_start": "2026-09-18T14:09:10+08:00",
+     "gap_end": "2026-09-18T14:12:30+08:00"
     }
    },
    {
     "id": "F2",
-    "source": "timeline",
-    "text": "Accepted 14:05:00. Cancelled by rider at 14:07:55 (2 min 55 s after acceptance). Cancellation fee on record: $6.61.",
+    "source": "gps",
+    "text": "Driver's closest approach to pickup: 26 m at 14:07:35.",
     "value": {
-     "accepted_at": "2026-09-18T14:05:00+08:00",
-     "cancelled_at": "2026-09-18T14:07:55+08:00",
-     "cancelled_by": "rider",
-     "s_after_accept": 175,
-     "cancellation_fee": 6.61
+     "nearest_m": 26,
+     "at": "2026-09-18T14:07:35+08:00",
+     "within_200m": true
     }
    },
    {
     "id": "F3",
-    "source": "timeline",
-    "text": "driver_arrived_at is null: the platform never recorded the driver at the pickup point.",
+    "source": "gps",
+    "text": "Driver first within 200 m of pickup at 14:07:15; cumulative time within 200 m before cancellation: 6 min 25 s.",
     "value": {
-     "driver_arrived_at": null,
-     "s_arrival_to_cancel": null
+     "first_within_200m_at": "2026-09-18T14:07:15+08:00",
+     "within_200m_s": 385
     }
    },
    {
     "id": "F4",
-    "source": "timeline",
-    "text": "No arrival confirmation on record: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null).",
+    "source": "gps",
+    "text": "Driver stationary 14:07:40–14:13:40 (6 min 0 s) at (1.3063, 103.7899), 40 m from pickup.",
     "value": {
-     "driver_pressed_here_at": null
+     "lat": 1.306341,
+     "lon": 103.789943,
+     "start": "2026-09-18T14:07:40+08:00",
+     "end": "2026-09-18T14:13:40+08:00",
+     "duration_s": 360,
+     "m_from_pickup": 40
     }
    },
    {
     "id": "F5",
-    "source": "fare",
-    "text": "Cancellation fee charged: $6.61.",
+    "source": "timeline",
+    "text": "Accepted 14:05:00. Cancelled by driver at 14:13:40 (8 min 40 s after acceptance). Reason picked in the app: rider_no_show. Cancellation fee on record: $5.00.",
     "value": {
-     "cancellation_fee": 6.61
+     "accepted_at": "2026-09-18T14:05:00+08:00",
+     "cancelled_at": "2026-09-18T14:13:40+08:00",
+     "cancelled_by": "driver",
+     "s_after_accept": 520,
+     "cancellation_fee": 5.0,
+     "app_reason": "rider_no_show"
     }
    },
    {
     "id": "F6",
+    "source": "timeline",
+    "text": "Before 14:13:40 the driver sent 2 in-app message(s) (first 14:08:10) and made 1 in-app call(s) (first 14:09:10).",
+    "value": {
+     "driver_messages": 2,
+     "driver_calls": 1,
+     "until": "2026-09-18T14:13:40+08:00"
+    }
+   },
+   {
+    "id": "F7",
+    "source": "timeline",
+    "text": "Platform recorded driver arrival at 14:07:40; cancelled 6 min 0 s after arrival.",
+    "value": {
+     "driver_arrived_at": "2026-09-18T14:07:40+08:00",
+     "s_arrival_to_cancel": 360
+    }
+   },
+   {
+    "id": "F8",
+    "source": "timeline",
+    "text": "Driver tapped \"I'm Here\" at 14:07:40, 40 m from the pickup point at that moment; stayed within 200 m for 6 min 0 s after the tap.",
+    "value": {
+     "driver_pressed_here_at": "2026-09-18T14:07:40+08:00",
+     "arrival_confirmed_by": "driver_tap",
+     "m_from_pickup_at_tap": 40,
+     "within_200m_after_tap_s": 360,
+     "left_radius": false,
+     "tail_uncovered_s": 0
+    }
+   },
+   {
+    "id": "F9",
+    "source": "fare",
+    "text": "Cancellation fee charged: $5.00.",
+    "value": {
+     "cancellation_fee": 5.0
+    }
+   },
+   {
+    "id": "F10",
     "source": "fare",
     "text": "Surge multiplier 1.0× (no surge).",
     "value": {
@@ -70,29 +118,29 @@
     }
    },
    {
-    "id": "F7",
+    "id": "F11",
     "source": "chat",
-    "text": "Chat #1 14:05 rider: “How long will you be?”",
+    "text": "Chat #1 14:08 driver: “I'm here at the pickup point, white BYD e6.”",
     "value": {
      "idx": 1,
-     "from": "rider",
-     "ts": "2026-09-18T14:05:40+08:00",
+     "from": "driver",
+     "ts": "2026-09-18T14:08:10+08:00",
      "kind": "message"
     }
    },
    {
-    "id": "F8",
+    "id": "F12",
     "source": "chat",
-    "text": "Chat #2 14:06 driver: “5 min more, traffic is slow”",
+    "text": "Chat #2 14:13 driver: “More than 5 min already, I have to cancel”",
     "value": {
      "idx": 2,
      "from": "driver",
-     "ts": "2026-09-18T14:06:15+08:00",
+     "ts": "2026-09-18T14:13:30+08:00",
      "kind": "message"
     }
    },
    {
-    "id": "F9",
+    "id": "F13",
     "source": "chat",
     "text": "Chat record: 2 message(s), every one timestamped.",
     "value": {
@@ -102,30 +150,42 @@
     }
    },
    {
-    "id": "F10",
+    "id": "F14",
     "source": "chat",
-    "text": "Driver statement (written after the trip, not part of the chat): “I was on my way when the rider cancelled.”",
+    "text": "Call log 14:09: driver called rider, not answered. No recording on record.",
+    "value": {
+     "from": "driver",
+     "ts": "2026-09-18T14:09:10+08:00",
+     "kind": "call_log",
+     "answered": false,
+     "recorded": false
+    }
+   },
+   {
+    "id": "F15",
+    "source": "chat",
+    "text": "Driver statement (written after the trip, not part of the chat): “I tapped I'm Here, waited over 5 minutes, nobody came, so I cancelled as a no-show.”",
     "value": {
      "from": "driver",
      "statement": true
     }
    },
    {
-    "id": "F11",
+    "id": "F16",
     "source": "traffic",
-    "text": "STEVENS ROAD (category 2) speed band 4 (30–39 km/h) during 14:00–14:12.",
+    "text": "GHIM MOH ROAD (category 2) speed band 5 (40–49 km/h) during 14:00–14:18.",
     "value": {
-     "road_name": "STEVENS ROAD",
-     "speed_band": 4,
-     "kmh_min": 30,
-     "kmh_max": 39,
+     "road_name": "GHIM MOH ROAD",
+     "speed_band": 5,
+     "kmh_min": 40,
+     "kmh_max": 49,
      "severe": false,
      "window_start": "2026-09-18T14:00:00+08:00",
-     "window_end": "2026-09-18T14:12:55+08:00"
+     "window_end": "2026-09-18T14:18:40+08:00"
     }
    },
    {
-    "id": "F12",
+    "id": "F17",
     "source": "traffic",
     "text": "No traffic incidents recorded near the route during the trip window.",
     "value": {
@@ -133,7 +193,7 @@
     }
    },
    {
-    "id": "F13",
+    "id": "F18",
     "source": "weather",
     "text": "Weather: Fair, 0.0 mm rain.",
     "value": {
@@ -142,14 +202,14 @@
     }
    },
    {
-    "id": "F14",
+    "id": "F19",
     "source": "profile",
-    "text": "Rider: account age 987 d (2.7 y), rating 4.3, 1 disputes in 90 d, 0 upheld (route: 0, no-show: 0).",
+    "text": "Rider: account age 1165 d (3.2 y), rating 4.5, 1 disputes in 90 d, 0 upheld (route: 0, no-show: 0).",
     "value": {
      "party": "rider",
      "history_window": "90 d",
-     "account_age_days": 987,
-     "rating": 4.3,
+     "account_age_days": 1165,
+     "rating": 4.5,
      "disputes_90d": 1,
      "disputes_upheld_90d": 0,
      "route_disputes_upheld_90d": 0,
@@ -157,19 +217,19 @@
     }
    },
    {
-    "id": "F15",
+    "id": "F20",
     "source": "profile",
-    "text": "Driver: account age 1460 d (4.0 y), rating 4.77, 652 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
+    "text": "Driver: account age 654 d (1.8 y), rating 4.49, 339 trips in 90 d, 1 disputes, 1 upheld (route: 0, no-show: 1).",
     "value": {
      "party": "driver",
      "history_window": "90 d",
-     "account_age_days": 1460,
-     "rating": 4.77,
-     "disputes_90d": 0,
-     "disputes_upheld_90d": 0,
+     "account_age_days": 654,
+     "rating": 4.49,
+     "disputes_90d": 1,
+     "disputes_upheld_90d": 1,
      "route_disputes_upheld_90d": 0,
-     "no_show_disputes_upheld_90d": 0,
-     "trips_90d": 652
+     "no_show_disputes_upheld_90d": 1,
+     "trips_90d": 339
     }
    }
   ]
@@ -177,12 +237,12 @@
  "events": [
   {
    "seq": 1,
-   "ts": "2026-10-10T18:41:32.395823Z",
+   "ts": "2026-10-13T17:47:43.896162Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "intake",
    "title": "Dispute B-0035 filed by rider",
-   "body": "\"The driver was nowhere near, so I cancelled less than 3 minutes after matching and still got charged $6.61.\"",
+   "body": "\"I got downstairs a minute after he cancelled and was charged $5.00 for nothing.\"",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -191,12 +251,12 @@
   },
   {
    "seq": 2,
-   "ts": "2026-10-10T18:41:32.396718Z",
+   "ts": "2026-10-13T17:47:43.897162Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "facts",
-   "title": "Fact table built: 15 facts (code, no LLM)",
-   "body": "F1 [gps] Driver's closest approach to pickup: 2189 m at 14:07:55. Driver never came within 200 m.\nF2 [timeline] Accepted 14:05:00. Cancelled by rider at 14:07:55 (2 min 55 s after acceptance). Cancellation fee on record: $6.61.\nF3 [timeline] driver_arrived_at is null: the platform never recorded the driver at the pickup point.\nF4 [timeline] No arrival confirmation on record: the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null).\nF5 [fare] Cancellation fee charged: $6.61.\nF6 [fare] Surge multiplier 1.0× (no surge).\nF7 [chat] Chat #1 14:05 rider: “How long will you be?”\nF8 [chat] Chat #2 14:06 driver: “5 min more, traffic is slow”\nF9 [chat] Chat record: 2 message(s), every one timestamped.\nF10 [chat] Driver statement (written after the trip, not part of the chat): “I was on my way when the rider cancelled.”\nF11 [traffic] STEVENS ROAD (category 2) speed band 4 (30–39 km/h) during 14:00–14:12.\nF12 [traffic] No traffic incidents recorded near the route during the trip window.\nF13 [weather] Weather: Fair, 0.0 mm rain.\nF14 [profile] Rider: account age 987 d (2.7 y), rating 4.3, 1 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF15 [profile] Driver: account age 1460 d (4.0 y), rating 4.77, 652 trips in 90 d, 0 disputes, 0 upheld (route: 0, no-show: 0).",
+   "title": "Fact table built: 20 facts (code, no LLM)",
+   "body": "F1 [gps] GPS trace has no samples between 14:09:10 and 14:12:30 (3 min 20 s).\nF2 [gps] Driver's closest approach to pickup: 26 m at 14:07:35.\nF3 [gps] Driver first within 200 m of pickup at 14:07:15; cumulative time within 200 m before cancellation: 6 min 25 s.\nF4 [gps] Driver stationary 14:07:40–14:13:40 (6 min 0 s) at (1.3063, 103.7899), 40 m from pickup.\nF5 [timeline] Accepted 14:05:00. Cancelled by driver at 14:13:40 (8 min 40 s after acceptance). Reason picked in the app: rider_no_show. Cancellation fee on record: $5.00.\nF6 [timeline] Before 14:13:40 the driver sent 2 in-app message(s) (first 14:08:10) and made 1 in-app call(s) (first 14:09:10).\nF7 [timeline] Platform recorded driver arrival at 14:07:40; cancelled 6 min 0 s after arrival.\nF8 [timeline] Driver tapped \"I'm Here\" at 14:07:40, 40 m from the pickup point at that moment; stayed within 200 m for 6 min 0 s after the tap.\nF9 [fare] Cancellation fee charged: $5.00.\nF10 [fare] Surge multiplier 1.0× (no surge).\nF11 [chat] Chat #1 14:08 driver: “I'm here at the pickup point, white BYD e6.”\nF12 [chat] Chat #2 14:13 driver: “More than 5 min already, I have to cancel”\nF13 [chat] Chat record: 2 message(s), every one timestamped.\nF14 [chat] Call log 14:09: driver called rider, not answered. No recording on record.\nF15 [chat] Driver statement (written after the trip, not part of the chat): “I tapped I'm Here, waited over 5 minutes, nobody came, so I cancelled as a no-show.”\nF16 [traffic] GHIM MOH ROAD (category 2) speed band 5 (40–49 km/h) during 14:00–14:18.\nF17 [traffic] No traffic incidents recorded near the route during the trip window.\nF18 [weather] Weather: Fair, 0.0 mm rain.\nF19 [profile] Rider: account age 1165 d (3.2 y), rating 4.5, 1 disputes in 90 d, 0 upheld (route: 0, no-show: 0).\nF20 [profile] Driver: account age 654 d (1.8 y), rating 4.49, 339 trips in 90 d, 1 disputes, 1 upheld (route: 0, no-show: 1).",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -205,27 +265,28 @@
   },
   {
    "seq": 3,
-   "ts": "2026-10-10T18:41:32.396815Z",
+   "ts": "2026-10-13T17:47:43.897298Z",
    "elapsed": "00:00.0",
    "actor": "verify",
    "kind": "check",
-   "title": "Policy execution trace (code): 1 element(s) left to the judge",
-   "body": "✓ NS-0 who cancelled [case] cancelled_by = rider (F2)\n✗ NS-4 rider cancelled more than 3 min after matching [case] 175 s after acceptance (F2)\n? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)\nallowed outcomes: refund_full, escalate; amount = cancellation fee $6.61\nflag_account required: False",
+   "title": "Policy execution trace (code): 2 element(s) left to the judge",
+   "body": "✓ NS-0 who cancelled [case] cancelled_by = driver (F5)\n✗ NS-1 (iv) stayed at the pickup throughout: GPS covers the wait without a hole [case] GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait (F1)\n? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)\nevidence insufficient: GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait\nallowed outcomes: escalate\nflag_account required: False",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": null,
    "certificate": [
-    "✓ NS-0 who cancelled [case] cancelled_by = rider (F2)",
-    "✗ NS-4 rider cancelled more than 3 min after matching [case] 175 s after acceptance (F2)",
+    "✓ NS-0 who cancelled [case] cancelled_by = driver (F5)",
+    "✗ NS-1 (iv) stayed at the pickup throughout: GPS covers the wait without a hole [case] GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait (F1)",
     "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
-    "allowed outcomes: refund_full, escalate; amount = cancellation fee $6.61",
+    "evidence insufficient: GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait",
+    "allowed outcomes: escalate",
     "flag_account required: False"
    ]
   },
   {
    "seq": 4,
-   "ts": "2026-10-10T18:41:32.396852Z",
+   "ts": "2026-10-13T17:47:43.897333Z",
    "elapsed": "00:00.0",
    "actor": "system",
    "kind": "brief",
@@ -242,7 +303,8 @@
      "action": "no_action",
      "amount": null
     },
-    "segment_grounds": {}
+    "segment_grounds": {},
+    "element_readings": {}
    },
    "rebuttal": null,
    "ruling": null,
@@ -250,87 +312,124 @@
   },
   {
    "seq": 5,
-   "ts": "2026-10-10T18:41:36.964898Z",
-   "elapsed": "00:04.6",
+   "ts": "2026-10-13T17:47:53.334123Z",
+   "elapsed": "00:09.4",
    "actor": "judge",
    "kind": "ruling",
-   "title": "Proposed ruling: refund_full $6.61 (model confidence 0.93)",
-   "body": "NS-0 routes this case: the record shows cancelled_by = rider, and the trip is an ordinary on-demand RydeX job, so the rider-cancellation branch NS-4 governs [F2]. The fare record confirms the disputed item is the $6.61 cancellation fee [F5], with no surge and no other charge in issue [F6].\n\nNS-4 makes the fee chargeable only if the rider cancels more than 3 minutes after matching; within 3 minutes (≤ 3:00) no fee is chargeable. The timeline shows acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 2 min 55 s (175 s) after matching [F2], which is inside the 3-minute grace period. The fee therefore had no basis and must be returned in full — $6.61 [F2][F5]. This is the trace's settled element (NS-4 ✗) and it is also consistent with the surrounding record: the platform never recorded the driver at the pickup point, no arrival confirmation or \"I'm Here\" tap exists [F3][F4], and the driver's own message estimated 5 more minutes [F8], so nothing in the record makes a cancellation fee available. The driver's post-trip statement that he was \"on his way\" does not create a fee entitlement [F10]; the entitlement turns on the clock in NS-4, not on the driver's diligence. NS-1/NS-2 are not in play because the driver did not cancel and never claimed a no-show [F4][F10], and NS-6 (waiting fee) is not in issue since no waiting fee was charged [F5]. Because the rider cancelled within the free window, refund_full is the correct action, delivered as a voucher per NS-7.\n\nThe fixed quote for this non-metered RydeX service is unaffected by distance, and no detour analysis is required; there are no off-route segments in the record, so segment_findings is empty. Profile facts (rider 1 dispute in 90 d, 0 upheld; driver clean) [F14][F15] never decide a case on their own and no clause calls for an account action here, so flag_account stays false.\n\nSafety screen (SAFE-1, SAFE-2): I read every chat line and statement in context — the rider's \"How long will you be?\" [F7], the driver's \"5 min more, traffic is slow\" [F8], the post-trip driver statement [F10], and the rider's complaint. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and no hint word; the traffic and weather records show ordinary conditions, not a safety event [F11][F12][F13]. Safety concern: none.",
+   "title": "Proposed ruling: escalate (model confidence 0.60)",
+   "body": "Driver cancelled, and the reason picked in the app was rider_no_show [F5], so NS-0 sends the case to NS-1 / NS-2 [NS-0]. The fee on record is $5.00 [F9] and there is no surge [F10], so the only question is whether each NS-1 condition holds.\n\nArrival: the driver tapped \"I'm Here\" at 14:07:40 while 40 m from the pickup point [F8], and his first approach was 26 m at 14:07:35 [F2]; cumulative time within 200 m before cancelling was 6 min 25 s [F3], so the NS-1(i) arrival and 200 m radius condition is satisfied [F8][NS-1].\n\nWait and contact: arrival at 14:07:40, cancellation at 14:13:40 — 6 min 0 s of wait, more than the 5-minute free wait [F7][NS-1]; the driver sent 2 in-app messages (first 14:08:10) and made 1 in-app call (first 14:09:10) before cancelling [F6], the chat is fully timestamped [F13][F11], and the call went unanswered [F14], so the ≥1 message + ≥1 call requirement is satisfied [F6][NS-1].\n\nPresence throughout: this is the condition that fails on the record. The GPS trace has no samples between 14:09:10 and 14:12:30, a hole of 3 min 20 s [F1], inside the wait window. The stationary fix at 40 m from pickup runs 14:07:40–14:13:40 [F4], but the trace does not measure the gap, and the trace's NS-1(iv) check is marked ✗ [F1][NS-1]. A GPS gap that leaves continuous presence unproven is expressly an escalation trigger [NS-1][TH-4]. Missing records favour neither party, so I neither uphold the fee on the driver's written account [F15] nor void it on the rider's complaint alone [TH-4].\n\nSafety screen: I read the driver's messages \"I'm here at the pickup point, white BYD e6.\" [F11] and \"More than 5 min already, I have to cancel\" [F12], the call log [F14], the driver's statement [F15] and the complaint — they are a pickup/arrival exchange and a no-show cancellation, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [SAFE-1]; no safety escalation is warranted.\n\nAmount: no refund is computed and no fee is upheld here. The disputed item is the $5.00 cancellation fee on record [F9]; whether it stands is exactly what the unproven presence condition leaves open [F1][F9][NS-1], so the outcome is escalate rather than refund_full, fee_waived, no_action or refund_partial [TH-4]. Legibility of the route conflict is immaterial: there is no route-deviation refundable km to compute, and the driver's arrival tap at 40 m is within the 200 m radius [F8], so NS-2's flag_account trigger is not met [NS-2].",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": {
-    "ruling": "refund_full",
-    "amount": 6.61,
-    "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case.",
-    "confidence": 0.93,
-    "reasoning": "NS-0 routes this case: the record shows cancelled_by = rider, and the trip is an ordinary on-demand RydeX job, so the rider-cancellation branch NS-4 governs [F2]. The fare record confirms the disputed item is the $6.61 cancellation fee [F5], with no surge and no other charge in issue [F6].\n\nNS-4 makes the fee chargeable only if the rider cancels more than 3 minutes after matching; within 3 minutes (≤ 3:00) no fee is chargeable. The timeline shows acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 2 min 55 s (175 s) after matching [F2], which is inside the 3-minute grace period. The fee therefore had no basis and must be returned in full — $6.61 [F2][F5]. This is the trace's settled element (NS-4 ✗) and it is also consistent with the surrounding record: the platform never recorded the driver at the pickup point, no arrival confirmation or \"I'm Here\" tap exists [F3][F4], and the driver's own message estimated 5 more minutes [F8], so nothing in the record makes a cancellation fee available. The driver's post-trip statement that he was \"on his way\" does not create a fee entitlement [F10]; the entitlement turns on the clock in NS-4, not on the driver's diligence. NS-1/NS-2 are not in play because the driver did not cancel and never claimed a no-show [F4][F10], and NS-6 (waiting fee) is not in issue since no waiting fee was charged [F5]. Because the rider cancelled within the free window, refund_full is the correct action, delivered as a voucher per NS-7.\n\nThe fixed quote for this non-metered RydeX service is unaffected by distance, and no detour analysis is required; there are no off-route segments in the record, so segment_findings is empty. Profile facts (rider 1 dispute in 90 d, 0 upheld; driver clean) [F14][F15] never decide a case on their own and no clause calls for an account action here, so flag_account stays false.\n\nSafety screen (SAFE-1, SAFE-2): I read every chat line and statement in context — the rider's \"How long will you be?\" [F7], the driver's \"5 min more, traffic is slow\" [F8], the post-trip driver statement [F10], and the rider's complaint. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and no hint word; the traffic and weather records show ordinary conditions, not a safety event [F11][F12][F13]. Safety concern: none.",
+    "ruling": "escalate",
+    "amount": null,
+    "recommended_action": "Send the case file to a human reviewer: confirm from raw telemetry whether the driver remained at/near the pickup point through the 14:09:10–14:12:30 gap; if presence is confirmed, the $5.00 no-show fee stands (fee on record $5.00, F9), otherwise NS-2 voids it and the $5.00 is refunded to the rider's original payment method. Do not flag the driver's account: the arrival tap was 40 m from the pickup (F8), within the 200 m radius.",
+    "confidence": 0.6,
+    "reasoning": "Driver cancelled, and the reason picked in the app was rider_no_show [F5], so NS-0 sends the case to NS-1 / NS-2 [NS-0]. The fee on record is $5.00 [F9] and there is no surge [F10], so the only question is whether each NS-1 condition holds.\n\nArrival: the driver tapped \"I'm Here\" at 14:07:40 while 40 m from the pickup point [F8], and his first approach was 26 m at 14:07:35 [F2]; cumulative time within 200 m before cancelling was 6 min 25 s [F3], so the NS-1(i) arrival and 200 m radius condition is satisfied [F8][NS-1].\n\nWait and contact: arrival at 14:07:40, cancellation at 14:13:40 — 6 min 0 s of wait, more than the 5-minute free wait [F7][NS-1]; the driver sent 2 in-app messages (first 14:08:10) and made 1 in-app call (first 14:09:10) before cancelling [F6], the chat is fully timestamped [F13][F11], and the call went unanswered [F14], so the ≥1 message + ≥1 call requirement is satisfied [F6][NS-1].\n\nPresence throughout: this is the condition that fails on the record. The GPS trace has no samples between 14:09:10 and 14:12:30, a hole of 3 min 20 s [F1], inside the wait window. The stationary fix at 40 m from pickup runs 14:07:40–14:13:40 [F4], but the trace does not measure the gap, and the trace's NS-1(iv) check is marked ✗ [F1][NS-1]. A GPS gap that leaves continuous presence unproven is expressly an escalation trigger [NS-1][TH-4]. Missing records favour neither party, so I neither uphold the fee on the driver's written account [F15] nor void it on the rider's complaint alone [TH-4].\n\nSafety screen: I read the driver's messages \"I'm here at the pickup point, white BYD e6.\" [F11] and \"More than 5 min already, I have to cancel\" [F12], the call log [F14], the driver's statement [F15] and the complaint — they are a pickup/arrival exchange and a no-show cancellation, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [SAFE-1]; no safety escalation is warranted.\n\nAmount: no refund is computed and no fee is upheld here. The disputed item is the $5.00 cancellation fee on record [F9]; whether it stands is exactly what the unproven presence condition leaves open [F1][F9][NS-1], so the outcome is escalate rather than refund_full, fee_waived, no_action or refund_partial [TH-4]. Legibility of the route conflict is immaterial: there is no route-deviation refundable km to compute, and the driver's arrival tap at 40 m is within the 200 m radius [F8], so NS-2's flag_account trigger is not met [NS-2].",
     "cited_facts": [
+     "F1",
      "F2",
-     "F5",
-     "F6",
      "F3",
      "F4",
-     "F8",
-     "F10",
-     "F14",
-     "F15",
+     "F5",
+     "F6",
      "F7",
+     "F8",
+     "F9",
+     "F10",
      "F11",
      "F12",
-     "F13"
+     "F13",
+     "F14",
+     "F15"
     ],
     "cited_policy": [
      "NS-0",
-     "NS-4",
-     "NS-7",
+     "NS-1",
+     "NS-2",
      "SAFE-1",
-     "SAFE-2"
+     "TH-4"
     ],
-    "rejected_claims": [],
+    "rejected_claims": [
+     {
+      "id": "C1",
+      "reason": "Rider's request for no_action (i.e. the fee stands) is not supported: NS-1(iv) presence throughout the wait is unproven because of the 3 min 20 s GPS hole [F1], and a missing record favours neither party [TH-4][NS-1]."
+     },
+     {
+      "id": "D1",
+      "reason": "Driver's request for no_action is likewise not established: his written account that he waited and cancelled as a no-show [F15] is a claim, and the only presence evidence covering the gap is missing [F1][NS-1][TH-4]."
+     }
+    ],
     "flag_account": false,
+    "goodwill_credit": null,
+    "element_findings": [
+     {
+      "element": "NS-1(iv)",
+      "finding": "undetermined",
+      "basis": [
+       "F1",
+       "F4",
+       "F7"
+      ],
+      "reason": "The trace marks the 'stayed at the pickup throughout' check ✗ because of a 200 s GPS hole between 14:09:10 and 14:12:30 [F1][NS-1]. The stationary fix at 40 m from pickup spans 14:07:40–14:13:40 [F4], but the gap means continuous presence is not measured, and the driver's written statement [F15] cannot fill it [NS-1][TH-4]. Not decidable on this record."
+     },
+     {
+      "element": "SAFE-1",
+      "finding": "not_met",
+      "basis": [
+       "F11",
+       "F12",
+       "F14",
+       "F15"
+      ],
+      "reason": "Read the chat [F11][F12], the unanswered call [F14], the driver's statement [F15] and the complaint in context: an arrival notice, a no-show notice and a cancellation. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so no safety escalation under SAFE-1."
+     }
+    ],
     "segment_findings": [],
     "safety_concern": "none",
     "safety_basis": [
-     "F7",
-     "F8",
-     "F10"
+     "F11",
+     "F12",
+     "F14",
+     "F15"
     ],
-    "evidence_status": "sufficient",
-    "evidence_gap": null,
-    "escalate": false,
-    "escalation_reason": null
+    "evidence_status": "insufficient",
+    "evidence_gap": "GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established.",
+    "escalate": true,
+    "escalation_reason": "NS-1(iv) is unproven: the GPS trace has no samples for 3 min 20 s during the free-wait window (F1), so whether the driver remained at the pickup point until cancelling cannot be decided from the record (TH-4). NS-1's conditions gate the $5.00 no-show fee; that condition failing or being undecidable means the fee cannot be upheld on the record, but a missing record favours neither party, so the case goes to a human reviewer."
    },
    "certificate": null
   },
   {
    "seq": 6,
-   "ts": "2026-10-10T18:41:36.965075Z",
-   "elapsed": "00:04.6",
+   "ts": "2026-10-13T17:47:53.334206Z",
+   "elapsed": "00:09.4",
    "actor": "verify",
    "kind": "check",
    "title": "Ruling verification against the policy certificate",
-   "body": "✓ ruling consistent with the policy certificate\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate)",
+   "body": "citations outside what decided this no_show case removed from cited_policy: SAFE-1, TH-4\njudge escalates → human review: undetermined reading of NS-1(iv); evidence insufficient: GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
    "ruling": null,
    "certificate": [
-    "✓ NS-0 who cancelled [case] cancelled_by = rider (F2)",
-    "✗ NS-4 rider cancelled more than 3 min after matching [case] 175 s after acceptance (F2)",
+    "✓ NS-0 who cancelled [case] cancelled_by = driver (F5)",
+    "✗ NS-1 (iv) stayed at the pickup throughout: GPS covers the wait without a hole [case] GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait (F1)",
     "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
-    "allowed outcomes: refund_full, escalate; amount = cancellation fee $6.61",
+    "evidence insufficient: GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait",
+    "allowed outcomes: escalate",
     "flag_account required: False"
    ]
   },
   {
    "seq": 7,
-   "ts": "2026-10-10T18:41:36.965109Z",
-   "elapsed": "00:04.6",
-   "actor": "judge",
-   "kind": "summary",
-   "title": "Final: refund_full $6.61 · Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case.",
-   "body": "eligible for automation; cites F2 F5 F6 F3 F4 F8 F10 F14 F15 F7 F11 F12 F13 / NS-0 NS-4 NS-7 SAFE-1 SAFE-2\nWhat would change this ruling: Had the rider cancelled more than 3 minutes after matching, NS-4 would have upheld the $6.61 fee.",
+   "ts": "2026-10-13T17:47:53.334213Z",
+   "elapsed": "00:09.4",
+   "actor": "verify",
+   "kind": "escalate",
+   "title": "Routed to human review",
+   "body": "undetermined reading of NS-1(iv); evidence insufficient: GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -339,12 +438,12 @@
   },
   {
    "seq": 8,
-   "ts": "2026-10-10T18:41:38.695858Z",
-   "elapsed": "00:06.3",
+   "ts": "2026-10-13T17:47:53.334225Z",
+   "elapsed": "00:09.4",
    "actor": "system",
    "kind": "notify",
-   "title": "Notices sent to rider and driver",
-   "body": "RIDER: You were charged a $6.61 cancellation fee, and we're refunding it in full as a Ryde voucher.\n\nWhat decided it: the driver accepted your ride at 14:05 and you cancelled at 14:07:55 — under three minutes later. Cancellations within three minutes of matching aren't charged, so the fee shouldn't have been applied.\n\nNo changes to your account; the flag stays off. The voucher will be added to your Ryde account.\n\nDRIVER: The $6.61 cancellation fee from this trip will not be paid out, and the case is now closed.\n\nWhat decided it: the rider cancelled within three minutes of the match. A cancellation fee only applies after that window closes, so there was no fee to pay on this job.\n\nNothing changes on your account, and no action is needed from you. Thanks for the details you sent about the pickup — they were reviewed as part of the case.",
+   "title": "Notices sent to rider and driver (fixed text: case is with a reviewer, nothing promised)",
+   "body": "RIDER: Your dispute on trip B-0035 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete.\n\nDRIVER: The dispute on trip B-0035 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete.",
    "tool": null,
    "brief": null,
    "rebuttal": null,
@@ -353,108 +452,181 @@
   }
  ],
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case.",
-  "confidence": 0.93,
-  "reasoning": "NS-0 routes this case: the record shows cancelled_by = rider, and the trip is an ordinary on-demand RydeX job, so the rider-cancellation branch NS-4 governs [F2]. The fare record confirms the disputed item is the $6.61 cancellation fee [F5], with no surge and no other charge in issue [F6].\n\nNS-4 makes the fee chargeable only if the rider cancels more than 3 minutes after matching; within 3 minutes (≤ 3:00) no fee is chargeable. The timeline shows acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 2 min 55 s (175 s) after matching [F2], which is inside the 3-minute grace period. The fee therefore had no basis and must be returned in full — $6.61 [F2][F5]. This is the trace's settled element (NS-4 ✗) and it is also consistent with the surrounding record: the platform never recorded the driver at the pickup point, no arrival confirmation or \"I'm Here\" tap exists [F3][F4], and the driver's own message estimated 5 more minutes [F8], so nothing in the record makes a cancellation fee available. The driver's post-trip statement that he was \"on his way\" does not create a fee entitlement [F10]; the entitlement turns on the clock in NS-4, not on the driver's diligence. NS-1/NS-2 are not in play because the driver did not cancel and never claimed a no-show [F4][F10], and NS-6 (waiting fee) is not in issue since no waiting fee was charged [F5]. Because the rider cancelled within the free window, refund_full is the correct action, delivered as a voucher per NS-7.\n\nThe fixed quote for this non-metered RydeX service is unaffected by distance, and no detour analysis is required; there are no off-route segments in the record, so segment_findings is empty. Profile facts (rider 1 dispute in 90 d, 0 upheld; driver clean) [F14][F15] never decide a case on their own and no clause calls for an account action here, so flag_account stays false.\n\nSafety screen (SAFE-1, SAFE-2): I read every chat line and statement in context — the rider's \"How long will you be?\" [F7], the driver's \"5 min more, traffic is slow\" [F8], the post-trip driver statement [F10], and the rider's complaint. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and no hint word; the traffic and weather records show ordinary conditions, not a safety event [F11][F12][F13]. Safety concern: none.",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send the case file to a human reviewer: confirm from raw telemetry whether the driver remained at/near the pickup point through the 14:09:10–14:12:30 gap; if presence is confirmed, the $5.00 no-show fee stands (fee on record $5.00, F9), otherwise NS-2 voids it and the $5.00 is refunded to the rider's original payment method. Do not flag the driver's account: the arrival tap was 40 m from the pickup (F8), within the 200 m radius.",
+  "confidence": 0.6,
+  "reasoning": "Driver cancelled, and the reason picked in the app was rider_no_show [F5], so NS-0 sends the case to NS-1 / NS-2 [NS-0]. The fee on record is $5.00 [F9] and there is no surge [F10], so the only question is whether each NS-1 condition holds.\n\nArrival: the driver tapped \"I'm Here\" at 14:07:40 while 40 m from the pickup point [F8], and his first approach was 26 m at 14:07:35 [F2]; cumulative time within 200 m before cancelling was 6 min 25 s [F3], so the NS-1(i) arrival and 200 m radius condition is satisfied [F8][NS-1].\n\nWait and contact: arrival at 14:07:40, cancellation at 14:13:40 — 6 min 0 s of wait, more than the 5-minute free wait [F7][NS-1]; the driver sent 2 in-app messages (first 14:08:10) and made 1 in-app call (first 14:09:10) before cancelling [F6], the chat is fully timestamped [F13][F11], and the call went unanswered [F14], so the ≥1 message + ≥1 call requirement is satisfied [F6][NS-1].\n\nPresence throughout: this is the condition that fails on the record. The GPS trace has no samples between 14:09:10 and 14:12:30, a hole of 3 min 20 s [F1], inside the wait window. The stationary fix at 40 m from pickup runs 14:07:40–14:13:40 [F4], but the trace does not measure the gap, and the trace's NS-1(iv) check is marked ✗ [F1][NS-1]. A GPS gap that leaves continuous presence unproven is expressly an escalation trigger [NS-1][TH-4]. Missing records favour neither party, so I neither uphold the fee on the driver's written account [F15] nor void it on the rider's complaint alone [TH-4].\n\nSafety screen: I read the driver's messages \"I'm here at the pickup point, white BYD e6.\" [F11] and \"More than 5 min already, I have to cancel\" [F12], the call log [F14], the driver's statement [F15] and the complaint — they are a pickup/arrival exchange and a no-show cancellation, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [SAFE-1]; no safety escalation is warranted.\n\nAmount: no refund is computed and no fee is upheld here. The disputed item is the $5.00 cancellation fee on record [F9]; whether it stands is exactly what the unproven presence condition leaves open [F1][F9][NS-1], so the outcome is escalate rather than refund_full, fee_waived, no_action or refund_partial [TH-4]. Legibility of the route conflict is immaterial: there is no route-deviation refundable km to compute, and the driver's arrival tap at 40 m is within the 200 m radius [F8], so NS-2's flag_account trigger is not met [NS-2].",
   "cited_facts": [
+   "F1",
    "F2",
-   "F5",
-   "F6",
    "F3",
    "F4",
-   "F8",
-   "F10",
-   "F14",
-   "F15",
+   "F5",
+   "F6",
    "F7",
+   "F8",
+   "F9",
+   "F10",
    "F11",
    "F12",
-   "F13"
+   "F13",
+   "F14",
+   "F15"
   ],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7",
-   "SAFE-1",
-   "SAFE-2"
+   "NS-1",
+   "NS-2"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "Rider's request for no_action (i.e. the fee stands) is not supported: NS-1(iv) presence throughout the wait is unproven because of the 3 min 20 s GPS hole [F1], and a missing record favours neither party [TH-4][NS-1]."
+   },
+   {
+    "id": "D1",
+    "reason": "Driver's request for no_action is likewise not established: his written account that he waited and cancelled as a no-show [F15] is a claim, and the only presence evidence covering the gap is missing [F1][NS-1][TH-4]."
+   }
+  ],
   "flag_account": false,
+  "goodwill_credit": null,
+  "element_findings": [
+   {
+    "element": "NS-1(iv)",
+    "finding": "undetermined",
+    "basis": [
+     "F1",
+     "F4",
+     "F7"
+    ],
+    "reason": "The trace marks the 'stayed at the pickup throughout' check ✗ because of a 200 s GPS hole between 14:09:10 and 14:12:30 [F1][NS-1]. The stationary fix at 40 m from pickup spans 14:07:40–14:13:40 [F4], but the gap means continuous presence is not measured, and the driver's written statement [F15] cannot fill it [NS-1][TH-4]. Not decidable on this record."
+   },
+   {
+    "element": "SAFE-1",
+    "finding": "not_met",
+    "basis": [
+     "F11",
+     "F12",
+     "F14",
+     "F15"
+    ],
+    "reason": "Read the chat [F11][F12], the unanswered call [F14], the driver's statement [F15] and the complaint in context: an arrival notice, a no-show notice and a cancellation. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so no safety escalation under SAFE-1."
+   }
+  ],
   "segment_findings": [],
   "safety_concern": "none",
   "safety_basis": [
-   "F7",
-   "F8",
-   "F10"
+   "F11",
+   "F12",
+   "F14",
+   "F15"
   ],
-  "evidence_status": "sufficient",
-  "evidence_gap": null,
-  "escalate": false,
-  "escalation_reason": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established.",
+  "escalate": true,
+  "escalation_reason": "undetermined reading of NS-1(iv); evidence insufficient: GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established."
  },
  "proposed_ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7) and close the case.",
-  "confidence": 0.93,
-  "reasoning": "NS-0 routes this case: the record shows cancelled_by = rider, and the trip is an ordinary on-demand RydeX job, so the rider-cancellation branch NS-4 governs [F2]. The fare record confirms the disputed item is the $6.61 cancellation fee [F5], with no surge and no other charge in issue [F6].\n\nNS-4 makes the fee chargeable only if the rider cancels more than 3 minutes after matching; within 3 minutes (≤ 3:00) no fee is chargeable. The timeline shows acceptance at 14:05:00 and rider cancellation at 14:07:55, i.e. 2 min 55 s (175 s) after matching [F2], which is inside the 3-minute grace period. The fee therefore had no basis and must be returned in full — $6.61 [F2][F5]. This is the trace's settled element (NS-4 ✗) and it is also consistent with the surrounding record: the platform never recorded the driver at the pickup point, no arrival confirmation or \"I'm Here\" tap exists [F3][F4], and the driver's own message estimated 5 more minutes [F8], so nothing in the record makes a cancellation fee available. The driver's post-trip statement that he was \"on his way\" does not create a fee entitlement [F10]; the entitlement turns on the clock in NS-4, not on the driver's diligence. NS-1/NS-2 are not in play because the driver did not cancel and never claimed a no-show [F4][F10], and NS-6 (waiting fee) is not in issue since no waiting fee was charged [F5]. Because the rider cancelled within the free window, refund_full is the correct action, delivered as a voucher per NS-7.\n\nThe fixed quote for this non-metered RydeX service is unaffected by distance, and no detour analysis is required; there are no off-route segments in the record, so segment_findings is empty. Profile facts (rider 1 dispute in 90 d, 0 upheld; driver clean) [F14][F15] never decide a case on their own and no clause calls for an account action here, so flag_account stays false.\n\nSafety screen (SAFE-1, SAFE-2): I read every chat line and statement in context — the rider's \"How long will you be?\" [F7], the driver's \"5 min more, traffic is slow\" [F8], the post-trip driver statement [F10], and the rider's complaint. There is no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and no hint word; the traffic and weather records show ordinary conditions, not a safety event [F11][F12][F13]. Safety concern: none.",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Send the case file to a human reviewer: confirm from raw telemetry whether the driver remained at/near the pickup point through the 14:09:10–14:12:30 gap; if presence is confirmed, the $5.00 no-show fee stands (fee on record $5.00, F9), otherwise NS-2 voids it and the $5.00 is refunded to the rider's original payment method. Do not flag the driver's account: the arrival tap was 40 m from the pickup (F8), within the 200 m radius.",
+  "confidence": 0.6,
+  "reasoning": "Driver cancelled, and the reason picked in the app was rider_no_show [F5], so NS-0 sends the case to NS-1 / NS-2 [NS-0]. The fee on record is $5.00 [F9] and there is no surge [F10], so the only question is whether each NS-1 condition holds.\n\nArrival: the driver tapped \"I'm Here\" at 14:07:40 while 40 m from the pickup point [F8], and his first approach was 26 m at 14:07:35 [F2]; cumulative time within 200 m before cancelling was 6 min 25 s [F3], so the NS-1(i) arrival and 200 m radius condition is satisfied [F8][NS-1].\n\nWait and contact: arrival at 14:07:40, cancellation at 14:13:40 — 6 min 0 s of wait, more than the 5-minute free wait [F7][NS-1]; the driver sent 2 in-app messages (first 14:08:10) and made 1 in-app call (first 14:09:10) before cancelling [F6], the chat is fully timestamped [F13][F11], and the call went unanswered [F14], so the ≥1 message + ≥1 call requirement is satisfied [F6][NS-1].\n\nPresence throughout: this is the condition that fails on the record. The GPS trace has no samples between 14:09:10 and 14:12:30, a hole of 3 min 20 s [F1], inside the wait window. The stationary fix at 40 m from pickup runs 14:07:40–14:13:40 [F4], but the trace does not measure the gap, and the trace's NS-1(iv) check is marked ✗ [F1][NS-1]. A GPS gap that leaves continuous presence unproven is expressly an escalation trigger [NS-1][TH-4]. Missing records favour neither party, so I neither uphold the fee on the driver's written account [F15] nor void it on the rider's complaint alone [TH-4].\n\nSafety screen: I read the driver's messages \"I'm here at the pickup point, white BYD e6.\" [F11] and \"More than 5 min already, I have to cancel\" [F12], the call log [F14], the driver's statement [F15] and the complaint — they are a pickup/arrival exchange and a no-show cancellation, with no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [SAFE-1]; no safety escalation is warranted.\n\nAmount: no refund is computed and no fee is upheld here. The disputed item is the $5.00 cancellation fee on record [F9]; whether it stands is exactly what the unproven presence condition leaves open [F1][F9][NS-1], so the outcome is escalate rather than refund_full, fee_waived, no_action or refund_partial [TH-4]. Legibility of the route conflict is immaterial: there is no route-deviation refundable km to compute, and the driver's arrival tap at 40 m is within the 200 m radius [F8], so NS-2's flag_account trigger is not met [NS-2].",
   "cited_facts": [
+   "F1",
    "F2",
-   "F5",
-   "F6",
    "F3",
    "F4",
-   "F8",
-   "F10",
-   "F14",
-   "F15",
+   "F5",
+   "F6",
    "F7",
+   "F8",
+   "F9",
+   "F10",
    "F11",
    "F12",
-   "F13"
+   "F13",
+   "F14",
+   "F15"
   ],
   "cited_policy": [
    "NS-0",
-   "NS-4",
-   "NS-7",
+   "NS-1",
+   "NS-2",
    "SAFE-1",
-   "SAFE-2"
+   "TH-4"
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "Rider's request for no_action (i.e. the fee stands) is not supported: NS-1(iv) presence throughout the wait is unproven because of the 3 min 20 s GPS hole [F1], and a missing record favours neither party [TH-4][NS-1]."
+   },
+   {
+    "id": "D1",
+    "reason": "Driver's request for no_action is likewise not established: his written account that he waited and cancelled as a no-show [F15] is a claim, and the only presence evidence covering the gap is missing [F1][NS-1][TH-4]."
+   }
+  ],
   "flag_account": false,
+  "goodwill_credit": null,
+  "element_findings": [
+   {
+    "element": "NS-1(iv)",
+    "finding": "undetermined",
+    "basis": [
+     "F1",
+     "F4",
+     "F7"
+    ],
+    "reason": "The trace marks the 'stayed at the pickup throughout' check ✗ because of a 200 s GPS hole between 14:09:10 and 14:12:30 [F1][NS-1]. The stationary fix at 40 m from pickup spans 14:07:40–14:13:40 [F4], but the gap means continuous presence is not measured, and the driver's written statement [F15] cannot fill it [NS-1][TH-4]. Not decidable on this record."
+   },
+   {
+    "element": "SAFE-1",
+    "finding": "not_met",
+    "basis": [
+     "F11",
+     "F12",
+     "F14",
+     "F15"
+    ],
+    "reason": "Read the chat [F11][F12], the unanswered call [F14], the driver's statement [F15] and the complaint in context: an arrival notice, a no-show notice and a cancellation. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears, so no safety escalation under SAFE-1."
+   }
+  ],
   "segment_findings": [],
   "safety_concern": "none",
   "safety_basis": [
-   "F7",
-   "F8",
-   "F10"
+   "F11",
+   "F12",
+   "F14",
+   "F15"
   ],
-  "evidence_status": "sufficient",
-  "evidence_gap": null,
-  "escalate": false,
-  "escalation_reason": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established.",
+  "escalate": true,
+  "escalation_reason": "NS-1(iv) is unproven: the GPS trace has no samples for 3 min 20 s during the free-wait window (F1), so whether the driver remained at the pickup point until cancelling cannot be decided from the record (TH-4). NS-1's conditions gate the $5.00 no-show fee; that condition failing or being undecidable means the fee cannot be upheld on the record, but a missing record favours neither party, so the case goes to a human reviewer."
  },
  "certificate": [
-  "✓ NS-0 who cancelled [case] cancelled_by = rider (F2)",
-  "✗ NS-4 rider cancelled more than 3 min after matching [case] 175 s after acceptance (F2)",
+  "✓ NS-0 who cancelled [case] cancelled_by = driver (F5)",
+  "✗ NS-1 (iv) stayed at the pickup throughout: GPS covers the wait without a hole [case] GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait (F1)",
   "? SAFE-1 safety screen: any threat, intimidation, harassment or dangerous-driving allegation in the chat, statement or complaint [case] answer in safety_concern (none / suspected / confirmed) with safety_basis; suspected or confirmed → escalate. no hint word; read the messages anyway, a threat needs no keyword (no evidence)",
-  "allowed outcomes: refund_full, escalate; amount = cancellation fee $6.61",
+  "evidence insufficient: GPS has 1 hole(s) during the wait (200 s): the time between two samples is not a measured wait",
+  "allowed outcomes: escalate",
   "flag_account required: False"
  ],
  "eligibility": {
-  "auto": true,
-  "reasons": [],
+  "auto": false,
+  "reasons": [
+   "undetermined reading of NS-1(iv); evidence insufficient: GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established."
+  ],
   "actions": [
    {
-    "type": "refund_full",
-    "mode": "auto",
-    "detail": "$6.61 Ryde voucher to the rider (NS-7)"
+    "type": "escalate",
+    "mode": "human_review",
+    "detail": "undetermined reading of NS-1(iv); evidence insufficient: GPS hole of 3 min 20 s between 14:09:10 and 14:12:30 (F1) — the wait period is not continuously measured, so NS-1(iv) (driver stayed at the pickup point throughout) cannot be established."
    }
   ],
   "what_would_change": [
-   "Had the rider cancelled more than 3 minutes after matching, NS-4 would have upheld the $6.61 fee."
+   "Had NS-1 (iv) held ((iv) stayed at the pickup throughout: GPS covers the wait without a hole), the fee would stand and no refund would be due."
   ]
  },
  "briefs": {
@@ -468,7 +640,8 @@
     "action": "no_action",
     "amount": null
    },
-   "segment_grounds": {}
+   "segment_grounds": {},
+   "element_readings": {}
   },
   "driver": {
    "side": "driver",
@@ -480,27 +653,28 @@
     "action": "no_action",
     "amount": null
    },
-   "segment_grounds": {}
+   "segment_grounds": {},
+   "element_readings": {}
   }
  },
  "rebuttals": {},
  "notices": [
   {
    "to": "rider",
-   "text": "You were charged a $6.61 cancellation fee, and we're refunding it in full as a Ryde voucher.\n\nWhat decided it: the driver accepted your ride at 14:05 and you cancelled at 14:07:55 — under three minutes later. Cancellations within three minutes of matching aren't charged, so the fee shouldn't have been applied.\n\nNo changes to your account; the flag stays off. The voucher will be added to your Ryde account."
+   "text": "Your dispute on trip B-0035 has been passed to a Ryde reviewer. No decision has been made yet: nothing has been refunded or charged as part of this review. The reviewer will look at the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete."
   },
   {
    "to": "driver",
-   "text": "The $6.61 cancellation fee from this trip will not be paid out, and the case is now closed.\n\nWhat decided it: the rider cancelled within three minutes of the match. A cancellation fee only applies after that window closes, so there was no fee to pay on this job.\n\nNothing changes on your account, and no action is needed from you. Thanks for the details you sent about the pickup — they were reviewed as part of the case."
+   "text": "The dispute on trip B-0035 has been passed to a Ryde reviewer. No decision has been made yet, and nothing changes on your account or earnings as part of this review. The reviewer will look at the trip record, including the parts that are missing from it. Ryde will contact you once the review is complete."
   }
  ],
  "precedent_id": null,
  "receipt": {
-  "case_sha256": "dede1d7fea687bc5",
-  "policy_sha256": "22732a5091cb274a",
-  "code_sha256": "fe5ca6e9c490331a",
+  "case_sha256": "0ec39fcaf0247363",
+  "policy_sha256": "97891ff9acb11eab",
+  "code_sha256": "1444180f8dddb603",
   "model": "deepseek:deepseek-chat",
-  "judge_prompt_sha256": "06cd0298ce999eda",
-  "issued_at": "2026-10-10T18:41:38+00:00"
+  "judge_prompt_sha256": "4c548afb642d7d68",
+  "issued_at": "2026-10-13T17:47:53+00:00"
  }
 }

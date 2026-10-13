@@ -4,54 +4,74 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:41:46.276190+00:00",
+ "ts": "2026-10-13T17:47:48.472103+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Route to a human reviewer: treat the driver's chat message as a SAFE-1 conduct/credible-threat concern (hold the $6.61 cancellation fee and any account action pending the reviewer's decision) and separately note the NS-1 no-show elements are all met in the driver's favour. Do not execute any refund or account action automatically.",
-  "confidence": 0.93,
-  "reasoning": "Safety screen first. The driver's chat message at 09:54 reads \"Hurry up or I will find you and you will regret it\" [F11]; the complaint also alleges the driver threatened the rider in chat [F12 records three timestamped messages, so the chat is complete and this line is the driver's own words, F9–F11]. Read in context this is not a pickup arrangement or a complaint about lateness: it is a conditional threat of pursuit and retaliation aimed at the rider, which is intimidation/harassment of the other party under SAFE-1. I therefore record safety_concern = confirmed, basis F11 (with F9–F11, F12 for the complete record), and under SAFE-1 I do not decide the case: ruling = escalate, escalate = true.\n\nThe underlying fee dispute is otherwise clean on the record. cancelled_by = driver [F4], so NS-0 routes the $6.61 fee to NS-1. All three NS-1 elements are marked ✓ by the trace and are supported by the facts: the driver tapped \"I'm Here\" at 09:50:45 [F6], at that moment 38 m from pickup, within the 200 m radius [F6][F1], and stayed inside the radius for 3 min 40 s (220 s) until cancelling at 09:54:25 [F6][F4], exceeding the 180 s threshold. The platform-arrival variant at 09:49:50 with 4 min 35 s within 200 m [F2][F5] corroborates. On those elements alone NS-1 would make the $6.61 fee stand (no_action). The rider's own \"2 min, coming\" at 09:52 [F10] and the absence of any traffic cause [F14][F15] leave no NS-2 or RD-4 argument open.\n\nI cannot, however, execute that outcome at this stage: SAFE-1 removes the case from automated adjudication, and the human reviewer must decide whether the threat affects the fee/account treatment (and whether the driver's conduct warrants action independently of the fare). No amount is computed: the fee computation is a fee dispute, and no_action/escalate carry amount = null. Flag_account is not set: NS-2's flag condition (tap made from outside the pickup radius) is not met [F6][F1], and RD-6 does not apply to a no-show case (route disputes upheld = 0) [F18]; the driver's prior upheld no-show dispute [F18] is a profile fact and cannot decide anything on its own. Evidence is sufficient: the chat is complete and timestamped [F12], the GPS trace covers the wait without a hole [F2][F6], and cancellation author and time are recorded [F4], so every element I needed is settled by the record.",
+  "ruling": "refund_full",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 cancellation fee to the rider's original payment method and add the $5.00 goodwill credit (NS-8) for the driver's zero contact attempts; log the failed arrival/no-show attempt on the driver's record (this is the driver's 3rd upheld no-show-related matter in 90 days — see RD-6 note, no account flag ordered here).",
+  "confidence": 0.92,
+  "reasoning": "The rider booked a 09:52 pickup and cancelled at 10:00:00, 8 minutes after the scheduled time [F4][F2]. The driver never came within 200 m of the pickup point — closest approach 4069 m at 10:00:00 [F1] — and the platform never recorded an arrival: driver_arrived_at is null and no \"I'm Here\" tap or automatic arrival exists [F5][F6]. The driver sent 0 in-app messages and made 0 in-app calls before the cancellation [F3]. The rider's messages show she waited and chased — \"where are you? It's already the pickup time\" at 09:52 [F9], then \"Still no car. I'm cancelling\" at 09:59 [F10] — a complete, fully timestamped chat record [F11]. Under NS-8, a driver not at the pickup by scheduled time + 5 minutes gives the rider a free cancellation, and a fee charged is refunded in full; the rider cancelled 8 minutes after the scheduled time [F4][F2][NS-8]. NS-8 also requires a $5.00 goodwill credit where the driver made no contact attempt, which the trace confirms from the zero messages and calls [F3][NS-8]. Because the driver never arrived and the platform has no arrival record, the NS-1 no-show preconditions cannot hold: there was no arrival confirmation with GPS within 200 m [F1][F5][F6], and no chat message or call before cancelling [F3][NS-1]. The driver's post-hoc statement that traffic was heavy [F12] does not change the outcome: a no-show fee under NS-1 turns on arrival, wait and contact, not on the driver's difficulty reaching the pickup, and NS-2 voids the fee where any NS-1 condition fails. No NS-2 account flag is ordered because the driver did not mark arrival while away from the pickup — he never marked arrival at all [F6]. The profile facts (rider clean [F16]; driver with 2 upheld no-show matters in 90 days [F17]) do not decide this case. Amount: the cancellation fee charged on record is $5.00 [F7][NS-8], refunded in full, giving amount = $5.00.",
   "cited_facts": [
    "F1",
    "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F14",
-   "F15",
-   "F18"
+   "F16",
+   "F17"
   ],
   "cited_policy": [
-   "SAFE-1",
    "NS-0",
    "NS-1",
    "NS-2",
-   "RD-4",
-   "RD-6"
+   "NS-8"
   ],
-  "escalate": true,
-  "escalation_reason": "safety concern confirmed (F11, F9, F10, F12)",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "C1",
-    "reason": "The rider-side claim that the fee should be waived fails on NS-1: the driver tapped I'm Here at 09:50:45 and was 38 m from pickup at that moment [F6][F1], then stayed within 200 m for 220 s until cancellation at 09:54:25 [F6][F4], all three NS-1 elements satisfied — no NS-2 refund is triggered. The complaint's threat allegation, however, is accepted as a SAFE-1 issue [F11]."
+    "element": "NS-0:who_cancelled",
+    "finding": "met",
+    "basis": [
+     "F2"
+    ],
+    "reason": "The timeline shows the rider cancelled at 10:00:00 with the app reason driver_taking_too_long, so NS-0 routes the case to the rider-cancellation/no-show payment analysis rather than a driver-cancellation branch [F2][NS-0]."
    },
    {
-    "id": "D1",
-    "reason": "The driver-side claim that the cancellation was a valid no-show is correct on NS-1 (tap at 09:50:45, 38 m away, 220 s of continuous waiting) [F6][F1][F4], but it does not resolve the case: the driver's own 09:54 chat message is a SAFE-1 intimidation issue [F11], so the case goes to a human instead of a no_action outcome."
+    "element": "NS-8:driver_not_at_pickup_by_sched_plus_5",
+    "finding": "met",
+    "basis": [
+     "F1",
+     "F2",
+     "F4",
+     "F5",
+     "F6"
+    ],
+    "reason": "Scheduled pickup 09:52:00 with cancellation 8 minutes later, while the driver's closest approach was 4069 m and no arrival was ever recorded, so the driver was not at the pickup by scheduled time + 5 minutes and the rider could cancel free [F1][F4][F5][F6][NS-8]."
+   },
+   {
+    "element": "NS-8:no_contact_attempt",
+    "finding": "met",
+    "basis": [
+     "F3"
+    ],
+    "reason": "Before the cancellation the driver sent 0 in-app messages and made 0 in-app calls; this triggers the $5.00 goodwill credit under NS-8 for a driver who failed to attempt contact [F3][NS-8]."
    }
   ],
+  "rejected_claims": [],
   "flag_account": false,
-  "safety_concern": "confirmed",
+  "goodwill_credit": 5.0,
+  "safety_concern": "none",
   "safety_basis": [
-   "F11",
    "F9",
    "F10",
    "F12"
@@ -60,50 +80,79 @@
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Route to a human reviewer: treat the driver's chat message as a SAFE-1 conduct/credible-threat concern (hold the $6.61 cancellation fee and any account action pending the reviewer's decision) and separately note the NS-1 no-show elements are all met in the driver's favour. Do not execute any refund or account action automatically.",
-  "confidence": 0.93,
-  "reasoning": "Safety screen first. The driver's chat message at 09:54 reads \"Hurry up or I will find you and you will regret it\" [F11]; the complaint also alleges the driver threatened the rider in chat [F12 records three timestamped messages, so the chat is complete and this line is the driver's own words, F9–F11]. Read in context this is not a pickup arrangement or a complaint about lateness: it is a conditional threat of pursuit and retaliation aimed at the rider, which is intimidation/harassment of the other party under SAFE-1. I therefore record safety_concern = confirmed, basis F11 (with F9–F11, F12 for the complete record), and under SAFE-1 I do not decide the case: ruling = escalate, escalate = true.\n\nThe underlying fee dispute is otherwise clean on the record. cancelled_by = driver [F4], so NS-0 routes the $6.61 fee to NS-1. All three NS-1 elements are marked ✓ by the trace and are supported by the facts: the driver tapped \"I'm Here\" at 09:50:45 [F6], at that moment 38 m from pickup, within the 200 m radius [F6][F1], and stayed inside the radius for 3 min 40 s (220 s) until cancelling at 09:54:25 [F6][F4], exceeding the 180 s threshold. The platform-arrival variant at 09:49:50 with 4 min 35 s within 200 m [F2][F5] corroborates. On those elements alone NS-1 would make the $6.61 fee stand (no_action). The rider's own \"2 min, coming\" at 09:52 [F10] and the absence of any traffic cause [F14][F15] leave no NS-2 or RD-4 argument open.\n\nI cannot, however, execute that outcome at this stage: SAFE-1 removes the case from automated adjudication, and the human reviewer must decide whether the threat affects the fee/account treatment (and whether the driver's conduct warrants action independently of the fare). No amount is computed: the fee computation is a fee dispute, and no_action/escalate carry amount = null. Flag_account is not set: NS-2's flag condition (tap made from outside the pickup radius) is not met [F6][F1], and RD-6 does not apply to a no-show case (route disputes upheld = 0) [F18]; the driver's prior upheld no-show dispute [F18] is a profile fact and cannot decide anything on its own. Evidence is sufficient: the chat is complete and timestamped [F12], the GPS trace covers the wait without a hole [F2][F6], and cancellation author and time are recorded [F4], so every element I needed is settled by the record.",
+  "ruling": "refund_full",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 cancellation fee to the rider's original payment method and add the $5.00 goodwill credit (NS-8) for the driver's zero contact attempts; log the failed arrival/no-show attempt on the driver's record (this is the driver's 3rd upheld no-show-related matter in 90 days — see RD-6 note, no account flag ordered here).",
+  "confidence": 0.92,
+  "reasoning": "The rider booked a 09:52 pickup and cancelled at 10:00:00, 8 minutes after the scheduled time [F4][F2]. The driver never came within 200 m of the pickup point — closest approach 4069 m at 10:00:00 [F1] — and the platform never recorded an arrival: driver_arrived_at is null and no \"I'm Here\" tap or automatic arrival exists [F5][F6]. The driver sent 0 in-app messages and made 0 in-app calls before the cancellation [F3]. The rider's messages show she waited and chased — \"where are you? It's already the pickup time\" at 09:52 [F9], then \"Still no car. I'm cancelling\" at 09:59 [F10] — a complete, fully timestamped chat record [F11]. Under NS-8, a driver not at the pickup by scheduled time + 5 minutes gives the rider a free cancellation, and a fee charged is refunded in full; the rider cancelled 8 minutes after the scheduled time [F4][F2][NS-8]. NS-8 also requires a $5.00 goodwill credit where the driver made no contact attempt, which the trace confirms from the zero messages and calls [F3][NS-8]. Because the driver never arrived and the platform has no arrival record, the NS-1 no-show preconditions cannot hold: there was no arrival confirmation with GPS within 200 m [F1][F5][F6], and no chat message or call before cancelling [F3][NS-1]. The driver's post-hoc statement that traffic was heavy [F12] does not change the outcome: a no-show fee under NS-1 turns on arrival, wait and contact, not on the driver's difficulty reaching the pickup, and NS-2 voids the fee where any NS-1 condition fails. No NS-2 account flag is ordered because the driver did not mark arrival while away from the pickup — he never marked arrival at all [F6]. The profile facts (rider clean [F16]; driver with 2 upheld no-show matters in 90 days [F17]) do not decide this case. Amount: the cancellation fee charged on record is $5.00 [F7][NS-8], refunded in full, giving amount = $5.00.",
   "cited_facts": [
    "F1",
    "F2",
+   "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F14",
-   "F15",
-   "F18"
+   "F16",
+   "F17"
   ],
   "cited_policy": [
-   "SAFE-1",
    "NS-0",
    "NS-1",
    "NS-2",
-   "RD-4",
-   "RD-6"
+   "NS-8"
   ],
-  "escalate": true,
-  "escalation_reason": "SAFE-1: the driver's 09:54 chat message \"Hurry up or I will find you and you will regret it\" [F11], in a complete timestamped chat [F9]-[F12] and mirrored in the rider's complaint, is intimidation/harassment aimed at the rider in the context of the pickup wait. Under SAFE-1 the case is not automatically adjudicated and goes to a human; the human reviewer should also see that the NS-1 no-show elements (driver tap at 09:50:45, 38 m from pickup, 220 s inside the radius until cancellation) are met [F4][F6][F1], so the $6.61 fee would otherwise stand — the reviewer decides whether the conduct affects the fee and whether separate conduct action applies.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "C1",
-    "reason": "The rider-side claim that the fee should be waived fails on NS-1: the driver tapped I'm Here at 09:50:45 and was 38 m from pickup at that moment [F6][F1], then stayed within 200 m for 220 s until cancellation at 09:54:25 [F6][F4], all three NS-1 elements satisfied — no NS-2 refund is triggered. The complaint's threat allegation, however, is accepted as a SAFE-1 issue [F11]."
+    "element": "NS-0:who_cancelled",
+    "finding": "met",
+    "basis": [
+     "F2"
+    ],
+    "reason": "The timeline shows the rider cancelled at 10:00:00 with the app reason driver_taking_too_long, so NS-0 routes the case to the rider-cancellation/no-show payment analysis rather than a driver-cancellation branch [F2][NS-0]."
    },
    {
+    "element": "NS-8:driver_not_at_pickup_by_sched_plus_5",
+    "finding": "met",
+    "basis": [
+     "F1",
+     "F2",
+     "F4",
+     "F5",
+     "F6"
+    ],
+    "reason": "Scheduled pickup 09:52:00 with cancellation 8 minutes later, while the driver's closest approach was 4069 m and no arrival was ever recorded, so the driver was not at the pickup by scheduled time + 5 minutes and the rider could cancel free [F1][F4][F5][F6][NS-8]."
+   },
+   {
+    "element": "NS-8:no_contact_attempt",
+    "finding": "met",
+    "basis": [
+     "F3"
+    ],
+    "reason": "Before the cancellation the driver sent 0 in-app messages and made 0 in-app calls; this triggers the $5.00 goodwill credit under NS-8 for a driver who failed to attempt contact [F3][NS-8]."
+   }
+  ],
+  "rejected_claims": [
+   {
     "id": "D1",
-    "reason": "The driver-side claim that the cancellation was a valid no-show is correct on NS-1 (tap at 09:50:45, 38 m away, 220 s of continuous waiting) [F6][F1][F4], but it does not resolve the case: the driver's own 09:54 chat message is a SAFE-1 intimidation issue [F11], so the case goes to a human instead of a no_action outcome."
+    "reason": "The driver's statement that traffic was heavy en route to the pickup [F12] cannot support a no-show fee: no NS-1 condition holds — no arrival confirmation within 200 m [F1][F5][F6] and no message or call before cancelling [F3] — so NS-2 voids the $5.00 fee regardless of travel difficulty [NS-1][NS-2]."
+   },
+   {
+    "id": "C1",
+    "reason": "The rider's requested no_action (fee stands) is not supported: the driver never reached the pickup and made no contact, so the fee cannot stand under NS-1 and must be refunded in full under NS-8 [F1][F3][F5][F6][NS-1][NS-8]."
    }
   ],
   "flag_account": false,
-  "safety_concern": "confirmed",
+  "goodwill_credit": 5.0,
+  "safety_concern": "none",
   "safety_basis": [
-   "F11",
    "F9",
    "F10",
    "F12"
@@ -111,16 +160,16 @@
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "escalated",
+ "status": "resolved",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "judge escalates → human review: safety concern confirmed (F11, F9, F10, F12)"
+  "dropped rejected_claims not in any live brief: D1, C1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: $10.00, confidence 100% ≥ 80%; code confidence 100%\nmodel confidence 0.92 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/judge_only/B-0041.record.json",
- "latency_s": 6.87,
- "input_tokens": 11729,
- "output_tokens": 1428,
- "requests": 1,
- "llm_calls": 1
+ "latency_s": 8.75,
+ "input_tokens": 11067,
+ "output_tokens": 1655,
+ "requests": 2,
+ "llm_calls": 2
 }

@@ -84,10 +84,17 @@ def _assemble(rates, km, minutes, wait_min, surge, discount, pricing, basis):
     }
 
 
-def metered_fare(trip_gps, rates: dict, surge: float = 1.0, discount: float = 0.0) -> dict:
-    """RydeTAXI: meter runs on the actual trace (pickup..dropoff samples only).
-    time_min = trip minutes minus stationary minutes (the stop is billed as waiting_min, once)."""
+FOLDED = "in_time_fare"        # FARE-0: no separate waiting line; every trip minute is time fare (base + distance + time is what surges)
+
+
+def metered_fare(trip_gps, rates: dict, surge: float = 1.0, discount: float = 0.0, fold_waiting: bool = False) -> dict:
+    """Distance-based fare on the actual trace (pickup..dropoff samples only).
+    time_min = trip minutes minus stationary minutes (the stop is billed as waiting_min, once); with fold_waiting
+    (FARE-0, the benchmark) every trip minute is time fare and there is no waiting line."""
     km = r2(distance_km(trip_gps))
+    if fold_waiting:
+        minutes = round((ts(trip_gps[-1]) - ts(trip_gps[0])).total_seconds() / 60 + 1e-9, 2)
+        return _assemble(rates, km, minutes, 0.0, surge, discount, "metered", FOLDED)
     wait_s = stationary_seconds(trip_gps, rates["stationary_threshold_m"])
     wait_min = round(wait_s / 60 + 1e-9, 2)
     minutes = round(((ts(trip_gps[-1]) - ts(trip_gps[0])).total_seconds() - wait_s) / 60 + 1e-9, 2)
@@ -100,5 +107,33 @@ def fixed_fare(route: dict, rates: dict, surge: float = 1.0, discount: float = 0
     return _assemble(rates, route["total_km"], route["total_min"], 0.0, surge, discount, "fixed", "flat_pickup_button")
 
 
-def cancellation_fare(rates: dict) -> dict:
-    return {"pricing": "fixed", "cancellation_fee": rates["cancellation_fee"], "currency": rates["currency"]}
+POLICY_CANCELLATION_FEE = 5.00   # policy NS-1 / NS-4: the official $5.00 (the rate card's $6.61 is Ryde's help-centre figure)
+
+
+def cancellation_fare(rates: dict, fee: float | None = None) -> dict:
+    """The fare block of a cancelled booking. `fee` defaults to the rate card's figure (the demo cases); the benchmark
+    passes POLICY_CANCELLATION_FEE."""
+    return {"pricing": "fixed", "cancellation_fee": rates["cancellation_fee"] if fee is None else fee, "currency": rates["currency"]}
+
+
+def surgeable_subtotal(fare: dict) -> float:
+    """FARE-0: the part of a fare the multiplier applies to (base + distance + time + waiting), before surge. The booking
+    (platform) fee is not surged."""
+    return r2(fare["base_fare"] + fare["distance_fare"] + fare["time_fare"] + fare["waiting_fee"])
+
+
+def estimate_subtotal(route: dict, rates: dict) -> float:
+    """Unsurged subtotal of the upfront quote, priced on the optimal route's distance and time."""
+    return r2(rates["base_fare"] + r2(route["total_km"] * rates["rate_per_km"]) + r2(route["total_min"] * rates["rate_per_min"]))
+
+
+def surge_breakdown(fare: dict, quote_subtotal: float, quote_multiplier: float, rates: dict) -> tuple[float, dict]:
+    """(quoted_total, fare_detail) of a metered trip charged at fare["surge_multiplier"] and quoted at quote_multiplier
+    on quote_subtotal. The booking fee is the platform fee tier of each surged subtotal; it is never multiplied."""
+    s1 = surgeable_subtotal(fare)
+    q_surged = r2(quote_subtotal * quote_multiplier)
+    q_fee = platform_fee(q_surged, rates)
+    detail = {"upfront_quote": {"surge_multiplier": quote_multiplier, "surge_amount": r2(q_surged - quote_subtotal), "surgeable_subtotal": quote_subtotal},
+              "surge_amount": r2(fare["total"] - fare["platform_fee"] + fare["discount"] - s1), "surgeable_subtotal": s1,
+              "booking_fee": fare["platform_fee"], "booking_fee_surge_exempt": True}
+    return r2(q_surged + q_fee), detail

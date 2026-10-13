@@ -92,6 +92,19 @@ def scripted_ruling() -> dict:
             sf.append({"fact_id": f, "finding": fd, "ground": ground, "basis": basis[:1] if fd == "exempt" else [], "reason": f"[RD-5] {fd} per record [{fids[0]}]"})
         d["segment_findings"] = sf
         d["flag_account"] = bool(cert.flag_required) if cert.flag_required is not None else bool(cert.flag_conditional and any(v == "counts" for v in findings.values()))
+    # a reading the trace leaves to the judge ("? element"): the finding whose consequence is the expected outcome; an
+    # RD-3 "named this place" element follows its segment's finding
+    seg_found = {x["fact_id"]: x["finding"] for x in d["segment_findings"]}
+    ef = []
+    for eid, el in cert.elements.items():
+        if el.get("segment"):
+            finding = "met" if seg_found.get(el["segment"]) == "exempt" else "not_met"
+        else:
+            finding = next((k for k, v in el["outcome"].items() if v == d["ruling"]), "undetermined")
+        ef.append({"element": eid, "finding": finding, "basis": [fids[0]], "reason": f"[{eid.split(':')[0]}] {finding} per record [{fids[0]}]"})
+        if el.get("flag_if_met") and finding == "met":
+            d["flag_account"] = True
+    d["element_findings"] = ef
     if d["flag_account"]:
         d["recommended_action"] += " + flag_account"
     if d["ruling"] in ("no_action", "escalate"):
@@ -184,7 +197,7 @@ def test_bench_runner_saves_every_field_and_marks_an_outage_failed(scripted, tmp
 def _demo_expected(cid: str, cf: str | None):
     base = json.loads((ROOT / "data" / "expected" / f"{cid}.json").read_text())
     if cf == "grace_179":
-        return {**base, "ruling": "refund_full", "amount": 6.61, "cited_policy": ["NS-0", "NS-4"], "escalate": False}
+        return {**base, "ruling": "refund_full", "amount": 5.00, "cited_policy": ["NS-0", "NS-4"], "escalate": False}
     if cf == "grace_181":
         return {**base, "ruling": "no_action", "amount": None, "cited_policy": ["NS-0", "NS-4"], "escalate": False}
     return base
@@ -218,7 +231,7 @@ def test_each_prerecorded_demo_shows_its_named_effect(scripted, name):
     elif name == "swap_profiles":
         assert r.ruling == exp["ruling"] and r.amount == exp["amount"] and not r.flag_account      # RD-6 reads the driver's own record: no prior after the swap
     elif name == "grace_179":
-        assert r.ruling == "refund_full" and r.amount == 6.61
+        assert r.ruling == "refund_full" and r.amount == 5.00
     elif name == "grace_181":
         assert r.ruling == "no_action"
     assert rec.receipt and verify_receipt(rec.receipt, case, MODEL)["verified"]

@@ -4,44 +4,97 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:03.776482+00:00",
+ "ts": "2026-10-13T15:36:01.376550+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); note that the driver's \"I'm Here\" tap does not satisfy NS-1 because the GPS position at the tap was ~110 m from the rider's rider-fixed pickup pin at Clarke Quay's entrance despite the driver being told the rider was at the entrance.",
-  "confidence": 0.75,
-  "reasoning": "Safety screen: chat is a pickup-coordination exchange (\"I'm here…\", \"I'm at the entrance, I don't see you\", \"Waited more than 3 min, cancelling\"). No threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is no_show, not safety. safety_concern = none.\n\nFare/trip: RydeX (non-metered), fare record shows only cancellation_fee 6.61 and total 0.00 otherwise — the disputed item is the $6.61 cancellation fee. cancelled_by = driver, and the driver's statement claims rider no-show, so the case enters via NS-0 → NS-1/NS-2.\n\nNS-1 requires (i) \"I'm Here\" pressed — satisfied: driver_pressed_here_at 14:06:15 (driver_tap; arrival_confirmed_by is null, so I write it as the driver's own tap), supported by the chat at 14:06:25. (ii) at the tap the driver's GPS must be at the pickup point (≤200 m of pickup). Computing from the driver's GPS trace: the samples nearest the tap are 14:06:00 (1.291852, 103.847539) and 14:06:30 (1.291834, 103.847526). Distance from 1.291840, 103.847530 to the Clarke Quay pickup pin (1.2906, 103.8465) = Δlat 0.00124° ≈ 138 m and Δlon 0.00103° ≈ 114 m → ≈179 m. Even taking the tap point itself as the closest position, the driver never sits within 200 m of the pickup pin (the closest sample across the whole stop is ≈179 m, and the rider's own complaint is that the driver was not at the entrance where the pin was, which the chat corroborates at 14:07:55). The driver's own statement (\"a short walk from the entrance\") and the chat show the car was on the side road, not at the pinned entrance. On the record's own operating radius (200 m, G2), 179 m is inside the radius, so criterion (ii) is only marginally satisfied, not clearly failed — the record cannot cleanly settle whether the tap moment was inside or outside the 200 m circle. (iii) continuous waiting >3 minutes at the pickup after the tap: the GPS samples from 14:06:30 to 14:09:55 are 30 s apart on the thinned grid (nominal 5 s, thinned to every 6th = 30 s), which is neither a >2 min gap nor >2× the normal interval, so the trace does cover the wait; the driver remained essentially stationary from ~14:06 until cancellation at 14:09:55 (~3:40 after the tap), so (iii) is satisfied on the record's own sampling.\n\nResult: the elements are not established beyond reasonable dispute. The 179 m figure sits just inside the 200 m data-layer radius, i.e. the tap-moment location is right at the boundary and cannot be resolved confidently; and the rider's complaint plus the chat (rider at the pinned entrance, driver on the side road, ~180 m apart, rider unable to find the car) place the car away from the actual pickup point at the tap, which on the \"at the pick-up location according to GPS data\" requirement supports the rider. Under NS-2, any NS-1 element failing → the $6.61 cancellation fee is not chargeable and must be fully refunded (to be issued as a Ryde voucher per NS-7). No driver \"I'm Here\" fraud flag is warranted here because the tap-moment distance straddles the 200 m radius (NS-2's flag only applies when the GPS clearly shows the driver outside the pickup range at the tap).",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show fee to the rider's original payment method; no driver fault finding (GPS shows a 90-second gap after arrival), but log the weak-contact/early-cancel pattern for driver coaching.",
+  "confidence": 0.82,
+  "reasoning": "Screening: the complaint, driver statement and brief chat contain no threat, harassment, sexual remark or dangerous-driving allegation; safety_concern = none.\n\nElements (NS-0/NS-1): driver cancelled under reason \"rider_no_show\", so NS-1 governs.\n(i) Arrival — driver_arrival_time 14:03:30 and app event \"driver_arrived\" at 14:03:30. The final telemetry point before arrival (14:03:00) is on Temasek Boulevard at 1.292376/103.857183, ~150 m from the pickup point (1.2955/103.8585) — within the 200 m radius. Met.\n(ii) Free wait — booked 14:05; arrival 14:03:30. Counted from the later of the two (14:05:00), five minutes elapse at 14:10:00. The driver cancelled at 14:09:00, i.e. 4 minutes after the scheduled pickup time and 5.5 minutes after arrival — short of the 5-minute free wait. Not met.\n(iii) Contact — one in-app message at 14:04:00 (before the segment/at the point) and one unanswered in-app call at 14:05:00. Met.\n(iv) Continuous presence — telemetry runs 14:04:00–14:09:00 continuously at ~1–2 km/h at the pickup, but there is a 90-second sampling hole between arrival (14:03:30) and 14:04:00; presence in that interval is unproven. This alone would be an evidence gap, not a ground of decision.\n\nBecause condition (ii) fails, the $5.00 fee is voided under NS-2 and refunded in full. This is not a case where the driver marked arrival while away from the pickup, so no account flag under NS-2/NS-1; the rider's own statement (\"cancelled 4 minutes after\") and the driver's statement (\"more than 6 minutes\") both give way to the system records, which show 5.5 minutes from arrival and 4 minutes from the scheduled time. Precedent DISP-2026-0211 (no-show cancel) confirms the fee turns on the strict NS-1 conditions. Amount within TH-1/TH-2 ($5.00 fixed, system final).",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver_statement_arrival_at_pickup",
-    "reason": "The driver claims he 'was parked at the pickup'; the rider's complaint and the chat (rider at the pinned entrance, 'I don't see you') plus the GPS trace at the 'I'm Here' tap (~110 m north of the rider-stated pin, at the radius edge) place the car on the side road rather than at the rider's pinned pickup point, so the arrival claim is not accepted as establishing NS-1(ii)."
+    "element": "NS-1(i) driver arrived at pickup (I'm Here / auto-confirm, GPS within 200 m)",
+    "finding": "met",
+    "basis": [
+     "driver_arrival_time",
+     "app_events driver_arrived",
+     "gps_telemetry 14:03:00"
+    ],
+    "reason": "Arrival event at 14:03:30 is corroborated by the 14:03:00 telemetry point on Temasek Boulevard at 1.292376/103.857183, ~150 m from the pickup point 1.2955/103.8585 (within the 200 m radius)."
    },
    {
-    "id": "driver_claim_waited_3min",
-    "reason": "The >3 min wait after the tap (14:06:15 → 14:09:55) is accepted from the GPS trace, but NS-1 requires all three elements; wait duration alone does not make the $6.61 cancellation fee chargeable when the tap-moment location is not established at the pickup point."
+    "element": "NS-1(ii) 5-minute free wait elapsed before cancellation (later of scheduled time and arrival)",
+    "finding": "not_met",
+    "basis": [
+     "scheduled_time",
+     "driver_arrival_time",
+     "cancellation_time"
+    ],
+    "reason": "Later of scheduled pickup 14:05:00 and arrival 14:03:30 is 14:05:00; five minutes run to 14:10:00. Cancellation at 14:09:00 is 4 minutes after 14:05:00 and 5.5 minutes after arrival — under the free wait."
+   },
+   {
+    "element": "NS-1(iii) before cancelling, ≥1 in-app message and ≥1 in-app call",
+    "finding": "met",
+    "basis": [
+     "chat_logs 14:04:00",
+     "chat_logs 14:08:50",
+     "call_records 14:05:00"
+    ],
+    "reason": "Two in-app messages to the rider (14:04:00, 14:08:50) and one in-app call at 14:05:00, though unanswered."
+   },
+   {
+    "element": "NS-1(iv) driver remained at the pickup point throughout the wait",
+    "finding": "undetermined",
+    "basis": [
+     "gps_telemetry 14:03:30",
+     "gps_telemetry 14:04:00"
+    ],
+    "reason": "Telemetry from 14:04:00 to 14:09:00 is stationary at the pickup, but a 90-second gap between arrival (14:03:30) and the next sample (14:04:00) leaves the interval unproven; the wasted wait is anyway short of the threshold, so this gap does not change the outcome."
+   },
+   {
+    "element": "Reason for driver's cancellation (NS-0/NS-3 routing)",
+    "finding": "undetermined",
+    "basis": [
+     "cancellation_reason",
+     "driver_statement",
+     "chat_logs 14:08:50"
+    ],
+    "reason": "The recorded reason is rider_no_show and the driver's messages/statement are consistent with that account, so NS-1 (not NS-3) is the governing clause; the fee nevertheless fails the free-wait condition."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement_wait_over_6_minutes",
+    "reason": "System records show arrival 14:03:30 and cancellation 14:09:00 — 5.5 minutes from arrival but only 4 minutes from the scheduled 14:05:00 pickup; the 5-minute free wait counted from the later of the two had not elapsed."
+   },
+   {
+    "id": "driver_statement_arrived_early",
+    "reason": "Consistent with the record (arrival 14:03:30) but immaterial: the free wait runs from 14:05:00, so early arrival does not extend it before the cancelled trip."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
-  "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_status": "insufficient",
+  "evidence_gap": "GPS telemetry thinned to every 6th sample leaves a 90-second hole between the 14:03:30 arrival event and the 14:04:00 sample, so continuous presence at the pickup during the first 90 seconds after arrival cannot be verified (NS-1(iv)). The provided samples do establish the 14:04:00–14:09:00 presence and the sub-5-minute wait, which decide the case."
  },
- "latency_s": 7.01,
- "input_tokens": 13534,
- "output_tokens": 1433,
+ "latency_s": 8.58,
+ "input_tokens": 11336,
+ "output_tokens": 1767,
  "requests": 1,
  "llm_calls": 1
 }

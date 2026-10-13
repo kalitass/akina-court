@@ -38,6 +38,7 @@ DEMOS = {
     "grace_181": ("C-0005", {"cf": "grace_181"}),
     "prompt_injection": ("C-0001", {"cf": "prompt_injection"}),
     "swap_profiles": ("C-0002", {"cf": "swap_profiles"}),
+    "no_call": ("DISP-002", {"cf": "no_call"}),                # v3 NS-1 (iii): the driver messaged but never called → the fee is refunded
     "stretch": ("C-0004", {"flags": ("STRETCH_FRAUD",)}),      # the one stored hearing with a stretch module on; a ~ run id never writes the stores
 }
 

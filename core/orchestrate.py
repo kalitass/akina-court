@@ -74,7 +74,7 @@ def rebuttal_body(r: Rebuttal) -> str:
 def record_grounds(cert, grounds: dict) -> dict:
     """An advocate's segment grounds, corrected where the record cannot support the form of a ground: "named_road_tied" needs a
     record that ties the segment to the road (a stop in it, a message once it had started); with none on record it is read
-    as "named_road_untied" (G13). The reading of the words stays the advocate's; only the tie, which code can see, is corrected."""
+    as "named_road_untied". The reading of the words stays the advocate's; only the tie, which code can see, is corrected."""
     out = dict(grounds or {})
     for fid, g in list(out.items()):
         if g == "named_road_tied" and fid in cert.segments and cert.segments[fid]["exempt"] is None and not tie_possible(cert, fid):
@@ -90,7 +90,7 @@ def ground_corrections(cert, briefs: dict, rebuttals: dict) -> list[str]:
             gs = src.segment_grounds if src else {}
             for fid, g in gs.items():
                 if record_grounds(cert, {fid: g}).get(fid) != g:
-                    out.append(f"{fid} {side} {what}: '{g}' → 'named_road_untied' (no stop in the segment and no message once it had started: nothing on record can tie the segment to the road, G13)")
+                    out.append(f"{fid} {side} {what}: '{g}' → 'named_road_untied' (the record names no roads for the segment, no stop in it and no message once it had started: nothing can tie it to the road)")
     return out
 
 
@@ -111,6 +111,26 @@ def stipulated_grounds(cert, briefs: dict, rebuttals: dict) -> dict:
         if g1 and g1 == g2 and g1 in GROUND_CONSEQUENCE:
             out[fid] = g1
     return out
+
+
+def element_readings(cert, briefs: dict, rebuttals: dict) -> dict:
+    """{element id: {side: reading}} for the trace's judge-read elements — each side's rebuttal reading, else its brief reading."""
+    out = {}
+    for eid in cert.elements:
+        sides = {}
+        for side in ("rider", "driver"):
+            b, r = briefs.get(side), rebuttals.get(side)
+            rd = (r.element_readings.get(eid) if r and r.element_readings else None) or (b.element_readings.get(eid) if b else None)
+            if rd:
+                sides[side] = rd
+        out[eid] = sides
+    return out
+
+
+def stipulated_elements(readings: dict) -> dict:
+    """Elements both advocates read the same way (met / not_met) after arguing them."""
+    return {eid: sides["rider"] for eid, sides in readings.items()
+            if sides.get("rider") and sides.get("rider") == sides.get("driver") and sides["rider"] != "undetermined"}
 
 
 def argued_grounds(cert, briefs: dict, rebuttals: dict) -> dict:
@@ -218,7 +238,7 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         rebuttal = False
     agents = {side: build_advocate(side) for side in ("rider", "driver")} if advocates else {}
     deps = {side: AdvocateDeps(side=side, table=table, emit=log.emit) for side in agents}
-    prompt = ticket_prompt(d, summary, table)
+    prompt = ticket_prompt(d, summary, table, [f"{p.element} — {p.detail}" for p in cert.predicates if p.status == "judge" and p.element.startswith("[")])
     results = dict(zip(agents, await asyncio.gather(*(_staged(agents[s].run(prompt, deps=deps[s]), TIMEOUTS["brief"], f"{s} advocate") for s in agents)))) if agents else {}
     for side, (r, err) in results.items():
         if err:
@@ -257,11 +277,17 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
             log.emit(side, "rebuttal", f"{side.title()} Advocate rebuttal: {len(rb.points)} points", rebuttal_body(rb), rebuttal=rb)
             log.emit("verify", "check", f"Rebuttal check — {side}", "\n".join(lines))
 
-    # ---- stipulation: a ground both advocates state for an open segment is agreed and binds the judge ----
+    # ---- agreement: a ground both advocates state for an open segment is shown to the judge and, if the judge agrees, raises the code confidence ----
     corrections = ground_corrections(cert, briefs, rebuttals) if advocates else []
     if corrections:
         log.emit("verify", "check", "Advocate ground corrected by the record: " + "; ".join(c.split(":")[0] for c in corrections), "\n".join(corrections))
     stipulated = stipulated_grounds(cert, briefs, rebuttals) if advocates else {}
+    readings = element_readings(cert, briefs, rebuttals) if advocates else {}
+    stip_el = stipulated_elements(readings)
+    if readings and any(readings.values()):
+        log.emit("verify", "check", "Readings of the text put forward by the advocates: " + "; ".join(
+                     f"{e} — " + ", ".join(f"{s}: {r}" for s, r in sides.items()) for e, sides in readings.items()),
+                 "each side read the text the trace points to; where both read it the same way the reading is agreed")
     argued = argued_grounds(cert, briefs, rebuttals) if advocates else None
     if argued and any(gs for sides in argued.values() for gs in sides.values()):
         log.emit("verify", "check", "Grounds put forward by the advocates: " + "; ".join(
@@ -270,22 +296,25 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
                  "the argued grounds — a finding on a ground neither side put forward is sent back once, then goes to a person; undetermined is always open")
     if stipulated:
         log.emit("verify", "check", "Stipulated by both advocates: " + ", ".join(f"{f} → {g}" for f, g in stipulated.items()),
-                 "each side stated the same policy ground for these segments after reading the other; the judge rules on that ground or names the fact that refutes it")
+                 "each side stated the same policy ground for these segments after reading the other; the judge weighs it and rules on its own reading")
 
     # ---- ruling (judge) with one self-correction on citation problems ----
     judge = build_judge()
     jprompt = judge_prompt(d, summary, table, [briefs["rider"], briefs["driver"]], rebuttals, cert.lines(), judge_items)
     if argued and any(gs for sides in argued.values() for gs in sides.values()):
         jprompt += ("\n\nGROUNDS ARGUED (each advocate's reading of the record, per open segment). You decide between the readings the parties put "
-                    "forward and you may name the sub-branch you read; but a consequence (exempt / counts) that no argued ground leads to is sent back "
-                    "once, then the case goes to a person. Find a segment undetermined only when the record itself does not settle the reading — "
-                    "not because the parties disagree. One exception: where one side reads the rider's words as a general route choice and the "
-                    "other as an agreement to a named road, the kind of agreement is contested and no exemption executes on it — find that segment "
-                    "undetermined.\n" + "\n".join(
+                    "forward, but you rule on your own reading of the record — the advocates can both miss the right reading. Find a segment "
+                    "undetermined only when the record itself does not settle the reading — "
+                    "not because the parties disagree. One exception, only for a segment whose fact names no roads: where one side reads the rider's "
+                    "words as a general route choice and the other as an agreement to a named road, the kind of agreement is contested and no "
+                    "exemption executes on it — find that segment undetermined.\n" + "\n".join(
                         f"  {f}: " + "; ".join(f"{s} → {', '.join(gs) or 'none stated'}" for s, gs in sides.items()) for f, sides in argued.items()))
     if stipulated:
-        jprompt += "\n\nSTIPULATED (both advocates state the same ground; it binds you unless a fact you cite refutes it):\n" + "\n".join(
+        jprompt += "\n\nAGREED BY BOTH ADVOCATES (both state the same ground; weigh it, but rule on your own reading of the record — when you agree, the decision is better supported):\n" + "\n".join(
             f"  {f}: ground {g} → finding {GROUND_CONSEQUENCE[g]}" for f, g in stipulated.items())
+    if readings and any(readings.values()):
+        jprompt += "\n\nREADINGS ARGUED (each advocate's reading of the text behind a ? element):\n" + "\n".join(
+            f"  {e}: " + "; ".join(f"{s} → {r}" for s, r in sides.items()) for e, sides in readings.items() if sides)
     pc = hooks.judge_context()
     if pc:
         jprompt += "\n\n" + pc
@@ -314,6 +343,22 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         f0 = raw.segment_findings[0]
         sf = f0.model_copy(update={"finding": "counts" if f0.finding == "exempt" else "exempt", "reason": "(demo) finding flipped"})
         raw = raw.model_copy(update={"segment_findings": [sf] + raw.segment_findings[1:]})
+    if not err and advocates and "flip_finding" not in inject and "wrong_amount" not in inject and not raw.escalate:
+        # second opinion the court has and a lone judge lacks: a reading both advocates share, which the judge contradicts,
+        # is put back to the judge once — adopt it or name the fact that refutes it. The second answer stands either way.
+        clash = [f"segment {sf.fact_id}: both advocates read it as '{stipulated[sf.fact_id]}' ({GROUND_CONSEQUENCE[stipulated[sf.fact_id]]}); you found {sf.finding}"
+                 for sf in raw.segment_findings if sf.fact_id in stipulated and GROUND_CONSEQUENCE.get(stipulated[sf.fact_id]) not in (sf.finding, "undetermined")]
+        clash += [f"{ef.element}: both advocates read it as {stip_el[ef.element]}; you found {ef.finding}"
+                  for ef in raw.element_findings if ef.element in stip_el and stip_el[ef.element] != ef.finding]
+        if clash:
+            log.emit("verify", "check", "Ruling departs from a reading both advocates share — put back to the judge once", "\n".join(clash), ruling=raw)
+            jr4, err4 = await _staged(judge.run(
+                "Your ruling departs from a reading BOTH advocates — opponents — arrived at after arguing it:\n- " + "\n- ".join(clash)
+                + "\nRe-read the record on these points. If a fact shows both advocates are wrong, keep your reading and cite that fact in the "
+                  "finding's reason; otherwise adopt the shared reading and make the outcome and amount follow the trace. Re-issue the whole Ruling.",
+                message_history=last.all_messages()), TIMEOUTS["judge"], "judge second opinion")
+            if not err4 and not citation_problems(jr4.output, table, clause_ids):
+                raw, last = jr4.output, jr4
     if not err and "flip_finding" not in inject and "wrong_amount" not in inject:
         ok_c, why_c = check_ruling(cert, raw, stipulated, argued)   # an escalate with a real ground (safety, open question, missing evidence) passes; one without is sent back once
         if not ok_c:   # one self-correction against the certificate: the judge sees exactly where it contradicts the code
@@ -321,7 +366,8 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
             jr3, err3 = await _staged(judge.run(
                 "Your ruling is inconsistent with the policy execution trace (computed by code):\n- " + "\n- ".join(why_c)
                 + "\nThe trace is binding on ✓/✗ elements and on the amount formula. Re-issue the Ruling so that: the outcome is in the allowed set; "
-                  "segment findings agree with every code-settled segment; the amount equals the formula to the cent; flag_account is "
+                  "segment findings agree with every code-settled segment; every ? element has an element_findings entry whose reading matches "
+                  "the outcome; the amount equals the formula to the cent; flag_account is "
                   "recommended only when the trace requires it. If the record does not let you decide a ? element, rule escalate with "
                   "that ground (safety_concern, an undetermined finding on a ? segment, or evidence_status insufficient / unknown with the missing record named in evidence_gap); "
                   "elements marked ✓/✗ are settled and are not grounds. A person then decides.",
@@ -332,7 +378,8 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         raw = raw.model_copy(update={"segment_findings": []})      # the field is for off-route segments only; the verifier drops them too
     log.emit("judge", "ruling", f"Proposed ruling: {raw.ruling}" + (f" ${raw.amount:.2f}" if raw.amount else "") + f" (model confidence {raw.confidence:.2f})",
              raw.reasoning, ruling=raw)
-    ruling, lines = verify_ruling(raw, table, clause_ids, (briefs["rider"], briefs["driver"]), certificate=cert, stipulated=stipulated, argued=argued)
+    ruling, lines = verify_ruling(raw, table, clause_ids, (briefs["rider"], briefs["driver"]), certificate=cert, stipulated=stipulated, argued=argued,
+                                  stipulated_elements=stip_el)
     if degraded and not ruling.escalate:
         ruling = ruling.model_copy(update={"ruling": "escalate", "amount": None, "escalate": True, "escalation_reason": "; ".join(degraded)})
         lines.append("an advocate stage failed → human review")
@@ -354,7 +401,8 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
         log.emit("system", "notify", "Notices sent to rider and driver (fixed text: case is with a reviewer, nothing promised)", f"RIDER: {rider_n}\n\nDRIVER: {driver_n}")
     else:
         nw = build_notice_writer()
-        ctx = (f"Case {case.case_id}. Final outcome: {ruling.ruling}" + (f", amount ${ruling.amount:.2f} as a Ryde voucher" if ruling.amount else ", no amount")
+        ctx = (f"Case {case.case_id}. Final outcome: {ruling.ruling}" + (f", amount ${ruling.amount:.2f} back to the original payment method" if ruling.amount else ", no amount")
+               + (f", plus a ${ruling.goodwill_credit:.2f} goodwill credit" if ruling.goodwill_credit else "")
                + f". Account flag: {'yes' if ruling.flag_account else 'no'}. Recommended action: {ruling.recommended_action}.\nReasoning:\n{ruling.reasoning}")
         nr, nerr = await _staged(nw.run(ctx), TIMEOUTS["notice"], "notice writer")
         rider_n, driver_n = (nr.output.rider, nr.output.driver) if not nerr else (None, None)
@@ -373,7 +421,9 @@ async def run_case(case: Case, on_event: Optional[Callable[[Event], None]] = Non
     actions = []
     if not ruling.escalate:
         if ruling.ruling in ("refund_full", "refund_partial", "fee_waived") and ruling.amount:
-            actions.append({"type": ruling.ruling, "mode": "auto", "detail": f"${ruling.amount:.2f} Ryde voucher to the rider (NS-7)"})
+            actions.append({"type": ruling.ruling, "mode": "auto", "detail": f"${ruling.amount:.2f} back to the rider's original payment method"})
+        if ruling.goodwill_credit:
+            actions.append({"type": "goodwill_credit", "mode": "auto", "detail": f"${ruling.goodwill_credit:.2f} goodwill credit to the rider (NS-8)"})
         elif ruling.ruling == "no_action":
             actions.append({"type": "no_action", "mode": "auto", "detail": "charges stand; both parties notified"})
         if ruling.flag_account:

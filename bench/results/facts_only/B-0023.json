@@ -4,19 +4,22 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:38:55.991168+00:00",
+ "ts": "2026-10-13T16:36:41.058347+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 3.0,
-  "recommended_action": "Refund the $3.00 unexcused extra-mileage component (2.13 km x $1.4102/km) to the rider as a Ryde voucher and confirm the segment-to-route tie with a human reviewer + flag_account",
-  "confidence": 0.78,
-  "reasoning": "Safety screen: the chat (F8-F10), the driver's statement (F11) and the complaint contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation, and the dispute type is not safety. safety_concern = none.\n\nRoute deviation (RydeTAXI, metered fare, so extra mileage enters the fare: RD-1/RD-2). One off-route segment exists: F3 (22:54-23:03), 3.77 km driven where the optimal route is 1.64 km, +2.13 km, up to 1095 m off the optimal route.\n\nThe only rider message before the segment began is the chat pairing F8 (22:51 driver: \"mind if I go round via Guillemard Road?\") and F9 (22:51 rider: \"Sure, go ahead.\"). In scope terms this is a named-road authorization, not a general route instruction (\"whichever way is faster\") and not a rider-named stop: the rider named a road for routing, named no place to stop, and the record shows no stop (RD-3(a) unavailable). Under RD-5 with G13, a named-road consent covers driving on that road only and the record must tie the driven segment to it (a stop on it, a location message, a route-name fact). The fact table names PIE (F12), Braddell Road (F13) and KPE (F14) and contains nothing tying the 22:54-23:03 segment to Guillemard Road, and nothing placing it elsewhere. Timing alone (F3 start 22:54 after F9 at 22:51) is not a tie. The segment is therefore undetermined - ground = named_road_untied, finding = undetermined. The driver's post-trip assertion of agreement (F11) is a claim, not consent (G11).\n\nRD-4 does not excuse the segment: F15 records no LTA incident near the route in the trip window, so RD-4(a) fails; F12 (PIE band 2, 10-19 km/h, 22:32-22:54) is a band fact only, which under RD-4(b) is corroboration at best and expressly cannot exempt a segment on its own (shortfall G3), and F13/F14 are band 3. F16 weather is fair and irrelevant.\n\nAmount (RD-2, metered branch): refund = sum of unexcused extra_km x this trip's per-km rate = 2.13 km x ($19.15 / 13.58 km = $1.4102/km) = $3.0037, rounded to $3.00. The billed excess-distance figure in the fare record is $3.65 = 2.59 km x $1.4102/km (F4), which covers map-matching/jitter mileage outside the identified segment; RD-2 refunds only the unexcused segment's extra_km, so the corridor remainder is not refunded. The rider's claim (\"I paid more than the estimate, give me the difference back\") is thus upheld in part: $3.00 of the $3.65 billed excess.\n\nThe undetermined segment finding changes the amount, so flagging this to a human reviewer to confirm the Guillemard Road tie before the figure is finalised; the amount above is the policy-computed remedy either way.\n\nAccount flag (RD-6): the driver's profile shows 2 route disputes upheld in the last 90 days (F18), so with this case upheld the \"repeated\" threshold (>=1 prior upheld + this case) is met and the ruling carries flag_account. The profile is used only for this add-on action, never to establish the deviation itself.",
+  "amount": 3.46,
+  "recommended_action": "Refund $3.46 surge differential to the rider's original payment method; remind Ops/vendor that surge notices must state the correct revised fare before go-live.",
+  "confidence": 0.9,
+  "reasoning": "No route issue: actual 3.9 km equals the optimal 3.9 km, deviation +0.0 km, within the RD-1 tolerance, and the billed distance does not exceed the optimal route [F1][F2][F3]. RD clauses do not apply.\n\nThe dispute is the surge differential. The quote was $12.71 at 1× and the trip ran at 1.4×, giving a charged fare of $16.17 — $3.46 over the quote [F4][F5][F6][F7][F8]. Surge rose before trip start, so SURGE-1 required an in-app notice stating the new multiplier, the revised estimated fare, and free cancellation. The 17:18:45 notice, before the 17:20:00 start, gave the multiplier (1.4×) and free cancellation, but told the rider \"Your fare stays at the quoted $12.71\" — the opposite of the revised estimated fare ($16.17) and a misstatement of the binding quote [F9]. Since the required item \"revised estimated fare\" is missing/incorrect, the rider was not properly notified under SURGE-1, and SURGE-2 gives a full refund of the surge differential.\n\nAmount: the whole $3.46 excess over the quote is attributable to the multiplier change; the mixed-cause cap in SURGE-3 gives (1.4 − 1) × $10.66 = $4.26, capped at the $3.46 the fare exceeds the quote, so $3.46 is refunded [F8][F7]. Per TH-1/TH-2 and the C1 reading of DISP-001, this is a fare matter under $10 and is final at system level. The driver's after-the-fact statement [F13] does not cure the defective notice; the chat [F10][F11] is a pickup arrangement only, and the systemic notice log [F9] controls. Precedent cited: DISP-2026-0142 (surge without notice). Profiles [F14][F15] are not dispositive; the driver's 2 upheld disputes are route/no-show = 0, so RD-6/NS-2 flagging is not triggered.",
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
+   "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
@@ -25,52 +28,56 @@
    "F12",
    "F13",
    "F14",
-   "F15",
-   "F16",
-   "F18"
+   "F15"
   ],
   "cited_policy": [
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
    "RD-1",
-   "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6"
+   "TH-1",
+   "TH-2",
+   "C1"
   ],
   "escalate": false,
-  "escalation_reason": "The off-route segment F3 is undetermined under RD-5/G13 because no record ties the driven segment to the agreed Guillemard Road and none places it elsewhere. The money in issue is independently fixed by the fare record, so the refund can be quantified; the segment tie is referred to a human reviewer to confirm the final figure ($3.00 policy-computed, up to $3.65 as billed).",
-  "segment_findings": [
+  "escalation_reason": null,
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "F3",
-    "finding": "undetermined",
-    "ground": "named_road_untied",
+    "element": "SURGE-1 surge notice states the new multiplier, the revised estimated fare and free cancellation",
+    "finding": "not_met",
     "basis": [
-     "F8",
-     "F9",
-     "F10"
+     "F9"
     ],
-    "reason": "The rider's pre-segment message (F9, 22:51) agreed to a specific named road, Guillemard Road, proposed at F8, so this is a named-road consent under RD-5, not a general route authorization and not a rider-named stop (no place was named to stop at and no stop occurred, so RD-3(a) does not apply). A named-road consent covers driving on that road only and a record must tie the driven segment to it (RD-5 + G13); the fact table names PIE (F12), Braddell Road (F13) and KPE (F14) and contains nothing tying the 22:54-23:03 segment to Guillemard Road, nor anything placing it elsewhere. Timing alone (F3 start 22:54 after F9 at 22:51) is not a tie, so the finding is undetermined rather than exempt or counts. RD-4 does not excuse it: F15 shows no incident (RD-4(a) fails) and F12/F13/F14 are band facts that cannot exempt a segment on their own (RD-4(b), G3). The driver's post-trip claim of the rider's verbal agreement (F11) is not consent (G11)."
+    "reason": "Notice at 17:18:45 stated the 1.4× multiplier and free cancellation, but stated the fare 'stays at the quoted $12.71' instead of the revised estimated fare of $16.17 — a required item is missing."
+   },
+   {
+    "element": "Who the rider is charged for the multiplier change (surge differential attributable)",
+    "finding": "met",
+    "basis": [
+     "F6",
+     "F7",
+     "F8"
+    ],
+    "reason": "The $3.46 excess over the $12.71 quote arises from the 1× → 1.4× change; (1.4 − 1) × $10.66 = $4.26, capped at $3.46."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F11",
-    "reason": "The driver's post-trip statement that the rider agreed is a claim about verbal consent, not consent; agreement must be the rider's own message sent before the detour began (RD-5, G11). It adds nothing beyond the chat at F8/F9."
-   },
-   {
-    "id": "F12",
-    "reason": "PIE speed band 2 (10-19 km/h) during 22:32-22:54 is a traffic-band fact only; RD-4(b) makes it corroboration at most and expressly not sufficient to exempt a segment on its own (shortfall G3), and no LTA incident exists (F15)."
+    "id": "F13",
+    "reason": "The driver's post-trip statement that the rider was properly notified is a claim; the system notice log [F9] shows the revised estimated fare was not stated, and system records override statements."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 17.5,
- "input_tokens": 24809,
- "output_tokens": 3908,
- "requests": 2,
+ "latency_s": 5.9,
+ "input_tokens": 7716,
+ "output_tokens": 1096,
+ "requests": 1,
  "llm_calls": 1
 }

@@ -8,7 +8,7 @@ Both return a new object plus a list of human-readable check lines for the Event
 from __future__ import annotations
 
 from core.policy import ACTIONS, cited_in
-from core.policy_engine import check_ruling, escalate_grounds
+from core.policy_engine import check_ruling, escalate_grounds, expected_amount, threshold_check
 from core.schemas import CaseBrief, FactTable, Ruling
 
 
@@ -96,6 +96,9 @@ def all_cited(ruling: Ruling) -> tuple[set[str], set[str]]:
         facts |= f; clauses |= c
     for sf in ruling.segment_findings:
         facts |= set(sf.basis)
+    for ef in ruling.element_findings:
+        facts |= set(ef.basis)
+        clauses |= cited_in(ef.reason)[1]
     return facts, clauses
 
 
@@ -109,14 +112,29 @@ def citation_problems(ruling: Ruling, table: FactTable, clause_ids: set[str]) ->
     if bad_f:
         out.append(f"fact ids that do not exist in the fact table: {', '.join(bad_f)}")
     if bad_p:
-        out.append(f"clause ids that do not exist or are marked 不可引用: {', '.join(bad_p)}")
+        out.append(f"clause ids that do not exist in the policy: {', '.join(bad_p)}")
     if ruling.ruling not in ACTIONS:
         out.append(f"ruling {ruling.ruling!r} is not in the vocabulary {ACTIONS}")
     return out
 
 
+GROUPS_BY_TYPE = {"route_deviation": ("FARE", "RD"), "no_show": ("NS",), "fare_dispute": ("FARE", "SURGE"),
+                  "safety": ("SAFE",), "property_damage": ("DMG",)}
+
+
+def scope_citations(ruling: Ruling, dispute_type: str) -> tuple[Ruling, list[str]]:
+    """cited_policy keeps the clauses that decide this kind of dispute. Another type's clauses, the safety clauses when
+    the screen found nothing, and TH- / PREC- (applied by code, not by the judge) are taken off the list; the reasoning
+    text is left as written."""
+    keep_groups = GROUPS_BY_TYPE.get(dispute_type, ()) + (("SAFE",) if ruling.safety_concern != "none" else ())
+    kept = [c for c in ruling.cited_policy if c.split("-")[0] in keep_groups]
+    pruned = [c for c in ruling.cited_policy if c not in kept]
+    return (ruling.model_copy(update={"cited_policy": kept}) if pruned else ruling), pruned
+
+
 def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
-                  briefs: tuple[CaseBrief, ...] = (), certificate=None, stipulated: dict | None = None, argued: dict | None = None) -> tuple[Ruling, list[str]]:
+                  briefs: tuple[CaseBrief, ...] = (), certificate=None, stipulated: dict | None = None, argued: dict | None = None,
+                  stipulated_elements: dict | None = None) -> tuple[Ruling, list[str]]:
     lines: list[str] = []
     ids = table.ids()
     if table.dispute_type != "route_deviation" and ruling.segment_findings:
@@ -138,6 +156,9 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
     if bad_p:
         lines.append(f"HARD: ruling cites {', '.join(bad_p)} which are not citable clauses → escalate")
         return _escalate(ruling, f"citation check: ruling cites non-citable clauses {', '.join(bad_p)}"), lines
+    ruling, pruned = scope_citations(ruling, table.dispute_type)
+    if pruned:
+        lines.append(f"citations outside what decided this {table.dispute_type} case removed from cited_policy: {', '.join(pruned)}")
     if ruling.ruling not in ACTIONS:
         lines.append(f"HARD: ruling action {ruling.ruling!r} not in vocabulary → escalate")
         return _escalate(ruling, f"ruling action {ruling.ruling!r} not in vocabulary"), lines
@@ -157,6 +178,24 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
             lines.append("judge escalates → human review: " + why)
         else:
             lines.extend("✗ " + r for r in why_g)
+            sole = [x for x in (certificate.allowed if certificate is not None else []) if x != "escalate"]
+            if (certificate is not None and certificate.mechanical and not certificate.elements and not certificate.insufficient
+                    and len(sole) == 1 and ruling.safety_concern == "none"):
+                # the record settles the case end to end, the safety screen is clear, and the escalation names no ground the
+                # trace leaves open: the one outcome the policy allows is carried out, and the log says so
+                amt = None
+                if sole[0] in ("refund_full", "refund_partial", "fee_waived"):
+                    amt = certificate.amount if certificate.dispute_type != "route_deviation" else expected_amount(certificate, {})
+                ruling = ruling.model_copy(update={"ruling": sole[0], "amount": amt, "escalate": False, "escalation_reason": None,
+                                                   "evidence_status": "sufficient", "evidence_gap": None,
+                                                   "flag_account": bool(certificate.flag_required)})
+                lines.append(f"judge escalated without a ground the record leaves open; the trace settles every element and allows only "
+                             f"{sole[0]}" + (f" ${amt:.2f}" if amt else "") + " → carried out as the policy requires")
+                ok_t, why_t = threshold_check(certificate, ruling.amount, ruling, stipulated, stipulated_elements)
+                lines.append(("✓ " if ok_t else "✗ ") + why_t)
+                if not ok_t:
+                    return _escalate(ruling, why_t), lines
+                return ruling, lines
             lines.append("judge escalates on a ground the trace does not leave open; recorded for the reviewer as is")
         return _escalate(ruling, why), lines
     if ruling.safety_concern != "none":
@@ -193,5 +232,9 @@ def verify_ruling(ruling: Ruling, table: FactTable, clause_ids: set[str],
         lines.extend(("✓ " if ok else "✗ ") + r for r in (reasons or ["ruling consistent with the policy certificate"]))
         if not ok:
             return _escalate(ruling, "not eligible for automation: " + "; ".join(reasons)), lines
-    lines.append(f"model confidence {ruling.confidence:.2f} (diagnostic only; automation is decided by the certificate)")
+        ok_t, why_t = threshold_check(certificate, ruling.amount, ruling, stipulated, stipulated_elements)
+        lines.append(("✓ " if ok_t else "✗ ") + why_t)
+        if not ok_t:
+            return _escalate(ruling, why_t), lines
+    lines.append(f"model confidence {ruling.confidence:.2f} (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)")
     return ruling.model_copy(update={"escalate": False, "escalation_reason": None}), lines   # reached only by a non-escalate ruling that passed every check

@@ -4,27 +4,27 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:39:59.685013+00:00",
+ "ts": "2026-10-13T17:47:10.698711+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.33,
-  "recommended_action": "Refund $4.33 (Ryde voucher) for the non-exempt off-route segment; no account flag (no prior upheld route dispute).",
-  "confidence": 0.85,
-  "reasoning": "The trip was a RydeTAXI metered ride (F6: metered $49.37), and one off-route segment exists: 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, +3.07 km [F3][RD-1]. Under RD-1 any unexplained deviation is a non-exempt detour; the driver's post-trip statement \"I went where the GPS sent me; it rerouted\" is a claim, not rider consent [F10][RD-5].\n\nRD-4 does not excuse the segment: the traffic records show only speed band 5 (40–49 km/h) on East Coast Parkway and Airport Boulevard, i.e. free-flowing conditions, and no incident near the route during the trip window [F11][F12][F13][RD-4]. Band 5 is nowhere near the band 1–2 congestion threshold, and a speed band alone cannot exempt a segment [RD-4].\n\nRD-5 is not satisfied either. The complete chat record contains only the rider's pickup message and the driver's arrival message, both before pickup, at 09:04 and 09:05; neither says anything about the route to Changi [F7][F8][F9]. The rider therefore sent no agreement before the segment began at 09:24 [RD-5]. The driver's assertion of GPS rerouting appears only in his own statement, which is not consent [F10][RD-5]. For the same reason RD-3 does not apply: no rider message named any stop or place in this segment, and no stop is measured in it [F7][F8][RD-3].\n\nOn the metered fare, only the extra distance of the non-exempt segment is refundable: $34.42 ÷ 24.41 km = $1.4101/km [F6][RD-2]. 3.07 km × $1.4101/km = $4.3290, rounded to $4.33 [F3][F4][F6][RD-2]. The unallocated corridor jitter is not refunded [RD-2].\n\nRD-6 does not attach an account action: the driver's profile shows 1 upheld dispute in 90 days, but zero of them involve route, so route_disputes_upheld_90d = 0 and this case does not make him \"repeated\" for route deviation [F16][RD-6]. The 1.0× surge and no discount are consistent with the total (base $3.90 + distance $34.42 + time $9.58 + platform $1.47 = $49.37), so no FARE-1 item is refundable [F5][F6][FARE-1].",
+  "amount": 5.89,
+  "recommended_action": "Refund $5.89 excess distance fare to the rider's original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning, first such incident); record a driver violation for the deviation with no traffic reason (RD-2 / RD-4).",
+  "confidence": 0.82,
+  "reasoning": "The trip ran 14.9 km against an optimal 10.7 km, a deviation of 4.18 km billed at $1.4098/km = $5.89 [F1][F4]. The trace settles that the deviation exceeds 1 km, so RD-1's tolerance does not apply and the case turns on whether the single off-route segment is exempt [RD-1][RD-2].\n\nThe off-route segment, 21:43–21:50, drove JALAN BUKIT MERAH → KAMPONG BAHRU ROAD → TELOK BLANGAH ROAD → HENDERSON ROAD, adding 3.70 km and taking the car up to 1459 m from the optimal route [F3]. The trace settles there was no traffic reason on the replaced stretch: the AYE was at speed band 7 (60–69 km/h) and no incident is recorded, so RD-4 gives the driver no cover and the deviation is a violation if not exempt [F11][F13][RD-4].\n\nOn consent, the rider's only message before the segment, at 21:38, was \"Whatever road you think is fastest, I trust you, don't need to follow the app\", which the driver accepted with \"Ok no problem\" [F7][F8]. Read plainly, that is not a bare general \"whichever way is faster\" mandate covering the road chosen: the rider named the fastest road as the standard, the driver answered \"no problem\", and the record shows the detour did not serve that standard — the expressway was moving freely at 60–69 km/h with no incident and fair weather, while the car left it to loop through Jalan Bukit Merah, Kampong Bahru Road, Telok Blangah Road and Henderson Road [F3][F11][F13][F14][RD-5]. The rider named no road or place, so there is no named road to tie the segment to; the only words the driver offers are in a statement written after the trip, which is a claim and not timed rider consent [F10][RD-5].\n\nNo exemption therefore applies here. RD-3 fails because the rider named no stop or place and no stop was measured, and the driver's own after-the-fact explanation that he thought Telok Blangah Road would be faster is not consent under RD-5 [F3][F7][F10][RD-3][RD-5].\n\nAmount: (4.18 km deviation − 0 km exempt) × $1.4098/km = $5.89 [F4][RD-2], the billed excess distance fare. Tolls, time fare and surge are not refunded; surge is 1.0× so nothing is added under SURGE-3 [F5][F6][RD-2][SURGE-3]. The trace shows 0 prior upheld route disputes in 90 days, so RD-6's flag_account condition is not met despite the driver's other upheld disputes [F16][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
    "F6",
    "F7",
    "F8",
-   "F9",
    "F10",
    "F11",
-   "F12",
    "F13",
+   "F14",
    "F16"
   ],
   "cited_policy": [
@@ -34,7 +34,7 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "RD-7"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -42,18 +42,40 @@
    {
     "fact_id": "F3",
     "finding": "counts",
-    "ground": "consent_after_or_none",
+    "ground": "scope_other",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The rider's 21:38 message set the fastest road as the standard ('Whatever road you think is fastest, I trust you'), accepted at F8 [F7][F8] — that is an agreement about which route to take, not a request for a stop the driver chose [F3]. What was driven was a 3.70 km off-expressway loop whose road the record shows was no faster: the AYE ran at 60–69 km/h with no incident and the weather was fair [F3][F11][F13][F14]. The driver's post-trip statement that he thought Telok Blangah Road would be faster is a claim, not timed rider consent [F10]. RD-3 fails too: the rider named no place and no stop was measured [F3][RD-3]. The segment counts under RD-2 [RD-5]."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-3:place",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "The rider's only pre-segment message asked for the fastest road and named no stop or route, and no stop was measured on the segment, so RD-3 gives no exemption [F3][F7][F8][RD-3]."
+   },
+   {
+    "element": "RD-5:consent_scope",
+    "finding": "met",
     "basis": [
      "F7",
      "F8",
-     "F9",
      "F10"
     ],
-    "reason": "The complete, fully timestamped chat record contains only the rider's 09:04 pickup message and the driver's 09:05 arrival message; neither addresses the route, so no rider agreement precedes the 09:24 segment start [F7][F8][F9][RD-5]. The driver's post-trip statement that the GPS rerouted him is a claim, not rider consent [F10][RD-5]. No rider-named stop exists in this segment either [RD-3]. The 3.07 km extra is therefore a non-exempt detour refundable under RD-2."
+    "reason": "A timed rider message before the segment [F7], accepted by the driver [F8], agreed on taking the fastest road; the record names no road or stop, and the driver's statement [F10] is not consent, so the agreement does not cover this segment and it counts [F3][RD-5]."
    }
   ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F7",
@@ -65,22 +87,22 @@
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 4.33,
-  "recommended_action": "Refund $4.33 (Ryde voucher) for the non-exempt off-route segment; no account flag (no prior upheld route dispute).",
-  "confidence": 0.85,
-  "reasoning": "The trip was a RydeTAXI metered ride (F6: metered $49.37), and one off-route segment exists: 09:24–09:30, 3.78 km driven where the optimal route covers 0.71 km, +3.07 km [F3][RD-1]. Under RD-1 any unexplained deviation is a non-exempt detour; the driver's post-trip statement \"I went where the GPS sent me; it rerouted\" is a claim, not rider consent [F10][RD-5].\n\nRD-4 does not excuse the segment: the traffic records show only speed band 5 (40–49 km/h) on East Coast Parkway and Airport Boulevard, i.e. free-flowing conditions, and no incident near the route during the trip window [F11][F12][F13][RD-4]. Band 5 is nowhere near the band 1–2 congestion threshold, and a speed band alone cannot exempt a segment [RD-4].\n\nRD-5 is not satisfied either. The complete chat record contains only the rider's pickup message and the driver's arrival message, both before pickup, at 09:04 and 09:05; neither says anything about the route to Changi [F7][F8][F9]. The rider therefore sent no agreement before the segment began at 09:24 [RD-5]. The driver's assertion of GPS rerouting appears only in his own statement, which is not consent [F10][RD-5]. For the same reason RD-3 does not apply: no rider message named any stop or place in this segment, and no stop is measured in it [F7][F8][RD-3].\n\nOn the metered fare, only the extra distance of the non-exempt segment is refundable: $34.42 ÷ 24.41 km = $1.4101/km [F6][RD-2]. 3.07 km × $1.4101/km = $4.3290, rounded to $4.33 [F3][F4][F6][RD-2]. The unallocated corridor jitter is not refunded [RD-2].\n\nRD-6 does not attach an account action: the driver's profile shows 1 upheld dispute in 90 days, but zero of them involve route, so route_disputes_upheld_90d = 0 and this case does not make him \"repeated\" for route deviation [F16][RD-6]. The 1.0× surge and no discount are consistent with the total (base $3.90 + distance $34.42 + time $9.58 + platform $1.47 = $49.37), so no FARE-1 item is refundable [F5][F6][FARE-1].",
+  "amount": 5.89,
+  "recommended_action": "Refund $5.89 excess distance fare to the rider's original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning, first such incident); record a driver violation for the deviation with no traffic reason (RD-2 / RD-4).",
+  "confidence": 0.82,
+  "reasoning": "The trip ran 14.9 km against an optimal 10.7 km, a deviation of 4.18 km billed at $1.4098/km = $5.89 [F1][F4]. The trace settles that the deviation exceeds 1 km, so RD-1's tolerance does not apply and the case turns on whether the single off-route segment is exempt [RD-1][RD-2].\n\nThe off-route segment, 21:43–21:50, drove JALAN BUKIT MERAH → KAMPONG BAHRU ROAD → TELOK BLANGAH ROAD → HENDERSON ROAD, adding 3.70 km and taking the car up to 1459 m from the optimal route [F3]. The trace settles there was no traffic reason on the replaced stretch: the AYE was at speed band 7 (60–69 km/h) and no incident is recorded, so RD-4 gives the driver no cover and the deviation is a violation if not exempt [F11][F13][RD-4].\n\nOn consent, the rider's only message before the segment, at 21:38, was \"Whatever road you think is fastest, I trust you, don't need to follow the app\", which the driver accepted with \"Ok no problem\" [F7][F8]. Read plainly, that is not a bare general \"whichever way is faster\" mandate covering the road chosen: the rider named the fastest road as the standard, the driver answered \"no problem\", and the record shows the detour did not serve that standard — the expressway was moving freely at 60–69 km/h with no incident and fair weather, while the car left it to loop through Jalan Bukit Merah, Kampong Bahru Road, Telok Blangah Road and Henderson Road [F3][F11][F13][F14][RD-5]. The rider named no road or place, so there is no named road to tie the segment to; the only words the driver offers are in a statement written after the trip, which is a claim and not timed rider consent [F10][RD-5].\n\nNo exemption therefore applies here. RD-3 fails because the rider named no stop or place and no stop was measured, and the driver's own after-the-fact explanation that he thought Telok Blangah Road would be faster is not consent under RD-5 [F3][F7][F10][RD-3][RD-5].\n\nAmount: (4.18 km deviation − 0 km exempt) × $1.4098/km = $5.89 [F4][RD-2], the billed excess distance fare. Tolls, time fare and surge are not refunded; surge is 1.0× so nothing is added under SURGE-3 [F5][F6][RD-2][SURGE-3]. The trace shows 0 prior upheld route disputes in 90 days, so RD-6's flag_account condition is not met despite the driver's other upheld disputes [F16][RD-6].",
   "cited_facts": [
+   "F1",
    "F3",
    "F4",
    "F5",
    "F6",
    "F7",
    "F8",
-   "F9",
    "F10",
    "F11",
-   "F12",
    "F13",
+   "F14",
    "F16"
   ],
   "cited_policy": [
@@ -90,7 +112,8 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "RD-7",
+   "SURGE-3"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -98,23 +121,49 @@
    {
     "fact_id": "F3",
     "finding": "counts",
-    "ground": "consent_after_or_none",
+    "ground": "scope_other",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The rider's 21:38 message set the fastest road as the standard ('Whatever road you think is fastest, I trust you'), accepted at F8 [F7][F8] — that is an agreement about which route to take, not a request for a stop the driver chose [F3]. What was driven was a 3.70 km off-expressway loop whose road the record shows was no faster: the AYE ran at 60–69 km/h with no incident and the weather was fair [F3][F11][F13][F14]. The driver's post-trip statement that he thought Telok Blangah Road would be faster is a claim, not timed rider consent [F10]. RD-3 fails too: the rider named no place and no stop was measured [F3][RD-3]. The segment counts under RD-2 [RD-5]."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-3:place",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "The rider's only pre-segment message asked for the fastest road and named no stop or route, and no stop was measured on the segment, so RD-3 gives no exemption [F3][F7][F8][RD-3]."
+   },
+   {
+    "element": "RD-5:consent_scope",
+    "finding": "met",
     "basis": [
      "F7",
      "F8",
-     "F9",
      "F10"
     ],
-    "reason": "The complete, fully timestamped chat record contains only the rider's 09:04 pickup message and the driver's 09:05 arrival message; neither addresses the route, so no rider agreement precedes the 09:24 segment start [F7][F8][F9][RD-5]. The driver's post-trip statement that the GPS rerouted him is a claim, not rider consent [F10][RD-5]. No rider-named stop exists in this segment either [RD-3]. The 3.07 km extra is therefore a non-exempt detour refundable under RD-2."
+    "reason": "A timed rider message before the segment [F7], accepted by the driver [F8], agreed on taking the fastest road; the record names no road or stop, and the driver's statement [F10] is not consent, so the agreement does not cover this segment and it counts [F3][RD-5]."
    }
   ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "The rider advocate requested no_action, i.e. no refund; the record contradicts this — the off-route segment of +3.07 km is unexplained by any rider message, RD-4 traffic evidence or RD-3 stop, so RD-1/RD-2 require the extra distance to be refunded [F3][F11][F12][F13][RD-1][RD-2][RD-4]. The driver's post-trip statement 'I went where the GPS sent me' is a claim and cannot excuse the segment [F10][RD-5]."
+    "reason": "The rider's own claim sequence, if read as inviting no refund, fails: the deviation is 4.18 km over optimal (F1, F4), far above the 1 km tolerance, and RD-2 requires the excess distance fare to be refunded (RD-1, RD-2)."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's no-refund position fails on RD-5: the rider's message named no road or place and the segment drove a loop the record shows was no faster, with the AYE free-flowing at 60–69 km/h and no incident (F7, F11, F13); his after-the-fact explanation (F10) is not consent, so the $5.89 excess distance fare is refundable (RD-4, RD-5)."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F7",
@@ -125,15 +174,15 @@
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 8,
+ "events": 9,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: C1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this route_deviation case removed from cited_policy: SURGE-3\ndropped rejected_claims not in any live brief: C1, D1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 90%\nmodel confidence 0.82 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/judge_only/B-0001.record.json",
- "latency_s": 8.5,
- "input_tokens": 13741,
- "output_tokens": 1619,
- "requests": 2,
- "llm_calls": 2
+ "latency_s": 18.79,
+ "input_tokens": 25448,
+ "output_tokens": 3733,
+ "requests": 3,
+ "llm_calls": 3
 }

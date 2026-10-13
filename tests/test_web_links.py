@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
 PAGES = sorted(WEB.glob("*.html"))
 ROUTES = re.findall(r'@app\.get\("([^"]+)"', (ROOT / "app" / "main.py").read_text())
-CASES = {p.stem for d in ("data/cases", "data/bench/cases", "data/bench/blind/cases") for p in (ROOT / d).glob("*.json")}
+CASES = {p.stem for d in ("data/cases", "data/bench/cases") for p in (ROOT / d).glob("*.json")}
 RUNS = {p.stem for p in (ROOT / "runs").glob("*.json")}
 DYNAMIC_IDS = {"facts.html", "receipt.html", "replay.html"}  # ids rendered by script, not checkable statically
 

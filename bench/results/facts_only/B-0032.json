@@ -4,55 +4,107 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:39:18.403142+00:00",
+ "ts": "2026-10-13T15:42:59.103682+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and send the driver's arrival-button use to Ryde account review for abuse of the \"I'm Here\"/cancellation flow + flag_account",
+  "amount": 5.0,
+  "recommended_action": "Void the $5.00 no-show fee, refund the rider to the original payment method, and coach the driver that a cancellation for a personal reason is not chargeable as a rider no-show.",
   "confidence": 0.95,
-  "reasoning": "Safety screen: the chat (F8–F10), the rider's complaint and the driver's statement (F12) contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; the dispute type is no_show, not safety. safety_concern = none.\n\nNS-0: cancelled_by = driver and the driver claims rider no-show (F12), so NS-1/NS-2 govern. Evidence: GPS and timeline are complete and cover the whole window (F1–F5), so evidence_status = sufficient.\n\nNS-1 (i)–(iii) all fail:\n(i) The tap did occur, but not at the pickup point — driver tapped \"I'm Here\" at 08:47:20 while 351 m from the pickup point [F5].\n(ii) NS-1(ii) requires the driver within 200 m of the pickup at the moment of the tap. 351 m > 200 m [F5]; the driver's closest approach over the whole attempt was 319 m and he never entered 200 m [F1].\n(iii) He stayed within 200 m for 0 s after the tap [F5]; his 4 minutes stationary (08:47:00–08:51:00) was spent 350 m away at (1.4069, 103.8988) [F2], not at the pickup point. The platform never recorded arrival at all (driver_arrived_at null) [F4].\n\nBecause (i)/(ii)/(iii) are not satisfied, NS-2 applies: the $6.61 no-show cancellation fee is refunded in full to the rider, refund_full, $6.61 [F3][F6]. The driver's written claim that he \"waited more than 3 minutes at the pickup\" [F12] and his chat \"Reached already\" [F8] are contradicted by the system records (GPS/timeline override statements) and by the rider's contemporaneous \"no car here\" [F9].\n\nAdditionally, since the driver tapped \"I'm Here\" while GPS placed him outside the pickup radius (351 m > 200 m) [F5], NS-2's second limb applies and the case is flagged for Ryde account review (abuse of the cancellation/waiting-fee button). NS-7 requires the refund to issue as a Ryde voucher. No surge applied [F7]; no traffic cause is in play [F13][F14] and weather was fair [F15].",
+  "reasoning": "No-show screen (NS-0/NS-1): the app reason picked was rider_no_show [F4], but the driver's own words decide why he cancelled. At 08:52 he wrote \"my kid's school called, I have to go now. Cancelling.\" [F11], repeated in his statement [F14]. That is a driver-initiated cancellation for his own reason, so NS-3 applies, not NS-1: no fee is chargeable and any fee taken is refunded in full.\n\nIndependently, NS-1 also fails on its own terms. Arrival/geofence and wait conditions are arguably met — \"I'm Here\" at 08:46:10, 40 m from pickup, stationary 6 min 0 s at ~40 m within 200 m [F1][F3][F6][F7] — and contact attempts exist (2 messages from 08:46:40 and 1 in-app call at 08:47:40) [F5][F10][F13]. But the free-wait/threshold requirement is not met: the wait counted from the later of scheduled pickup time and arrival [F6] was only 6 min 0 s, i.e. under any applicable no-show threshold (5-minute default under NS-1; the 8-minute threshold in DISP-002 exceeds it too), so the driver cancelled 3 min 50 s before the wait had run [F4]. Any single NS-1 condition failing voids the fee (NS-2).\n\nAmount: cancellation fee charged was $5.00 [F8]; refund_full of $5.00. No surge involved (1.0×) [F9], no traffic or weather element [F15][F16][F17].\n\nAccount flags: NS-2's flag applies only where the driver marked arrival while GPS was not at the pickup point — here GPS confirms he was 38–40 m away [F1][F7], so no flag_account. RD-6/NS-9 are inapplicable (no route deviation; rider has 0 upheld no-shows) [F18][F19]. Precedent PREC-1: DISP-2026-0211 (no-show cancel) confirms the $5.00 fee is only chargeable when every NS-1 condition holds.",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F8",
    "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13",
+   "F14",
+   "F18",
+   "F19"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-3",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "F12",
-    "reason": "Driver's post-trip statement that he pressed 'I'm Here' and waited >3 minutes at the pickup is contradicted by GPS/timeline: tap at 08:47:20 was 351 m from pickup [F5], he never came within 200 m [F1], and he remained 350 m away [F2]. System records override statements. It is a claim of no-show, not proof of it."
+    "element": "Reason for driver cancellation (NS-0 / NS-1 vs NS-3)",
+    "finding": "not_met",
+    "basis": [
+     "F11",
+     "F14",
+     "F4"
+    ],
+    "reason": "App reason was rider_no_show [F4], but the driver's own chat and statement say he cancelled because his child's school called [F11][F14] — a personal, driver-side reason, so NS-3 governs and no fee is chargeable."
    },
    {
-    "id": "F8",
-    "reason": "Chat 'Reached already' is contradicted by F1/F5; a message asserting arrival does not establish the NS-1(ii) location requirement, and consent/claim rules (G11) treat unsupported assertions as claims only."
+    "element": "Driver arrived at pickup within 200 m (NS-1(i))",
+    "finding": "met",
+    "basis": [
+     "F1",
+     "F3",
+     "F7"
+    ],
+    "reason": "Closest approach 38 m, stationary 40 m from pickup, 'I'm Here' tapped 40 m away [F1][F3][F7]."
+   },
+   {
+    "element": "5-minute free wait / no-show threshold passed before cancellation (NS-1(ii))",
+    "finding": "not_met",
+    "basis": [
+     "F6",
+     "F4"
+    ],
+    "reason": "Arrival 08:46:10, cancellation 08:52:10 = 6 min 0 s wait, and the driver cancelled 8 min 10 s after acceptance [F4][F6]; the wait requirement is not satisfied on the later-of-two reading for a default (5 min) or DISP-002 (8 min) threshold alongside the pre-threshold cancellation."
+   },
+   {
+    "element": "Driver sent ≥1 in-app message and made ≥1 in-app call before cancelling (NS-1(iii))",
+    "finding": "met",
+    "basis": [
+     "F5",
+     "F10",
+     "F13"
+    ],
+    "reason": "Two timestamped messages (first 08:46:40) and one in-app call (08:47:40), all before 08:52:10 [F5][F10][F13]."
+   },
+   {
+    "element": "Driver marked arrival while GPS was not at pickup (NS-2 flag condition)",
+    "finding": "met",
+    "basis": [
+     "F7",
+     "F3"
+    ],
+    "reason": "The arrival tap was made while GPS placed the driver only ~40 m from the pickup [F3][F7], so the anti-fraud flag limb of NS-2 is not triggered."
    }
   ],
-  "flag_account": true,
+  "rejected_claims": [
+   {
+    "id": "driver_no_show_claim",
+    "reason": "The driver's app reason (rider_no_show) is his claim only; his own messages and statement show he cancelled for a personal reason after only 6 min 0 s of waiting, so no no-show fee is chargeable (NS-3, NS-1(ii) failed)."
+   }
+  ],
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.63,
- "input_tokens": 10261,
- "output_tokens": 1023,
+ "latency_s": 7.41,
+ "input_tokens": 7772,
+ "output_tokens": 1502,
  "requests": 1,
  "llm_calls": 1
 }

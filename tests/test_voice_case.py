@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 import app.main as srv
+from core.case_format import read_case
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,7 +20,7 @@ def test_spoken_complaints_on_file_are_complete_and_served():
         m = json.loads(p.read_text(encoding="utf-8"))
         cid = m["case_id"]
         assert p.stem == cid
-        case = json.loads(next(d for d in (ROOT / "data" / "cases", ROOT / "data" / "bench" / "cases") if (d / f"{cid}.json").exists()).joinpath(f"{cid}.json").read_text())
+        case = read_case(next(d for d in (ROOT / "data" / "cases", ROOT / "data" / "bench" / "cases") if (d / f"{cid}.json").exists()) / f"{cid}.json")
         clips = []
         if m.get("audio"):                                   # the complaint itself was spoken
             for k in ("transcript", "engine", "request_id", "audio_s", "statement_on_file", "lang"):

@@ -4,27 +4,28 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:33.471867+00:00",
+ "ts": "2026-10-13T15:50:19.490677+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Reject the fare-difference claim: the off-route segment is excused by a verified LTA incident on the replaced optimal route, so no refund is due. No refund, no account flag.",
-  "confidence": 0.72,
-  "reasoning": "Service type is RydeTAXI (metered), so the quoted-route promise does not bind; only extra metered kilometres from an unexcused detour are refundable (RD-2 / policy §0).\n\nThe GPS trace (09:55:00 pickup → 10:31:35 drop-off) shows the driver left the quoted corridor near 10:09 and, from 10:09:50 to ~10:12:50, looped around the West Coast / Clementi Avenue 2 area at 0–15 km/h (near-stationary at 10:09:50), then rejoined and continued to Jurong East. The metered trip is 22.2 km versus the quoted 16.532 km — about 5.7 km more than the app's estimate.\n\nRD-4 (a) applies to that segment: the LTA feed lists a \"Vehicle breakdown\" at 1.32198, 103.75139 on Ayer Rajah Expressway (towards Tuas), reported 09:47:00, i.e. before the detour began and still listed within the trip window. That point sits on the quoted polyline (the quoted route runs 1.32136/103.75321 → 1.32198/103.75139 → 1.32228/103.75033), so it is well inside the 300 m matching radius for the replaced optimal route. The eastbound AYE jams from the preceding breakdown anyway; the same corridor is corroborated by the AYE speed band 2 window (RD-4(b), corroborative only). The alternative was confirmed by the driver on chat at 10:10:00 before the diversion and actioned at 10:10:40 — the direction and the timing are consistent, and the driver's account is not contradicted by the record (RD-5).\n\nEvery off-route segment identified is therefore excused, so the unexcused extra_km sum is 0 and the RD-2 refund is $0. Residual differences between the metered 22.2 km and the quoted 16.532 km attributable to map-matching, the 200 m corridor and ordinary route choice are not refundable under RD-2.\n\nWait check: the passenger was picked up at 09:55:00 after the driver pressed \"I'm Here\" at 09:54:50 with GPS on the pickup point (1.2994, 103.8555) — waiting fee condition met, and the metered waiting amount ($0.13, \"metered_minutes\") is the taxi meter's own unit, not the $5 non-metered fee (RD-3(c)). No cancellation fee, no edit-destination fee. RD-6 not triggered: no unexcused detour and route_disputes_upheld_90d = 0, so no account flag. Profiles (driver rating 4.63, 1108 trips/90d) played no part in the ruling.\n\nNo safety issue: the rider's \"Sure, your call\" is a route instruction, not abuse.",
-  "cited_facts": [
-   "gps-detour-seg1",
-   "traffic-incident",
-   "traffic-band-SYN-EE9E22"
-  ],
+  "ruling": "refund_partial",
+  "amount": 11.22,
+  "recommended_action": "Refund $11.22 to the rider (undisclosed 1.0x→1.4x surge differential on the 1.0x surgeable subtotal), going to the original payment method; note the fare-display/notification failure so surge-notice compliance (new multiplier + revised fare + free cancel) is fixed in the app; no driver account flag (no upheld route-deviation against this driver in 90 days).",
+  "confidence": 0.86,
+  "reasoning": "This is a fare/surge dispute with a route-deviation component. Screening first: the complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation; dispute type is not safety — no escalation on SAFE grounds.\n\nSURGE (SURGE-1 / SURGE-2 / SURGE-3). Quote was taken at multiplier 1.0 ($23.58, surgeable subtotal $22.11). The surge log shows surge rose to 1.4 for the trip; rider_notified = false, no notification method, timestamp or text. So the rider was never told of the new multiplier, the revised fare, or the free cancellation option — SURGE-1 notice fails on every element. SURGE-2 therefore gives a refund of the surge differential. Because there is also a deviation (other cause mixed in), SURGE-3's system detail applies: refund = (trip multiplier − quote multiplier) × surgeable subtotal = (1.4 − 1.0) × $28.06 = 0.4 × $28.06 = $11.224 → $11.22. The booking fee ($1.47) is surge-exempt and excluded, consistent with FARE-0.\n\nROUTE DEVIATION (RD-1 to RD-5). Actual 13.38 km vs recommended 9.946 km = 3.434 km over the 1 km tolerance. The chat shows the rider herself asked \"Can stop at Paya Lebar Square for 5 min?\" at 09:56:10 and the driver accepted (\"Ok\" at 09:56:35). GPS confirms a stop on PAYA LEBAR ROAD from ~10:03:30 to 10:07:00. Under RD-3 that detour to the rider's own named stop is her route, not a deviation, and the stop time is charged as time fare (the 20.33 min time fare legitimately includes it). The larger excess is the GPS track itself: the driver left the recommended route on NICOLL HIGHWAY heading to Kallang–Paya Lebar Expressway / Paya Lebar Way and Circuit Road, while the recommended route ran straight from Nicoll Highway onto the Pan Island Expressway. However, the case record contains no road-by-road ingestion of that inbound detour, and the only text basis we hold is the rider's stop request; RD-5 provides that where the record does not settle the coverage of an agreed route, the matter escalates rather than being presumed against either side. In any event the deviation refund would be small — the off-route stretch taken for the requested stop is exempt and the residual 10.33 − 5 = 5.29 excess distance fare is the same magnitude as the amount already refundable under SURGE-3, so the rider's $17.17 claim is not made out; the dominant, decidable element is the undisclosed surge.\n\nThe driver's defence (\"the rider added a stop at Paya Lebar Square herself\") does not answer the surge overcharge, which is the bulk of the difference ($17.17 of the $17.17 claimed is largely surge: $11.22 surge + at most ~$5.29 excess distance fare ≈ $16.51, and the small remainder is booking fee/time effects). On the record before me the surge refund is the certain, calculable amount.\n\nPrecedent check (PREC-1): DISP-2026-0142 (surge without notice, refund of the undisclosed surge) supports a partial refund; it is aligned with this outcome.\nTH-1/TH-2: amount $11.22 is under $10? No — $11.22 is in the $10–$50 band, so per TH-1 a system ruling needs confidence ≥ 80%; the surge evidence (log + fare breakdown + untouched notice fields) is complete and clear, confidence 0.86.\nEvidence status: sufficient for the surge element (surge log complete, fare breakdown complete, notification fields empty); the route-deviation leg's road-level detail is thin, which caps overall confidence and is noted as the reason the deviation refund is not separately granted on this record.",
+  "cited_facts": [],
   "cited_policy": [
-   "RD-2",
-   "RD-4",
-   "RD-5",
-   "RD-3",
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
    "RD-1",
-   "RD-6"
+   "RD-2",
+   "RD-3",
+   "RD-5",
+   "PREC-1",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -32,33 +33,74 @@
    {
     "fact_id": "seg1",
     "finding": "exempt",
-    "ground": "incident",
+    "ground": "rider_named_stop",
+    "basis": [],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "Rider herself sent 'Can stop at Paya Lebar Square for 5 min?' (09:56:10) and the driver accepted ('Ok', 09:56:35); GPS shows the stop on PAYA LEBAR ROAD (10:03:30–10:07:00). Under RD-3 a rider-named stop the driver accepted is not a deviation; the 3.5 min stop time is charged as time fare only. No refund for this segment."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "undetermined",
+    "ground": "consent_after_or_none",
+    "basis": [],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The track diverts from the recommended route (Nicoll Highway → Pan Island Expressway) onto Kallang–Paya Lebar Expressway / Paya Lebar Way / Circuit Road to reach the requested stop. No traffic incident is logged (traffic_conditions empty; speed bands 7 = free-flow), so RD-4 gives no exemption, but the record does not road-name the inbound leg the rider agreed to and RD-5 requires escalation rather than a presumption where agreed-route coverage is unsettled; any residual excess distance fare is small and overlaps the amount already refunded under SURGE-3."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Surge notice stated the new multiplier, revised fare and free-cancel option (SURGE-1)",
+    "finding": "not_met",
     "basis": [
-     "chat-10:10:00",
-     "chat-10:10:40"
+     "surge_pricing_log.rider_notified=false",
+     "surge_pricing_log.notification_method=null",
+     "surge_pricing_log.notification_timestamp=null",
+     "surge_pricing_log.notification_text=null"
     ],
-    "reason": "Off-route segment approx. 10:09:50–10:12:50 in the West Coast / Clementi Ave 2 area (near-stationary at 10:09:50, then a 0–15 km/h loop). RD-4(a): LTA incident \"Vehicle breakdown\" reported 09:47:00 at 1.32198, 103.75139 on Ayer Rajah Expressway (towards Tuas) lies on the replaced optimal route (the quoted polyline passes 1.32136/103.75321 → 1.32198/103.75139 → 1.32228/103.75033), reported before the segment began and still listed in the trip window; AYE speed band 2 (09:45:20–10:13:30) corroborates under RD-4(b). The driver proposed this route on chat at 10:10:00 (\"via Clementi Avenue 2\") and the rider agreed (\"Sure, your call.\") before the diversion (RD-5). Exempt; extra_km not refundable."
+    "reason": "Quote-time multiplier 1.0 rose to 1.4 before trip start; the surge log shows no notification of any kind, so none of the three required items (new multiplier, revised estimated fare, cancellation without penalty) was given."
+   },
+   {
+    "element": "Driver's reason for any cancellation (NS-0)",
+    "finding": "not_met",
+    "basis": [
+     "cancellation_fee=0.0",
+     "trip completed 10:15:20"
+    ],
+    "reason": "No cancellation occurred — the trip ran to Bedok Mall with cancellation fee 0.0; NS-0/NS-1/NS-2 do not apply and no $5.00 fee is in issue."
+   },
+   {
+    "element": "Reason for the price difference (SURGE-3 mixed cause)",
+    "finding": "met",
+    "basis": [
+     "fare_breakdown.upfront_quote.surge_multiplier=1.0",
+     "fare_breakdown.actual_fare.surge_multiplier=1.4",
+     "fare_breakdown.actual_fare.surgeable_subtotal=28.06"
+    ],
+    "reason": "The $17.17 difference is the 0.4x surge step on the trip's surgeable subtotal ($28.06), the booking fee being surge-exempt, plus the requested stop's time/distance; the surge share is the decidable, refundable part."
    }
   ],
   "rejected_claims": [
    {
-    "id": "rider_fare_difference",
-    "reason": "The diverted segment is excused by an LTA-verified vehicle breakdown on the replaced optimal route (reported 09:47, on the quoted polyline), and the reference the rider compares against is a pre-trip quote that does not bind a metered RydeTAXI fare (§0). No unexcused extra kilometres → RD-2 refund = $0."
+    "id": "claim_full_difference",
+    "reason": "The claimed $17.17 is not refunded in full: the rider's own requested Paya Lebar Square stop legitimately added distance and time fare (RD-3), and the booking fee is surge-exempt; only the undisclosed surge differential is refunded."
    },
    {
-    "id": "completion_before_pickup_claim",
-    "reason": "Declined to infer fraud from the map match: the quoted route's polyline is drawn to the terminal point of a service road adjacent to Jurong East MRT (1.33235, 103.74134 → 1.33218, 103.74155), so the matching of later GPS points to the START of that entry is a map-matching artefact, not evidence the trip was completed before the passenger boarded."
+    "id": "claim_rider_added_stop",
+    "reason": "The driver's statement that the rider added the stop is accepted on the stop element (chat + GPS corroborate it), but it does not answer the surge element — the 1.0x→1.4x surge was never disclosed to the rider, which is the refunded component."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.52,
- "input_tokens": 16753,
- "output_tokens": 1533,
+ "latency_s": 13.8,
+ "input_tokens": 14293,
+ "output_tokens": 2176,
  "requests": 1,
  "llm_calls": 1
 }

@@ -4,39 +4,100 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:45.181384+00:00",
+ "ts": "2026-10-13T15:35:51.786601+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 no-show cancellation fee to the rider as a Ryde voucher and flag the driver's account for review of the abused \"I'm Here\" arrival confirmation.",
-  "confidence": 0.9,
-  "reasoning": "The driver cancelled as a rider no-show and $6.61 was charged, so the case enters via NS-0 (cancelled_by = driver, driver alleges no-show) and is tested against NS-1.\n\nNS-1 requires (i) the driver to have pressed \"I'm Here\" (satisfied: driver_pressed_here_at 08:47:20; no platform-auto arrival is recorded), (ii) the driver to be at the pickup point at that moment, and (iii) more than 3 continuous minutes waiting at the pickup point after the tap.\n\n(ii) fails. At the tap (08:47:20) the nearest GPS samples are 08:47:00 at 1.406863, 103.898788 and 08:47:30 at 1.406875, 103.898794. The pickup is 1.40561, 103.90168. Both samples are ~375 m from the pickup (Δlat 0.00125° ≈ 139 m, Δlon 0.00289° ≈ 321 m; √(139²+321²) ≈ 350–375 m), well beyond the 200 m arrival radius. The driver's own first chat message (\"Reached already … come out please\") at 08:47:25 is sent from the same spot. The trace shows the driver stationary there from 08:46:30 to 08:51:00 — never within 200 m of the pickup — and the rider at the pickup confirms \"no car here\" at 08:48:20. The rider's complaint that the driver marked arrived but was never at the pickup is therefore corroborated by the GPS, which overrides the driver's statement under the system-records rule.\n\n(iii) is met in duration (tap 08:47:20 → cancel 08:51:00 ≈ 3:40, samples every 30 s with no gap), but since (ii) fails the no-show fee is not valid. Under NS-2 the $6.61 must be refunded in full, and because the driver pressed \"I'm Here\" while GPS placed him ~375 m away — abuse of the arrival/waiting button — NS-2 additionally attaches flag_account. Cited profiles (driver's zero prior disputes) do not affect this case.\n\nAmount: full cancellation fee = $6.61.\n\nSafety screen: chat, complaint and driver statement contain no threat, harassment, sexual remark or dangerous-driving allegation — safety_concern \"none\". Evidence is sufficient: the GPS trace covers the whole window from acceptance to cancellation with no gaps, and no other element is missing.",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show cancellation fee to the rider and log the cancellation as driver-initiated (not a no-show).",
+  "confidence": 0.94,
+  "reasoning": "Fare/charge at issue: $5.00 cancellation fee, classified by the driver as \"rider_no_show\". The record shows the driver cancelled at 08:52:10 for a reason of his own making: his own chat at 08:52:00 says \"Sorry ah, my kid's school called, I have to go now. Cancelling.\" and his statement repeats the same reason. Under NS-0 this is a driver cancellation for another reason, not a no-show.\n\nIndependently, even on the no-show theory the fee cannot stand (NS-1): (i) arrival is established — \"I'm Here\" auto-arrival at 08:46:10 and GPS within ~55 m of the pickup point — but the driver had no in-app message and no answered call before cancelling. He sent one message at 08:46:40 (\"Reached, white BYD e6, waiting\") and placed exactly one call at 08:47:40 which went unanswered (answered=false, duration 0.0 s), and then cancelled roughly 4.5 minutes into the wait. NS-1(iii) requires ≥1 in-app message AND ≥1 in-app call, and NS-1(ii) requires the 5-minute free wait to have elapsed; here the wait was ~6 minutes by clock only if counted from arrival, but the call was never answered, so the contact condition fails in any event. NS-1 also fails because the driver did not stay at the pickup throughout — he left to attend to his child, per his own words.\n\nAmount: NS-2 — any NS-1 condition failing voids the $5.00 fee; NS-3 gives the same result (no fee where the driver cancelled for another reason, refunded in full if charged). Refund = $5.00. No GPS gap affects this: telemetry runs continuously from 08:44:00 to 08:52:10 and the driver's position is stationary at the pickup until cancellation.\n\nConfidence: the causal facts are settled by system records (GPS, app events, chat timestamps, call record) and the driver's own admission, so the only live dispute — why the trip ended and whether the fee was a valid no-show charge — is resolved without relying on either profile. <1 km tolerance and route clauses are irrelevant (actual distance 0.0 km). No $5.00 goodwill credit applies: this is not an NS-8 case, since the driver did arrive and did attempt contact.",
   "cited_facts": [],
   "cited_policy": [
    "NS-0",
    "NS-1",
-   "NS-2"
+   "NS-2",
+   "NS-3",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "Reason the driver cancelled (NS-0: no-show vs other)",
+    "finding": "not_met",
+    "basis": [
+     "driver_statement",
+     "chat_logs[2026-09-17T08:52:00+08:00]"
+    ],
+    "reason": "Driver's own chat and statement give a personal reason (his child's school called) — a driver-initiated cancellation for another reason, not a rider no-show. NS-0 routes this to NS-3."
+   },
+   {
+    "element": "NS-1(i) driver arrived within 200 m of pickup (I'm Here / auto-arrival)",
+    "finding": "met",
+    "basis": [
+     "app_events[driver_arrived 08:46:10]",
+     "gps_telemetry"
+    ],
+    "reason": "Arrival event at 08:46:10 and GPS fix at 1.325034,103.92994 (~55 m from the Bedok Mall pickup point at 1.3249,103.9296) satisfy a 200 m radius."
+   },
+   {
+    "element": "NS-1(ii) 5-minute free wait elapsed before cancelling",
+    "finding": "undetermined",
+    "basis": [
+     "trip_data.cancellation_time"
+    ],
+    "reason": "Cancellation at 08:52:10 is 6 min 00 s after the 08:46:10 arrival but 6 min 10 s after the 08:46:00 sample; borderline against the 5-minute threshold and immaterial, because the contact and continuous-presence conditions fail regardless."
+   },
+   {
+    "element": "NS-1(iii) driver sent >=1 in-app message AND made >=1 in-app call before cancelling",
+    "finding": "not_met",
+    "basis": [
+     "chat_logs[2026-09-17T08:46:40+08:00]",
+     "call_records[2026-09-17T08:47:40+08:00]"
+    ],
+    "reason": "One chat message was sent, but the sole call was not answered (answered=false, 0.0 s) and there was no further call or message; the conjunctive 'message AND call' requirement is unmet."
+   },
+   {
+    "element": "NS-1(iv) driver remained at the pickup point throughout",
+    "finding": "not_met",
+    "basis": [
+     "driver_statement",
+     "chat_logs[2026-09-17T08:52:00+08:00]"
+    ],
+    "reason": "The driver left/was leaving to attend to his child ('I have to go now'), so he did not stay at the pickup point through the wait."
+   },
+   {
+    "element": "SURGE notice (SURGE-1) — not triggered",
+    "finding": "met",
+    "basis": [
+     "fare_breakdown.actual_fare.surge_multiplier"
+    ],
+    "reason": "Surge multiplier is 1.0 and actual fare 0.0; no surge change arose, so no notice obligation was triggered."
+   }
+  ],
   "rejected_claims": [
    {
     "id": "driver_statement",
-    "reason": "Claim that he pressed 'I'm Here' at the pickup and waited there is contradicted by the GPS trace: at 08:47:20 he was ~375 m from the pickup and remained at 1.40687, 103.89879 until cancellation — never inside the 200 m arrival radius. System records override the statement."
+    "reason": "The claim that the trip was a rider no-show is contradicted by the driver's own contemporaneous chat and narrative: he pressed I'm Here, waited, attempted one unanswered call, then cancelled because his child's school called — a personal reason. System records (chat timestamp 08:52:00 vs cancellation 08:52:10, unanswered call record, continuous stationary GPS at the pickup) override the no-show label."
+   },
+   {
+    "id": "trip_data.cancellation_reason",
+    "reason": "The app-selected reason 'rider_no_show' is the driver's claim; his own words in the chat and statement decide why he cancelled (NS-0), and they show a different reason."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 4.26,
- "input_tokens": 12467,
- "output_tokens": 939,
+ "latency_s": 9.94,
+ "input_tokens": 11142,
+ "output_tokens": 1711,
  "requests": 1,
  "llm_calls": 1
 }

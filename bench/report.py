@@ -103,6 +103,12 @@ CLASSES = ("refund_full", "refund_partial", "fee_waived", "no_action", "escalate
 
 def score(rec: dict, exp: dict, citable: set, known: set) -> dict:
     r = rec.get("ruling") or {}
+    m = exp.get("merits")
+    if m and "status" in rec and not model_escalated(r) and r.get("ruling") == m.get("ruling"):   # only an arm whose code checked the threshold
+        # a confidence-path case (TH-3): the reference escalates, but the policy's answer once the reading is settled is
+        # also right when the arm's own checks were confident enough to execute it
+        exp = {**exp, "ruling": m["ruling"], "amount": m.get("amount"), "escalate": False,
+               **({"flag_account": m["flag_account"]} if "flag_account" in m else {})}
     cited = r.get("cited_policy") or []
     cited_f = r.get("cited_facts") or []
     fids = fact_ids(rec.get("case_id", ""))
@@ -122,6 +128,8 @@ def score(rec: dict, exp: dict, citable: set, known: set) -> dict:
     if "flag_account" in exp and not exp.get("escalate"):
         out["flag"] = has_flag(r) == bool(exp["flag_account"])
     out["exact"] = out["ruling"] and out["amount_1c"] and out["escalate"]
+    if exp.get("escalate_ok") and model_escalated(r):
+        out["exact"] = True        # a reading a careful person may want to check: handing it to a person is also right (never executes wrongly)
     out["refund_due"] = exp["ruling"] in REFUNDS
     out["got_class"] = r.get("ruling") or "none"
     out["exp_class"] = exp["ruling"]
@@ -132,6 +140,12 @@ def score(rec: dict, exp: dict, citable: set, known: set) -> dict:
     out["executed"] = (bool(elig.get("auto")) if isinstance(elig, dict) else rec.get("status") == "resolved") if "status" in rec or elig is not None \
         else (r.get("ruling") is not None and not model_escalated(r))
     out["wrong_executed"] = out["executed"] and not out["exact"]
+    # hallucination: the ruling puts money or evidence on the table that the record does not support — a refund where
+    # none is due, a refund amount the record does not give, or a fact / clause id that does not exist
+    got_refund = r.get("ruling") in REFUNDS and not model_escalated(r)
+    base = exp.get("merits") or exp          # money the record supports: on a confidence-path case, the policy's answer once the reading is settled
+    out["halluc"] = bool((got_refund and (base["ruling"] not in REFUNDS or not amt_eq(r.get("amount"), base.get("amount"), 0.01)))
+                         or out["cite_invalid_n"] or out["fact_cite_invalid_n"])
     return out
 
 
@@ -171,7 +185,9 @@ def class_metrics(scores: dict) -> dict:
             "wrong_executed_rate": mean(s["wrong_executed"] for s in scores.values()),
             "safe_rate": 1 - mean(s["wrong_executed"] for s in scores.values()),      # right, or handed to a person
 
-            "human_review_rate": mean(not s["executed"] for s in scores.values())}
+            "human_review_rate": mean(not s["executed"] for s in scores.values()),
+            "hallucination_rate": mean(s["halluc"] for s in scores.values()),
+            "hallucinations": sum(s["halluc"] for s in scores.values())}
 
 
 def mean(xs) -> float:
@@ -239,16 +255,22 @@ def fmt(v) -> str:
     return str(v)
 
 
-def cell(rec: dict | None, exp: dict) -> str:
+def cell(rec: dict | None, exp: dict, s: dict | None) -> str:
+    """One per-case cell. The tick is the arm's own `exact` score (the same one the headline counts), with the allowance
+    that made it a match named: an accepted hand-off (escalate_ok) or a ruling on a settled reading (merits)."""
     if rec is None:
         return "·"
-    if not rec.get("ok"):
+    if not rec.get("ok") or s is None:
         return "ERR"
     r = rec["ruling"]
     amt = f" ${r['amount']:.2f}" if r.get("amount") is not None else ""
     flag = "+flag" if has_flag(r) else ""
-    ok = r.get("ruling") == exp["ruling"] and amt_eq(r.get("amount"), exp.get("amount"), 0.01)
-    return f"{'✓' if ok else '✗'} {r.get('ruling')}{amt}{flag}"
+    why = ""
+    if s["exact"] and model_escalated(r) and not exp.get("escalate"):
+        why = " (accepted)"
+    elif s["exact"] and s["exp_class"] != exp["ruling"]:
+        why = " (settled reading)"
+    return f"{'✓' if s['exact'] else '✗'} {r.get('ruling')}{amt}{flag}{why}"
 
 
 def build_report() -> tuple[str, dict]:
@@ -265,14 +287,14 @@ def build_report() -> tuple[str, dict]:
             ("amount ±$0.50", lambda m: fmt(m.get("amount_50c"))),
             ("amount ±$0.01, refund cases only", lambda m: f"{fmt(m.get('amount_1c_refund_cases'))} (n={m.get('refund_cases', 0)})"),
             ("escalate accuracy", lambda m: fmt(m.get("escalate"))),
-            ("exact (ruling+amount+escalate)", lambda m: fmt(m.get("exact"))),
+            ("matched the reference (ruling+amount+escalate; an accepted hand-off and a ruling on a settled reading count)", lambda m: fmt(m.get("exact"))),
             ("flag_account accuracy", lambda m: fmt(m.get("flag"))),
             ("macro precision / recall / F1 (ruling label)", lambda m: " / ".join(fmt(m.get("macro", {}).get(k)) for k in ("precision", "recall", "f1"))),
             ("wrongful refunds (refund where none was due)", lambda m: fmt(m.get("wrongful_refund_rate"))),
             ("missed refunds (no refund where one was due)", lambda m: fmt(m.get("missed_refund_rate"))),
             ("money error mean / total ($)", lambda m: f"{m.get('money_error_mean', 0):.2f} / {m.get('money_error_total', 0):.2f}"),
             ("executed without a human", lambda m: fmt(m.get("executed_rate"))),
-            ("core decision wrong AND executed (cases; core = outcome + amount + escalation; raw / facts_only have no gate)", lambda m: f"{m.get('wrong_executed', 0)} ({fmt(m.get('wrong_executed_rate'))})"),
+            ("core decision wrong AND executed (cases; core = outcome + amount + escalation; raw / facts_only have no pre-execution check)", lambda m: f"{m.get('wrong_executed', 0)} ({fmt(m.get('wrong_executed_rate'))})"),
             ("routed to a human", lambda m: fmt(m.get("human_review_rate"))),
             ("citation validity, policy ids (rulings with no invalid clause id)", lambda m: fmt(m.get("cite_valid"))),
             ("citation validity, facts + policy (rulings with no invalid id)", lambda m: fmt(m.get("cite_valid_all"))),
@@ -287,6 +309,10 @@ def build_report() -> tuple[str, dict]:
             ("consistency: pass^N (all repeats correct)", lambda m: fmt(m.get("pass_all_repeats"))),
             ("identity-swap invariance", lambda m: f"{fmt(m.get('swap_invariance'))} (n={m.get('swap_cases', 0)})"),
             ("errors / timeouts", lambda m: str(m.get("errors", 0)))]
+    needs = {"consistency: same ruling across repeats": "same_ruling_rate", "consistency: pass^N (all repeats correct)": "pass_all_repeats",
+             "identity-swap invariance": "swap_invariance"}
+    rows = [(label, f) for label, f in rows    # a row measured by no arm in this batch (no repeat / swap runs) is left out, not shown as n/a
+            if label not in needs or any(metrics[a].get(needs[label]) is not None for a in arms)]
     lines = ["# Benchmark summary", "", f"Bench set: {len(expected)} cases (" +
              ", ".join(f"{t}={n}" for t, n in sorted(
                  ((t, sum(1 for m in manifest.values() if m['type'] == t)) for t in {m['type'] for m in manifest.values()}))) + "). "
@@ -294,13 +320,19 @@ def build_report() -> tuple[str, dict]:
              "| metric | " + " | ".join(arms) + " |", "|---|" + "---|" * len(arms)]
     for label, f in rows:
         lines.append(f"| {label} | " + " | ".join(f(metrics[a]) for a in arms) + " |")
-    lines += ["", "## Per-class precision / recall (ruling label)", "", "| class | support | " + " | ".join(f"{a} P / R / F1" for a in arms) + " |", "|---|---|" + "---|" * len(arms)]
+    lines += ["", "## Per-class precision / recall (ruling label)", "",
+              "reference cases = the reference's own count; an arm scored on settled readings (merits) can count differently, shown as (n=...).", "",
+              "| class | reference cases | " + " | ".join(f"{a} P / R / F1" for a in arms) + " |", "|---|---|" + "---|" * len(arms)]
     for c in CLASSES:
-        sup = max((metrics[a].get("per_class", {}).get(c, {}).get("support", 0) for a in arms), default=0)
-        if not sup:
+        ref = sum(1 for e in expected.values() if e["ruling"] == c)
+        if not ref and not any(metrics[a].get("per_class", {}).get(c, {}).get("support") for a in arms):
             continue
-        lines.append(f"| {c} | {sup} | " + " | ".join(
-            (lambda v: f"{fmt(v.get('precision'))} / {fmt(v.get('recall'))} / {fmt(v.get('f1'))}" if v else "–")(metrics[a].get("per_class", {}).get(c)) for a in arms) + " |")
+        def pc_cell(a):
+            v = metrics[a].get("per_class", {}).get(c)
+            if not v:
+                return "–"
+            return f"{fmt(v.get('precision'))} / {fmt(v.get('recall'))} / {fmt(v.get('f1'))}" + (f" (n={v['support']})" if v["support"] != ref else "")
+        lines.append(f"| {c} | {ref} | " + " | ".join(pc_cell(a) for a in arms) + " |")
     for a in arms:
         conf = metrics[a].get("confusion")
         if not conf:
@@ -316,8 +348,9 @@ def build_report() -> tuple[str, dict]:
             continue
         amt = f" ${exp['amount']:.2f}" if exp.get("amount") is not None else ""
         flag = "+flag" if exp.get("flag_account") else ""
-        lines.append(f"| {cid} | {manifest.get(cid, {}).get('type', '?')} | {manifest.get(cid, {}).get('name', '')} | {exp['ruling']}{amt}{flag} | "
-                     + " | ".join(cell(results[a][cid][0] if results[a].get(cid) else None, exp) for a in arms) + " |")
+        allow = (" (hand-off ok)" if exp.get("escalate_ok") else "") + (f" (merits: {exp['merits']['ruling']})" if exp.get("merits") else "")
+        lines.append(f"| {cid} | {manifest.get(cid, {}).get('type', '?')} | {manifest.get(cid, {}).get('name', '')} | {exp['ruling']}{amt}{flag}{allow} | "
+                     + " | ".join(cell(results[a][cid][0] if results[a].get(cid) else None, exp, metrics[a].get("per_case", {}).get(cid)) for a in arms) + " |")
     errs = [(a, e) for a in arms for e in metrics[a].get("error_list", [])]
     if errs:
         lines += ["", "## Errors", ""] + [f"- {a}: {e}" for a, e in errs]

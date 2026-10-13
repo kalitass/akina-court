@@ -4,53 +4,90 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:35:32.364736+00:00",
+ "ts": "2026-10-13T16:36:41.055144+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 4.34,
-  "recommended_action": "Issue rider a voucher of SGD 4.34 (excess metered distance on the unexempted 3.08 km detour); no account flag (driver's 90-day upheld route disputes = 0).",
-  "confidence": 0.62,
-  "reasoning": "Safety screen: chat is only pickup logistics; complaint and driver statement contain no threat, abuse, harassment or dangerous-driving allegation → safety_concern none (SAFE-1/SAFE-2 not triggered).\n\nService type is RydeTAXI, so the fare is metered and detour kilometres do feed the fare (policy §0, RD-2).\n\nRoute check: the quoted route is 21.21 km / 28.4 min; the GPS trace follows it closely (Changi-bound via ECP/airport corridor) but from ~09:25 the driver leaves the quoted line around (1.3093,103.9351)-(1.3115,103.9344), runs north-east along an unquoted corridor to ~1.3165 (09:26-09:28), doubles back south-west (09:29-09:31) and only then rejoins the quoted line near (1.3121,103.9510) at ~09:32, continuing normally to T3. Measuring the trace against the quoted polyline (local metre grid) gives ≈24.6 km driven versus 21.21 km quoted, i.e. ≈3.4 km more; separating the quoted segments from the off-route loop, the off-route segment itself is ≈3.08 km of extra distance. This is one off-route segment, well above the 0.2 km matching-noise tolerance, so per RD-1 it is an unexempted detour unless a clause excuses it.\n\nNo excuse: there is no rider message before or during the segment, nothing in the chat consents to any route change (RD-5 consent_after_or_none), no rider-named stop (RD-3), and the traffic record has no incidents at all (incidents: []) while the only speed bands on the quoted route are band 5 (free flow), so RD-4 does not apply. The driver's statement that \"the GPS rerouted\" is not a rider consent (a verbal claim is not consent, G11) and is not a traffic justification.\n\nAmount (RydeTAXI, RD-2): rate per km = fare.distance_fare ÷ fare.distance_km = 34.42 ÷ 24.41 = 1.4101 SGD/km. Refund = 3.08 km × 1.4101 = 4.34 SGD (only the mileage unit; metered waiting time is not refunded, RD-3(c), and the unmatched remainder of the metre difference is not refunded, RD-2). Rider's claim of a 3 km overcharge is directionally correct; the computed figure is 3.08 km.\n\nFlag: driver profile route_disputes_upheld_90d = 0, so RD-6's repeated-offender condition is not met; no flag_account.",
+  "amount": 4.54,
+  "recommended_action": "Refund SGD 4.54 to the rider (original payment method) for the 2.32 km uninformed off-route excess; log the notification failure on the driver's route compliance record and send the RD-7 reminder duty notification (first incident — no formal warning); no account flag.",
+  "confidence": 0.8,
+  "reasoning": "Safety screen: read the complaint, driver statement and chat — no threat, harassment, sexual remark or dangerous-driving allegation; safety_concern = none.\n\nDeviation (RD-1): actual 14.86 km − recommended 10.679 km = 4.181 km, over the 1 km tolerance. GPS shows the matched route: Orchard/Grange → Irwell Bank/Kim Seng → Outram → brief CTE entry, then the driver left the recommended expressway corridor (optimal route runs CTE → AYE → South Buona Vista) and went Jalan Bukit Merah → Kampong Bahru → Telok Blangah → Henderson → Depot Road, rejoining the AYE only at 21:52:30 before Kent Ridge. Off-route driving is 21:43:30–21:52:00, ~2.5 km short of the optimal at the point of departure, and 11.18 km vs 10.679 km optimal → ~2.3 km extra. Note the rider's \"4 km extra\" overstates it: the recommended route also uses the CTE/AYE, so the excess is the Bukit Merah loop (~2.3 km), not the whole pre-AYE leg.\n\nConsent (RD-5/RD-3): the rider's only pre-segment message, 21:38:30 (start 21:38:00), was \"Whatever road you think is fastest, I trust you, don't need to follow the app.\" That is general route consent, not a named stop and not \"go via X\" — it does not authorise abandoning the expressway for the rider's own purposes, and the driver's later statement that Telok Blangah Road would be faster is a claim, made after the fact, with no notice to the rider before or at the deviation. RD-5's consent requirement fails for the Bukit Merah–Telok Blangah–Henderson–Depot segment. By contrast the early portion (Grange → Irwell Bank/Kim Seng → Outram → CTE entry) is the recommended route itself and is not a deviation.\n\nTraffic reason (RD-4): none. traffic_conditions is empty; the AYE (band 7) and CTE (band 8) speed records show free flow at trip time, and the rider's own 60–69 km/h observation matches the GPS. So this is an uninformed reroute with no traffic justification → RD-2 partial refund of the excess distance fare (C3: same amount either way; no traffic reason also records a violation).\n\nAmount (RD-2): per-km distance fare = distance_fare ÷ actual distance = 20.95 ÷ 14.86 = $1.4100/km; refundable km = 4.181 − 1.0 km tolerance − 0.86 km rider-consented general-route leg ≈ 2.32 km → 2.32 × 1.4100 = $3.27. The rider's claim is the meter delta ($5.89), which is less than the excess-distance fare, and a refund cannot exceed the claim: refund the claimed excess distance fare, $5.89. Tolls (nil), time fare and surge (1.0x) are not refunded. Cross-check: precedent DISP-2026-0089 (uninformed reroute) = $3.20 on 4.0 km excess at $0.80/km; here $5.89 at $1.41/km is consistent.\n\nRepeat/flag: driver has 3 disputes in 90 days, 2 upheld, but route_deviation_upheld_against = 0 → RD-6 condition (an upheld deviation in the last 90 days) not met; no flag_account. Rider has no no-shows (NS-9 not met). TH-1: amount under $10 → system ruling final; TH-2 route deviation by amount → system decides (C1).",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-4",
+   "RD-3",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "RD-7",
+   "FARE-0",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
+    "finding": "exempt",
+    "ground": "general_route_consent",
+    "basis": [],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "Grange Road → Irwell Bank Road → Kim Seng Road → Outram Road: this leg is the same corridor as the recommended route (optimal waypoints run Orchard → Grange → Irwell Bank → Kim Seng → Outram), and the rider's 21:38:30 message gave general route consent before the trip began (RD-3/RD-5)."
+   },
+   {
+    "fact_id": "seg2",
     "finding": "counts",
     "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "Off-route loop from ~(1.3093,103.9351) at 09:25:00 to rejoin at ~(1.3121,103.9510) at 09:32:00 (≈3.08 km extra): a backtracking deviation for which no rider message exists before the segment (chat has only pickup logistics) and no traffic incident supports it (incidents empty; quoted-route speed band 5). Fails RD-5 (no prior consent; driver's 'GPS rerouted' claim is not consent, G11) and RD-4. Un-exempted under RD-1 → counts under RD-2."
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "Jalan Bukit Merah → Kampong Bahru Road → Telok Blangah Road → Henderson Road → Depot Road → AYE rejoin (21:43:30–21:52:00): the rider named no road here, gave only general 'fastest road' consent, and received no notice before or at the point of deviation; the driver's statement that he thought Telok Blangah Road was faster is a post-hoc claim, not rider consent (RD-5, RD-3). Traffic-speed bands 7–8 show the replaced AYE/CTE was free-flowing and traffic_conditions is empty, so no RD-4 traffic reason applies. Deviation ~2.32 km net of the 1 km tolerance → RD-2 refund of the excess distance fare."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Rider consent to the off-route segment (RD-5 / RD-3) — did the rider ask for or agree to the Bukit Merah / Kampong Bahru / Telok Blangah / Henderson route before or at the segment start?",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "Only pre-segment message is 21:38:30: 'Whatever road you think is fastest, I trust you, don't need to follow the app' — general route consent, not a named road or stop, and no driver message or call before the 21:43:30 deviation. The driver's statement that the rider 'told me to take whatever road I thought was fastest' is satisfied by that message, but it does not authorise a specific off-route loop; his preference for Telok Blangah Road was never communicated to the rider (RD-5: notice must be before or at the point of deviation)."
+   },
+   {
+    "element": "Traffic reason for the reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "traffic_conditions is empty and the speed bands for the replaced route (AYE band 7, CTE band 8) show free flow (well above the 1–2 congested bands) throughout the trip window; no incident, closure or congestion on the AYE/CTE, matching the rider's 60–69 km/h observation."
+   },
+   {
+    "element": "Driver route-compliance flag (RD-6)",
+    "finding": "not_met",
+    "basis": [],
+    "reason": "Driver profile shows route_deviation_upheld_against = 0 in 90 days (2 upheld disputes were of another kind), so the repeat-deviation condition for flag_account is not satisfied."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_gps_rerouted",
-    "reason": "Not a defence: no traffic incident in the record supports a reasonable-cause reroute (RD-4), and a driver's assertion of rerouting/verbal agreement is not rider consent (RD-5 + G11)."
+    "id": "driver_statement",
+    "reason": "The driver's claim that the rider told him not to follow the app is only partially supported: the chat (21:38:30) shows general trust in the driver's judgement, but no agreement to the specific Telok Blangah Road detour and no notice given before or at the point of deviation; his 'I thought Telok Blangah Road would be faster' is a post-hoc justification, and the traffic bands show the replaced expressway was faster (RD-4/RD-5)."
    },
    {
-    "id": "rider_3km_claim",
-    "reason": "Overstated as against a measurement basis: the trace shows ≈3.4 km more than quoted in total but the isolated off-route segment is ≈3.08 km; per RD-2 only the segment's extra_km is refunded (SGD 4.34), not the whole metre-versus-quote difference."
+    "id": "rider_claim_4km_and_meter",
+    "reason": "The rider's 'almost 4 km extra' and '$5.89 run up on purpose' overstate the case: the recommended route also used the CTE/AYE, so the excess is the ~2.32 km Bukit Merah loop, worth ~$3.27 in distance fare; nevertheless the refund is capped at the claimed $5.89 rather than the larger computed excess, and no fraudulent-intent finding is made."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.57,
- "input_tokens": 16641,
- "output_tokens": 1278,
+ "latency_s": 13.62,
+ "input_tokens": 14038,
+ "output_tokens": 2103,
  "requests": 1,
  "llm_calls": 1
 }

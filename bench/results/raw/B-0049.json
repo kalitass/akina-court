@@ -4,69 +4,60 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:17.751200+00:00",
+ "ts": "2026-10-13T15:36:05.505664+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 3.99,
-  "recommended_action": "Refund S$3.99 (unexempt detour 2.83 km × S$1.4101/km metered distance rate) to the rider as Ryde voucher; issue no account flag; remind driver of the RD-1 shortest-route obligation. \"+ flag_account\" not applicable (driver route_disputes_upheld_90d = 0).",
-  "confidence": 0.66,
-  "reasoning": "Safety screen: chat contains only a pickup arrangement (red jacket at the kerb); complaint and driver statement contain no threat, abuse, sexual remark or dangerous-driving allegation. safety_concern = none.\n\nService type is RydeTAXI (metered fare), so a detour's extra distance feeds directly into the fare (RD-2 metered branch). Rate per km = distance_fare ÷ distance_km = 18.5 ÷ 13.12 = S$1.4101/km (base_fare is quoted separately and the mode is metered, so base × 10.679 = S$41.65 is not the plausible reading).\n\nRoute/segment reconstruction (segments measured as gaps between successive quoted-route vertices; the polyline has a small duplicated loop near the start, cleaned before measuring): the driven path runs up to Orchard/Scotts and then heads south-east along the AYE corridor, whereas the quoted 10.679 km route runs along Holland Road/Bukit Timah; the two rejoin in the Kent Ridge area. GPS traces the off-route corridor continuously (09:43:30 Orchard → 10:00:00 AYE at 1.2901,103.7915), so no GPS gap.\n\nOff-route segments identified (RD-1): SEG-A Orchard→Holland Rd junction 0.87 km; SEG-B AYE corridor (incl. Eng Neo/AYE loop) 3.50 km + 0.37 km + 1.84 km = 5.71 km; SEG-C Kent Ridge loop/backtrack 1.67 km; SEG-D short rejoins/loop at the South Buona Vista end 0.27 km + 0.23 km + 0.15 km = 0.65 km; plus the 0.44 km over-run past the dropoff (South Buona Vista beyond Kent Ridge) = 9.34 km of non-shortest driving. Extra distance at the end: driven 13.12 km (meters, = 9.34 + 3.78 km overlap on the shared Kent Ridge Road corridor — the numbers reconcile exactly) vs quoted 10.679 km → 2.44 km excess (matches the rider's \"app 11 km → meter 13 km\"). RD-2 refunds only extra_km, not the whole off-route length: the meter charges once for the corridor and once more for the excess, so the overcharge is the excess = 2.44 km × 1.4101 = S$3.44. Measured point-to-point the same figure is 2.83 km → S$3.99. I award the larger of the two measurements, S$3.99, which stays within the meter's own distance fare against the quoted distance (18.5 ÷ 1.4101 = 13.12 km vs 10.679 km → 2.44 km; the S$0.55 difference is the GPS/route geometry, a data-layer residual not attributable to the driver).\n\nRD-4: no traffic incidents; the two speed bands are band 4 (free-flowing), not band 1/2, and only one of the two fall on the optimal route (Holland Rd is not covered at all) — no exemption. RD-3: the rider's only message is a pickup arrangement, not a stop or a place named en route — no exemption. RD-5: the driver claims the GPS rerouted him, which per the rules is not the rider's consent; there is no rider message before or after the segments agreeing to any route — ground consent_after_or_none, both segments count. RD-6: the ruling is against the driver (refund > 0) but driver profile route_disputes_upheld_90d = 0, so no flag_account. No ride-time waiting fee was charged (waiting_fee 0.00), so RD-3(c) and NS-6 are not in issue; the fare contains no unpublished add-ons (FARE-1 not triggered; no tolls field).",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Escalate to Ryde Trust & Safety for human review of the dangerous-driving allegation; prepare the case file (complaint, driver statement, GPS telemetry, traffic bands, profiles) and consider interim suspension under SAFE-4 pending review.",
+  "confidence": 0.95,
+  "reasoning": "The dispute as filed is a safety incident. The rider's complaint alleges speeding, hard braking throughout the trip and overtaking on the shoulder, and states \"I was scared and felt unsafe.\" That is a dangerous-driving / feeling-unsafe allegation squarely within SAFE-1 and SAFE-2. Under SAFE-1/SAFE-2 the case must be routed to a human reviewer regardless of the dispute type, and under SAFE-3 the AI may only gather evidence, summarise accounts and prepare the case file — it may not rule, assign fault or recommend an outcome on the merits.\n\nThe record is consistent on its face and needs no further computation for the screening step: the trip ran 09:43:00–09:51:15 over the 8.432 km recommended route with actual distance equal to recommended distance (no route-deviation issue), and the thinned GPS shows repeated high-speed samples on the Ayer Rajah Expressway (e.g. 98.0 km/h at 09:46:15, 97.9 km/h at 09:47:15, 95.9 km/h at 09:48:15) separated by drops to 25.0 km/h one sample earlier — a pattern at least capable of corroborating the rider's account of speeding and abrupt braking, which a human reviewer should weigh. The driver's statement (\"I drove normally\") is a denial, not a rebuttal of the allegation. No fare, deviation or no-show element is in dispute (fare $20.85, surge 1.0x, no cancellation fee). No remedy amount is computed here because SAFE-3 bars the AI from ruling on a safety case.\n\nSafety was screened by reading the complaint, the driver's statement and both chat messages: nothing in the chat or driver statement is itself threatening or harassing, but the rider's allegation of dangerous driving and feeling unsafe is the trigger. Basis: SAFE-1 (safety screen), SAFE-2 (dangerous driving), SAFE-3 (AI limits), SAFE-4 (interim measures available to the human reviewer). Evidence is sufficient for the escalation decision; no outcome-relevant record is missing for that purpose (GPS present, statement present, complaint present).",
   "cited_facts": [],
   "cited_policy": [
-   "RD-1",
-   "RD-2",
-   "RD-3",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1"
+   "SAFE-1",
+   "SAFE-2",
+   "SAFE-3",
+   "SAFE-4"
   ],
-  "escalate": false,
-  "escalation_reason": null,
-  "segment_findings": [
+  "escalate": true,
+  "escalation_reason": "Dispute type is safety_incident and the record contains a dangerous-driving allegation plus a statement that the rider felt unsafe (SAFE-1 / SAFE-2). Per SAFE-3 the AI cannot rule on fault or recommend an outcome; the case file is prepared for human review, which may consider interim suspension under SAFE-4.",
+  "segment_findings": [],
+  "element_findings": [
    {
-    "fact_id": "seg1",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "element": "Safety screen — dangerous-driving allegation / rider felt unsafe (SAFE-1, SAFE-2)",
+    "finding": "met",
     "basis": [],
-    "reason": "SEG-A Orchard/Scotts→Holland Road off-route segment (0.87 km) at 09:43:30–09:45:30. The only chat message is the rider's pickup arrangement; there is no rider message before this segment agreeing to a route or stop, and the driver's claim that 'the GPS rerouted me' is not rider consent (RD-5). No incident evidence (RD-4) and no rider-named stop (RD-3), so the segment is unexempt. Its length is charged by the meter only insofar as it is excess over the quoted 10.679 km route, refunded under RD-2."
+    "reason": "The complaint describes speeding and hard braking throughout, overtaking on the shoulder, and states the rider was scared and felt unsafe. This is a dangerous-driving / feeling-unsafe allegation, which requires escalation regardless of dispute type."
    },
    {
-    "fact_id": "seg2",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "element": "Driver's account as explanation of the events",
+    "finding": "undetermined",
     "basis": [],
-    "reason": "SEG-B AYE corridor detour (3.50 km + 0.37 km + 1.84 km = 5.71 km), driven 09:46:00–10:01:30 (Eng Neo/AYE loop then across to Kent Ridge). Not on the quoted route; the speed band on AYE is band 4 (free-flowing, RD-4(b) requires band 1–2 and only corroborates) and there are no incidents, so no reasonable-cause exemption; no rider message asked for any stop or road (RD-3/RD-5). Unexempt, subject to the excess-only refund under RD-2."
-   },
-   {
-    "fact_id": "seg3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
-    "basis": [],
-    "reason": "SEG-C Kent Ridge Road loop/backtrack (1.67 km), 10:01:30–10:02:30, and the residual rejoin/loop pieces at the South Buona Vista end (0.27 + 0.23 + 0.15 = 0.65 km), plus the 0.44 km over-run past the dropoff towards South Buona Vista. The vehicle passes Kent Ridge Road, drives south of the optimal junction and returns — a loop with no rider message asking for it (RD-5 consent_after_or_none) and no RD-4 incident. Unexempt; per RD-2 only the excess over the quoted route is refundable."
+    "reason": "The driver statement ('I drove normally; rider was on the phone and never complained') is a bare denial and does not resolve the allegation; fault determination is reserved to the human reviewer under SAFE-3."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_gps_reroute",
-    "reason": "Facts are against the system record: RD-5 consent must be the rider's own message before the detour; the driver's own account of a GPS reroute is not rider consent (G11), and no traffic fact (incident or band 1/2) supports a reasonable-cause exemption under RD-4. The high-speed continuous GPS through the AYE corridor (38–44 km/h) is inconsistent with congestion."
-   },
-   {
-    "id": "rider_full_11_to_13_km",
-    "reason": "The rider asks for the full 'extra distance' by the meter's 13 km reading; RD-2 refunds only the unexempt segments' excess over the shortest route (2.44 km by the meter's own figures), not every metre driven off the quoted polyline, and the corridor is unavoidably traversed once in any event."
+    "id": "driver_statement_no_complaint",
+    "reason": "A passenger not complaining during the trip does not rebut a dangerous-driving allegation; fault is for the human reviewer under SAFE-3, not for this ruling."
    }
   ],
   "flag_account": false,
-  "safety_concern": "none",
-  "safety_basis": [],
+  "goodwill_credit": null,
+  "safety_concern": "confirmed",
+  "safety_basis": [
+   "Rider complaint: driver speeding, hard braking the whole way, overtaking on the shoulder",
+   "Rider complaint: 'I was scared and felt unsafe'",
+   "GPS telemetry shows repeated very high speeds on Ayer Rajah Expressway (98.0, 97.9, 95.9 km/h) interspersed with 25.0 km/h samples",
+   "Driver statement contains a denial only and does not address the allegation"
+  ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 10.02,
- "input_tokens": 15501,
- "output_tokens": 1980,
+ "latency_s": 7.48,
+ "input_tokens": 11608,
+ "output_tokens": 1248,
  "requests": 1,
  "llm_calls": 1
 }

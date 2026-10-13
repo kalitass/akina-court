@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:39:42.569105+00:00",
+ "ts": "2026-10-13T15:50:19.495718+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "escalate",
-  "amount": null,
-  "recommended_action": "Route to Ryde human trust & safety review of the dangerous-driving allegation; log the rider complaint, driver statement and trip record; advise rider of the RydeHELP report path and that 995 / commercial-insurance medical-claim channels apply if injured. Do not auto-adjudicate any fare item.",
-  "confidence": 0.95,
-  "reasoning": "Safety screen: the rider's complaint alleges speeding, hard braking all the way and overtaking on the shoulder — a dangerous-driving allegation, and the dispute type is itself \"safety\". Under SAFE-2 this case is not automatically adjudicated; the ruling is escalate with a factual summary for a human reviewer [F6]. The same applies under SAFE-1 to the extent the record contains a hostile/unsafe-riding claim worth a human look; no threatening, harassing or sexual language appears in the chat, which is two message(s), all timestamped [F3][F4][F5].\n\nThe measurable record is otherwise benign: the actual route was 8.3 km against an 8.4 km optimal route (-0.1 km, -1%) [F1] and the trip took 12.7 min against an estimated 13.8 min [F2] — so no route-deviation (RD-1/RD-2) issue is opened, and the driver's statement that he drove normally is contradicted only by the rider's unmeasured driving-conduct allegation, which is not something a system record can resolve [F6]. No fare item is disputed (no cancellation fee, waiting fee or extra charge in the facts), so no NS/FARE clause applies; profiles are never decisive on their own and both parties show clean 90-day records with 0 upheld disputes [F7][F8], so RD-6 flagging is not triggered. Evidence status is sufficient for the safety-screening outcome, but the safety allegation itself is not resolvable from the record, so it goes to a human.",
+  "ruling": "refund_full",
+  "amount": 5.0,
+  "recommended_action": "Void the $5.00 no-show fee and refund the rider to the original payment method; no driver flag (no fraud, no repeat), but note the arrival-point mismatch (150 m, Gate B) in the driver's compliance log.",
+  "confidence": 0.86,
+  "reasoning": "Safety screen: the chat [F10–F15], the complaint and the driver statement [F16] contain no threat, harassment, sexual remark, dangerous-driving or accident allegation; the dispute is a fee dispute only → safety_concern none.\n\nNS-0: the driver cancelled and picked \"rider_no_show\", so NS-1/NS-2 apply (the app reason is his claim; his own chat/statement confirm he cancelled for no-show, so no NS-3).\n\nNS-1 conditions: (i) arrival — driver tapped \"I'm Here\" at 21:26:00 [F6][F7] but was 150 m from the pickup point at that moment [F7], within the 200 m radius, so this holds; (ii) wait — arrival 21:26:00, cancellation 21:32:00, 6 min 0 s elapsed [F4][F6], past the 5-minute free wait (the later-of scheduled/arrival is 21:26:00); (iii) contact — 3 in-app messages (first 21:26:30) and 1 in-app call (21:27:30, unanswered) before cancelling [F5][F15], satisfying §2.3; (iv) continuous presence — stationary 6 min 0 s at a point 150 m from pickup, and within 200 m for 6 min 0 s after the tap [F2][F3][F7], no GPS gap.\n\nHowever, all four NS-1 sub-conditions cannot make the fee \"stand\" unless the driver's waited position is the designated pickup point — instead the record shows he parked at Gate B while the pickup point was Gate A [F7][F10][F11][F12]; the rider asked him to come to Gate A (\"I'm at Gate A, can you come here?\" [F11]) and the driver refused (\"Cannot stop at Gate A, double yellow line, please come to Gate B\" [F12]), so the waiting was not performed \"at the pick-up location according to GPS data\" (A3, NS-1). The rider was at the correct pickup point [F11]; the driver stopped 150 m away at a different gate [F3][F7]. NS-2 therefore applies: any NS-1 condition failing → refund_full of the $5.00 charged [F8]. Amount = $5.00 (NS-1/§2.2 fee). No NS-2 flag: the driver did not mark arrival while away from the pickup point — 150 m is inside the 200 m tolerance [F2][F7] — so this is a pickup-point placement failure, not a fraudulent arrival mark. No repeat/no-show flags on either profile [F20][F21], so no NS-9 / RD-6 add-on; no NS-8 goodwill credit (the driver did arrive and did attempt contact).",
   "cited_facts": [
    "F1",
    "F2",
@@ -21,40 +21,86 @@
    "F5",
    "F6",
    "F7",
-   "F8"
+   "F8",
+   "F10",
+   "F11",
+   "F12",
+   "F13",
+   "F14",
+   "F15",
+   "F16",
+   "F20",
+   "F21"
   ],
   "cited_policy": [
-   "SAFE-2"
+   "NS-0",
+   "NS-1",
+   "NS-2"
   ],
-  "escalate": true,
-  "escalation_reason": "SAFE-2: the case involves a dangerous-driving allegation (speeding, hard braking, shoulder overtaking) and is filed as a safety dispute, so no automatic ruling is issued; factual summary forwarded to Ryde human review with 995 / driver commercial insurance / RydeHELP reporting guidance.",
+  "escalate": false,
+  "escalation_reason": null,
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "F6",
-    "reason": "Driver's statement 'I drove normally; the rider never complained' conflicts with the rider's safety allegation; a statement is not a system record and cannot resolve an alleged driving-conduct safety issue — left to human review rather than used to dismiss the complaint."
+    "element": "Driver arrived at pickup point (\"I'm Here\" + GPS at pickup, NS-1(i)/A3)",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F10",
+     "F11",
+     "F12"
+    ],
+    "reason": "Tap at 21:26:00 was 150 m from the pickup point at Gate B while the rider waited at Gate A; the rider asked him to come to Gate A and he refused, so the wait was not performed at the pickup location."
    },
    {
-    "id": "F7",
-    "reason": "Rider profile (long tenure, 4.6 rating, 0 prior disputes) cannot decide the case on its own and does not rebut the safety allegation."
+    "element": "5-minute free wait passed (later of scheduled pickup and arrival)",
+    "finding": "met",
+    "basis": [
+     "F4",
+     "F6"
+    ],
+    "reason": "Arrival recorded 21:26:00, cancellation 21:32:00 — 6 min 0 s, beyond the 5-minute free wait from the later of the two."
    },
    {
-    "id": "F8",
-    "reason": "Driver profile (4.85 rating, 963 trips, 0 upheld disputes) cannot decide the case on its own; it also does not trigger RD-6 flagging because it shows no prior upheld dispute."
+    "element": "Driver sent >=1 in-app message AND >=1 in-app call before cancelling (NS-1(iii))",
+    "finding": "met",
+    "basis": [
+     "F5",
+     "F15"
+    ],
+    "reason": "3 in-app messages (first 21:26:30) and 1 in-app call (first 21:27:30, unanswered) before the 21:32:00 cancellation."
+   },
+   {
+    "element": "Driver stayed at pickup point throughout (NS-1(iv))",
+    "finding": "met",
+    "basis": [
+     "F2",
+     "F3"
+    ],
+    "reason": "Stationary 21:26:00–21:32:00 (6 min 0 s) 150 m from pickup, within 200 m for the whole 7-minute window; no GPS gap."
+   },
+   {
+    "element": "Reason the driver cancelled (NS-0)",
+    "finding": "met",
+    "basis": [
+     "F4",
+     "F13",
+     "F16"
+    ],
+    "reason": "App reason rider_no_show and driver's own chat/statement confirm he cancelled over the no-show after waiting — NS-1/NS-2 route, not NS-3."
    }
   ],
+  "rejected_claims": [],
   "flag_account": false,
-  "safety_concern": "suspected",
-  "safety_basis": [
-   "Rider complaint alleges speeding, hard braking throughout and overtaking on the shoulder (dangerous driving)",
-   "Dispute type filed as safety; rider states she was scared and felt unsafe"
-  ],
+  "goodwill_credit": null,
+  "safety_concern": "none",
+  "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": "No telematics/vehicle data (speed, harsh-braking, lane position) in the record to test the dangerous-driving allegation; the riding-conduct claim rests on the rider's statement and is left to the human reviewer."
+  "evidence_gap": null
  },
- "latency_s": 4.82,
- "input_tokens": 9965,
- "output_tokens": 1008,
+ "latency_s": 8.2,
+ "input_tokens": 7849,
+ "output_tokens": 1399,
  "requests": 1,
  "llm_calls": 1
 }

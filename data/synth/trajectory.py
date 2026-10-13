@@ -35,8 +35,26 @@ class Congestion:
     speed_kmh: float
 
 
+def profile_time_s(profile, d_a: float, d_b: float) -> float:
+    """Seconds to drive metres d_a..d_b of a polyline at the profile's speeds ([(from_m, to_m, kmh)], contiguous)."""
+    t = 0.0
+    for lo, hi, kmh in profile:
+        a, b = max(lo, d_a), min(hi, d_b)
+        if b > a:
+            t += (b - a) / (kmh / 3.6)
+    return t
+
+
+def _profile_kmh(profile, d: float) -> float:
+    i = bisect.bisect_right([p[0] for p in profile], d) - 1
+    return profile[max(0, min(i, len(profile) - 1))][2]
+
+
 def build_trajectory(polyline, start: datetime, total_s: int, stops=(), congestion=(), step_s: int = 5,
-                     seed: int = 0) -> list[dict]:
+                     seed: int = 0, profile=None, end_at_rest: bool = True) -> list[dict]:
+    """`profile` = [(from_m, to_m, kmh)] along the polyline: each leg's speeds follow it (road class), scaled to the
+    leg's time budget; None = one cruising speed per leg (the demo cases). `end_at_rest=False` keeps the real speed on
+    the last sample (a car still moving when the record ends)."""
     pts = [tuple(p) for p in polyline]
     cum = [0.0]
     for a, b in zip(pts, pts[1:]):
@@ -54,7 +72,7 @@ def build_trajectory(polyline, start: datetime, total_s: int, stops=(), congesti
     samples = [(0, pts[0])]  # (offset_s, (lat, lon))
     for d_a, d_b, t_a, t_b, st in legs:
         if d_b - d_a > 0.5:
-            samples.extend(_drive(pts, cum, d_a, d_b, t_a, t_b, congestion, step_s))
+            samples.extend(_drive(pts, cum, d_a, d_b, t_a, t_b, congestion, step_s, profile))
             if st is not None:
                 samples.pop()  # the arrival tick is re-emitted by _rest (so it gets the stop's jitter/anchor rule)
         elif t_b > t_a:  # nothing to drive but time to burn (only if a stop was placed at the start)
@@ -69,11 +87,12 @@ def build_trajectory(polyline, start: datetime, total_s: int, stops=(), congesti
         out.append({"ts": (start + timedelta(seconds=off)).isoformat(), "lat": lat, "lon": lon,
                     "speed_kmh": round(speed, 1)})
         prev = (lat, lon)
-    out[-1]["speed_kmh"] = 0.0  # arrived / cancelled: the vehicle is at rest at the last sample
+    if end_at_rest:
+        out[-1]["speed_kmh"] = 0.0  # arrived / cancelled: the vehicle is at rest at the last sample
     return out
 
 
-def _drive(pts, cum, d_a, d_b, t_a, t_b, congestion, step_s):
+def _drive(pts, cum, d_a, d_b, t_a, t_b, congestion, step_s, profile=None):
     n = round((t_b - t_a) / step_s)
     if n <= 0:
         raise ValueError(f"leg {d_a:.0f}->{d_b:.0f} m gets no time ({t_a}..{t_b} s)")
@@ -88,12 +107,17 @@ def _drive(pts, cum, d_a, d_b, t_a, t_b, congestion, step_s):
     if free_t <= 0 or (d_b - d_a - zone_len) < 0:
         raise ValueError(f"congestion does not fit in leg {d_a:.0f}->{d_b:.0f} m / {n * step_s} s")
     v_base = (d_b - d_a - zone_len) / free_t
+    if profile:
+        # time the profile needs outside the zones; its speeds are scaled so the leg fits its budget
+        prof_t = profile_time_s(profile, d_a, d_b) - sum(profile_time_s(profile, lo, hi) for lo, hi, _ in zones)
+        scale = prof_t / free_t if free_t > 0 else 1.0
 
     steps, d = [], d_a
     for i in range(n):
         t = t_a + i * step_s
         zone = next((z for z in zones if z[0] <= d < z[1]), None)
-        v = zone[2] if zone else v_base * (1 + 0.12 * math.sin(2 * math.pi * t / 90))
+        wobble = 1 + (0.08 if profile else 0.12) * math.sin(2 * math.pi * t / 90)
+        v = zone[2] if zone else (_profile_kmh(profile, d) / 3.6 * scale if profile else v_base) * wobble
         steps.append([v * step_s, zone is None])
         d += v * step_s
     resid = (d_b - d_a) - sum(s[0] for s in steps)

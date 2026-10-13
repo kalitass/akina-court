@@ -91,11 +91,19 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
     ['weather', 'Weather', 'External record', ''],
     ['profile', 'Rider and driver history', 'Platform record · supports a flag, never decides', '']
   ];
-  var TYPE = { route_deviation: 'Route deviation', no_show: 'No-show fee', safety: 'Safety' };
+  var TYPE = { route_deviation: 'Route deviation', no_show: 'No-show fee', fare_dispute: 'Surge pricing', safety: 'Safety' };
   var sel = document.getElementById('case'), out = document.getElementById('out');
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var q = new URLSearchParams(location.search), want = q.get('case') || 'DISP-002', CASES = {};
-  fetch('/api/cases').then(function (r) { return r.json(); }).then(function (list) {
+  // a run id like C-0005~grace_179 is a counterfactual: the case itself is transformed, so its facts differ and are shown as
+  // such. Any other suffix (C-0001~fake_fact, a fault injected into an agent) leaves the case untouched: show the original.
+  var base = want.split('~')[0], suffix = want.indexOf('~') > 0 ? want.slice(want.indexOf('~') + 1) : '';
+  function short(d) { return String(d || '').split(' — ')[0].replace(/^[a-z-]+: /, ''); }
+  Promise.all([
+    fetch('/api/cases').then(function (r) { return r.json(); }),
+    suffix ? fetch('/api/demo-controls').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }) : Promise.resolve({})
+  ]).then(function (got) {
+    var list = got[0], cf = (got[1] && got[1].counterfactual) || {};
     var groups = { sample: "Organisers' sample", demo: 'Demo cases', benchmark: 'Benchmark' }, order = ['sample', 'demo', 'benchmark'];
     order.forEach(function (g) {
       var items = list.filter(function (c) { return c.group === g; });
@@ -104,19 +112,28 @@ footer .links{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px;font-weight
       items.forEach(function (c) { CASES[c.case_id] = c; var o = document.createElement('option'); o.value = c.case_id; o.textContent = c.case_id + ' · ' + (c.title || (TYPE[c.type] || c.type) + ' · ' + c.pickup + ' → ' + c.dropoff); og.appendChild(o); });
       sel.appendChild(og);
     });
+    if (suffix && CASES[base] && cf[suffix]) {
+      CASES[want] = Object.assign({}, CASES[base], {variant: cf[suffix], base: base, cf: suffix});
+      var og = document.createElement('optgroup'), o = document.createElement('option'); og.label = 'Counterfactual run';
+      o.value = want; o.textContent = base + ' · counterfactual: ' + short(cf[suffix]); og.appendChild(o); sel.insertBefore(og, sel.firstChild);
+    } else if (suffix) { want = base; history.replaceState(null, '', '?case=' + encodeURIComponent(want) + location.hash); }
     if (!CASES[want]) want = list[0] && list[0].case_id;
     sel.value = want; load(want);
   }).catch(function () { out.innerHTML = '<p class="err">Could not load the case list.</p>'; });
   sel.onchange = function () { var id = sel.value; history.replaceState(null, '', '?case=' + encodeURIComponent(id)); load(id); };
   function load(id) {
-    document.getElementById('watchCase').href = '/replay.html?case=' + encodeURIComponent(id) + '&phase=court';
+    var v = CASES[id] || {};
+    document.getElementById('watchCase').href = v.variant ? '/replay.html?case=' + encodeURIComponent(v.base) + '&cf=' + encodeURIComponent(v.cf) + '&phase=court'
+      : '/replay.html?case=' + encodeURIComponent(id) + '&phase=court';
     out.innerHTML = '<p class="blurb">Computing the fact table…</p>';
     fetch('/api/cases/' + encodeURIComponent(id) + '/facts').then(function (r) { return r.json(); }).then(function (t) {
       var c = CASES[id] || {};
       document.getElementById('casebox').hidden = false;
       document.getElementById('ctype').textContent = (TYPE[t.dispute_type] || t.dispute_type) + ' · ' + id + (c.service_type ? ' · ' + c.service_type : '');
-      document.getElementById('ctitle').textContent = (c.title || (c.pickup + ' → ' + c.dropoff));
-      document.getElementById('cstmt').innerHTML = c.statement ? 'Filed by the ' + esc(c.filed_by) + ': <q>' + esc(c.statement) + '</q>' : '';
+      document.getElementById('ctitle').textContent = c.variant ? c.base + ' · counterfactual: ' + short(c.variant) : (c.title || (c.pickup + ' → ' + c.dropoff));
+      document.getElementById('cstmt').innerHTML = (c.variant ? '<b>Counterfactual run.</b> The case was changed on purpose (' + esc(short(c.variant)) + '), and the facts below are computed from the changed case. <a id="orig">See the original ' + esc(c.base) + '</a>.<br>' : '')
+        + (c.statement ? 'Filed by the ' + esc(c.filed_by) + ': <q>' + esc(c.statement) + '</q>' : '');
+      if (c.variant) document.getElementById('orig').href = '?case=' + encodeURIComponent(c.base);
       document.getElementById('count').textContent = t.facts.length + ' facts · assembled from the case record, identical for unchanged inputs';
       var html = '';
       GROUPS.forEach(function (g) {

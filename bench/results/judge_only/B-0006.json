@@ -4,27 +4,33 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:28:03.871330+00:00",
+ "ts": "2026-10-13T17:47:10.703692+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 3.33,
-  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider for the unexcused off-route segment (RD-2); no account flag (RD-6 not met).",
-  "confidence": 0.88,
-  "reasoning": "The trip is RydeTAXI, so the fare is meter-based and detour km feed directly into the fare [F4][F7][RD-2][RD-1]. One off-route segment is on record: 21:57–22:04, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km [F3].\n\nNo exemption applies. The rider-requested-stop branch fails: there is no rider message naming any place, and in fact no in-app chat at all [F8][RD-3]. The consent branch fails: the only source of an alleged agreement is the driver's post-trip statement, which is a claim, not rider consent, and it is written after the segment [F9][RD-5][G11]. The reasonable-cause branch fails: the only traffic item is an accident reported 22:07 along the optimal route, later than the segment's 21:57 start, and the speed bands on AYE and CTE are band 4 (30–39 km/h), which at most corroborates and cannot exempt on its own [F3][F4][F10][F11][F12][RD-4].\n\nAmount: the segment's extra 2.36 km × this trip's per-km rate = $26.93 ÷ 19.10 km = $1.4099/km; 2.36 km × $1.4099/km = $3.3274 → $3.33 [F4][F7][RD-2][RD-1]. The billed excess of $3.62 covers 2.57 km, which includes residual corridor/matching km that RD-2 does not refund, so only the segment's own extra km are refunded [F4].\n\nRD-6 does not apply: the driver profile shows 4 disputes but 0 upheld route disputes in 90 days, so this is not a repeated breach and no account flag is warranted [F15][RD-6]. The rider's profile facts are not used to decide anything [F14].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "No refund on the billed excess distance fare: the only off-route segment was driven to reach the Clementi Mall stop the rider named and the driver accepted, so those km are exempt under RD-3(a) and what remains of the billed deviation (2.02 km − 1.75 km = 0.27 km) is within the 1 km tolerance under RD-1. Send the driver the RD-7 notification-duty reminder and log it on his route compliance record; no driver violation is affirmed for this stretch as no refund is upheld, and no account flag is added.",
+  "confidence": 0.85,
+  "reasoning": "Safety screen first: the chat is two short civil messages, the complaint is a fare grievance and the driver's statement is factual. Nothing in F8, F9, F11 or the complaint describes threats, intimidation, harassment, sexual remarks or dangerous driving, so safety_concern = none [SAFE-1]. The record needed to decide this case is complete: both chat messages are timestamped [F10], the GPS track measures the off-route segment and the stop [F1][F2][F3][F4], and the fare build-up is itemised [F5][F7], so evidence_status = sufficient.\n\nThe deviation is over tolerance: actual 10.5 km against optimal 8.4 km, billed excess 2.02 km at $1.4096/km = $2.85 [F1][F5][RD-1][RD-2]. There is one off-route segment, 21:45–21:55, 3.86 km driven where the optimal route covers 2.11 km, adding 1.75 km, during which the car halted 4 min 0 s at 21:47–21:51 [F4][F2].\n\nNo traffic reason exists: no incident is recorded in the trip window and the relevant speed bands during 21:31–22:04 are 7 and 5, far above the congested bands [F12][F13][F14][RD-4]; light rain [F15] is weather, not a closure, incident or congestion event.\n\nConsent and the rider-named stop: the rider's only pre-segment message, sent 21:42, reads \"Can you stop at Clementi Mall? I need to grab a parcel, 3-4 minutes\" — she names a specific place [F8]; the driver accepts at 21:42 with \"Sure\" [F9], and the GPS confirms the car stopped there, 4 min 0 s at 21:47–21:51 [F2]. Under RD-3(a) a rider-named stop makes the segment driven to reach it not a deviation; its extra km are exempt in full and the segment is not split into \"the stop\" and \"the way there\" [F4][RD-3]. The driver's post-trip statement [F11] cannot itself establish consent under RD-5, but it does not conflict with the timestamped chat and is not needed for this finding.\n\nAmount: exempt km = 1.75 km [F4]. What is left of the billed deviation is (2.02 km − 1.75 km) = 0.27 km, which is at or below the 1 km tolerance, so no refund is due under RD-1 and the excess distance fare stands. Surge is 1.0× and time, waiting and platform items are not part of the distance comparison [F6][F7][RD-2]. Because no refund is due, no driver violation and no account flag follow here [RD-2][RD-6]; the comparison precedent for an uninformed reroute (DISP-2026-0089, excess distance fare refunded) does not apply once the segment is exempt [PREC-1]. The rider's profile (0 upheld) and the driver's prior disputes [F16][F17] do not decide this case.",
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
+   "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
    "F14",
-   "F15"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -32,50 +38,92 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "fact_id": "F4",
+    "finding": "exempt",
+    "ground": "rider_named_stop",
+    "basis": [
+     "F8",
+     "F9",
+     "F2"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "A rider message sent before the segment (21:42, before the 21:45 segment start) named the specific place Clementi Mall and the driver accepted it at 21:42 [F8][F9]; the car did stop there, 4 min 0 s at 21:47–21:51 [F2]. The whole segment driven to reach the rider-named stop is therefore not a deviation and its 1.75 km of extra distance is exempt in full under RD-3(a); the way there is not split from the stop. The driver's post-trip statement [F11] is not relied on, as a driver's statement is not prior consent under RD-5."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-3:F4",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
+     "F2"
+    ],
+    "reason": "A rider message before the segment (21:42, before the 21:45 start) named the specific place Clementi Mall, the driver accepted it with 'Sure' at 21:42, and the GPS shows the car stopped there for 4 min 0 s at 21:47–21:51 [F8][F9][F2][RD-3]. The car went to the named place, so RD-3(a) applies and the whole segment is exempt."
+   },
+   {
+    "element": "RD-5:F4",
+    "finding": "met",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "No rider message agrees to this route before the segment began at 21:57 — there is no in-app chat at all [F8], and the driver's statement that the extra distance was unavoidable is a post-trip claim, not rider consent [F9][RD-5][G11]. No place was named by the rider, so RD-3 does not excuse it, and the only traffic record (accident at 22:07) postdates the segment's start [F3][F12][RD-4]. The 2.36 extra km are refundable under RD-2."
+    "reason": "The rider's own pre-segment message at 21:42 asked for the Clementi Mall stop and the driver agreed at 21:42, before the 21:45:40 cut-off [F8][F9][RD-5]. The agreement is to a rider-requested stop at a rider-named place, with the car stopping there [F2], so the agreement covers this segment (the way there included) [RD-3][RD-5]."
+   },
+   {
+    "element": "SAFE-1:case",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F11"
+    ],
+    "reason": "Read all messages, the driver's statement and the complaint: they concern a stop request, the fare estimate and a route argument. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears [F8][F9][F11][SAFE-1], so the safety screen is negative and the case proceeds on the route rules."
    }
   ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F8",
-   "F9"
+   "F9",
+   "F11"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_partial",
-  "amount": 3.33,
-  "recommended_action": "Issue a Ryde voucher of $3.33 to the rider for the unexcused off-route segment (RD-2); no account flag (RD-6 not met).",
-  "confidence": 0.88,
-  "reasoning": "The trip is RydeTAXI, so the fare is meter-based and detour km feed directly into the fare [F4][F7][RD-2][RD-1]. One off-route segment is on record: 21:57–22:04, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km [F3].\n\nNo exemption applies. The rider-requested-stop branch fails: there is no rider message naming any place, and in fact no in-app chat at all [F8][RD-3]. The consent branch fails: the only source of an alleged agreement is the driver's post-trip statement, which is a claim, not rider consent, and it is written after the segment [F9][RD-5][G11]. The reasonable-cause branch fails: the only traffic item is an accident reported 22:07 along the optimal route, later than the segment's 21:57 start, and the speed bands on AYE and CTE are band 4 (30–39 km/h), which at most corroborates and cannot exempt on its own [F3][F4][F10][F11][F12][RD-4].\n\nAmount: the segment's extra 2.36 km × this trip's per-km rate = $26.93 ÷ 19.10 km = $1.4099/km; 2.36 km × $1.4099/km = $3.3274 → $3.33 [F4][F7][RD-2][RD-1]. The billed excess of $3.62 covers 2.57 km, which includes residual corridor/matching km that RD-2 does not refund, so only the segment's own extra km are refunded [F4].\n\nRD-6 does not apply: the driver profile shows 4 disputes but 0 upheld route disputes in 90 days, so this is not a repeated breach and no account flag is warranted [F15][RD-6]. The rider's profile facts are not used to decide anything [F14].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "No refund on the billed excess distance fare: the only off-route segment was driven to reach the Clementi Mall stop the rider named and the driver accepted, so those km are exempt under RD-3(a) and what remains of the billed deviation (2.02 km − 1.75 km = 0.27 km) is within the 1 km tolerance under RD-1. Send the driver the RD-7 notification-duty reminder and log it on his route compliance record; no driver violation is affirmed for this stretch as no refund is upheld, and no account flag is added.",
+  "confidence": 0.85,
+  "reasoning": "Safety screen first: the chat is two short civil messages, the complaint is a fare grievance and the driver's statement is factual. Nothing in F8, F9, F11 or the complaint describes threats, intimidation, harassment, sexual remarks or dangerous driving, so safety_concern = none [SAFE-1]. The record needed to decide this case is complete: both chat messages are timestamped [F10], the GPS track measures the off-route segment and the stop [F1][F2][F3][F4], and the fare build-up is itemised [F5][F7], so evidence_status = sufficient.\n\nThe deviation is over tolerance: actual 10.5 km against optimal 8.4 km, billed excess 2.02 km at $1.4096/km = $2.85 [F1][F5][RD-1][RD-2]. There is one off-route segment, 21:45–21:55, 3.86 km driven where the optimal route covers 2.11 km, adding 1.75 km, during which the car halted 4 min 0 s at 21:47–21:51 [F4][F2].\n\nNo traffic reason exists: no incident is recorded in the trip window and the relevant speed bands during 21:31–22:04 are 7 and 5, far above the congested bands [F12][F13][F14][RD-4]; light rain [F15] is weather, not a closure, incident or congestion event.\n\nConsent and the rider-named stop: the rider's only pre-segment message, sent 21:42, reads \"Can you stop at Clementi Mall? I need to grab a parcel, 3-4 minutes\" — she names a specific place [F8]; the driver accepts at 21:42 with \"Sure\" [F9], and the GPS confirms the car stopped there, 4 min 0 s at 21:47–21:51 [F2]. Under RD-3(a) a rider-named stop makes the segment driven to reach it not a deviation; its extra km are exempt in full and the segment is not split into \"the stop\" and \"the way there\" [F4][RD-3]. The driver's post-trip statement [F11] cannot itself establish consent under RD-5, but it does not conflict with the timestamped chat and is not needed for this finding.\n\nAmount: exempt km = 1.75 km [F4]. What is left of the billed deviation is (2.02 km − 1.75 km) = 0.27 km, which is at or below the 1 km tolerance, so no refund is due under RD-1 and the excess distance fare stands. Surge is 1.0× and time, waiting and platform items are not part of the distance comparison [F6][F7][RD-2]. Because no refund is due, no driver violation and no account flag follow here [RD-2][RD-6]; the comparison precedent for an uninformed reroute (DISP-2026-0089, excess distance fare refunded) does not apply once the segment is exempt [PREC-1]. The rider's profile (0 upheld) and the driver's prior disputes [F16][F17] do not decide this case.",
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
+   "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
+   "F13",
    "F14",
-   "F15"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -83,42 +131,89 @@
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-7",
+   "PREC-1",
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "fact_id": "F4",
+    "finding": "exempt",
+    "ground": "rider_named_stop",
+    "basis": [
+     "F8",
+     "F9",
+     "F2"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "A rider message sent before the segment (21:42, before the 21:45 segment start) named the specific place Clementi Mall and the driver accepted it at 21:42 [F8][F9]; the car did stop there, 4 min 0 s at 21:47–21:51 [F2]. The whole segment driven to reach the rider-named stop is therefore not a deviation and its 1.75 km of extra distance is exempt in full under RD-3(a); the way there is not split from the stop. The driver's post-trip statement [F11] is not relied on, as a driver's statement is not prior consent under RD-5."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-3:F4",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
+     "F2"
+    ],
+    "reason": "A rider message before the segment (21:42, before the 21:45 start) named the specific place Clementi Mall, the driver accepted it with 'Sure' at 21:42, and the GPS shows the car stopped there for 4 min 0 s at 21:47–21:51 [F8][F9][F2][RD-3]. The car went to the named place, so RD-3(a) applies and the whole segment is exempt."
+   },
+   {
+    "element": "RD-5:F4",
+    "finding": "met",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "No rider message agrees to this route before the segment began at 21:57 — there is no in-app chat at all [F8], and the driver's statement that the extra distance was unavoidable is a post-trip claim, not rider consent [F9][RD-5][G11]. No place was named by the rider, so RD-3 does not excuse it, and the only traffic record (accident at 22:07) postdates the segment's start [F3][F12][RD-4]. The 2.36 extra km are refundable under RD-2."
+    "reason": "The rider's own pre-segment message at 21:42 asked for the Clementi Mall stop and the driver agreed at 21:42, before the 21:45:40 cut-off [F8][F9][RD-5]. The agreement is to a rider-requested stop at a rider-named place, with the car stopping there [F2], so the agreement covers this segment (the way there included) [RD-3][RD-5]."
+   },
+   {
+    "element": "SAFE-1:case",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F11"
+    ],
+    "reason": "Read all messages, the driver's statement and the complaint: they concern a stop request, the fare estimate and a route argument. No threat, intimidation, harassment, sexual remark or dangerous-driving allegation appears [F8][F9][F11][SAFE-1], so the safety screen is negative and the case proceeds on the route rules."
    }
   ],
-  "rejected_claims": [],
+  "rejected_claims": [
+   {
+    "id": "C1",
+    "reason": "The rider's claim that the detour was overcharged is not upheld: the 1.75 km off-route segment was driven to reach the Clementi Mall stop the rider herself named and the driver accepted, so its km are exempt under RD-3(a) [F8][F9][F2][F4][RD-3]; the remaining billed deviation is 0.27 km, within the 1 km tolerance, so no refund arises [F5][RD-1][RD-2]."
+   },
+   {
+    "id": "D1",
+    "reason": "The driver's blanket no_action position is accepted only as to the absence of any refundable amount; it cannot rest on his statement that the rider asked for the stop [F11], since a driver's statement is not prior rider consent under RD-5 — the exemption here rests on the rider's own timestamped message [F8][F9][F10][RD-3]."
+   }
+  ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F8",
-   "F9"
+   "F9",
+   "F11"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 8,
+ "events": 10,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.88 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this route_deviation case removed from cited_policy: PREC-1, SAFE-1\ndropped rejected_claims not in any live brief: C1, D1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 90%\nmodel confidence 0.85 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/judge_only/B-0006.record.json",
- "latency_s": 6.4,
- "input_tokens": 12695,
- "output_tokens": 1222,
- "requests": 2,
- "llm_calls": 2
+ "latency_s": 23.4,
+ "input_tokens": 26763,
+ "output_tokens": 4742,
+ "requests": 3,
+ "llm_calls": 3
 }

@@ -4,44 +4,98 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:38.962788+00:00",
+ "ts": "2026-10-13T16:36:41.057287+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher and remind the driver that the \"I'm Here\" plus >3-minute wait conditions must be satisfied before a no-show cancellation is charged; note the driver's high upheld no-show dispute count for the account team's awareness (no formal flag on this record).",
-  "confidence": 0.86,
-  "reasoning": "The $6.61 cancellation fee can only stand if NS-1's conditions are all met, since the driver cancelled and relies on rider no-show (NS-0 → NS-1/NS-2).\n\n(i) Arrival indicator: driver_pressed_here_at = 17:19:15; the GPS trace confirms the car stopped at ~1.28393, 103.85094 (≈154 m from the pickup point at 1.284, 103.8513, i.e. within the 200 m arrival radius) at that time. So the \"I'm Here\" tap was at the pickup location.\n\n(ii) Continuous wait after the tap: the trace shows the driver stationary from 17:19:15 (speed 1.9 km/h) through 17:22:55 (speed 0.0), with no gaps in the 30 s thinned samples, i.e. about 3 min 40 s of presence.\n\n(iii) However, the \"I'm Here\" tap at 17:19:15 falls ≈1 min 25 s after driver_arrived_at = 17:17:50, while the driver had accepted the trip at 17:16:00. Measured per NS-1 (iii) the wait from the tap to cancellation is 3:40 > 3:00, so (iii) is on its face satisfied.\n\nThe failure is elsewhere: the structured timeline fields that record the no-show clock are null — arrival_confirmed_by = null, arrival_radius_m = null, wait_started_at = null, wait_expired_at = null, fee_applied_at = null. Under NS-1 the arrival confirmation is a driver tap (driver_tap) or a platform auto-decision (platform_auto) and the record must show which; NS-1 also requires that (i)-(iii) be verifiable from the platform's own record, and where the record does not let the judge establish the arrival confirmation mechanism or the wait window (G12), the presumption is against charging, not in favour of it. Here the only confirmation of the arrival tap is the GPS trace (an inference), not the platform's recorded event, and the record's own wait-window fields are empty, so (iii) cannot be established from the platform record as NS-1 demands.\n\nRider's own account (\"I came out a minute after the driver cancelled\") is consistent with the driver's message at 17:22:45 (\"3 min up, cancelling the trip\") and the cancellation at 17:22:55 — i.e. the rider was on the way when the fee was triggered.\n\nBecause NS-1 (i)(ii)(iii) are not all established on the record, NS-2 applies: the $6.61 cancellation fee is refunded in full (Ryde voucher per NS-7). NS-2's additional flag_account applies only where the driver tapped \"I'm Here\" while GPS placed him outside the pickup radius; here GPS places him ~154 m from pickup, inside the radius, so no flag is raised on this record, though the driver profile (no_show_disputes_upheld_90d = 2, disputes_upheld_90d = 2) is noted as context only — profile facts alone never decide a case.\n\nApplied policy branch: NS-0 → NS-1 (not satisfied) → NS-2 (refund_full).",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Human review: the record cannot settle whether the rider was validly notified of the surge increase — the in-app notice is timestamped 17:14:45 and offers \"free cancellation until 17:13\", an already-expired option, and the policy-state comparison needed to test the ruling against precedent DISP-2026-0142 ($3.20) is unresolved. Obtain the notification transcript/push-delivery record (was it on screen before trip start at 17:16:00?), verify the rider_notified flag, and confirm the booking-fee/surgeable-subtotal treatment before a differential is paid. Flag the surge notice defect to the pricing team.",
+  "confidence": 0.5,
+  "reasoning": "Fare-only case: quote $16.26 at 1.0×, actual $21.14 at 1.4×, rider claims the $4.88 difference. No route issue — actual 5.6 km vs optimal 5.645 km, so deviation is negative and RD is out. The whole difference comes from surge: recompute the trip on the quote base (base 3.90 + distance 7.90 + time 2.25 = 14.05, ×1.0 + booking 1.47 = 15.52) vs the charged (14.05 × 1.4 + 1.47 = 19.67 + 1.47 = 21.14). The $5.62 = 0.4 × 14.05 is the pure surge differential; the quoted total exceeds quote-base + booking by $0.74, so the fare tables as given do not fully reconcile, which is why the exact refund amount (SURGE-3) cannot be mechanically fixed on these figures.\n\nThe decisive issue is valid notice (SURGE-1). The record's own notice text fails on two of the three required items: it states the new multiplier (1.4×, OK) but the revised fare given is $22.48, not the $21.14 actually charged, and the \"free cancellation until 17:13\" is already in the past when the notice was sent at 17:14:45 and before the 17:16:00 trip start — an impracticable, expired option is not a real option to cancel without penalty. A rider cannot be said to have accepted a surcharge in exchange for a cancellation right she never had. The driver's statement that \"the app told her the new multiplier, the new fare and that she could cancel for free\" is a claim contradicted by the system text (system records override statements). Moreover the notice timestamped 17:14:45 is still only 75 s before trip start and after the surge activated at 17:14:20 — late notice under RD-5's system rule. The only chat log (17:14:10, 17:14:50) shows no rider acknowledgement of the surcharge before riding.\n\nTH-3 confidence: complete = yes (GPS, fare, chat, surge log, telemetry all present); clear = no, the notice item fails on content and the differential cannot be computed unambiguously from the reconciled tables (mixed/opaque base); aligned = questionable, since on a clean reading the outcome would be refund_partial of the surge differential, matching DISP-2026-0142 (~$3.20). Credibility and profile facts do not decide this case. With the ruling turning on a textual finding the records contradict and an arithmetic gap, I escalate rather than rule, per TH-4's no-presumption principle; missing/defective records favour neither side. No safety indicators in any chat, the complaint or the driver statement (no threat, harassment, sexual remark or dangerous-driving allegation) — this is a pricing dispute, not a safety one.",
   "cited_facts": [],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
+   "TH-1",
+   "TH-2",
+   "TH-3",
+   "TH-4",
+   "PREC-1",
+   "SAFE-1"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "Surge notice is defective on content (revised fare $22.48 not matching the $21.14 charged; \"free cancellation until 17:13\" already expired when sent at 17:14:45) and is issued only 75 s before trip start, and the fare tables do not reconcile to fix the differential — a textual/eligibility finding the record contradicts, so the case goes to human review. Scope is a surge-differential adjustment (~$3–$6), not the full $4.88 claimed.",
   "segment_findings": [],
-  "rejected_claims": [
+  "element_findings": [
    {
-    "id": "driver_no_show_claim",
-    "reason": "The driver asserts he tapped 'I'm Here', waited over 3 minutes and cancelled as a no-show. The trace supports a ~3 min 40 s stationary presence, but the platform's own arrival/wait fields (arrival_confirmed_by, wait_started_at, wait_expired_at) are null, so the NS-1 (i)-(iii) chain is not established from the record; NS-1/G12 require the platform record, not inference, and the shortfall is charged against the fee, not the rider."
+    "element": "Surge notice stated the new multiplier (SURGE-1)",
+    "finding": "met",
+    "basis": [
+     "surge_pricing_log.notification_text"
+    ],
+    "reason": "\"Fares are 1.4× higher right now\" correctly states the new 1.4× multiplier."
    },
    {
-    "id": "rider_charged_validly",
-    "reason": "The $6.61 cancellation fee is not chargeable where NS-1's conditions are not verifiable on the record (NS-2); the rider's account is consistent with the trace and the driver's own message."
+    "element": "Surge notice stated the revised estimated fare (SURGE-1)",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_text",
+     "fare_breakdown.actual_fare.total"
+    ],
+    "reason": "Notice gives $22.48 as the new estimated fare; the fare actually charged was $21.14. The stated revised fare does not match the applied fare, so the required item is not properly given."
+   },
+   {
+    "element": "Surge notice offered cancellation without penalty (SURGE-1)",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_text",
+     "surge_pricing_log.notification_timestamp"
+    ],
+    "reason": "Notice sent 17:14:45 offers \"Free cancellation until 17:13\" — an already-expired deadline. No effective option to cancel without penalty was given; the driver's claim of a free-cancel offer is contradicted by the system text."
+   },
+   {
+    "element": "Rider notified before or at trip start (SURGE-1)",
+    "finding": "not_met",
+    "basis": [
+     "surge_pricing_log.notification_timestamp",
+     "trip_data.start_time"
+    ],
+    "reason": "Notice at 17:14:45 is only 75 s before the 17:16:00 start and the chat log contains no rider acknowledgement before riding; notice content is also defective, so the rider did not validly accept the surcharge."
+   },
+   {
+    "element": "Whole fare difference attributable solely to surge (SURGE-3)",
+    "finding": "undetermined",
+    "basis": [
+     "fare_breakdown.upfront_quote.total",
+     "fare_breakdown.actual_fare.surgeable_subtotal",
+     "fare_breakdown.actual_fare.surge_amount"
+    ],
+    "reason": "Surge component 0.4 × 14.05 = $5.62 is identifiable, but the quote ($16.26) exceeds quote-base + booking ($15.52) by $0.74 while the rider claims $4.88; the base makeup is not fully reconciled, so the exact differential cannot be fixed mechanically."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "driver_statement",
+    "reason": "The driver says the app told the rider the new multiplier, new fare and free cancellation. The system notice text contradicts this: the revised fare quoted ($22.48) is not the fare charged ($21.14) and the \"free cancellation until 17:13\" was already expired when the notice was sent at 17:14:45. System records override statements."
+   },
+   {
+    "id": "rider_full_refund",
+    "reason": "The rider seeks the full $4.88 difference. Only the surge differential is refundable under SURGE-3 (tolls, time fare and booking fee excluded); the exact figure cannot be computed from the unreconciled tables, so the full-difference claim is not granted as pleaded."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
-  "evidence_gap": null
+  "evidence_gap": "No needed record is missing, but the record as given is internally unresolved: the notice text's fare and the fare tables do not reconcile (quote $16.26 vs quote-base+booking $15.52; notice fare $22.48 vs charged $21.14), so the SURGE-3 differential cannot be computed deterministically. Escalated on the substantive defect in the notice and the resulting ambiguity, not on a missing file."
  },
- "latency_s": 6.09,
- "input_tokens": 12645,
- "output_tokens": 1275,
+ "latency_s": 11.09,
+ "input_tokens": 12013,
+ "output_tokens": 2012,
  "requests": 1,
  "llm_calls": 1
 }

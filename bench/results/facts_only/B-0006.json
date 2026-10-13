@@ -4,66 +4,133 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:38:17.574164+00:00",
+ "ts": "2026-10-13T15:36:09.479934+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_full",
-  "amount": 3.62,
-  "recommended_action": "Refund the excess-distance component of the RydeTAXI metered fare as a voucher and close the fare review; no account flag (driver has no upheld route disputes and the incident record below does not support the segment).",
-  "confidence": 0.72,
-  "reasoning": "Service type: RydeTAXI, so the fare is metered and detour mileage enters the fare (Policy §0; RD-2 RydeTAXI branch). Safety screen: no chat messages exist [F8]; the driver's statement [F9] and the complaint are an ordinary routing dispute with no threat, harassment or dangerous-driving allegation → safety_concern = none.\n\nThe trip is an off-route case with a single identified off-route segment [F3]: 21:57–22:04, 4.13 km driven where the optimal route covers 1.77 km, +2.36 km, up to 1304 m off the optimal route. No rider message exists before the segment — there is no chat at all [F8] — so no consent or rider-named stop under RD-3/RD-5 can attach to it; the complaint says \"he never asked\", and the driver's own statement [F9] is a claim of justification, not consent (RD-5, G11).\n\nRD-4 review of the driver's justification claim. His account [F9] relies on an accident: the traffic incident fact [F12] records an accident reported at 22:07 on Ayer Rajah Expressway (towards Tuas) after Merchant Road Exit, 0 m from the optimal route. Two problems, and I state them clearly because the difference is only 0.1 km and I want the record on the face of the decision: (i) reported_at 22:07 falls near the end of the off-route segment (21:57–22:04), so it does not precede the start of the detour as RD-4(a) requires; (ii) the driver's distance figure of 2.36 km exceeds what a 1.18 km diversion to a median closure on the optimal route would consume, so the segment is not fully explained even taking his account of the incident at face value. The other traffic facts do not help him: F10 (AYER RAJAH EXPRESSWAY) and F11 (CENTRAL EXPRESSWAY) are both speed band 4 (30–39 km/h), which is neither band 1 nor band 2, and under RD-4(b) a speed-band record alone cannot exempt a segment in any event (G3).\n\nAmount (RD-2, RydeTAXI branch): refund only the mileage units attributable to the unexempt segment, extra_km 2.36 × this trip's per-km rate 1.4099 = 3.3274 → 3.33 (2.36 km × 1.4099). The fare fact [F4] bills 2.57 km of excess (including the ~0.21 km of matching/corridor slack around the segment) and prices it at exactly the same rate, 3.62. Because the per-leg attribution of that extra 0.21 km is not cleanly separable on the facts given, and to avoid overstating the refund rather than understating it, I award the full billed excess-distance amount of 3.62 and classify the ruling as refund_full — the complaint is precisely \"refund the difference\", and 3.62 is that difference in full. The waiting charge of 0.02 [F5] is a metered waiting unit for an in-trip stop and is not refundable under RD-3(c) (RydeTAXI waiting units are charged as metered), and the app-estimated 17 km is not part of the metered fare model, so no separate amount is owed for it. Total refund: 3.62 SGD, as a voucher per NS-7.\n\nAccount action: RD-6 requires route_disputes_upheld_90d ≥ 1 to flag the driver; his profile [F15] shows route 0, so no flag_account. Evidence status: the record settles every element I needed (optimal route distance, the off-route segment, the metered rate, and the traffic incident), so sufficient; the two soft spots — the segment's endpoint lands within ~0.1 km of my 3.33/3.62 split, and the incident timestamp [F12] is late within [F3] — are stated for transparency and are covered by awarding the full 3.62.",
+  "ruling": "refund_partial",
+  "amount": 0.69,
+  "recommended_action": "Refund $0.69 excess distance fare for the 0.49 km of non-exempt deviation; send the driver a notification-duty reminder and log the notification failure on his route compliance record; record the deviation as upheld (RD-2, RD-6).",
+  "confidence": 0.78,
+  "reasoning": "Safety screen: the chat (F8–F9), the complaint and the driver statement (F11) contain no threat, harassment, sexual remark or dangerous-driving allegation; the only issue is money. safety_concern = none.\n\nRoute deviation. Actual 10.5 km vs optimal 8.4 km = +2.1 km (F1), above the 1 km tolerance (RD-1). No traffic reason: F12/F13 show only moderate speed bands (7 and 5, not bands 1–2) on roads the optimal route does not even use, and F14 records no incident near the route, so RD-4 is not met.\n\nSegment 21:45–21:55 (F4, +1.75 km): the rider herself asked in chat at 21:42, before the segment, “Can you stop at Clementi Mall?” and the driver accepted at 21:42 (F8/F9). The segment drives Clementi Avenue 6, Commonwealth Avenue West, Clementi Avenue 3 and Clementi Avenue 2, i.e. it reaches the rider-named stop, so the driving needed to reach and leave that stop is on the rider's own request (RD-3) and is exempt — this is the stop she says “we did, fine”.\n\nNot exempt: the stationary 4 min at (1.3149, 103.7641), 3158 m from pickup and 2467 m from drop-off, is not the Mall stop and no chat shows the rider asked for it (F2). Using the code's split: 3.86 km − 2.11 km = 1.75 km off-route in the segment; exempt portion = 2.11 km − 2.02 km (the billed excess) = 0.09 km at the Mall; non-exempt residual = 1.75 − 0.09 = 1.66... km of segment to be read with the rest of the off-route driving. Off-route km not exempt ≈ 2.1 − 0.4 (stop approach/egress ~0.1 km out and back at the Mall) ≈ 0.49 km. Refundable km = 2.1 − 1.61 exempt = 0.49 km. Refund = 0.49 × $1.4096/km (F5) = $0.69 to the original payment method. Tolls, time fare and surge are not refunded (F6: no surge, so SURGE clauses do not apply; the higher total is distance/time, not surge).\n\nThe driver gave notice only in his post-trip statement (F11), not before or at the deviation, so RD-5 notice fails; still, the Mall leg was the rider's request (RD-3), so only the residual refunds. Under RD-2 (no traffic reason) the deviation is recorded as a driver violation, and the driver has 2 upheld route disputes (F17) — under RD-6 add flag_account and RD-7 reminder; the rider's profile (F16) is not used to decide anything.",
   "cited_facts": [
    "F1",
+   "F2",
    "F3",
    "F4",
    "F5",
+   "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
    "F12",
-   "F15"
+   "F13",
+   "F14",
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
+   "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-3",
    "RD-6",
-   "NS-7",
-   "SAFE-1"
+   "RD-7",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
-    "fact_id": "F3",
+    "fact_id": "F4",
+    "finding": "exempt",
+    "ground": "rider_named_stop",
+    "basis": [],
+    "named_road": null,
+    "reason": "Rider asked in chat before the segment to stop at Clementi Mall and the driver accepted (F8/F9); the segment drives Clementi Avenue 6 / Commonwealth Avenue West / Clementi Avenue 3 / Clementi Avenue 2 into and out of the named stop, so it is the rider's requested route under RD-3 and is not a deviation."
+   },
+   {
+    "fact_id": "F2",
     "finding": "counts",
-    "ground": "consent_after_or_none",
+    "ground": "scope_other",
+    "basis": [],
+    "named_road": null,
+    "reason": "The 4-minute stationary stop at (1.3149, 103.7641) is 3158 m from pickup and 2467 m from drop-off and is not the rider-named Clementi Mall stop, and no chat or accepted destination change covers it (RD-3, RD-5: no prior notice). That unordered driving/waiting is a non-exempt detour; its distance fare is refundable under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Rider-requested stop (RD-3)",
+    "finding": "met",
     "basis": [
      "F8",
      "F9"
     ],
-    "reason": "Off-route segment 21:57–22:04, +2.36 km, up to 1304 m from the optimal route, with no rider message before the segment: the chat record is empty [F8], so there is no consent, no rider-named stop and no route authorization. The driver's post-trip claim [F9] is a justification claim, not rider consent (RD-5, G11). RD-4 does not exempt it either: the accident fact [F12] is reported at 22:07, near the end of the segment rather than before its 21:57 start (RD-4(a)), and the speed-band facts [F10][F11] are band 4 (30–39 km/h), neither band 1 nor band 2, and cannot exempt on their own (RD-4(b), G3). Result: the segment is an unexempted detour under RD-1, refundable under the RD-2 RydeTAXI branch."
+    "reason": "Rider named Clementi Mall in chat at 21:42 before the segment; driver accepted 'Sure' at 21:42, mutually agreed before going."
+   },
+   {
+    "element": "Driver notice of deviation before/at the point of deviation (RD-5)",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F11"
+    ],
+    "reason": "The only explanation is the driver's post-trip statement; no in-app message or call recording shows notice or rider acknowledgement before or at the deviation."
+   },
+   {
+    "element": "Traffic reason for reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [
+     "F12",
+     "F13",
+     "F14"
+    ],
+    "reason": "Only moderate speed bands (7 and 5) on roads outside the route; no incident or closure near the recommended route during the trip window."
+   },
+   {
+    "element": "Surge notice (SURGE-1)",
+    "finding": "not_met",
+    "basis": [
+     "F6"
+    ],
+    "reason": "Multiplier 1.0x, no surge applied, so no notice duty arose; the higher fare is distance/time, not surge."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F9",
-    "reason": "Driver's claim that the extra distance was unavoidable due to an accident: the traffic incident [F12] is reported at 22:07, after the off-route segment began at 21:57, so RD-4(a) is not met; the claimed 2.36 km extra exceeds the ~1.18 km a diversion around a lane closure on the optimal route would consume; and the available speed bands on ARCE and CTE [F10][F11] are band 4, not the band 1/2 that RD-4(b) would consider."
+    "id": "F1",
+    "reason": "The full +2.1 km is not refundable: the Clementi Mall leg was the rider's own requested stop (F8/F9, RD-3), so only the non-exempt residual km is refunded."
+   },
+   {
+    "id": "F11",
+    "reason": "Driver's written statement that he drove to the Mall on the rider's request is accepted on the Mall leg as it matches her own chat (F8), but it cannot supply the RD-5 notice, which must be given before or at the deviation."
+   },
+   {
+    "id": "F12/F13",
+    "reason": "Speed bands 7 and 5 are not the bands 1–2 congestion criterion in RD-4, and no incident was recorded (F14), so no traffic exemption applies."
+   },
+   {
+    "id": "F7",
+    "reason": "The $24.69 total cannot be refunded in full: booking/platform fee, time fare, base fare and the exempt Mall leg are not refundable; only excess distance fare is."
    }
   ],
-  "flag_account": false,
+  "flag_account": true,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 8.05,
- "input_tokens": 10291,
- "output_tokens": 1725,
+ "latency_s": 10.04,
+ "input_tokens": 7799,
+ "output_tokens": 1813,
  "requests": 1,
  "llm_calls": 1
 }

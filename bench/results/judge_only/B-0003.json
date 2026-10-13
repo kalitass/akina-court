@@ -4,140 +4,166 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:27:55.943474+00:00",
+ "ts": "2026-10-13T17:47:10.700895+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "refund_partial",
-  "amount": 2.74,
-  "recommended_action": "Refund $2.74 to the rider as a Ryde voucher for the non-exempt off-route segment (1.94 km × $1.4104/km); no account action against the driver.",
-  "confidence": 0.72,
-  "reasoning": "The trip was a metered RydeTAXI journey (F7), so extra distance reaches the fare: the record bills $14.95 distance for 10.60 km and $3.06 of \"excess distance\" at $1.4104/km [F4][F7]. Under RD-2, where a non-exempt off-route segment exists, the refund is the segment's extra_km times the trip's per-km rate (distance_fare ÷ distance_km) [RD-2].\n\nOne off-route segment is recorded: 14:28–14:34, 3.07 km driven against 1.12 km optimal, +1.94 km, straying up to 786 m from the route [F3]. The trace settles that no qualifying incident supports the driver (no RD-4(a) event, speed-band alone not enough) [F12][F13][F14][F15][RD-4] and that no rider message before 14:28:45 named a stop [RD-3].\n\nThe driver asked at 14:30 \"can I go round via Clementi Road?\" and the rider replied at 14:31 \"Sure, no problem.\" [F8][F9]. Read plainly, that is a specific named-road agreement to go via Clementi Road — a limited authorization, not a general one [RD-5]. But both messages are timestamped after the segment began at 14:28:45 (trace on F3), so RD-5's \"before you go\" requirement is not met: consent after the diversion started cannot excuse the segment [RD-5]. The driver's statement that he told the rider beforehand is a claim, not consent under G11 [F11]. The segment therefore counts [RD-2].\n\nWaiting time on a RydeTAXI is metered and not refundable here: the $0.11 is 0.4 min of metered waiting, consistent with RD-3(c)'s treatment of waiting [F5][RD-3]. No unpublished add-on appears (base $3.90 + distance $14.95 + time $4.83 + waiting $0.11 + platform $1.47 = $25.26) [F7][FARE-1].\n\nAmount: 1.94 km × $1.4104/km = $2.736 ≈ $2.74 [F3][F4][RD-2]. (The billed \"excess\" figure of $3.06 rests on 2.17 km, i.e. it also carries map-matching/corridor mileage outside the measured segment, which RD-2 leaves unrefunded.) RD-6 is not triggered: the driver has 0 prior upheld route disputes, so no flag_account [F18][RD-6].",
+  "ruling": "escalate",
+  "amount": null,
+  "recommended_action": "Close the case with no refund; no driver action needed (traffic reason on record, no violation under RD-4).",
+  "confidence": 0.78,
+  "reasoning": "The trip ran 18.0 km against an optimal 13.9 km (+4.1 km, +30%) [F1], over one off-route segment at 14:29–14:38 that added 3.73 km [F3], so the RD-1 tolerance of 1 km is exceeded and the excess distance fare on record is $5.78 (4.10 km × $1.4102/km) [F4][RD-1][RD-2].\n\nBefore that segment began, the driver sent a chat at 14:26 asking \"Traffic ahead on Central Expressway is building up, ok if I go round via Lavender Street?\" [F7], and the rider answered at 14:26 \"可以，走 Lavender Street 吧。\" — an agreement to a specific named road, Lavender Street, sent before the segment started at 14:29 [F8][F9]. Lavender Street is among the roads actually driven on the segment (JALAN BAHAGIA → KIM KEAT ROAD → BALESTIER ROAD → LAVENDER STREET → …) [F3], so the agreed road ties to the segment and the rider's prior, in-scope agreement under RD-5 makes the segment non-refundable [RD-5].\n\nThis is not a rider-named stop: no stop was named or measured, so RD-3 does not apply — the exemption rests on RD-5 consent alone [F8][F3][RD-3][RD-5]. The record also shows a traffic reason on the replaced stretch (Central Expressway, band 2, 10–19 km/h, 14:12–14:38), so no driver violation is recorded [F11][RD-4].\n\nWith segment F3 exempt, the refundable distance is 4.10 km − 3.73 km = 0.37 km, which is within the 1 km tolerance: (4.10 km − 3.73 km) = 0.37 km ≤ 1 km, so no refund is due [F3][F4][RD-1][RD-2]. The rider's doubt about whether the car took the road she agreed to is answered by the record: Lavender Street was in fact driven, and her own message [F8] agreed to exactly that road [F3][RD-5]. The rider's refund-fraud flag [F16] only raises any decision threshold; it does not decide this case [TH-3].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
-   "F5",
    "F7",
    "F8",
    "F9",
-   "F10",
    "F11",
-   "F12",
-   "F13",
-   "F14",
-   "F15",
-   "F18"
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-5"
   ],
-  "escalate": false,
-  "escalation_reason": null,
+  "escalate": true,
+  "escalation_reason": "code confidence 87% below the 95% needed: a party carries a fraud flag (TH-3: 95%)",
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
-     "F8",
-     "F9",
-     "F11"
+     "F7",
+     "F8"
     ],
-    "reason": "The only rider agreement is the 14:31 message \"Sure, no problem.\" answering the driver's 14:30 request to go via Clementi Road [F8][F9]; both are timestamped after the segment's 14:28:45 start (trace on F3), so they are not consent obtained before the diversion, and the driver's own statement is a claim, not consent (G11) [F11]. No rider message named a stop or road before the segment [RD-3][RD-5]. The segment's extra_km is therefore non-exempt and refundable under RD-2."
+    "named_road": "Lavender Street",
+    "excluded_road": null,
+    "reason": "The rider's message at 14:26 agreed to the driver's proposal to go via Lavender Street, before the segment began at 14:29 [F8][F7]; Lavender Street is among the roads driven on the segment [F3], so the prior agreement covers the segment [RD-5]."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5",
+    "finding": "met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "Rider's own timestamped message before the segment ('可以，走 Lavender Street 吧。') agrees to the specific road the driver proposed, and that road was driven on the segment; agreement therefore covers the segment [F7][F8][F3][RD-5]."
+   },
+   {
+    "element": "RD-3",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "No rider-named stop appears in the chat and no stop is measured in the segment; the rider named a route, not a stop, so RD-3 does not excuse anything here [F7][F8][F3][RD-3]."
    }
   ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
+   "F7",
    "F8",
-   "F9",
-   "F11"
+   "F10"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "refund_partial",
-  "amount": 2.74,
-  "recommended_action": "Refund $2.74 to the rider as a Ryde voucher for the non-exempt off-route segment (1.94 km × $1.4104/km); no account action against the driver.",
-  "confidence": 0.72,
-  "reasoning": "The trip was a metered RydeTAXI journey (F7), so extra distance reaches the fare: the record bills $14.95 distance for 10.60 km and $3.06 of \"excess distance\" at $1.4104/km [F4][F7]. Under RD-2, where a non-exempt off-route segment exists, the refund is the segment's extra_km times the trip's per-km rate (distance_fare ÷ distance_km) [RD-2].\n\nOne off-route segment is recorded: 14:28–14:34, 3.07 km driven against 1.12 km optimal, +1.94 km, straying up to 786 m from the route [F3]. The trace settles that no qualifying incident supports the driver (no RD-4(a) event, speed-band alone not enough) [F12][F13][F14][F15][RD-4] and that no rider message before 14:28:45 named a stop [RD-3].\n\nThe driver asked at 14:30 \"can I go round via Clementi Road?\" and the rider replied at 14:31 \"Sure, no problem.\" [F8][F9]. Read plainly, that is a specific named-road agreement to go via Clementi Road — a limited authorization, not a general one [RD-5]. But both messages are timestamped after the segment began at 14:28:45 (trace on F3), so RD-5's \"before you go\" requirement is not met: consent after the diversion started cannot excuse the segment [RD-5]. The driver's statement that he told the rider beforehand is a claim, not consent under G11 [F11]. The segment therefore counts [RD-2].\n\nWaiting time on a RydeTAXI is metered and not refundable here: the $0.11 is 0.4 min of metered waiting, consistent with RD-3(c)'s treatment of waiting [F5][RD-3]. No unpublished add-on appears (base $3.90 + distance $14.95 + time $4.83 + waiting $0.11 + platform $1.47 = $25.26) [F7][FARE-1].\n\nAmount: 1.94 km × $1.4104/km = $2.736 ≈ $2.74 [F3][F4][RD-2]. (The billed \"excess\" figure of $3.06 rests on 2.17 km, i.e. it also carries map-matching/corridor mileage outside the measured segment, which RD-2 leaves unrefunded.) RD-6 is not triggered: the driver has 0 prior upheld route disputes, so no flag_account [F18][RD-6].",
+  "ruling": "no_action",
+  "amount": null,
+  "recommended_action": "Close the case with no refund; no driver action needed (traffic reason on record, no violation under RD-4).",
+  "confidence": 0.78,
+  "reasoning": "The trip ran 18.0 km against an optimal 13.9 km (+4.1 km, +30%) [F1], over one off-route segment at 14:29–14:38 that added 3.73 km [F3], so the RD-1 tolerance of 1 km is exceeded and the excess distance fare on record is $5.78 (4.10 km × $1.4102/km) [F4][RD-1][RD-2].\n\nBefore that segment began, the driver sent a chat at 14:26 asking \"Traffic ahead on Central Expressway is building up, ok if I go round via Lavender Street?\" [F7], and the rider answered at 14:26 \"可以，走 Lavender Street 吧。\" — an agreement to a specific named road, Lavender Street, sent before the segment started at 14:29 [F8][F9]. Lavender Street is among the roads actually driven on the segment (JALAN BAHAGIA → KIM KEAT ROAD → BALESTIER ROAD → LAVENDER STREET → …) [F3], so the agreed road ties to the segment and the rider's prior, in-scope agreement under RD-5 makes the segment non-refundable [RD-5].\n\nThis is not a rider-named stop: no stop was named or measured, so RD-3 does not apply — the exemption rests on RD-5 consent alone [F8][F3][RD-3][RD-5]. The record also shows a traffic reason on the replaced stretch (Central Expressway, band 2, 10–19 km/h, 14:12–14:38), so no driver violation is recorded [F11][RD-4].\n\nWith segment F3 exempt, the refundable distance is 4.10 km − 3.73 km = 0.37 km, which is within the 1 km tolerance: (4.10 km − 3.73 km) = 0.37 km ≤ 1 km, so no refund is due [F3][F4][RD-1][RD-2]. The rider's doubt about whether the car took the road she agreed to is answered by the record: Lavender Street was in fact driven, and her own message [F8] agreed to exactly that road [F3][RD-5]. The rider's refund-fraud flag [F16] only raises any decision threshold; it does not decide this case [TH-3].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
-   "F5",
    "F7",
    "F8",
    "F9",
-   "F10",
    "F11",
-   "F12",
-   "F13",
-   "F14",
-   "F15",
-   "F18"
+   "F16"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-3",
    "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1"
+   "RD-5"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
-     "F8",
-     "F9",
-     "F11"
+     "F7",
+     "F8"
     ],
-    "reason": "The only rider agreement is the 14:31 message \"Sure, no problem.\" answering the driver's 14:30 request to go via Clementi Road [F8][F9]; both are timestamped after the segment's 14:28:45 start (trace on F3), so they are not consent obtained before the diversion, and the driver's own statement is a claim, not consent (G11) [F11]. No rider message named a stop or road before the segment [RD-3][RD-5]. The segment's extra_km is therefore non-exempt and refundable under RD-2."
+    "named_road": "Lavender Street",
+    "excluded_road": null,
+    "reason": "The rider's message at 14:26 agreed to the driver's proposal to go via Lavender Street, before the segment began at 14:29 [F8][F7]; Lavender Street is among the roads driven on the segment [F3], so the prior agreement covers the segment [RD-5]."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5",
+    "finding": "met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "Rider's own timestamped message before the segment ('可以，走 Lavender Street 吧。') agrees to the specific road the driver proposed, and that road was driven on the segment; agreement therefore covers the segment [F7][F8][F3][RD-5]."
+   },
+   {
+    "element": "RD-3",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8"
+    ],
+    "reason": "No rider-named stop appears in the chat and no stop is measured in the segment; the rider named a route, not a stop, so RD-3 does not excuse anything here [F7][F8][F3][RD-3]."
    }
   ],
   "rejected_claims": [
    {
-    "id": "D1",
-    "reason": "The driver-side position that the rider agreed to the Clementi Road route fails as a defence: the rider's agreement message [F9] is timestamped 14:31, after the off-route segment began at 14:28:45 [F3], and RD-5 requires consent before the departure from the optimal route; the driver's statement that he told the rider beforehand is a claim, not consent (G11) [F11][RD-5]."
+    "id": "C1",
+    "reason": "The rider's uncertainty whether the driver took the agreed road is contradicted by the record: Lavender Street, the road she agreed to [F8], appears among the roads driven on the segment [F3], so the prior agreement under RD-5 exempts the segment and the residual 0.37 km falls within the 1 km tolerance [RD-1][RD-5]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
+   "F7",
    "F8",
-   "F9",
-   "F11"
+   "F10"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "status": "resolved",
+ "status": "escalated",
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: D1\n✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)"
+  "dropped rejected_claims not in any live brief: C1\n✓ ruling consistent with the policy certificate\n✗ code confidence 87% below the 95% needed: a party carries a fraud flag (TH-3: 95%)"
  ],
  "record_path": "bench/results/judge_only/B-0003.record.json",
- "latency_s": 7.93,
- "input_tokens": 12937,
- "output_tokens": 1564,
- "requests": 2,
- "llm_calls": 2
+ "latency_s": 6.57,
+ "input_tokens": 11192,
+ "output_tokens": 1276,
+ "requests": 1,
+ "llm_calls": 1
 }

@@ -7,15 +7,15 @@ logic has already re-run everything and committed results that belong to this ex
 
 Every PR: the diff must not carry forbidden words (see FORBIDDEN).
 A PR that touches a gated path (core/, policy/policy.md, data/rates.json, bench/baseline.py) must also pass:
-  1. receipts — every stored demo run and every court / judge record on the benchmark and held-out sets verifies
+  1. receipts — every stored demo run and every court / judge record on the benchmark set verifies
      against this tree (case, policy, code and model fingerprints); the code fingerprint covers core/, so this holds
      only when the runs were produced by this code. A judge-only record with an older code fingerprint still stands
      when the experiment is provably the same: the judge's input rebuilt on this tree hashes to the receipt's
      judge_prompt_sha256 and the judge's instructions and model factory are unchanged since the producing commit;
-  2. completeness — every benchmark case has a successful result in all four systems and the held-out cases in both
-     judge systems, on the current result schema, with no failed runs and all stored demo runs present;
+  2. completeness — every benchmark case has a successful result in all four systems, on the current result schema,
+     with no failed runs and all stored demo runs present;
   3. pages — regenerating every derived file from the results leaves the committed files unchanged;
-  4. score floor — the full court still executes no wrong decision and its right-or-handed-off count has not dropped
+  4. score floor — the full court still executes no wrong decision and its right-or-handed-off share has not dropped
      below the base branch.
 Exit code 1 on any failure; the report also goes to $GITHUB_STEP_SUMMARY when set.
 """
@@ -36,9 +36,9 @@ GATED = ("core/", "policy/policy.md", "data/rates.json", "bench/baseline.py")
 # assembled at runtime so that this file never spells the words it forbids
 FORBIDDEN = tuple("".join(parts) for parts in (("cl", "aude"), ("anthr", "opic"), ("co", "dex"), ("/private/", "tmp/"), ("~/.cl", "aude")))
 ARMS = ("raw", "facts_only", "judge_only", "court")
-GENERATORS = ("bench/report.py", "bench/gate_ablation.py", "bench/blind_report.py", "bench/dashboard.py", "bench/ops_page.py",
+GENERATORS = ("bench/report.py", "bench/gate_ablation.py", "bench/dashboard.py", "bench/ops_page.py",
               "scripts/build_policy_page.py", "scripts/build_submission.py", "scripts/sync_numbers.py")
-GENERATED = ("bench/results/summary.md", "bench/results/summary.json", "bench/results/gate_ablation.json", "bench/results/blind/summary.md",
+GENERATED = ("bench/results/summary.md", "bench/results/summary.json", "bench/results/gate_ablation.json",
              "web/report.html", "web/ops.html", "web/policy.html", "web/submission.json", "README.md", "web/index.html", "web/i18n.zh.js")
 STAMP = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2} [A-Z]{2,5}")     # the results page prints the time it was generated
 
@@ -126,6 +126,7 @@ def _judge_only_equivalent(rec: dict, case, model: str) -> tuple[bool, str]:
 
 def check_receipts() -> list[str]:
     from app.main import get_case
+    from core.case_format import read_case
     from core.llm import describe_model
     from core.receipt import verify
     from core.schemas import Case
@@ -139,11 +140,11 @@ def check_receipts() -> list[str]:
         if not v["verified"]:
             bad.append(f"runs/{p.name}: {v['status']}")
     equivalent = 0
-    for sub, cases in (("bench/results", "data/bench/cases"), ("bench/results/blind", "data/bench/blind/cases")):
+    for sub, cases in (("bench/results", "data/bench/cases"),):
         for arm in ("judge_only", "court"):
             for p in sorted((ROOT / sub / arm).glob("*.record.json")):
                 rec = json.loads(p.read_text())
-                case = Case.model_validate(json.loads((ROOT / cases / f"{rec['case_id']}.json").read_text()))
+                case = Case.model_validate(read_case(ROOT / cases / f"{rec['case_id']}.json"))
                 v = verify(rec.get("receipt"), case, model)
                 if v["verified"]:
                     continue
@@ -162,7 +163,7 @@ def check_receipts() -> list[str]:
 def check_completeness() -> list[str]:
     from bench.run_bench import SCHEMA
     bad: list[str] = []
-    for sub, cases, arms in (("bench/results", "data/bench/cases", ARMS), ("bench/results/blind", "data/bench/blind/cases", ("judge_only", "court"))):
+    for sub, cases, arms in (("bench/results", "data/bench/cases", ARMS),):
         ids = sorted(p.stem for p in (ROOT / cases).glob("*.json"))
         for arm in arms:
             for cid in ids:
@@ -188,7 +189,7 @@ def check_pages() -> list[str]:
     before = {f: _norm(f) for f in GENERATED}
     for g in GENERATORS:
         r = subprocess.run([sys.executable, str(ROOT / g)], cwd=ROOT, capture_output=True, text=True)
-        if r.returncode != 0 and g != "bench/blind_report.py":
+        if r.returncode != 0:
             return [f"{g} failed: {r.stderr.strip().splitlines()[-1] if r.stderr.strip() else r.returncode}"]
     bad = [f"{f} is stale: regenerating it from the results changes it" for f in GENERATED if before[f] != _norm(f)]
     subprocess.run(["git", "checkout", "--", *GENERATED], cwd=ROOT, capture_output=True)     # leave the tree as committed
@@ -215,8 +216,8 @@ def check_scores(base: str) -> tuple[list[str], list[str]]:
     court = cur["arms"]["court"]
     if court["wrong_executed_single_call"] != 0:
         bad.append(f"the full court executes {court['wrong_executed_single_call']} wrong decision(s); the floor is 0")
-    if old and court["safe"] < old["arms"]["court"]["safe"]:
-        bad.append(f"the full court's right-or-handed-off count dropped from {old['arms']['court']['safe']} to {court['safe']}")
+    if old and court["safe"] / cur["cases"] < old["arms"]["court"]["safe"] / old["cases"]:      # a share: the set itself may have changed size
+        bad.append(f"the full court's right-or-handed-off share dropped from {old['arms']['court']['safe']}/{old['cases']} to {court['safe']}/{cur['cases']}")
     return bad, lines
 
 

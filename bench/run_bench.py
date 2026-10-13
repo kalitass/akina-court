@@ -39,6 +39,7 @@ os.environ.setdefault("PYDANTIC_AI_NO_BANNER", "1")
 from pydantic_ai import Agent  # noqa: E402
 
 from bench.baseline import run_baseline, usage_of  # noqa: E402
+from core.case_format import read_case  # noqa: E402
 from core.llm import describe_model  # noqa: E402
 from core.orchestrate import model_outage, run_case  # noqa: E402
 from core.schemas import Case  # noqa: E402
@@ -50,7 +51,7 @@ SCHEMA = 2   # 2 = the ruling dict carries every Ruling field (safety_concern, e
 # every field of the model's ruling is kept as the model wrote it: the gate ablation re-validates these dicts, and a
 # missing safety_concern / evidence_status would otherwise be filled in as "none" / "sufficient" by the legacy loader
 RULING_KEYS = ("ruling", "amount", "recommended_action", "confidence", "reasoning", "cited_facts", "cited_policy", "escalate",
-               "escalation_reason", "segment_findings", "rejected_claims", "flag_account",
+               "escalation_reason", "segment_findings", "element_findings", "rejected_claims", "flag_account", "goodwill_credit",
                "safety_concern", "safety_basis", "evidence_status", "evidence_gap")
 
 # ---- token accounting: every Agent.run inside a case appends its usage to the case's accumulator ----
@@ -87,7 +88,7 @@ def case_ids(args) -> list[str]:
 
 
 def load_case(cid: str, swap: bool) -> Case:
-    d = json.loads((BENCH / "cases" / f"{cid}.json").read_text())
+    d = read_case(BENCH / "cases" / f"{cid}.json")
     if swap:
         r, dr = d["profiles"]["rider"], d["profiles"]["driver"]
         shared = [k for k in r if k in dr and k != "trips_90d"]
@@ -166,8 +167,8 @@ def save_court_record(record, cid: str, repeat: int, swap: bool, arm: str = "cou
 
 async def main_async(args) -> int:
     global BENCH, RESULTS
-    if getattr(args, "set", "main") == "blind":
-        BENCH, RESULTS = ROOT / "data" / "bench" / "blind", ROOT / "bench" / "results" / "blind"
+    if getattr(args, "set", "main") != "main":            # trial cases, kept apart from the 50 until they prove themselves
+        BENCH, RESULTS = ROOT / "data" / "bench" / args.set, ROOT / "bench" / "results" / args.set
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
     bad = [a for a in arms if a not in ARMS]
     if bad:
@@ -229,7 +230,7 @@ def main():
     ap.add_argument("--swap", action="store_true", help="identity swap: exchange rider/driver profile blocks, results under <arm>_swap/")
     ap.add_argument("--force", action="store_true", help="re-run even if a successful result exists")
     ap.add_argument("--no-rebuttal", action="store_true", help="court arm without the rebuttal round")
-    ap.add_argument("--set", default="main", help="main = data/bench -> bench/results; blind = data/bench/blind -> bench/results/blind (held-out cases)")
+    ap.add_argument("--set", default="main", help="main = data/bench; any other name = data/bench/<name> (trial cases, results under bench/results/<name>)")
     args = ap.parse_args()
     if not os.environ.get("DEEPSEEK_API_KEY") and os.environ.get("LLM_PROVIDER", "deepseek") == "deepseek":
         print("DEEPSEEK_API_KEY not set: export it in the shell first")

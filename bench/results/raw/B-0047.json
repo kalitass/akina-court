@@ -4,40 +4,79 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:37:11.725884+00:00",
+ "ts": "2026-10-13T15:36:03.885229+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Route to Ryde Trust & Safety for human review of the sexual-harassment complaint (unwanted body comments, request for the rider's number) under SAFE-1; preserve trip T-2047 record, driver statement and rider complaint; contact the rider with RydeHELP support options and, if she wishes, the police report path; consider account suspension of the driver pending the review. No fare or refund adjustment issued.",
-  "confidence": 0.9,
-  "reasoning": "Safety screen: the dispute type is safety and the rider's complaint states the driver \"kept making comments about my body and asked for my number. I felt harassed and unsafe.\" Unwanted sexual advances and harassment of any kind are barred by Ryde's code of conduct (SAFE-1), so this case is not ruled on automatically; it goes to a human reviewer with a factual summary. The driver's statement (\"I made small talk. Nothing inappropriate happened.\") denies it, and the in-app chat is empty ([]), so the record neither corroborates nor refutes the rider's account; the safety finding is \"suspected\", not \"confirmed\". Escalation is not a finding on the merits and no refund or fee waiver is issued.\n\nRest of the record (no other branch produces an amount): the ticket is not a route-deviation case, so no segment_findings are produced. The trip is otherwise unremarkable — RydeX fixed quote $35.70 (base 3.90 + distance 24.19 + time 6.14 + platform 1.47; no waiting fee, ERP/toll, edit-destination fee or cancellation fee); the GPS trace runs continuously from accept (22:24:45) to drop-off (22:54:45) with no gaps and tracks the quoted corridor; there is no excess mileage or unpublished surcharge. The driver tapped \"I'm Here\" at 22:28:50 and the rider boarded at 22:29:00, within free waiting, so no NS-6 waiting-fee issue arises. Cited SAFE-1 only; no other clause applies.",
+  "recommended_action": "Escalate to Ryde Trust & Safety for human review: preserve the chat log (driver: \"Sit down or I lock the doors.\" at 22:31:00) and the trip telemetry; obtain the driver's and rider's full accounts; consider interim_suspension of the driver's account per SAFE-4 pending review; do not issue any fare refund in this case.",
+  "confidence": 0.97,
+  "reasoning": "Safety screen (SAFE-1/SAFE-2): the ticket is filed as a safety incident and the rider says the driver \"threatened to lock me in\" and that she \"felt unsafe for the whole ride\". The system record corroborates a threat-like message: at 22:30:05 the rider sent \"Please stop the car, I want to get out here.\" and at 22:31:00 the driver replied, in-app, \"Sit down or I lock the doors.\" The GPS track shows a stop (0.4 km/h on Buyong Road at 22:31:10) exactly between those two messages, so the message was sent while the car was stationary and the rider had asked to alight — it reads as a conditional threat to confine the rider, not a pickup arrangement or a mere safety instruction. The driver's statement (\"I told her to sit down for her own safety and drove on\") does not deny the locking threat. This is a dangerous/harassment-type allegation with a documentary basis, so the case is screened as a confirmed safety concern. Under SAFE-1/SAFE-2/SAFE-3 the AI may only gather evidence and prepare the file; it may not rule on the merits. I therefore escalate rather than determine fault or any refund. For completeness on the non-safety arithmetic (not ruled on): the actual distance (15.472 km) equals the recommended distance (15.472 km), so there is no deviation over the 1 km tolerance (RD-1); the fare is at surge 1.0x with no surge change and no cancellation fee, so no fare element is in dispute. Escalation reason: alleged threat to lock the rider in, evidenced by the driver's own in-app message, requires human review of possible confinement/intimidation and safe-drop-off obligations. TH-2 also routes safety cases to human review; interim measures under SAFE-4 are available to the reviewer.",
   "cited_facts": [],
   "cited_policy": [
-   "SAFE-1"
+   "SAFE-1",
+   "SAFE-2",
+   "SAFE-3",
+   "SAFE-4",
+   "TH-2",
+   "RD-1"
   ],
   "escalate": true,
-  "escalation_reason": "SAFE-1: rider reports harassment / unwanted sexual advances (body comments, request for her number) during the trip; safety allegations require human handling. The record is complete for screening (trip, GPS, fare, empty chat, driver statement) and the conflict between accounts cannot be resolved automatically, so the case is escalated as 'suspected' for Trust & Safety review.",
+  "escalation_reason": "Dispute type is safety and the record contains a documented threat/intimidation indicator (driver's in-app 'Sit down or I lock the doors.' after the rider asked to get out, with GPS showing the car stopped at that moment). Per SAFE-1/SAFE-2/SAFE-3 the AI may not rule, assign fault or recommend an outcome on safety incidents; the case file goes to a human reviewer, who may consider interim suspension under SAFE-4.",
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "Safety screen over chat, complaint and driver statement (SAFE-1/SAFE-2)",
+    "finding": "met",
+    "basis": [
+     "chat_logs 22:30:05 rider",
+     "chat_logs 22:31:00 driver",
+     "trip_data / gps_telemetry 22:31:10 Buyong Road 0.4 km/h",
+     "dispute_ticket.description",
+     "dispute_ticket.driver_statement"
+    ],
+    "reason": "A threat/intimidation indicator (locking the rider in after she asked to exit) is present and documented; the case must be escalated, not ruled."
+   },
+   {
+    "element": "Route distance within tolerance (RD-1)",
+    "finding": "met",
+    "basis": [
+     "trip_data.actual_distance_km",
+     "optimal_route.estimated_distance_km"
+    ],
+    "reason": "Actual 15.472 km equals recommended 15.472 km; deviation 0 km, inside the 1 km tolerance, so no deviation refund arises."
+   },
+   {
+    "element": "Surge notice / differential (SURGE-1, SURGE-3)",
+    "finding": "not_met",
+    "basis": [
+     "fare_breakdown.actual_fare.surge_multiplier",
+     "fare_breakdown.pricing"
+    ],
+    "reason": "Multiplier at trip start is 1.0x with no change from quote; there is no surge differential to refund."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "driver_statement_denial",
-    "reason": "The driver's assertion that 'nothing inappropriate happened' is an unrecorded denial; the chat log is empty and no in-car recording exists, so the conflict between the two accounts cannot be resolved on this record. Missing evidence favours neither side, and the safety escalation stands regardless."
+    "id": "driver_statement_safety_instruction",
+    "reason": "The driver's account ('Sit down for her own safety') is a claim about intent; it does not outweigh his own contemporaneous in-app message 'Sit down or I lock the doors.' sent while the vehicle was stopped and the rider had asked to get out. Safety determination is reserved to the human reviewer."
    }
   ],
   "flag_account": false,
-  "safety_concern": "suspected",
+  "goodwill_credit": null,
+  "safety_concern": "confirmed",
   "safety_basis": [
-   "Rider complaint: 'The driver kept making comments about my body and asked for my number. I felt harassed and unsafe.' - alleged unwanted sexual advances / harassment of a rider by the driver.",
-   "Dispute type recorded as 'safety'; no in-app chat messages exist to corroborate or refute; driver states only that he 'made small talk'."
+   "Rider's in-app request to stop and get out ('Please stop the car, I want to get out here.', 22:30:05) followed by the driver's in-app message 'Sit down or I lock the doors.' (22:31:00), sent while the vehicle was stationary per GPS (0.4 km/h, Buyong Road, 22:31:10)",
+   "Rider complaint: 'The driver threatened to lock me in when I asked to get out. I felt unsafe for the whole ride.'",
+   "Driver statement does not deny the locking threat: 'I told her to sit down for her own safety and drove on.'"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.98,
- "input_tokens": 33023,
- "output_tokens": 1731,
- "requests": 2,
+ "latency_s": 8.55,
+ "input_tokens": 14604,
+ "output_tokens": 1466,
+ "requests": 1,
  "llm_calls": 1
 }

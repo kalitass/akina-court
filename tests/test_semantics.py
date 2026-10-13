@@ -6,7 +6,8 @@ Acceptance list (no model call; the engine, the verifier and the fact tools are 
   * "I cannot find you at the pickup point" does not force an escalation; a threat without a keyword can still escalate
   * an exempt finding must rest on a rider message sent before the segment, never on the driver's statement alone
   * missing GPS, a hole in the trace, an untimed message, a metered trip without a distance fare: no ruling for either side
-  * the judge's own escalate (undetermined finding, safety concern, evidence gap) is kept by the verifier
+  * the judge's own escalate (undetermined finding, safety concern, evidence gap) is kept by the verifier when the trace
+    leaves something open; on a case the trace settles end to end, the one outcome the policy allows is carried out
 """
 import json
 from datetime import timedelta
@@ -32,6 +33,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def load(cid):
     return Case.model_validate(json.loads((ROOT / "data" / "cases" / f"{cid}.json").read_text()))
+
+
+def bench(cid):
+    from core.case_format import read_case
+    return Case.model_validate(read_case(ROOT / "data" / "bench" / "cases" / f"{cid}.json"))
 
 
 def with_chat(case, lines):
@@ -62,12 +68,12 @@ def test_paraphrased_agreement_keeps_the_question_open():
 
 
 def test_negated_okay_is_not_labelled_and_the_judge_may_still_find_counts():
-    case = with_chat(load("C-0001"), [(0, "driver", "ok if I go round by Cavenagh?"), (40, "rider", "I am not okay with this detour.")])
+    case = with_chat(bench("B-0013"), [(0, "driver", "ok if I go round by West Coast Road?"), (40, "rider", "I am not okay with this detour.")])
     table = build_fact_table(case)
     assert not any("agreement" in (f.value or {}).get("flags", []) for f in table.facts)
     assert not any("[agreement]" in f.text for f in table.facts)
     cert = evaluate(case, table)
-    open_segs = [s for s, sg in cert.segments.items() if sg["exempt"] is None]          # code settled the RD-4 one; these are the judge's
+    open_segs = [s for s, sg in cert.segments.items() if sg["exempt"] is None]          # the rider wrote before the segment: the judge reads it
     assert open_segs
     f = [_sf(fact_id=s, finding="counts" if sg["exempt"] is None else "exempt", reason="refused [RD-5]") for s, sg in cert.segments.items()]
     amount = expected_amount(cert, {x.fact_id: x.exempt for x in f})
@@ -77,7 +83,7 @@ def test_negated_okay_is_not_labelled_and_the_judge_may_still_find_counts():
 
 
 def test_exempt_finding_needs_a_rider_message_before_the_segment():
-    case = load("C-0001")
+    case = bench("B-0015")                                     # rider's "ok" before both off-route segments
     table = build_fact_table(case)
     cert = evaluate(case, table)
     seg = next(s for s in cert.segments if cert.segments[s]["exempt"] is None)
@@ -186,29 +192,49 @@ def test_undetermined_finding_blocks_execution_and_escalate_is_kept():
     assert out.escalate and "undetermined" in (out.escalation_reason or "")
 
 
-def test_evidence_gap_escalate_is_not_reset_by_the_verifier():
-    case = load("C-0004")
+def test_evidence_gap_escalate_is_kept_when_the_trace_leaves_the_gap_open():
+    case = bench("B-0035")                                     # a hole in the GPS during the wait that could decide the case
     table = build_fact_table(case)
     cert = evaluate(case, table)
-    r = ruling(ruling="escalate", escalate=True, evidence_status="insufficient", evidence_gap="the arrival tap time contradicts the trace and the record does not say which is right", cited_policy=["NS-1"])
+    assert cert.insufficient and cert.allowed == ["escalate"]
+    r = ruling(ruling="escalate", escalate=True, evidence_status="insufficient", evidence_gap="the GPS trace has a hole during the wait", cited_policy=["NS-1"])
+    ok, why = check_ruling(cert, r)
+    assert ok, why
     out, lines = verify_ruling(r, table, citable_ids(), certificate=cert)
     assert out.escalate and out.ruling == "escalate" and "evidence insufficient" in (out.escalation_reason or "")   # never turned back into a ruling
+
+
+def test_evidence_gap_escalate_on_a_case_the_trace_settles_is_carried_out():
+    case = bench("B-0030")                                     # driver cancelled after 4 min 50 s: NS-1 (ii) fails, the fee is refunded
+    table = build_fact_table(case)
+    cert = evaluate(case, table)
+    assert cert.mechanical and cert.allowed == ["refund_full", "escalate"] and not cert.elements
+    r = ruling(ruling="escalate", escalate=True, evidence_status="insufficient", evidence_gap="the arrival tap time contradicts the trace and the record does not say which is right", cited_policy=["NS-1"])
     ok, why = check_ruling(cert, r)
-    assert not ok and any("end to end" in w for w in why)                      # ...but on a case the trace settles, the judge is asked once more first
+    assert not ok and any("end to end" in w for w in why)
+    out, lines = verify_ruling(r, table, citable_ids(), certificate=cert)
+    assert not out.escalate and out.ruling == "refund_full" and out.amount == 5.00 and out.evidence_status == "sufficient"
+    assert any("carried out as the policy requires" in l for l in lines)
+    # a safety concern is always a ground of its own: kept as an escalate
+    out2, _ = verify_ruling(r.model_copy(update={"safety_concern": "suspected", "safety_basis": ["F10"]}), table, citable_ids(), certificate=cert)
+    assert out2.escalate and out2.ruling == "escalate"
 
 
 # ---------------------------------------------------------------- an escalate needs a ground the trace leaves open
 
 def test_undetermined_on_a_code_settled_segment_is_not_a_ground():
-    case = load("C-0003")                                                      # RD-4 incident: code settled the segment exempt
+    case = bench("B-0016")                                     # no rider message before the detour: code settled it (counts)
     table = build_fact_table(case)
     cert = evaluate(case, table)
     seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is not None)
-    r = ruling(ruling="escalate", escalate=True, segment_findings=[_sf(fact_id=seg, finding="undetermined", reason="RD-4 unclear")])
+    assert cert.mechanical and cert.allowed == ["refund_partial", "escalate"]
+    r = ruling(ruling="escalate", escalate=True, segment_findings=[_sf(fact_id=seg, finding="undetermined", reason="consent unclear [RD-5]")])
     ok, why = check_ruling(cert, r)
     assert not ok and any("settled that segment" in w for w in why)
     out, lines = verify_ruling(r, table, citable_ids(), certificate=cert)
-    assert out.escalate and any("not leave open" in l for l in lines)          # still a person's case, but recorded as such
+    # the trace settles the case end to end: the one outcome it allows is carried out, at the RD-2 amount
+    assert not out.escalate and out.ruling == "refund_partial" and any("carried out as the policy requires" in l for l in lines)
+    assert out.amount == expected_amount(cert, {}) == 4.08
 
 
 def test_escalate_on_a_mechanical_case_without_a_missing_fact_is_sent_back():
@@ -223,16 +249,20 @@ def test_escalate_on_a_mechanical_case_without_a_missing_fact_is_sent_back():
     assert ok
 
 
-def test_exempt_finding_cannot_rest_on_rd4_the_trace_rejected():
+def test_exempt_finding_cannot_rest_on_rd4():
+    """RD-2 (v3): a traffic reason never exempts a segment, whether the judge says so in words or names the ground."""
     case = load("C-0001")
     table = build_fact_table(case)
     cert = evaluate(case, table)
-    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
+    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None and sg["traffic"])
     rider_before = [f for f, m in cert.chat_index.items() if m["from"] == "rider" and not m["statement"] and m["ts"] < cert.segments[seg]["start"]]
-    others = [_sf(fact_id=s, finding="exempt" if sg["exempt"] else "counts", basis=rider_before, reason="[RD-5]") for s, sg in cert.segments.items() if s != seg]
+    others = [_sf(fact_id=s, finding="counts", reason="[RD-5]") for s in cert.segments if s != seg]
     r = ruling(ruling="no_action", segment_findings=[_sf(fact_id=seg, finding="exempt", basis=rider_before, reason="the accident on record exempts it [RD-4]")] + others)
     ok, why = check_ruling(cert, r)
     assert not ok and any("rests on RD-4" in w for w in why)
+    r2 = ruling(ruling="no_action", segment_findings=[SegmentFinding(fact_id=seg, finding="exempt", ground="incident", reason="[RD-4]")] + others)
+    ok, why = check_ruling(cert, r2)
+    assert not ok and any("traffic reason does not exempt" in w for w in why), why
 
 
 # ---------------------------------------------------------------------------- a finding is held to its ground
@@ -246,39 +276,33 @@ def test_every_ground_but_other_has_one_consequence():
 
 
 def test_finding_that_contradicts_its_ground_is_blocked_and_other_cannot_execute():
-    """B-0011's failure shape: the judge recognises a rider-named stop (RD-3(a)) and still refunds. With the ground
+    """A known failure shape: the judge recognises a rider-named stop (RD-3) and still refunds. With the ground
     named, code sees the contradiction; a finding on no named ground cannot execute either."""
-    case = load("C-0001")                                             # segment 1 is settled by RD-4; the 7-Eleven loop is the judge's
-    table = build_fact_table(case); cert = evaluate(case, table)
-    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
-    rider_before = [f.id for f in table.facts if f.source == "chat" and f.value.get("from") == "rider"][:1]
-    bad = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
-                 segment_findings=[SegmentFinding(fact_id=seg, finding="counts", ground="rider_named_stop", basis=rider_before, reason="[RD-3]")])
+    table, cert, seg, base, rider_before = _open_segments()
+    amt = expected_amount(cert, {**{b.fact_id: b.exempt for b in base}, seg: False})
+    bad = ruling(ruling="refund_partial", amount=amt,
+                 segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="rider_named_stop", basis=rider_before, reason="[RD-3]")])
     ok, why = check_ruling(cert, bad)
     assert not ok and any("rider_named_stop" in w and "exempt" in w for w in why), why
-    vague = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
-                   segment_findings=[SegmentFinding(fact_id=seg, finding="counts", ground="other", basis=rider_before, reason="[RD-5]")])
+    vague = ruling(ruling="refund_partial", amount=amt,
+                   segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="other", basis=rider_before, reason="[RD-5]")])
     ok, why = check_ruling(cert, vague)
     assert not ok and any("no named ground" in w for w in why), why
-    settled = [SegmentFinding(fact_id=s, finding="exempt" if sg["exempt"] else "counts", ground="incident" if sg["exempt"] else "consent_after_or_none", reason="[RD-4]")
-               for s, sg in cert.segments.items() if sg["exempt"] is not None]
-    good = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
-                  segment_findings=settled + [SegmentFinding(fact_id=seg, finding="counts", ground="consent_after_or_none", basis=rider_before, reason="[RD-5]")])
+    good = ruling(ruling="refund_partial", amount=amt,
+                  segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="consent_after_or_none", basis=rider_before, reason="[RD-5]")])
     ok, why = check_ruling(cert, good)
     assert ok, why
 
 
-# ---------------------------------------------------------------------------- a ground both advocates state binds the judge
+# ---------------------------------------------------------------------------- a ground both advocates state is advice, not a binding
 
-def test_stipulated_ground_binds_the_judge_and_needs_both_sides():
+def test_stipulated_ground_needs_both_sides_and_informs_but_does_not_bind_the_judge():
     from core.orchestrate import stipulated_grounds
+    from core.policy_engine import code_confidence
     from core.schemas import CaseBrief, Rebuttal, RequestedOutcome
-    case = load("C-0001")
-    table = build_fact_table(case); cert = evaluate(case, table)
-    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
-    settled = next(s for s, sg in cert.segments.items() if sg["exempt"] is not None)
-    brief = lambda side, g: CaseBrief(side=side, claims=[], weaknesses=["x"], requested_outcome=RequestedOutcome(action="no_action", amount=None), segment_grounds={seg: g, settled: "incident"})
-    # one side only, or "other": nothing is stipulated; a settled segment never is
+    table, cert, seg, base, rider_before = _open_segments()
+    brief = lambda side, g: CaseBrief(side=side, claims=[], weaknesses=["x"], requested_outcome=RequestedOutcome(action="no_action", amount=None), segment_grounds={seg: g})
+    # one side only, or "other": nothing is stipulated
     assert stipulated_grounds(cert, {"rider": brief("rider", "rider_named_stop"), "driver": brief("driver", "consent_after_or_none")}, {}) == {}
     assert stipulated_grounds(cert, {"rider": brief("rider", "other"), "driver": brief("driver", "other")}, {}) == {}
     # both sides agree in their briefs; a rebuttal may revise one side and dissolve the agreement
@@ -286,47 +310,59 @@ def test_stipulated_ground_binds_the_judge_and_needs_both_sides():
     assert stipulated_grounds(cert, both, {}) == {seg: "rider_named_stop"}
     reb = {"rider": Rebuttal(side="rider", points=[], segment_grounds={seg: "scope_other"})}
     assert stipulated_grounds(cert, both, reb) == {}
-    # the judge's finding must rest on the stipulated ground: a different ground is sent back, the right one passes
-    rider_before = [f.id for f in table.facts if f.source == "chat" and f.value.get("from") == "rider"][:1]
-    base = [SegmentFinding(fact_id=settled, finding="exempt", ground="incident", reason="[RD-4]")]
-    wrong = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
+    # the judge may read the words otherwise: a different ground is not sent back, but the reading then rests on nothing
+    # else and the code confidence drops (TH-3); following the stipulation keeps it at 100%
+    other = ruling(ruling="refund_partial", amount=expected_amount(cert, {**{b.fact_id: b.exempt for b in base}, seg: False}),
                    segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="scope_other", basis=rider_before, reason="[RD-5]")])
-    ok, why = check_ruling(cert, wrong, {seg: "rider_named_stop"})
-    assert not ok and any("stipulated" in w for w in why), why
+    ok, why = check_ruling(cert, other, {seg: "rider_named_stop"})
+    assert ok, why
     right = ruling(ruling="no_action", amount=None,
                    segment_findings=base + [SegmentFinding(fact_id=seg, finding="exempt", ground="rider_named_stop", basis=rider_before, reason="[RD-3]")])
     ok, why = check_ruling(cert, right, {seg: "rider_named_stop"})
     assert ok, why
+    stip = {seg: "rider_named_stop", base[0].fact_id: "general_route_consent"}
+    assert code_confidence(cert, right, stip) == 1.0
+    assert code_confidence(cert, other, stip) == 0.9
+
+
+def test_a_code_settled_segment_is_never_stipulated():
+    from core.orchestrate import stipulated_grounds
+    from core.schemas import CaseBrief, RequestedOutcome
+    case = load("C-0002")
+    cert = evaluate(case, build_fact_table(case))
+    settled = next(s for s, sg in cert.segments.items() if sg["exempt"] is not None)
+    brief = lambda side: CaseBrief(side=side, claims=[], weaknesses=["x"], requested_outcome=RequestedOutcome(action="no_action", amount=None), segment_grounds={settled: "general_route_consent"})
+    assert stipulated_grounds(cert, {"rider": brief("rider"), "driver": brief("driver")}, {}) == {}
 
 
 # ---------------------------------------------------------------------------- the judge decides between the grounds the parties argued
 
-def _c0001_open():
-    case = load("C-0001")
+def _open_segments():
+    """B-0015 has two open segments (the rider's "ok" came before both). The second is the one under test; the first is
+    held exempt on the rider's general route consent so the amount is fixed by the second alone. The road names are taken
+    off the GPS samples, so no named-road check applies and the segments stay the judge's to read."""
+    case = bench("B-0015")
+    case = case.model_copy(update={"gps": [p.model_copy(update={"road": None}) for p in case.gps]})
     table = build_fact_table(case); cert = evaluate(case, table)
-    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
-    settled = next(s for s, sg in cert.segments.items() if sg["exempt"] is not None)
+    first, seg = list(cert.segments)[:2]
     rider_before = [f.id for f in table.facts if f.source == "chat" and f.value.get("from") == "rider"][:1]
-    base = [SegmentFinding(fact_id=settled, finding="exempt", ground="incident", reason="[RD-4]")]
+    base = [SegmentFinding(fact_id=first, finding="exempt", ground="general_route_consent", basis=rider_before, reason="[RD-5]")]
     return table, cert, seg, base, rider_before
 
 
-def test_executing_finding_must_rest_on_an_argued_ground():
-    table, cert, seg, base, rider_before = _c0001_open()
+def test_argued_grounds_inform_the_judge_but_do_not_limit_it():
+    """v3: both advocates can miss the right reading, so a finding on a ground neither side argued may still execute."""
+    table, cert, seg, base, rider_before = _open_segments()
     argued = {seg: {"rider": ["named_road_untied"], "driver": ["general_route_consent"]}}
-    # counts on a ground neither side argued: sent back
-    unargued = ruling(ruling="refund_partial", amount=expected_amount(cert, {seg: False}),
+    unargued = ruling(ruling="refund_partial", amount=expected_amount(cert, {**{b.fact_id: b.exempt for b in base}, seg: False}),
                       segment_findings=base + [SegmentFinding(fact_id=seg, finding="counts", ground="driver_errand", basis=rider_before, reason="[RD-5]")])
-    ok, why = check_ruling(cert, unargued, None, argued)
-    assert not ok and any("neither advocate" in w for w in why), why
-    # the same consequence under another label the rider argued for (both are "counts" readings): the judge may name its own sub-branch
-    ok, why = check_ruling(cert, unargued, None, {seg: {"rider": ["scope_other"], "driver": ["general_route_consent"]}})
-    assert ok, why
-    # the same finding without advocates (judge-only arm): no such rule, the ruling stands on its own form
-    ok, why = check_ruling(cert, unargued, None, None)
-    assert ok, why
-    ok, why = check_ruling(cert, unargued, None, {seg: {"rider": [], "driver": []}})     # advocates stated nothing: nothing binds
-    assert ok, why
+    for a in (argued, {seg: {"rider": ["scope_other"], "driver": ["general_route_consent"]}}, None, {seg: {"rider": [], "driver": []}}):
+        ok, why = check_ruling(cert, unargued, None, a)
+        assert ok, (a, why)
+    # the ground still fixes the consequence, argued or not
+    wrong = unargued.model_copy(update={"segment_findings": base + [SegmentFinding(fact_id=seg, finding="counts", ground="general_route_consent", basis=rider_before, reason="[RD-5]")]})
+    ok, why = check_ruling(cert, wrong, None, argued)
+    assert not ok and any("means exempt" in w for w in why), why
     # exempt on the driver's argued ground passes (the rider disputes that consent exists, not what kind it was)
     argued_ok = ruling(ruling="no_action", amount=None,
                        segment_findings=base + [SegmentFinding(fact_id=seg, finding="exempt", ground="general_route_consent", basis=rider_before, reason="[RD-5]")])
@@ -340,7 +376,7 @@ def test_executing_finding_must_rest_on_an_argued_ground():
 
 
 def test_undetermined_on_a_stipulated_ground_is_sent_back_once():
-    table, cert, seg, base, rider_before = _c0001_open()
+    table, cert, seg, base, rider_before = _open_segments()
     und = ruling(ruling="escalate", escalate=True, amount=None,
                  segment_findings=base + [SegmentFinding(fact_id=seg, finding="undetermined", ground="general_route_consent", basis=rider_before, reason="[RD-5]")])
     ok, why = check_ruling(cert, und, {seg: "general_route_consent"})
@@ -353,7 +389,7 @@ def test_undetermined_on_a_stipulated_ground_is_sent_back_once():
 
 def test_advocate_output_must_state_a_ground_for_every_segment():
     from core.agents.advocate import missing_grounds
-    table, cert, seg, base, rider_before = _c0001_open()
+    table, cert, seg, base, rider_before = _open_segments()
     segs = [f.id for f in table.facts if f.source == "gps" and f.text.startswith("Off-route segment")]
     assert segs and missing_grounds(table, {}) == segs
     assert missing_grounds(table, {s: "general_route_consent" for s in segs}) == []
@@ -362,7 +398,7 @@ def test_advocate_output_must_state_a_ground_for_every_segment():
 
 
 def test_exemption_cannot_execute_while_the_kind_of_agreement_is_contested():
-    table, cert, seg, base, rider_before = _c0001_open()
+    table, cert, seg, base, rider_before = _open_segments()
     ex = ruling(ruling="no_action", amount=None,
                 segment_findings=base + [SegmentFinding(fact_id=seg, finding="exempt", ground="general_route_consent", basis=rider_before, reason="[RD-5]")])
     # one side reads a general route choice, the other an agreement to a named road: sent back (undetermined → a person)
@@ -380,15 +416,26 @@ def test_exemption_cannot_execute_while_the_kind_of_agreement_is_contested():
     assert ok, why
 
 
+def _c0003_with_roads(roads: list[str]):
+    """C-0003: the rider said "Ok" to the driver's "I'll go by ECP instead" before the detour. `roads` are written on
+    the GPS samples inside the off-route segment (the official record's location_desc)."""
+    case = load("C-0003")
+    cert = evaluate(case, build_fact_table(case))
+    sg = next(iter(cert.segments.values()))
+    start, end = sg["start"], sg["end"]
+    # the v3 demo record names the roads on every sample: they are taken off, and only `roads` are written in the segment
+    gps = [p.model_copy(update={"road": roads[i % len(roads)] if roads and start <= p.ts.isoformat() <= end else None}) for i, p in enumerate(case.gps)]
+    return case.model_copy(update={"gps": gps})
+
+
 def test_tied_ground_is_read_as_untied_when_nothing_on_record_can_tie_the_segment():
     from core.orchestrate import argued_grounds, ground_corrections, record_grounds, stipulated_grounds
     from core.policy_engine import tie_possible
-    from core.schemas import CaseBrief, Rebuttal, RequestedOutcome
-    case = Case.model_validate(json.loads((ROOT / "data" / "bench" / "cases" / "B-0054.json").read_text()))   # 'Can lah, go ahead' to a named road
+    from core.schemas import CaseBrief, RequestedOutcome
+    case = _c0003_with_roads([])                            # both messages precede the segment, no stop in it, no road names
     table = build_fact_table(case); cert = evaluate(case, table)
     seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
-    # B-0054: both messages precede the segment and no stop is measured inside it → nothing on record can tie it to the road
-    assert not cert.segments[seg]["stops"] and not tie_possible(cert, seg)
+    assert not cert.segments[seg]["stops"] and not cert.segments[seg]["roads"] and not tie_possible(cert, seg)
     assert record_grounds(cert, {seg: "named_road_tied"}) == {seg: "named_road_untied"}
     assert record_grounds(cert, {seg: "general_route_consent"}) == {seg: "general_route_consent"}
     brief = lambda side, g: CaseBrief(side=side, claims=[], weaknesses=["x"], requested_outcome=RequestedOutcome(action="no_action", amount=None), segment_grounds={seg: g})
@@ -396,16 +443,60 @@ def test_tied_ground_is_read_as_untied_when_nothing_on_record_can_tie_the_segmen
     assert stipulated_grounds(cert, both, {}) == {seg: "named_road_untied"}
     assert argued_grounds(cert, both, {})[seg] == {"rider": ["named_road_untied"], "driver": ["named_road_untied"]}
     assert len(ground_corrections(cert, both, {})) == 2
-    # a message sent once the segment had started makes a tie possible, and the ground is left as stated
-    late = with_chat(case, [(0, "driver", "ok if I go round via Lornie Road?"), (40, "rider", "Can lah, go ahead"), (90 * 60, "rider", "we are on Lornie now")])
-    t2 = build_fact_table(late); c2 = evaluate(late, t2)
-    seg2 = next(s for s, sg in c2.segments.items() if sg["exempt"] is None)
-    assert any(c["ts"] and c["ts"] >= c2.segments[seg2]["start"] for c in c2.chat_index.values()) and tie_possible(c2, seg2)
-    assert record_grounds(c2, {seg2: "named_road_tied"}) == {seg2: "named_road_tied"}
-    # a stop measured inside the segment (C-0001) also makes a tie possible
-    c1 = load("C-0001"); t1 = build_fact_table(c1); cc = evaluate(c1, t1)
-    s1 = next(s for s, sg in cc.segments.items() if sg["exempt"] is None)
-    assert tie_possible(cc, s1)
+    # road names on the segment's samples make a tie possible, and the ground is left as stated
+    c2 = evaluate(_c0003_with_roads(["EAST COAST PARKWAY"]), build_fact_table(_c0003_with_roads(["EAST COAST PARKWAY"])))
+    assert c2.segments[seg]["roads"] == ["EAST COAST PARKWAY"] and tie_possible(c2, seg)
+    assert record_grounds(c2, {seg: "named_road_tied"}) == {seg: "named_road_tied"}
+    # a stop measured inside the segment (C-0001's 7-Eleven loop) also makes a tie possible
+    c1 = load("C-0001"); cc = evaluate(c1, build_fact_table(c1))
+    assert any(tie_possible(cc, s) for s, sg in cc.segments.items() if sg["stops"])
+
+
+def test_named_road_consent_is_checked_against_the_roads_the_segment_drove():
+    """RD-5 (v3): the judge reads WHICH road the rider agreed to (named_road); code says whether the segment drove it."""
+    case = _c0003_with_roads(["Tampines Avenue 10", "EAST COAST PARKWAY", "ECP"])
+    table = build_fact_table(case); cert = evaluate(case, table)
+    seg = next(s for s, sg in cert.segments.items() if sg["exempt"] is None)
+    seg_fact = next(f for f in table.facts if f.id == seg)
+    assert "Roads driven:" in seg_fact.text and "EAST COAST PARKWAY" in seg_fact.value["roads"]
+    rider = [f for f, m in cert.chat_index.items() if m["from"] == "rider"]
+    f = lambda ground, named, finding: ruling(ruling="no_action" if finding == "exempt" else "refund_partial",
+                                             amount=None if finding == "exempt" else expected_amount(cert, {seg: False}),
+                                             segment_findings=[SegmentFinding(fact_id=seg, finding=finding, ground=ground, named_road=named, basis=rider, reason="[RD-5]")])
+    ok, why = check_ruling(cert, f("named_road_tied", "East Coast Parkway", "exempt"))
+    assert ok, why                                                      # case does not matter
+    ok, why = check_ruling(cert, f("named_road_tied", "ECP", "exempt"))
+    assert ok, why
+    ok, why = check_ruling(cert, f("named_road_tied", "Pan Island Expressway", "exempt"))
+    assert not ok and any("named_road_elsewhere" in w for w in why), why
+    ok, why = check_ruling(cert, f("named_road_elsewhere", "Pan Island Expressway", "counts"))
+    assert ok, why
+    ok, why = check_ruling(cert, f("named_road_untied", "ECP", "undetermined").model_copy(update={"ruling": "no_action", "amount": None}))
+    assert not ok and any("named_road_tied" in w for w in why), why     # roads are on record: untied is not a reading
+    ok, why = check_ruling(cert, f("named_road_tied", None, "exempt"))
+    assert not ok and any("needs named_road" in w for w in why), why
+
+
+def test_untied_escalate_is_sent_back_when_the_roads_are_on_record():
+    case = _c0003_with_roads(["EAST COAST PARKWAY"])
+    cert = evaluate(case, build_fact_table(case))
+    seg = next(iter(cert.segments))
+    r = ruling(ruling="escalate", escalate=True, segment_findings=[
+        SegmentFinding(fact_id=seg, finding="undetermined", ground="named_road_untied", named_road="ECP", reason="[RD-5]")])
+    ok, why = check_ruling(cert, r)
+    assert not ok and any("named_road_tied" in w for w in why), why
+
+
+def test_tolerance_applies_after_exempt_segments():
+    """C-0003: deviation 1.28 km, one 0.80 km segment. Exempt → 0.48 km left, within the 1 km tolerance → no refund;
+    counts → the whole 1.28 km is refunded."""
+    case = load("C-0003")
+    cert = evaluate(case, build_fact_table(case))
+    seg = next(iter(cert.segments))
+    assert cert.deviation_km == pytest.approx(1.28, abs=0.01)
+    assert expected_amount(cert, {seg: True}) == 0.0
+    assert expected_amount(cert, {seg: False}) == round(cert.deviation_km * cert.rate_per_km + 1e-9, 2)
+    assert expected_amount(cert, {}) is None                           # an open segment with no finding: nothing can execute
 
 
 def test_rebuttal_verification_keeps_the_segment_grounds():
@@ -423,15 +514,15 @@ def test_rebuttal_verification_keeps_the_segment_grounds():
 def test_no_rider_message_before_the_segment_is_settled_by_code():
     """RD-5 / RD-3 both need a rider message sent before the segment: with none (only later messages, or only the driver's
     statement) code settles the segment as counting, and nothing about it is left to the judge."""
-    case = Case.model_validate(json.loads((ROOT / "data" / "bench" / "cases" / "B-0003.json").read_text()))     # ask and yes both after the start
+    case = bench("B-0012")                                     # the rider's only message comes after the segment started
     table = build_fact_table(case); cert = evaluate(case, table)
     seg = next(iter(cert.segments))
     rider = [c for c in cert.chat_index.values() if c["from"] == "rider" and not c["statement"]]
     assert rider and all(c["ts"] >= cert.segments[seg]["start"] for c in rider)
     assert cert.segments[seg]["exempt"] is False and "after the segment started" in next(p for p in cert.predicates if p.clause == "RD-5" and p.subject == seg).detail
     assert not judge_items(cert) or all(p.clause == "SAFE-1" for p in judge_items(cert))
-    # only the driver's statement on record (B-0005): a claim, not consent → settled too
-    c5 = Case.model_validate(json.loads((ROOT / "data" / "bench" / "cases" / "B-0005.json").read_text()))
+    # only the driver's statement on record (B-0016: the rider's words are in an unrecorded call): a claim, not consent → settled too
+    c5 = bench("B-0016")
     t5 = build_fact_table(c5); k5 = evaluate(c5, t5)
     assert all(sg["exempt"] is False for sg in k5.segments.values())
     # a rider message before the segment keeps the question open (C-0001)

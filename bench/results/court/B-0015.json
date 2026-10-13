@@ -4,21 +4,22 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:29:46.281384+00:00",
+ "ts": "2026-10-13T17:48:33.196045+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 8.22,
-  "recommended_action": "Issue a $8.22 Ryde voucher to the rider for the two unexempted detour segments (RD-2); no account flag.",
-  "confidence": 0.9,
-  "reasoning": "Two off-route segments are recorded on this RydeTAXI trip: 22:56–23:04 adding 2.46 km [F3] and 23:08–23:14 adding 3.37 km [F4]. RD-1 makes each such segment reviewable under RD-3/RD-4/RD-5, and nothing on this record exempts either of them.\n\nNo rider message precedes either segment — there are no in-app chat messages at all [F9] — so no consent was given before 22:56 or before 23:08, and the driver's post-trip statement \"The GPS rerouted me\" [F10] is a claim written after the fact, which cannot establish consent [RD-5]. No stop was requested by the rider [F9], so RD-3 does not apply.\n\nThere is also no reasonable cause: no traffic incident was recorded near the route during the trip window [F13], and the only speed records are EAST COAST PARKWAY and AIRPORT BOULEVARD at band 4, 30–39 km/h [F11][F12], which is neither an incident under RD-4(a) nor the band 1–2 congestion RD-4(b) contemplates, and in any event a band alone does not exempt a segment [RD-4]. Weather was fair [F14]. Both segments are therefore unexempted detours refundable under RD-2.\n\nAmount: this is a metered RydeTAXI fare, so the refund is Σ(unexempted segment extra_km) × the trip's per-km rate. The rate is the fare record's distance fare ÷ distance km = $1.4099/km [F5]. 2.46 km + 3.37 km = 5.83 km; 5.83 km × $1.4099/km = $8.2197 → $8.22 [F3][F4][F5][RD-2]. The remaining ~0.66 km of the billed 6.49 km excess [F1][F5] lies in the route corridor and is expressly not refunded [RD-2]. The $0.02 meter waiting unit [F6] is a genuine RydeTAXI meter charge and is not refundable [RD-3(c)][F8].\n\nAccount flag: the driver's profile shows 0 upheld disputes and 0 route disputes in 90 days [F16], so RD-6's \"repeated\" condition is not met and no flag_account is added [RD-6].",
+  "amount": 6.49,
+  "recommended_action": "Refund $6.49 to the rider's original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning, first such incident); record a driver violation for the unexempt off-route km since there is no traffic reason (RD-2/RD-4). No account flag: RD-6's repeat condition is not met.",
+  "confidence": 0.88,
+  "reasoning": "The trip ran 30.9 km against a 20.6 km optimal route, a deviation of 10.31 km [F1], far over RD-1's 1 km tolerance, and the fare record prices that excess at $1.4100/km, excess distance billed $14.54 [F5][F7]. So a refund of the excess distance fare is due unless km are exempt under RD-3 or RD-5 [RD-2].\n\nSegment F3 (22:54–23:03, +5.71 km) [F3]: at 22:50, before the segment began, the driver asked \"Jam ahead, can go via Upper Bukit Timah Road?\" [F8] and the rider answered \"ok\" at 22:51 [F9]. The chat is complete and every message timestamped [F10]. That is a specific named road, agreed before the segment, and UPPER BUKIT TIMAH ROAD is among the roads this segment drove [F3], so the agreement covers the whole segment (the roads before and after the named road are part of going via it) — finding exempt, ground named_road_tied, 5.71 km exempt [RD-5].\n\nSegment F4 (23:07–23:13, +4.73 km) [F4]: the only rider message before it is the 22:51 \"ok\" to a road it never drove — it ran ARCADIA ROAD → ADAM ROAD → LORNIE HIGHWAY → LORNIE ROAD → KHEAM HOCK ROAD → TREVOSE CRESCENT → MERRYN ROAD [F4][F9][F8]. The driver's \"She agreed to my route\" is a post-trip statement, not rider consent given before the segment [F11][RD-5]. No rider message before 23:07 agrees to this route — finding counts, ground consent_after_or_none, 4.73 km refundable [RD-5].\n\nNo traffic reason for either segment: band 8 (70+ km/h) on the BKE and PIE, no incidents near the route, fair weather [F12][F13][F14][F15], and the trace marks RD-4 ✗ for both segments [F3][F4]; the driver's \"Jam ahead\" therefore exempts nothing and a driver violation is recorded [RD-2][RD-4].\n\nArithmetic: (10.31 km deviation − 5.71 km exempt) × $1.4100/km = 4.60 × $1.4100 = $6.4860 → $6.49 [F5][RD-2]. Tolls, time fare and surge are not refunded; surge was 1.0× [F6][F7]. Under TH-1/TH-2 a deviation under $10 is decided by the system per DISP-001, and the record is complete (GPS distance, full timed chat, statement) [F10][F7].\n\nRD-6 does not flag the account: the driver has 1 upheld dispute in 90 days but route disputes upheld = 0 [F17], so there is no prior upheld deviation. The rider's 2 disputes, 0 upheld, and the driver's rating/trips [F16][F17] are profile facts and decide nothing.\n\nRD-7 applies: the rider was not informed for the 23:07–23:13 stretch, so the driver gets the notification-duty reminder and the failure is logged; this is a first notification-related incident, so no formal warning [RD-7][F4].\n\nSafety screen: I read the complaint, the driver's statement and both chat messages; \"I want the whole extra distance refunded\" and \"She agreed to my route\" are about the fare and the route, and nothing describes threats, harassment, inappropriate conduct or dangerous driving — none [F8][F9][F11].",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F8",
    "F9",
    "F10",
@@ -26,28 +27,33 @@
    "F12",
    "F13",
    "F14",
-   "F16"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "RD-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
+     "F8",
      "F9",
      "F10"
     ],
-    "reason": "Off-route segment 22:56–23:04 adding 2.46 km. No rider message exists before 22:56 — the chat record is empty [F9] — and the driver's later statement [F10] is a claim, not consent (G11); no incident qualifies under RD-4 [F13]. Unexempted detour refundable under RD-2 [RD-1][RD-3][RD-4][RD-5]."
+    "named_road": "UPPER BUKIT TIMAH ROAD",
+    "excluded_road": null,
+    "reason": "Driver asked by chat at 22:50 'Jam ahead, can go via Upper Bukit Timah Road?' and the rider replied 'ok' at 22:51, both before the 22:54 segment start [F8][F9][F10]; UPPER BUKIT TIMAH ROAD is among the roads this segment drove [F3], so the agreement covers the whole segment's extra km under RD-5 (RD-5: present → covered)."
    },
    {
     "fact_id": "F4",
@@ -55,46 +61,111 @@
     "ground": "consent_after_or_none",
     "basis": [
      "F9",
+     "F11"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The only rider message before 23:07 is the 22:51 'ok' to UPPER BUKIT TIMAH ROAD, which this segment did not drive (ARCADIA ROAD → ADAM ROAD → LORNIE HIGHWAY → LORNIE ROAD → KHEAM HOCK ROAD → TREVOSE CRESCENT → MERRYN ROAD) [F4][F8][F9]; the driver's post-trip statement 'She agreed to my route' is a claim, not rider consent before the deviation [F11][RD-5]. No prior agreement → counts under RD-5, 4.73 km refundable under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5:F3",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
      "F10"
     ],
-    "reason": "Off-route segment 23:08–23:14 adding 3.37 km. Again no rider message before 23:08 [F9], the rider-requested-stop branch is not met [F9], and only non-qualifying band 4 traffic is recorded [F11][F12][F13]. Unexempted detour refundable under RD-2 [RD-1][RD-3][RD-4][RD-5]."
+    "reason": "Rider message 'ok' at 22:51, sent before the 22:54 segment start [F8][F9][F10], agrees to the driver's named road UPPER BUKIT TIMAH ROAD, which F3 drove [F3] — notice and consent satisfied under RD-5."
+   },
+   {
+    "element": "RD-3:F3",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
+     "F3"
+    ],
+    "reason": "The rider named the route via UPPER BUKIT TIMAH ROAD by accepting the driver's proposal and the car went there [F8][F9][F3]; the segment is not a deviation under RD-3/RD-5."
+   },
+   {
+    "element": "RD-5:F4",
+    "finding": "not_met",
+    "basis": [
+     "F9",
+     "F11",
+     "F4"
+    ],
+    "reason": "The only pre-segment rider message is the 22:51 'ok' to UPPER BUKIT TIMAH ROAD [F9], a road F4 did not drive [F4], and the driver's post-trip statement is not consent [F11] — no notice or agreement before the 23:07 segment under RD-5."
+   },
+   {
+    "element": "RD-3:F4",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F4"
+    ],
+    "reason": "No rider message before the segment named any place or route on F4's course [F8][F9][F4]; the rider asked for no stop or route here, so RD-3 exempts nothing."
+   },
+   {
+    "element": "SAFE-1:case",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F11"
+    ],
+    "reason": "Reading the chat, statement and complaint in context, there is no threat, intimidation, harassment, inappropriate conduct or dangerous-driving allegation — the messages are about the route and the fare [F8][F9][F11]; no escalation under SAFE-1."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C6",
-    "reason": "The $0.02 waiting item is not refundable: on a metered RydeTAXI trip the meter waiting unit is charged per RD-3(c) and appears as a genuine $0.02 charge in the bill [F6][F8]; only the segment kilometres are refunded [RD-2]."
+    "id": "D3",
+    "reason": "Wrongly exempts the entire 5.71 km of F3 as if consent to a named road excused more than that segment; the exemption under RD-5 is confined to the segment whose roads include the agreed road, and the arithmetic of the trace yields $6.49, not the 4.60 km result being used differently by the driver side. F3 is exempt in full (rider agreed to UPPER BUKIT TIMAH ROAD, which F3 drove [F3][F9]) and F4 counts, so the refundable km is 10.31 − 5.71 = 4.60 and the refund $6.49, not $6.49 on a different basis [RD-5][RD-2]."
    },
    {
     "id": "C7",
-    "reason": "The +14.3 min duration against the 28.4 min estimate [F2] cannot increase the refund: RD-2 refunds only the metered distance units of unexempted segments, and part of the longer duration is attributable to band 4 flow on the corridor [F11][F12][F8]."
+    "reason": "Claims no part of the deviation is exempt and seeks $14.54: the rider's own 'ok' at 22:51 before the F3 segment [F9][F8] ties the named road UPPER BUKIT TIMAH ROAD to F3 [F3], so F3's 5.71 km are exempt under RD-5 and the deviation to refund is 4.60 km, not 10.31 km [RD-5][RD-2]."
    },
    {
-    "id": "D6",
-    "reason": "The driver's point that no FARE-1 adjustment applies is correct as to the $0.02 [F6][F8], but it does not defeat the rider's distance claim: the billed excess distance was collected inside the metered total [F5][F8] and is refundable under RD-2."
+    "id": "C8",
+    "reason": "RD-6 requires an upheld deviation in the last 90 days, and the driver's record shows route_disputes_upheld_90d = 0 [F17]; the single upheld dispute was not a route deviation, so no flag_account follows [RD-6]."
+   },
+   {
+    "id": "C9",
+    "reason": "The 'no notice for the whole route' reading overstates: notice was given and agreed before F3, so RD-7's reminder and log attach only to the uninformed 23:07–23:13 stretch [F8][F9][F4], and the refund amount is fixed by the exempt-km calculation, not by the notice failure [RD-7][RD-2]."
+   },
+   {
+    "id": "D7",
+    "reason": "Reaches $6.49 by exempting all of F3, which is correct in result but rests on a claim that F3's exemption flows from the RD-5 road test; that is the same calculation the ruling adopts only after applying RD-2's formula (10.31 − 5.71) × $1.4100 [F3][F5][RD-2], so the figure is accepted but not the reasoning that the amount is a matter of the driver's concession."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
+   "F8",
    "F9",
-   "F10"
+   "F11"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_partial",
-  "amount": 8.22,
-  "recommended_action": "Issue a $8.22 Ryde voucher to the rider for the two unexempted detour segments (RD-2); no account flag.",
-  "confidence": 0.9,
-  "reasoning": "Two off-route segments are recorded on this RydeTAXI trip: 22:56–23:04 adding 2.46 km [F3] and 23:08–23:14 adding 3.37 km [F4]. RD-1 makes each such segment reviewable under RD-3/RD-4/RD-5, and nothing on this record exempts either of them.\n\nNo rider message precedes either segment — there are no in-app chat messages at all [F9] — so no consent was given before 22:56 or before 23:08, and the driver's post-trip statement \"The GPS rerouted me\" [F10] is a claim written after the fact, which cannot establish consent [RD-5]. No stop was requested by the rider [F9], so RD-3 does not apply.\n\nThere is also no reasonable cause: no traffic incident was recorded near the route during the trip window [F13], and the only speed records are EAST COAST PARKWAY and AIRPORT BOULEVARD at band 4, 30–39 km/h [F11][F12], which is neither an incident under RD-4(a) nor the band 1–2 congestion RD-4(b) contemplates, and in any event a band alone does not exempt a segment [RD-4]. Weather was fair [F14]. Both segments are therefore unexempted detours refundable under RD-2.\n\nAmount: this is a metered RydeTAXI fare, so the refund is Σ(unexempted segment extra_km) × the trip's per-km rate. The rate is the fare record's distance fare ÷ distance km = $1.4099/km [F5]. 2.46 km + 3.37 km = 5.83 km; 5.83 km × $1.4099/km = $8.2197 → $8.22 [F3][F4][F5][RD-2]. The remaining ~0.66 km of the billed 6.49 km excess [F1][F5] lies in the route corridor and is expressly not refunded [RD-2]. The $0.02 meter waiting unit [F6] is a genuine RydeTAXI meter charge and is not refundable [RD-3(c)][F8].\n\nAccount flag: the driver's profile shows 0 upheld disputes and 0 route disputes in 90 days [F16], so RD-6's \"repeated\" condition is not met and no flag_account is added [RD-6].",
+  "amount": 6.49,
+  "recommended_action": "Refund $6.49 to the rider's original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning, first such incident); record a driver violation for the unexempt off-route km since there is no traffic reason (RD-2/RD-4). No account flag: RD-6's repeat condition is not met.",
+  "confidence": 0.88,
+  "reasoning": "The trip ran 30.9 km against a 20.6 km optimal route, a deviation of 10.31 km [F1], far over RD-1's 1 km tolerance, and the fare record prices that excess at $1.4100/km, excess distance billed $14.54 [F5][F7]. So a refund of the excess distance fare is due unless km are exempt under RD-3 or RD-5 [RD-2].\n\nSegment F3 (22:54–23:03, +5.71 km) [F3]: at 22:50, before the segment began, the driver asked \"Jam ahead, can go via Upper Bukit Timah Road?\" [F8] and the rider answered \"ok\" at 22:51 [F9]. The chat is complete and every message timestamped [F10]. That is a specific named road, agreed before the segment, and UPPER BUKIT TIMAH ROAD is among the roads this segment drove [F3], so the agreement covers the whole segment (the roads before and after the named road are part of going via it) — finding exempt, ground named_road_tied, 5.71 km exempt [RD-5].\n\nSegment F4 (23:07–23:13, +4.73 km) [F4]: the only rider message before it is the 22:51 \"ok\" to a road it never drove — it ran ARCADIA ROAD → ADAM ROAD → LORNIE HIGHWAY → LORNIE ROAD → KHEAM HOCK ROAD → TREVOSE CRESCENT → MERRYN ROAD [F4][F9][F8]. The driver's \"She agreed to my route\" is a post-trip statement, not rider consent given before the segment [F11][RD-5]. No rider message before 23:07 agrees to this route — finding counts, ground consent_after_or_none, 4.73 km refundable [RD-5].\n\nNo traffic reason for either segment: band 8 (70+ km/h) on the BKE and PIE, no incidents near the route, fair weather [F12][F13][F14][F15], and the trace marks RD-4 ✗ for both segments [F3][F4]; the driver's \"Jam ahead\" therefore exempts nothing and a driver violation is recorded [RD-2][RD-4].\n\nArithmetic: (10.31 km deviation − 5.71 km exempt) × $1.4100/km = 4.60 × $1.4100 = $6.4860 → $6.49 [F5][RD-2]. Tolls, time fare and surge are not refunded; surge was 1.0× [F6][F7]. Under TH-1/TH-2 a deviation under $10 is decided by the system per DISP-001, and the record is complete (GPS distance, full timed chat, statement) [F10][F7].\n\nRD-6 does not flag the account: the driver has 1 upheld dispute in 90 days but route disputes upheld = 0 [F17], so there is no prior upheld deviation. The rider's 2 disputes, 0 upheld, and the driver's rating/trips [F16][F17] are profile facts and decide nothing.\n\nRD-7 applies: the rider was not informed for the 23:07–23:13 stretch, so the driver gets the notification-duty reminder and the failure is logged; this is a first notification-related incident, so no formal warning [RD-7][F4].\n\nSafety screen: I read the complaint, the driver's statement and both chat messages; \"I want the whole extra distance refunded\" and \"She agreed to my route\" are about the fare and the route, and nothing describes threats, harassment, inappropriate conduct or dangerous driving — none [F8][F9][F11].",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
    "F5",
    "F6",
+   "F7",
    "F8",
    "F9",
    "F10",
@@ -102,28 +173,35 @@
    "F12",
    "F13",
    "F14",
-   "F16"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
-   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "RD-7",
+   "TH-1",
+   "TH-2"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "counts",
-    "ground": "consent_after_or_none",
+    "finding": "exempt",
+    "ground": "named_road_tied",
     "basis": [
+     "F8",
      "F9",
      "F10"
     ],
-    "reason": "Off-route segment 22:56–23:04 adding 2.46 km. No rider message exists before 22:56 — the chat record is empty [F9] — and the driver's later statement [F10] is a claim, not consent (G11); no incident qualifies under RD-4 [F13]. Unexempted detour refundable under RD-2 [RD-1][RD-3][RD-4][RD-5]."
+    "named_road": "UPPER BUKIT TIMAH ROAD",
+    "excluded_road": null,
+    "reason": "Driver asked by chat at 22:50 'Jam ahead, can go via Upper Bukit Timah Road?' and the rider replied 'ok' at 22:51, both before the 22:54 segment start [F8][F9][F10]; UPPER BUKIT TIMAH ROAD is among the roads this segment drove [F3], so the agreement covers the whole segment's extra km under RD-5 (RD-5: present → covered)."
    },
    {
     "fact_id": "F4",
@@ -131,44 +209,108 @@
     "ground": "consent_after_or_none",
     "basis": [
      "F9",
+     "F11"
+    ],
+    "named_road": null,
+    "excluded_road": null,
+    "reason": "The only rider message before 23:07 is the 22:51 'ok' to UPPER BUKIT TIMAH ROAD, which this segment did not drive (ARCADIA ROAD → ADAM ROAD → LORNIE HIGHWAY → LORNIE ROAD → KHEAM HOCK ROAD → TREVOSE CRESCENT → MERRYN ROAD) [F4][F8][F9]; the driver's post-trip statement 'She agreed to my route' is a claim, not rider consent before the deviation [F11][RD-5]. No prior agreement → counts under RD-5, 4.73 km refundable under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5:F3",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
      "F10"
     ],
-    "reason": "Off-route segment 23:08–23:14 adding 3.37 km. Again no rider message before 23:08 [F9], the rider-requested-stop branch is not met [F9], and only non-qualifying band 4 traffic is recorded [F11][F12][F13]. Unexempted detour refundable under RD-2 [RD-1][RD-3][RD-4][RD-5]."
+    "reason": "Rider message 'ok' at 22:51, sent before the 22:54 segment start [F8][F9][F10], agrees to the driver's named road UPPER BUKIT TIMAH ROAD, which F3 drove [F3] — notice and consent satisfied under RD-5."
+   },
+   {
+    "element": "RD-3:F3",
+    "finding": "met",
+    "basis": [
+     "F8",
+     "F9",
+     "F3"
+    ],
+    "reason": "The rider named the route via UPPER BUKIT TIMAH ROAD by accepting the driver's proposal and the car went there [F8][F9][F3]; the segment is not a deviation under RD-3/RD-5."
+   },
+   {
+    "element": "RD-5:F4",
+    "finding": "not_met",
+    "basis": [
+     "F9",
+     "F11",
+     "F4"
+    ],
+    "reason": "The only pre-segment rider message is the 22:51 'ok' to UPPER BUKIT TIMAH ROAD [F9], a road F4 did not drive [F4], and the driver's post-trip statement is not consent [F11] — no notice or agreement before the 23:07 segment under RD-5."
+   },
+   {
+    "element": "RD-3:F4",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F4"
+    ],
+    "reason": "No rider message before the segment named any place or route on F4's course [F8][F9][F4]; the rider asked for no stop or route here, so RD-3 exempts nothing."
+   },
+   {
+    "element": "SAFE-1:case",
+    "finding": "not_met",
+    "basis": [
+     "F8",
+     "F9",
+     "F11"
+    ],
+    "reason": "Reading the chat, statement and complaint in context, there is no threat, intimidation, harassment, inappropriate conduct or dangerous-driving allegation — the messages are about the route and the fare [F8][F9][F11]; no escalation under SAFE-1."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C6",
-    "reason": "The $0.02 waiting item is not refundable: on a metered RydeTAXI trip the meter waiting unit is charged per RD-3(c) and appears as a genuine $0.02 charge in the bill [F6][F8]; only the segment kilometres are refunded [RD-2]."
+    "id": "D3",
+    "reason": "Wrongly exempts the entire 5.71 km of F3 as if consent to a named road excused more than that segment; the exemption under RD-5 is confined to the segment whose roads include the agreed road, and the arithmetic of the trace yields $6.49, not the 4.60 km result being used differently by the driver side. F3 is exempt in full (rider agreed to UPPER BUKIT TIMAH ROAD, which F3 drove [F3][F9]) and F4 counts, so the refundable km is 10.31 − 5.71 = 4.60 and the refund $6.49, not $6.49 on a different basis [RD-5][RD-2]."
    },
    {
     "id": "C7",
-    "reason": "The +14.3 min duration against the 28.4 min estimate [F2] cannot increase the refund: RD-2 refunds only the metered distance units of unexempted segments, and part of the longer duration is attributable to band 4 flow on the corridor [F11][F12][F8]."
+    "reason": "Claims no part of the deviation is exempt and seeks $14.54: the rider's own 'ok' at 22:51 before the F3 segment [F9][F8] ties the named road UPPER BUKIT TIMAH ROAD to F3 [F3], so F3's 5.71 km are exempt under RD-5 and the deviation to refund is 4.60 km, not 10.31 km [RD-5][RD-2]."
    },
    {
-    "id": "D6",
-    "reason": "The driver's point that no FARE-1 adjustment applies is correct as to the $0.02 [F6][F8], but it does not defeat the rider's distance claim: the billed excess distance was collected inside the metered total [F5][F8] and is refundable under RD-2."
+    "id": "C8",
+    "reason": "RD-6 requires an upheld deviation in the last 90 days, and the driver's record shows route_disputes_upheld_90d = 0 [F17]; the single upheld dispute was not a route deviation, so no flag_account follows [RD-6]."
+   },
+   {
+    "id": "C9",
+    "reason": "The 'no notice for the whole route' reading overstates: notice was given and agreed before F3, so RD-7's reminder and log attach only to the uninformed 23:07–23:13 stretch [F8][F9][F4], and the refund amount is fixed by the exempt-km calculation, not by the notice failure [RD-7][RD-2]."
+   },
+   {
+    "id": "D7",
+    "reason": "Reaches $6.49 by exempting all of F3, which is correct in result but rests on a claim that F3's exemption flows from the RD-5 road test; that is the same calculation the ruling adopts only after applying RD-2's formula (10.31 − 5.71) × $1.4100 [F3][F5][RD-2], so the figure is accepted but not the reasoning that the amount is a matter of the driver's concession."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
+   "F8",
    "F9",
-   "F10"
+   "F11"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 26,
+ "events": 29,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this route_deviation case removed from cited_policy: TH-1, TH-2\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 100%\nmodel confidence 0.88 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/court/B-0015.record.json",
- "latency_s": 19.34,
- "input_tokens": 86292,
- "output_tokens": 6410,
- "requests": 8,
+ "latency_s": 32.37,
+ "input_tokens": 85055,
+ "output_tokens": 8854,
+ "requests": 9,
  "llm_calls": 6
 }

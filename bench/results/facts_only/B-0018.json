@@ -4,33 +4,39 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:38:44.089607+00:00",
+ "ts": "2026-10-13T15:36:18.450602+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 3.01,
-  "recommended_action": "Refund S$3.01 (RydeTAXI metered overcharge: 2.13 km unexempt detour) as a Ryde voucher; record RD-1 breach on the driver; send driver account for review under RD-6 (repeated route disputes) + flag_account",
-  "confidence": 0.82,
-  "reasoning": "Safety screen: chat is empty [F7], the driver's post-trip statement [F8] is a factual/defensive remark, and the complaint contains no threat, harassment, sexual remark or dangerous-driving allegation. SAFE-1/SAFE-2 not engaged → safety_concern = none.\n\nRoute deviation (RD-1): one off-route segment, F3, 12:12–12:16, 2.93 km driven where the optimal route covers 0.80 km, +2.13 km, up to 954 m off the optimal corridor. It is examined under RD-3/RD-4/RD-5 and exempted by none:\n- RD-3: no rider-named stop. There is no rider message at all [F7]; the driver's post-trip statement that the GPS rerouted is not a rider request. Ground: consent_after_or_none → counts.\n- RD-5: consent must be the rider's own message sent before the detour began. There is no chat record [F7]; a driver's claim of agreement (here, GPS guidance) is not consent (G11). Ground: consent_after_or_none → counts.\n- RD-4: no exemption. F9/F10 are speed-band facts (band 4 / band 5, i.e. ≥30 km/h), not traffic incidents; no traffic incident was recorded near the route in the trip window [F11]. Under RD-4(b) a speed band alone does not exempt (band 1–2 would only be corroborative, and these are bands 4–5 anyway). Ground: driver_errand/incident branch → counts (no exemption).\nThe segment therefore is an unexempt detour.\n\nFare model (RD-2, RydeTAXI): the meter follows distance, so the unexempt extra km is refundable. Per datum rate = fare.distance_fare ÷ fare.distance_km = $15.14 ÷ 10.74 km = $1.4097/km [F6]. Refund = 2.13 km × $1.4097 = $3.0027 → $3.00. I use the segment's own extra_km (2.13 km), which is the measured unexempt detour within the recorded segment; the residual whole-trip excess (actual 10.7 km vs optimal 8.4 km, +2.3 km, F1) includes map-matching jitter, the 200 m corridor back-and-forth and unassigned mileage, which RD-2 expressly does not refund. The billed excess of $3.26 [F4] covers 2.31 km — the extra 0.18 km is not attributed to an off-route segment and is not refunded. Rounded to two decimals the distance refund is $3.00 (0.026 SGD short of the full $3.26 to avoid refunding unattributed mileage).\n\nNo other charge is refundable: no ERP/toll item, distance fare on non-detour km stays, time fare and platform fee $1.47 are published charges [F6]; waiting $0.00. Non-metered-stop/waiting issues do not arise.\n\nFlag: RD-6 is met — this case establishes a breach (RD-2 refund > 0) and the driver profile shows route_disputes_upheld_90d = 2 [F14], so the ruling carries flag_account (account review for repeated route deviations). The profile fact is used only for the additional action, never to decide the detour itself.\n\nEvidence status: sufficient — GPS detour segment [F3], fare breakdown with per-km rate [F4][F6], traffic records [F9][F10][F11] and the (empty) chat record [F7] settle every element. No escalation trigger.",
+  "amount": 4.06,
+  "recommended_action": "Refund the excess distance fare for the non-exempt 2.88 km, issue the driver a notification-duty reminder and log the notification failure on his route-compliance record (no formal warning — first notification incident)",
+  "confidence": 0.88,
+  "reasoning": "Route deviation with an agreed-but-qualified reroute. The optimal route was 8.4 km; the actual route was 11.6 km, a deviation of +3.2 km [F1], well over the 1 km tolerance in RD-1, so a refund is in scope. The code isolated one off-route segment, 12:11–12:17, +2.88 km, driving Faber Drive → Jalan Lempeng → Clementi Ave 6 → Commonwealth Ave West → Clementi Avenue 4 → Clementi Ave 5 → Clementi Ave 2 → West Coast Road → Jalan Mas Kuning [F3].\\n\\nTraffic: Ayer Rajah Expressway was in speed band 2 (10–19 km/h) from 11:58 to 12:17, i.e. active before the segment began and throughout it [F11], and no incidents were recorded [F14]. The driver's 12:07 message warned of that congestion and asked whether to take another way [F7], and the rider replied at 12:08, before the segment started: “Can lah, but not via Clementi Avenue 4” [F8, F9]. Notice was therefore timely [F7], but the consent was qualified.\\n\\nUnder RD-5 the code checks the named road against the roads actually driven: the segment drove Clementi Avenue 4 [F3], the very road the rider excluded. A qualified yes (“ok, but not via Y”) does not cover a segment that drove Y, and a traffic reason (RD-4) cannot enlarge the rider's consent where the rider has narrowed it. RD-3 also does not exempt the segment, because the rider's agreement was to avoid Clementi Avenue 4, not to take it. The driver's post-trip statement that “the rider said can” [F10] is a claim that omits the qualification in the timestamped chat [F8] and cannot override the written record. Accordingly the +2.88 km counts as a deviation.\\n\\nRefund: the whole-trip excess distance fare is $4.50 for 3.19 km at $1.4096/km [F4] — the trip's own per-km distance fare, as RD-2 requires. The single identified segment of 2.88 km is the bulk of that excess; the residual ~0.31 km is map-matching-scale leave from the 0.32 km exempt portion (traffic reason under RD-4) and is not refunded either way. Refund = 2.88 km × $1.4096/km = $4.06. Tolls, time fare and any surge are not refunded (RD-2); surge was 1.0×, so no surge element [F5], and the rest of the $26.08 build-up stands [F6].\\n\\nDriver side: this is not a repeat route deviation — the profile's single upheld dispute is a no-show matter (route upheld: 0) [F17], so RD-6's flag_account does not apply. RD-7 does apply: the driver did tell the rider, but did not honour the rider's qualification, so send a notification-duty reminder and log it on his route-compliance record; no formal warning as a first such incident.\\n\\nAmount is under $10 and the record is complete (GPS segment, timestamped chat, fare breakdown, traffic data), so this is decided at system level (TH-1, TH-2, C1; cf. PREC-1/DISP-2026-0089 — uninformed/unconsented reroute, excess distance fare refunded). No safety content appears in the chat, complaint or driver statement: the messages concern route choice only.",
   "cited_facts": [
    "F1",
    "F3",
    "F4",
+   "F5",
    "F6",
    "F7",
    "F8",
    "F9",
    "F10",
    "F11",
-   "F14"
+   "F14",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "PREC-1",
+   "TH-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -38,33 +44,75 @@
    {
     "fact_id": "F3",
     "finding": "counts",
-    "ground": "consent_after_or_none",
+    "ground": "named_road_untied",
     "basis": [
      "F7",
-     "F8"
+     "F8",
+     "F9"
     ],
-    "reason": "12:12–12:16 segment drove 2.93 km where the optimal route covers 0.80 km (+2.13 km, up to 954 m off corridor). No rider message before the segment asked for any stop or route [F7]; the driver's post-trip GPS/reroute statement [F8] is a claim, not rider consent (RD-5, G11). No rider-named stop (RD-3) and no traffic-incident corroboration on the superseded optimal route — only speed bands 4 and 5 [F9][F10] and no incidents [F11] — so RD-4 gives no exemption. Unexempt detour under RD-1 → RD-2."
+    "named_road": "Clementi Avenue 4",
+    "reason": "The rider's 12:08 reply is a qualified yes — \"Can lah, but not via Clementi Avenue 4\" — and the driver's notice at 12:07 preceded the segment (12:11–12:17), so consent to reroute existed. But the qualified consent does not cover a route that drives Clementi Avenue 4 [F3]; the segment drove it, so RD-5's named-road check fails (named_road_untied) and the +2.88 km is not exempt. RD-4 is met in form (Ayer Rajah Expressway, speed band 2, active 11:58–12:17 [F11]), but under RD-2/RD-5 a traffic reason cannot enlarge the rider's consent: the rider's own instructions define the agreed route."
+   },
+   {
+    "fact_id": "seg2",
+    "finding": "exempt",
+    "ground": "incident",
+    "basis": [
+     "F11"
+    ],
+    "named_road": null,
+    "reason": "The remaining 0.32 km is treated as exempt: congestion on the replaced part of the recommended route (Ayer Rajah Expressway, band 2, under 19 km/h, active before and throughout the segment, within tolerance band of the route) gives a traffic reason under RD-4, and 0.32 km is only map-matching-scale leave [F1, F3]."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Surge notice / quote lock (SURGE-1)",
+    "finding": "met",
+    "basis": [
+     "F5"
+    ],
+    "reason": "Multiplier at trip start was 1.0× [F5], identical to the quote, so no surge notice was required and SURGE-1/SURGE-2 do not apply."
+   },
+   {
+    "element": "Driver's stated reason for the reroute (RD-4/RD-5)",
+    "finding": "met",
+    "basis": [
+     "F7",
+     "F8",
+     "F9",
+     "F10"
+    ],
+    "reason": "The driver's chat message at 12:07 stated a reason and asked before the segment began at 12:11 [F7, F3], so notice existed; however the traffic explanation only addresses whether a reroute was justified, not whether the rider's qualification (not via Clementi Avenue 4) was respected. His post-trip statement that the rider 'said can' without noting the qualification [F10] is his claim and cannot override the timestamped rider chat [F8, F9]."
+   },
+   {
+    "element": "Repeat-deviation flag (RD-6)",
+    "finding": "not_met",
+    "basis": [
+     "F17"
+    ],
+    "reason": "The driver's profile shows 2 disputes in 90 days with 1 upheld, but that upheld dispute is a no-show matter (route upheld = 0) [F17]; RD-6 requires an upheld route deviation in the last 90 days, so no account flag is warranted."
    }
   ],
   "rejected_claims": [
    {
-    "id": "F8",
-    "reason": "Driver's post-trip statement that the GPS rerouted and the meter is what it is: a driver statement is not rider consent (RD-5, G11) and does not create a 'reasonable cause' exemption; no traffic-incident fact supports the alternative route [F11], and single speed-band facts [F9][F10] do not exempt under RD-4(b)."
+    "id": "F10",
+    "reason": "Driver's post-trip statement that the rider simply 'said can' omits the explicit limitation in the rider's own timestamped message ('but not via Clementi Avenue 4') [F8, F9]; under A7/RD-5 a claim of blanket agreement cannot override the written record."
    },
    {
-    "id": "F1",
-    "reason": "Whole-trip excess of 2.3 km is not fully refundable: RD-2 refunds only unexempt-segment extra_km (2.13 km within F3); corridor/matching mileage outside the segment is excluded, so the rider's request for the full 2.3 km difference is only partly granted."
+    "id": "F7",
+    "reason": "The driver's traffic warning, while truthful as to Ayer Rajah Expressway congestion [F11], does not convert the rider's qualified consent into agreement to drive Clementi Avenue 4; a traffic reason never exempts a segment the rider expressly excluded (RD-5)."
    }
   ],
-  "flag_account": true,
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 7.12,
- "input_tokens": 10215,
- "output_tokens": 1557,
+ "latency_s": 11.26,
+ "input_tokens": 7801,
+ "output_tokens": 1995,
  "requests": 1,
  "llm_calls": 1
 }

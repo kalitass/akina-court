@@ -4,15 +4,15 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:30:38.796948+00:00",
+ "ts": "2026-10-13T17:48:57.557109+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no refund: the metered RydeTAXI fare stands as billed; optionally note to the rider that the extra cost was metered time in heavy rain, not extra distance.",
-  "confidence": 0.95,
-  "reasoning": "The trace and the GPS record settle the route question: there is no off-route segment, actual distance 8.5 km equals the optimal 8.5 km with +0.0 km excess [F1], and the billed distance of 8.5 km does not exceed the optimal route [F3]. With no unexempted segment, RD-1 finds no deviation and RD-2 has nothing to refund. The RD-2 computation is $11.99 ÷ 8.50 km = $1.4106/km; 0.00 km × $1.4106/km = $0.00, so the refundable amount is nil [F5][F1][F3][RD-2]. A nil amount means no_action while recording that no RD-1 breach occurred [RD-2].",
+  "recommended_action": "Close the dispute with no refund: the $3.46 fare difference was caused solely by the disclosed surge rise and the rider was given compliant pre-trip notice; no driver or rider account action.",
+  "confidence": 0.9,
+  "reasoning": "The rider booked at an upfront quote of $12.71 at 1× surge [F6] and was charged $16.17 at the 1.4× multiplier in effect at trip start [F4][F7]. The whole $3.46 excess is attributable to that multiplier move: the surge element is (1.4 − 1.0) × $10.66 = $4.26, capped by the $3.46 the fare exceeds the quote [F8][SURGE-3]. Nothing in the gap is a route or time overcharge — actual distance 3.9 km equals the optimal 3.9 km (+0.0 km) and the trip ran 5.0 min against a 7.7 min estimate [F1][F2][F3] — so no excess-distance refund arises under the tolerance rule [RD-1][RD-2]. [FARE-0] is satisfied: F5/F7 show base $3.90 + distance $5.46 + time $1.30 + platform $1.25 with the booking fee kept outside the surge.\n\nThe notice element is met. The platform log shows the rider was notified in-app at 17:18:45, before the 17:20:00 trip start [F9]. The quoted text states all three SURGE-1 items: the new multiplier (\"Fares are 1.4× higher right now\"), a revised estimated fare (\"Your new estimated fare is $17.29\") and a free-cancel option (\"You can cancel for free\") [F9][SURGE-1]. That the final charge ($16.17) came in below the $17.29 estimate does not make the notice deficient — SURGE-1 requires a stated revised estimate, not a guaranteed final figure [F5][F7][F9]. A rider statement denying notice does not outweigh the platform log, and here the rider's own advocate withdrew the point [F9][F12].\n\nBecause the surge rose and the rider was notified and rode, the refund matrix puts the differential on the rider: the higher fare stands [F8][F9][SURGE-2]. The chat contains no route negotiation to disturb this — only a pickup arrangement and the driver's brief reply, both timestamped [F10][F11][F12]; the driver's post-trip statement [F13] adds nothing that changes the fare, which is platform-set [F5][F7][FARE-0].\n\nThe rider's single fraud flag (\"flagged_for_repeated_fare_disputes\", 0 upheld disputes in 90 days) raises the confidence threshold to 95% but never decides the case [F14][TH-3]; the evidence is complete (logged notice, full fare breakdown, complete GPS and timestamped chat), so the threshold is satisfied. The $3.46 in issue is under $10, so the system ruling is final and no human review is required [F8][TH-1][TH-2]. The driver's unrelated dispute history [F15] does not bear on a surge-only fare question. The safety screen found no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in the chat, the driver's statement or the complaint [F10][F11][F13].",
   "cited_facts": [
    "F1",
    "F2",
@@ -26,60 +26,46 @@
    "F10",
    "F11",
    "F12",
-   "F13"
+   "F13",
+   "F14",
+   "F15"
   ],
   "cited_policy": [
-   "RD-1",
-   "RD-2",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1",
-   "SAFE-1",
-   "SAFE-2"
+   "FARE-0",
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The logged in-app notice at 17:18:45, before trip start at 17:20:00, states the new multiplier (\"Fares are 1.4× higher right now\"), a revised estimated fare (\"Your new estimated fare is $17.29\") and free cancellation (\"You can cancel for free\") — all three SURGE-1 items; a stated estimate differing from the final charge remains a stated estimate [F9][SURGE-1], so the higher fare stands [SURGE-2]."
+   }
+  ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Not rejected as a fact — its content is correct and adopted: F1 shows +0.0 km and F3 confirms the billed 8.5 km does not exceed the optimal 8.5 km, so no segment exists under RD-1. It yields no refund because RD-2 refunds only unexempted extra kilometres, of which there are none [F1][F3][RD-1][RD-2]."
+    "reason": "The $3.46 gap does arise from the multiplier rising to 1.4× at trip start [F4][F8], but the rider was notified in-app before the trip started [F9], so the quote ceased to be the binding price once the rider was told of the new multiplier and rode: no refund under SURGE-1/SURGE-2 [F9]."
    },
    {
-    "id": "C2",
-    "reason": "The rider's framing that the higher fare is explained by 22.0 min vs 16.3 min [F2] and a $5.72 metered time component [F5] in 18.5 mm rain [F11] is accepted as fact but produces no rider-side remedy; on a metered RydeTAXI the time units are lawful under RD-2/RD-4 and no distance excess exists [F2][F5][F11][RD-2][RD-4]."
-   },
-   {
-    "id": "C5",
-    "reason": "The rider advocate's use of F10 to deny any RD-4 excuse is beside the point: RD-4 only matters to exempt an off-route segment, and the trace records no off-route segment for this trip [F1][F3][F8][F10][RD-4]."
-   },
-   {
-    "id": "C8",
-    "reason": "The safety finding is confirmed as 'none', so no escalation follows: F6 shows no chat at all and the post-trip driver statement in F7 contains no threat, harassment or dangerous-driving allegation [F6][F7][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "D3",
-    "reason": "Accepted in substance and adopted: every component of the $23.08 is a published item (base $3.90, distance $11.99, time $5.72, platform $1.47, waiting $0.00) with surge 1.0x, so FARE-1 leaves nothing to refund [F4][F5][FARE-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "The driver's RD-4 causation narrative is not needed as an exemption ground and is not relied on: since no off-route segment exists [F1][F3], RD-4 has no segment to exempt, and the band 3 speeds [F8][F9] and rain [F11] are background rather than a charging excuse to weigh [F2][F8][F9][F11][RD-4]."
-   },
-   {
-    "id": "D7",
-    "reason": "Correct that no consent question arises because no rider message exists [F6], but the absence of any agreement cannot be used as an affirmative finding under RD-5; the record simply contains no rider message before or during the trip [F6][RD-5]."
-   },
-   {
-    "id": "D8",
-    "reason": "Accepted: with 0 upheld route disputes for the driver and 0 disputes for the rider in 90 days [F12][F13], the RD-6 precondition of a prior upheld route dispute is absent, so no account flag issues [F12][F13][RD-6]."
+    "id": "C6",
+    "reason": "Correct as to path but supports no relief: at $3.46 the matter is under $10 and finally decided by the system, and the system outcome on this record is no refund [F8][TH-1][TH-2][SURGE-2]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F6",
-   "F7"
+   "F10",
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -87,9 +73,9 @@
  "pre_verify_ruling": {
   "ruling": "no_action",
   "amount": null,
-  "recommended_action": "Close the case with no refund: the metered RydeTAXI fare stands as billed; optionally note to the rider that the extra cost was metered time in heavy rain, not extra distance.",
-  "confidence": 0.95,
-  "reasoning": "The trace and the GPS record settle the route question: there is no off-route segment, actual distance 8.5 km equals the optimal 8.5 km with +0.0 km excess [F1], and the billed distance of 8.5 km does not exceed the optimal route [F3]. With no unexempted segment, RD-1 finds no deviation and RD-2 has nothing to refund. The RD-2 computation is $11.99 ÷ 8.50 km = $1.4106/km; 0.00 km × $1.4106/km = $0.00, so the refundable amount is nil [F5][F1][F3][RD-2]. A nil amount means no_action while recording that no RD-1 breach occurred [RD-2].",
+  "recommended_action": "Close the dispute with no refund: the $3.46 fare difference was caused solely by the disclosed surge rise and the rider was given compliant pre-trip notice; no driver or rider account action.",
+  "confidence": 0.9,
+  "reasoning": "The rider booked at an upfront quote of $12.71 at 1× surge [F6] and was charged $16.17 at the 1.4× multiplier in effect at trip start [F4][F7]. The whole $3.46 excess is attributable to that multiplier move: the surge element is (1.4 − 1.0) × $10.66 = $4.26, capped by the $3.46 the fare exceeds the quote [F8][SURGE-3]. Nothing in the gap is a route or time overcharge — actual distance 3.9 km equals the optimal 3.9 km (+0.0 km) and the trip ran 5.0 min against a 7.7 min estimate [F1][F2][F3] — so no excess-distance refund arises under the tolerance rule [RD-1][RD-2]. [FARE-0] is satisfied: F5/F7 show base $3.90 + distance $5.46 + time $1.30 + platform $1.25 with the booking fee kept outside the surge.\n\nThe notice element is met. The platform log shows the rider was notified in-app at 17:18:45, before the 17:20:00 trip start [F9]. The quoted text states all three SURGE-1 items: the new multiplier (\"Fares are 1.4× higher right now\"), a revised estimated fare (\"Your new estimated fare is $17.29\") and a free-cancel option (\"You can cancel for free\") [F9][SURGE-1]. That the final charge ($16.17) came in below the $17.29 estimate does not make the notice deficient — SURGE-1 requires a stated revised estimate, not a guaranteed final figure [F5][F7][F9]. A rider statement denying notice does not outweigh the platform log, and here the rider's own advocate withdrew the point [F9][F12].\n\nBecause the surge rose and the rider was notified and rode, the refund matrix puts the differential on the rider: the higher fare stands [F8][F9][SURGE-2]. The chat contains no route negotiation to disturb this — only a pickup arrangement and the driver's brief reply, both timestamped [F10][F11][F12]; the driver's post-trip statement [F13] adds nothing that changes the fare, which is platform-set [F5][F7][FARE-0].\n\nThe rider's single fraud flag (\"flagged_for_repeated_fare_disputes\", 0 upheld disputes in 90 days) raises the confidence threshold to 95% but never decides the case [F14][TH-3]; the evidence is complete (logged notice, full fare breakdown, complete GPS and timestamped chat), so the threshold is satisfied. The $3.46 in issue is under $10, so the system ruling is final and no human review is required [F8][TH-1][TH-2]. The driver's unrelated dispute history [F15] does not bear on a surge-only fare question. The safety screen found no threat, intimidation, harassment, sexual remark or dangerous-driving allegation in the chat, the driver's statement or the complaint [F10][F11][F13].",
   "cited_facts": [
    "F1",
    "F2",
@@ -103,60 +89,51 @@
    "F10",
    "F11",
    "F12",
-   "F13"
+   "F13",
+   "F14",
+   "F15"
   ],
   "cited_policy": [
+   "FARE-0",
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
    "RD-1",
    "RD-2",
-   "RD-4",
-   "RD-5",
-   "RD-6",
-   "FARE-1",
-   "SAFE-1",
-   "SAFE-2"
+   "TH-1",
+   "TH-2",
+   "TH-3"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "met",
+    "basis": [
+     "F9"
+    ],
+    "reason": "The logged in-app notice at 17:18:45, before trip start at 17:20:00, states the new multiplier (\"Fares are 1.4× higher right now\"), a revised estimated fare (\"Your new estimated fare is $17.29\") and free cancellation (\"You can cancel for free\") — all three SURGE-1 items; a stated estimate differing from the final charge remains a stated estimate [F9][SURGE-1], so the higher fare stands [SURGE-2]."
+   }
+  ],
   "rejected_claims": [
    {
     "id": "C1",
-    "reason": "Not rejected as a fact — its content is correct and adopted: F1 shows +0.0 km and F3 confirms the billed 8.5 km does not exceed the optimal 8.5 km, so no segment exists under RD-1. It yields no refund because RD-2 refunds only unexempted extra kilometres, of which there are none [F1][F3][RD-1][RD-2]."
+    "reason": "The $3.46 gap does arise from the multiplier rising to 1.4× at trip start [F4][F8], but the rider was notified in-app before the trip started [F9], so the quote ceased to be the binding price once the rider was told of the new multiplier and rode: no refund under SURGE-1/SURGE-2 [F9]."
    },
    {
-    "id": "C2",
-    "reason": "The rider's framing that the higher fare is explained by 22.0 min vs 16.3 min [F2] and a $5.72 metered time component [F5] in 18.5 mm rain [F11] is accepted as fact but produces no rider-side remedy; on a metered RydeTAXI the time units are lawful under RD-2/RD-4 and no distance excess exists [F2][F5][F11][RD-2][RD-4]."
-   },
-   {
-    "id": "C5",
-    "reason": "The rider advocate's use of F10 to deny any RD-4 excuse is beside the point: RD-4 only matters to exempt an off-route segment, and the trace records no off-route segment for this trip [F1][F3][F8][F10][RD-4]."
-   },
-   {
-    "id": "C8",
-    "reason": "The safety finding is confirmed as 'none', so no escalation follows: F6 shows no chat at all and the post-trip driver statement in F7 contains no threat, harassment or dangerous-driving allegation [F6][F7][SAFE-1][SAFE-2]."
-   },
-   {
-    "id": "D3",
-    "reason": "Accepted in substance and adopted: every component of the $23.08 is a published item (base $3.90, distance $11.99, time $5.72, platform $1.47, waiting $0.00) with surge 1.0x, so FARE-1 leaves nothing to refund [F4][F5][FARE-1]."
-   },
-   {
-    "id": "D4",
-    "reason": "The driver's RD-4 causation narrative is not needed as an exemption ground and is not relied on: since no off-route segment exists [F1][F3], RD-4 has no segment to exempt, and the band 3 speeds [F8][F9] and rain [F11] are background rather than a charging excuse to weigh [F2][F8][F9][F11][RD-4]."
-   },
-   {
-    "id": "D7",
-    "reason": "Correct that no consent question arises because no rider message exists [F6], but the absence of any agreement cannot be used as an affirmative finding under RD-5; the record simply contains no rider message before or during the trip [F6][RD-5]."
-   },
-   {
-    "id": "D8",
-    "reason": "Accepted: with 0 upheld route disputes for the driver and 0 disputes for the rider in 90 days [F12][F13], the RD-6 precondition of a prior upheld route dispute is absent, so no account flag issues [F12][F13][RD-6]."
+    "id": "C6",
+    "reason": "Correct as to path but supports no relief: at $3.46 the matter is under $10 and finally decided by the system, and the system outcome on this record is no refund [F8][TH-1][TH-2][SURGE-2]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F6",
-   "F7"
+   "F10",
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -165,12 +142,12 @@
  "events": 27,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this fare_dispute case removed from cited_policy: RD-1, RD-2, TH-1, TH-2, TH-3\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 97% (fraud flag on record)\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/court/B-0020.record.json",
- "latency_s": 21.32,
- "input_tokens": 109681,
- "output_tokens": 6499,
+ "latency_s": 23.71,
+ "input_tokens": 88536,
+ "output_tokens": 5983,
  "requests": 10,
  "llm_calls": 6
 }

@@ -4,18 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:31:46.984709+00:00",
+ "ts": "2026-10-13T17:49:08.527136+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the dispute: the $6.61 cancellation fee stands as validly raised under NS-1; no refund and no account action.",
-  "confidence": 0.9,
-  "reasoning": "The rider was charged a $6.61 cancellation fee after the driver cancelled as a no-show [F4][F7]. NS-0 routes the fee to NS-1/NS-2 because `cancelled_by = driver` and the driver asserts the rider did not show [F4]. NS-1 requires (i) an arrival confirmation, (ii) the GPS placing the driver within the pickup range at the moment of that confirmation, and (iii) a continuous wait of more than 3 minutes at the pickup after the confirmation, until cancellation [NS-1]. The trace marks all three as settled ✓, and the facts bear that out: the driver tapped \"I'm Here\" at 17:19:15 at 41 m from the pickup [F6], inside the 200 m data-layer radius, and the closest approach overall was 35 m [F1]. After the tap he stayed within 200 m of the pickup for 3 min 40 s and cancelled at 17:22:55 [F6][F4][F5], which exceeds the NS-1 default threshold of more than 3 minutes (3:01) [NS-1]. NS-2's $6.61 full refund therefore is not available, since none of (i)–(iii) failed [NS-2].\n\nThe rider's account that she \"came out a minute after the driver cancelled\" is a statement only [F4]; the system record shows the driver first within 200 m at 17:17:50 and 5 min 5 s of cumulative time within 200 m before cancelling [F2][F3][F5], with the driver stationary 17:18:50–17:22:55 at 54 m from the pickup [F3]. No arrival by the rider appears anywhere in the record, so the fee was properly triggered [F2][F5][NS-1][NS-0].\n\nNo abuse of the \"I'm Here\" button arises on this record: the tap was inside the radius [F6], so the NS-2 flag trigger (m_from_pickup_at_tap > 200) is not met, and the trace records flag_account as not required [F6][NS-2]. The $6.61 is exactly Ryde's published cancellation fee with no surge component (1.0×), so there is no overcharge for FARE-1 to strip out [F7][F8][FARE-1]. Any refund would in any event be a Ryde voucher, not cash, and Ryde retains final discretion [NS-7].\n\nSafety screen: I read all messages and the statement — the driver's arrivals notice and the cancellation notice are courteous and functional, and the complaint contains no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F9][F10][F12]; nothing triggers SAFE-1 or SAFE-2. Evidence: the chat record is complete with both messages timestamped [F11] and the GPS trace covers the period up to cancellation without a hole [F2][F6], so the decisive elements are all settled on the record.",
+  "ruling": "refund_partial",
+  "amount": 4.88,
+  "recommended_action": "Refund $4.88 to the rider's original payment method for the uninformed surge increase (SURGE-2/SURGE-3); notify the driver that the surge notice must offer a usable free-cancellation option, and log the notice defect on the trip record.",
+  "confidence": 0.93,
+  "reasoning": "The trip itself was clean: actual 5.6 km equals the optimal 5.6 km (+0.0 km), well inside RD-1's tolerance, so no route refund arises [F1][F3][RD-1]. The whole disputed $4.88 is the surge change: quote $16.26 at 1×, billed $21.14 at 1.4× from trip start [F6][F7][F5].\n\nThe only live element is SURGE-1:notice [F9][SURGE-1]. Reading the quoted text: it names the new multiplier \"1.4×\" and a revised estimated fare \"$22.48\" — an estimate that differs from the final charge is still a stated estimate [F5][F9][SURGE-1]. But the third required item — that the rider may cancel without penalty — is contradicted within the notice itself: it says \"Free cancellation until 17:13\" while the message was sent at 17:14:45, so the option it offers had already expired [F9][SURGE-1]. A cancellation the rider could no longer use is not the free-cancellation element SURGE-1 requires; that element is therefore not_met.\n\nWith notice defective, SURGE-2 gives the surge differential: (1.4 − 1.0) × $14.05 = $5.62 [F7][F8][SURGE-3], capped at the $4.88 the fare actually exceeded the quote — $21.14 − $16.26 = $4.88 [F5][F6][F8]. The $1.47 booking fee is not surged and is not refunded [F7][FARE-0]. Both advocates read the notice element the same way, so the only dispute left is quantum, which is $4.88. The driver's post-trip statement that the rider was told she could cancel free is a statement, not a call recording, and does not outweigh the fare log [F13][F9][SURGE-1].\n\nAmount is under $10, so the system decides (TH-1/TH-2, per DISP-001) [F8][TH-1][TH-2]. No route deviation exists, so no RD-6 flag [F1][F3][F15][RD-6]. The chat shows only logistics — \"waiting at the taxi stand\", \"arriving in about 1 min\" — with no threat, harassment or dangerous driving anywhere in the chat, the driver's statement or the complaint [F10][F11][F13][SAFE-1].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
@@ -25,43 +24,71 @@
    "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13",
+   "F15"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "FARE-1",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
+    "basis": [
+     "F9",
+     "F5"
+    ],
+    "reason": "The notice of 17:14:45 states the 1.4× multiplier and a revised estimated fare of $22.48, but its free-cancellation offer reads 'Free cancellation until 17:13' — a deadline already past when the notice was sent — so the option to cancel without penalty was not actually available [F9][SURGE-1]. Any of the three items missing, vague or contradicted within the notice itself makes the notice not_met."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "C5",
-    "reason": "The rider's complaint rests only on her unsupported statement that she came out a minute after cancellation [F4]; the system record shows the driver within 200 m since 17:17:50 and stationary 54 m away through the cancellation, with no rider arrival recorded [F2][F3][F5], so no full refund of the $6.61 can be founded and NS-2 does not apply [NS-2][NS-1]."
+    "id": "D3",
+    "reason": "The driver argues the notice duty was fully performed before departure, but the notice sent at 17:14:45 offers free cancellation only 'until 17:13', so the cancellation element of SURGE-1 was not met on the words of the notice itself [F9][SURGE-1]."
+   },
+   {
+    "id": "D5",
+    "reason": "The driver argues the rider's riding to completion after being shown the higher fare waives the refund. The chat contains only pickup logistics — 'waiting at the taxi stand', 'arriving in about 1 min' — with no acknowledgement of the new fare, and a post-trip written statement cannot establish informed consent [F10][F11][F12][F13][SURGE-1][SURGE-2]."
+   },
+   {
+    "id": "C3",
+    "reason": "The rider's added ground that the notice's fare figure is 'materially different' fails: SURGE-1 requires the notice to state a revised estimated fare, and '$22.48' is a stated estimate; an estimate above the final charge of $21.14 does not make the fare element missing [F9][F5][SURGE-1]. The refund rests on the defective cancellation element alone."
+   },
+   {
+    "id": "C4",
+    "reason": "Same point as C3 — the notice's $22.48 estimate differs from the billed $21.14 but is still a stated revised estimated fare, so this adds nothing to the outcome [F9][F6][F5][SURGE-1]."
+   },
+   {
+    "id": "C7",
+    "reason": "The rider's clean profile (account age, rating, no upheld disputes) cannot decide the case: profile facts never decide a case alone, and the notice element turns on the words of F9 [F14][F15][TH-3]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the dispute: the $6.61 cancellation fee stands as validly raised under NS-1; no refund and no account action.",
-  "confidence": 0.9,
-  "reasoning": "The rider was charged a $6.61 cancellation fee after the driver cancelled as a no-show [F4][F7]. NS-0 routes the fee to NS-1/NS-2 because `cancelled_by = driver` and the driver asserts the rider did not show [F4]. NS-1 requires (i) an arrival confirmation, (ii) the GPS placing the driver within the pickup range at the moment of that confirmation, and (iii) a continuous wait of more than 3 minutes at the pickup after the confirmation, until cancellation [NS-1]. The trace marks all three as settled ✓, and the facts bear that out: the driver tapped \"I'm Here\" at 17:19:15 at 41 m from the pickup [F6], inside the 200 m data-layer radius, and the closest approach overall was 35 m [F1]. After the tap he stayed within 200 m of the pickup for 3 min 40 s and cancelled at 17:22:55 [F6][F4][F5], which exceeds the NS-1 default threshold of more than 3 minutes (3:01) [NS-1]. NS-2's $6.61 full refund therefore is not available, since none of (i)–(iii) failed [NS-2].\n\nThe rider's account that she \"came out a minute after the driver cancelled\" is a statement only [F4]; the system record shows the driver first within 200 m at 17:17:50 and 5 min 5 s of cumulative time within 200 m before cancelling [F2][F3][F5], with the driver stationary 17:18:50–17:22:55 at 54 m from the pickup [F3]. No arrival by the rider appears anywhere in the record, so the fee was properly triggered [F2][F5][NS-1][NS-0].\n\nNo abuse of the \"I'm Here\" button arises on this record: the tap was inside the radius [F6], so the NS-2 flag trigger (m_from_pickup_at_tap > 200) is not met, and the trace records flag_account as not required [F6][NS-2]. The $6.61 is exactly Ryde's published cancellation fee with no surge component (1.0×), so there is no overcharge for FARE-1 to strip out [F7][F8][FARE-1]. Any refund would in any event be a Ryde voucher, not cash, and Ryde retains final discretion [NS-7].\n\nSafety screen: I read all messages and the statement — the driver's arrivals notice and the cancellation notice are courteous and functional, and the complaint contains no threat, intimidation, harassment, sexual remark or dangerous-driving allegation [F9][F10][F12]; nothing triggers SAFE-1 or SAFE-2. Evidence: the chat record is complete with both messages timestamped [F11] and the GPS trace covers the period up to cancellation without a hole [F2][F6], so the decisive elements are all settled on the record.",
+  "ruling": "refund_partial",
+  "amount": 4.88,
+  "recommended_action": "Refund $4.88 to the rider's original payment method for the uninformed surge increase (SURGE-2/SURGE-3); notify the driver that the surge notice must offer a usable free-cancellation option, and log the notice defect on the trip record.",
+  "confidence": 0.93,
+  "reasoning": "The trip itself was clean: actual 5.6 km equals the optimal 5.6 km (+0.0 km), well inside RD-1's tolerance, so no route refund arises [F1][F3][RD-1]. The whole disputed $4.88 is the surge change: quote $16.26 at 1×, billed $21.14 at 1.4× from trip start [F6][F7][F5].\n\nThe only live element is SURGE-1:notice [F9][SURGE-1]. Reading the quoted text: it names the new multiplier \"1.4×\" and a revised estimated fare \"$22.48\" — an estimate that differs from the final charge is still a stated estimate [F5][F9][SURGE-1]. But the third required item — that the rider may cancel without penalty — is contradicted within the notice itself: it says \"Free cancellation until 17:13\" while the message was sent at 17:14:45, so the option it offers had already expired [F9][SURGE-1]. A cancellation the rider could no longer use is not the free-cancellation element SURGE-1 requires; that element is therefore not_met.\n\nWith notice defective, SURGE-2 gives the surge differential: (1.4 − 1.0) × $14.05 = $5.62 [F7][F8][SURGE-3], capped at the $4.88 the fare actually exceeded the quote — $21.14 − $16.26 = $4.88 [F5][F6][F8]. The $1.47 booking fee is not surged and is not refunded [F7][FARE-0]. Both advocates read the notice element the same way, so the only dispute left is quantum, which is $4.88. The driver's post-trip statement that the rider was told she could cancel free is a statement, not a call recording, and does not outweigh the fare log [F13][F9][SURGE-1].\n\nAmount is under $10, so the system decides (TH-1/TH-2, per DISP-001) [F8][TH-1][TH-2]. No route deviation exists, so no RD-6 flag [F1][F3][F15][RD-6]. The chat shows only logistics — \"waiting at the taxi stand\", \"arriving in about 1 min\" — with no threat, harassment or dangerous driving anywhere in the chat, the driver's statement or the complaint [F10][F11][F13][SAFE-1].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
@@ -71,44 +98,78 @@
    "F9",
    "F10",
    "F11",
-   "F12"
+   "F12",
+   "F13",
+   "F15"
   ],
   "cited_policy": [
-   "NS-0",
-   "NS-1",
-   "NS-2",
-   "FARE-1",
-   "NS-7"
+   "SURGE-1",
+   "SURGE-2",
+   "SURGE-3",
+   "FARE-0",
+   "RD-1",
+   "RD-6",
+   "TH-1",
+   "TH-2",
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SURGE-1:notice",
+    "finding": "not_met",
+    "basis": [
+     "F9",
+     "F5"
+    ],
+    "reason": "The notice of 17:14:45 states the 1.4× multiplier and a revised estimated fare of $22.48, but its free-cancellation offer reads 'Free cancellation until 17:13' — a deadline already past when the notice was sent — so the option to cancel without penalty was not actually available [F9][SURGE-1]. Any of the three items missing, vague or contradicted within the notice itself makes the notice not_met."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "C5",
-    "reason": "The rider's complaint rests only on her unsupported statement that she came out a minute after cancellation [F4]; the system record shows the driver within 200 m since 17:17:50 and stationary 54 m away through the cancellation, with no rider arrival recorded [F2][F3][F5], so no full refund of the $6.61 can be founded and NS-2 does not apply [NS-2][NS-1]."
+    "id": "D3",
+    "reason": "The driver argues the notice duty was fully performed before departure, but the notice sent at 17:14:45 offers free cancellation only 'until 17:13', so the cancellation element of SURGE-1 was not met on the words of the notice itself [F9][SURGE-1]."
+   },
+   {
+    "id": "D5",
+    "reason": "The driver argues the rider's riding to completion after being shown the higher fare waives the refund. The chat contains only pickup logistics — 'waiting at the taxi stand', 'arriving in about 1 min' — with no acknowledgement of the new fare, and a post-trip written statement cannot establish informed consent [F10][F11][F12][F13][SURGE-1][SURGE-2]."
+   },
+   {
+    "id": "C3",
+    "reason": "The rider's added ground that the notice's fare figure is 'materially different' fails: SURGE-1 requires the notice to state a revised estimated fare, and '$22.48' is a stated estimate; an estimate above the final charge of $21.14 does not make the fare element missing [F9][F5][SURGE-1]. The refund rests on the defective cancellation element alone."
+   },
+   {
+    "id": "C4",
+    "reason": "Same point as C3 — the notice's $22.48 estimate differs from the billed $21.14 but is still a stated revised estimated fare, so this adds nothing to the outcome [F9][F6][F5][SURGE-1]."
+   },
+   {
+    "id": "C7",
+    "reason": "The rider's clean profile (account age, rating, no upheld disputes) cannot decide the case: profile facts never decide a case alone, and the notice element turns on the words of F9 [F14][F15][TH-3]."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 26,
+ "events": 28,
  "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.90 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this fare_dispute case removed from cited_policy: RD-1, RD-6, TH-1, TH-2, SAFE-1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 100%\nmodel confidence 0.93 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/court/B-0028.record.json",
- "latency_s": 25.61,
- "input_tokens": 124708,
- "output_tokens": 7682,
- "requests": 11,
+ "latency_s": 26.69,
+ "input_tokens": 89197,
+ "output_tokens": 6632,
+ "requests": 10,
  "llm_calls": 6
 }

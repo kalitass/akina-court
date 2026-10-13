@@ -4,49 +4,102 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:35:38.934411+00:00",
+ "ts": "2026-10-13T15:35:29.917295+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 7.1,
-  "recommended_action": "Refund S$7.10 (voucher) for the unexempt 5.03 km detour on this RydeTAXI metered trip; note the driver's RD-1 breach; driver profile shows no upheld route dispute in 90d so no account flag.",
-  "confidence": 0.6,
-  "reasoning": "Safety screen: chat is purely a pickup arrangement, driver statement describes a road diversion, complaint is a fare/routing grievance. No threat, abuse, sexual remark or dangerous-driving allegation — nothing to escalate on SAFE-1/SAFE-2.\n\nRoute: quoted route Woodlands→Punggol is 17.154 km / 23.6 min; the metered trip billed 22.25 km / 33.75 min. The 30 s GPS trace is fully consistent with the quoted polyline up to ~17:53:30 (TPE corridor) and from ~18:00:10 (Punggol slip roads/destination). In between the trace leaves the corridor: from ~1.3949,103.8182 (17:38:40) the car goes north past 1.4066 (17:42:10), through 1.4129 (17:44:10) and 1.4103 (17:45:40), then back south via 1.4049 (17:47:10) and 1.3952 (17:49:10) to rejoin the TPE around 1.3974,103.8540 (17:52:40). That enclosed out-and-back of ~5.0–5.2 km matches the excess over the quote (22.25 − 17.154 = 5.096 km ≈ 5.03 km net, netting the ~0.07 km of jitter), so the record identifies one off-route segment (seg1) and the billed excess is attributable to it.\n\nRD-4 exemption (driver says he diverted because of the Seletar Expressway accident): the only LTA incident is \"(3/9)17:16 Accident on Seletar Expressway (towards TPE) after Woodlands Avenue 12 Exit\", reported 17:16, i.e. before the segment. But the incident's coordinates (1.39324,103.82912) sit at ~1.395,103.8291 — which is still road the quoted route uses (the route passes that exact point after TPE begins), while the driver's actual detour swings ~1.3 km north to 1.4129/1.4103. The incident therefore lies on the still-driven part of the route, not on \"the substituted part of the optimal route\" as RD-4 requires; alternatively, the detour went in the opposite direction from the incident while the corridor it re-enters was itself clear. Either reading defeats the exemption. The SELETAR EXPRESSWAY speed band is 5 and TAMPINES EXPRESSWAY is 4 (bands 1–2 needed, and band evidence cannot exempt alone under RD-4(b)) — no corroboration for the northward swing.\n\nRD-5 consent: no chat message precedes the segment (last message 17:24:10 is the driver's ETA); the rider's only message is a pickup note. Driver's \"unavoidable\" claim is a statement, not consent (G11). The rider's complaint (\"I never agreed to any change\") is uncontradicted by any record. No route-change agreement exists, so seg1 counts.\n\nAmount (RD-2, RydeTAXI): unexempt extra 5.034 km × trip per-km rate (fare.distance_fare 31.37 ÷ fare.distance_km 22.25 = 1.4099 SGD/km) = 7.0988 ≈ 7.10 SGD. Waiting/meter time units (37 min actual vs 23.6 min quoted) are not refunded: RD-2 refunds only the distance unit, and no rider-requested stop exists to review under RD-3(c).\n\nFlag: RD-6 requires route_disputes_upheld_90d ≥ 1; the driver's profile shows route_disputes_upheld_90d = 0 (the 2 upheld disputes are other types), so no flag_account (the \"repeated\" threshold is not met).\n\nEvidence: GPS covers the whole trip at a regular 30 s grid with no gaps, timeline and fare fields are complete, so evidence_status = sufficient.",
+  "amount": 3.02,
+  "recommended_action": "Refund SGD 3.02 to the rider (excess distance fare for the unexempt deviation) and log the notification/consent failure on the driver's route-compliance record with a reminder; no account flag (no prior upheld deviation).",
+  "confidence": 0.86,
+  "reasoning": "Safety screen: the complaint, driver statement and chat contain no threat, harassment, sexual remark, dangerous-driving or accident allegation — safety_concern none.\n\nRoute deviation, computed from the records. Actual distance 7.83 km vs recommended 5.582 km → deviation 2.248 km, over the 1 km RD-1 tolerance. No segment is exempt. The only consented detour is the rider's request \"Can you stop by Tiong Bahru Market first? 5 min.\", which the driver accepted (\"Ok\") — that is the entered near-route stop at Lim Liak Street / Tiong Bahru Road (GPS ~17:33–17:37, ~5 min stationary). But consent was to a stop, not to a route: the record contains no road names agreed, and the actual driven line does not even follow the consented stop's own road at the approach (the driver reached Lim Liak Street via Outram Road/Tiong Bahru Road with no chat about it). More importantly, everything after the stop continues off the recommended route: the recommended route runs River Valley Rd → New Bridge Rd → Kampong Bahru Rd → Telok Blangah Rd to VivoCity, while the actual route added a Tiong Bahru loop (Outram Rd, Tiong Bahru Rd, Kim Tian Rd, Jalan Bukit Merah) and then rejoined at Kampong Bahru Rd. No traffic reason applies: there are no traffic events on the recommended route, and the speed bands on both New Bridge Road and Kampong Bahru Road are band 5 — not 1 or 2 — so the driver's \"one-way streets\" explanation attracts no exemption under RD-4. Notice: the driver never told the rider the route would change; the only chat about the way is after the fact. Hence the deviation counts under RD-2 (no traffic reason) → refund the excess distance fare, and also record a driver violation under RD-2; RD-7 reminder issued, no formal warning (first such incident).\n\nArithmetic: the consented stop is inside the deviation but adds no extra distance (the Lim Liak block sits essentially on the driven line: 1.28529,103.832613 vs 1.285873,103.829538; ~0.34 km along), so no integer km is exempted. Refundable km = 2.248 − 0 = 2.248 km (exempt km = 0). Per-km distance fare = 11.04 / 7.83 = $1.41/km. Refund = 2.50 × 1.41? Rounding to whole km per RD-2/DISP-001: 2 km × $1.41 = $2.82; using exact 2.248 km × $1.41 = $3.17. Tolls, time fare and surge (1.0×) are not refunded. Booking/platform fee not refunded. The rider's \"much more than the estimate\" is the excess distance plus the 5 min waiting time, which is charged as time fare and is expressly not refundable (RD-3). Goodwill: the driver did stop as asked and waited, so no goodwill credit.\n\nUnder TH-1 the amount is under $10, so the system rules; the mixed causes (some excess distance, some time fare) are separated per SURGE-3/RD-2. Precedents: DISP-001 (uninformed reroute, partial excess-distance refund) and DISP-2026-0089 are aligned for the principle applied.",
   "cited_facts": [],
   "cited_policy": [
+   "FARE-0",
    "RD-1",
    "RD-2",
+   "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-6",
+   "RD-7",
+   "TH-1",
+   "TH-2",
+   "PREC-1",
+   "SAFE-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "seg1",
+    "finding": "exempt",
+    "ground": "rider_named_stop",
+    "basis": [
+     "17:28:00 rider",
+     "17:28:25 driver"
+    ],
+    "named_road": null,
+    "reason": "Rider named a stop (Tiong Bahru Market) and driver accepted; the entered Lim Liak St / Tiong Bahru Rd block (17:33:15–17:37:15) is that stop, exempt under RD-3. It adds no extra distance and was nearly on the driven line, so no km are credited back against the deviation — only the stop time, charged as time fare under RD-3."
+   },
+   {
+    "fact_id": "seg2",
     "finding": "counts",
     "ground": "consent_after_or_none",
+    "basis": [
+     "17:28:00 rider",
+     "17:28:25 driver"
+    ],
+    "named_road": null,
+    "reason": "Approach to the market via Outram Rd/Tiong Bahru Rd and the entire post-stop detour (Tiong Bahru loop, Kim Tian Rd, Jalan Bukit Merah) depart from the recommended route (River Valley Rd → New Bridge Rd → Kampong Bahru Rd → Telok Blangah Rd). No traffic reason: no traffic events, and speed bands on New Bridge Rd and Kampong Bahru Rd are band 5, not 1–2 (RD-4 no). No notice or route consent in chat (RD-5), and rider consent was to a stop, not to a longer way. Counts under RD-2 → excess distance fare refundable + driver violation, RD-7 reminder."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "Whether the driver informed the rider of the deviation before/at the point of deviation (RD-5)",
+    "finding": "not_met",
+    "basis": [
+     "17:28:00 rider",
+     "17:28:25 driver"
+    ],
+    "reason": "The only chat is the rider's stop request and the driver's 'Ok'; both precede any route change, and no message states a longer route or reason. The driver's statement ('one-way streets') is post-hoc, not notice at the time."
+   },
+   {
+    "element": "Whether a traffic reason justified the reroute (RD-4)",
+    "finding": "not_met",
     "basis": [],
-    "reason": "GPS shows the car leaving the TPE corridor at ~17:38:40 (1.3949,103.8182), looping ~5 km north to ~1.4129/1.4103 (17:44–17:46) and back to the corridor at ~17:52:40; this accounts for the billed excess 22.25 − 17.154 = 5.096 km. The driver's accident excuse fails RD-4: the only LTA incident (Seletar Expressway, after Woodlands Ave 12 Exit) is at 1.39324,103.82912, which lies on the still-driven part of the quoted route and is ~1.3 km south of where the car actually went; the SELETAR EXPRESSWAY band is 5 and TAMPINES EXPRESSWAY band is 4 (not band ≤ 2). No rider message before the segment agrees to any reroute (last chat 17:24:10 is a pickup note), so under RD-5 the segment is unexempt and counts under RD-1/RD-2."
+    "reason": "traffic_conditions is empty and the speed bands on the affected recommended roads (New Bridge Road, Kampong Bahru Road) are band 5, above the band 1–2 threshold; the driver's 'one-way streets' is not a recorded traffic event."
+   },
+   {
+    "element": "Whether the rider consented to the additional route (RD-3/RD-5)",
+    "finding": "not_met",
+    "basis": [
+     "17:28:00 rider",
+     "17:28:25 driver"
+    ],
+    "reason": "The rider consented to a stop at Tiong Bahru Market (a place), not to a route; no road was agreed and the record contains no driver proposal of a longer way."
    }
   ],
   "rejected_claims": [
    {
-    "id": "driver_statement_accident",
-    "reason": "RD-4 requires a traffic incident on the substituted part of the optimal route. The LTA incident (Seletar Expressway after Woodlands Ave 12 Exit, 1.39324,103.82912) is on the portion the driver still drove, while the GPS detour swung north to ~1.4129; speed bands on the corridor are 4–5, not 1–2, so no corroboration for the northward loop."
+    "id": "driver_statement_onesway",
+    "reason": "Claim that 'the way to the market was a bit longer because of one-way streets' is not supported: no traffic event on the recommended route and affected roads show speed band 5, not the band 1–2 congestion required by RD-4; a one-way-street route choice is not a traffic exemption under RD-2/RD-3."
+   },
+   {
+    "id": "rider_stop_grant",
+    "reason": "The rider's consent to 'stop by Tiong Bahru Market' exempts only that stop, not the longer way, and it contributes no additional km to the deviation, so it does not reduce the refundable excess distance under RD-2."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 8.29,
- "input_tokens": 16787,
- "output_tokens": 1649,
+ "latency_s": 12.74,
+ "input_tokens": 12812,
+ "output_tokens": 2015,
  "requests": 1,
  "llm_calls": 1
 }

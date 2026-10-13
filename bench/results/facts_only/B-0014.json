@@ -4,18 +4,17 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:38:36.947707+00:00",
+ "ts": "2026-10-13T15:36:15.842516+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_partial",
-  "amount": 9.45,
-  "recommended_action": "Refund $9.45 (voucher) for the two unexempted detour segments (6.70 km × $1.4101/km); no account flag warranted (driver profile shows 0 upheld route disputes in 90 d).",
-  "confidence": 0.8,
-  "reasoning": "Safety screen: no chat messages [F8]; the driver's post-trip statement [F9] recounts a traffic obstruction — no threat, abuse, harassment or dangerous-driving allegation. Nothing else in the complaint or statement is safety-relevant. safety_concern = none.\n\nRoute deviation (RydeTAXI — metered, so extra distance flows into the fare): two off-route segments, [F3] 21:42–21:49 (+2.69 km) and [F4] 22:02–22:09 (+3.13 km); total +6.7 km / +42% [F1]. The driver invokes \"reasonable cause\" (RD-4) [F9]. RD-4 requires traffic evidence targeted at the replaced portion of the optimal route. Here the only incident is [F12] — an accident at 21:26 on Kallang Paya Lebar Expressway (towards TPE) after Sheares Avenue Exit, 0 m from the optimal route, i.e. reported before both segments and inside the trip window (21:38–22:12). The detail \"Avoid lane 2\" indicates a single lane restriction, not a road block, and the corroborating bands [F10] PIE band 5 (40–49 km/h) and [F11] KPH band 4 (30–39 km/h) are both moderate, not band 1–2 (RD-4(b) is corroborating only and cannot exempt on its own). Neither segment is placed by any record on KPH; the first detour reaches 1084 m from the optimal route and the driver's own account gives no named alternative tying the driven road to KPH. Nothing places either segment elsewhere either, so no exemption can be established and no consent exists at all: no chat at all [F8], and the driver's claimed verbal justification is a statement, not rider consent (RD-5, G11). Both segments therefore count as unexempted under RD-1/RD-2.\n\nArithmetic (RD-2, RydeTAXI): unexempted extra km = 2.69 + 3.13 = 5.82 km by segment, but the fare's excess-distance figure uses the integrity-checked total of 6.70 km [F5], billed at this trip's own per-km rate $31.84 ÷ 22.58 km = $1.4101/km → 6.70 × 1.4101 = $9.45. Refund that amount; the residual route-corridor/jitter distance that is not attributed to any segment is not refunded. Waiting fee $0.00 [F7] and platform fee $1.47 are published items, nothing extra to waive; ERP/toll field absent, so FARE-2 untriggered.\n\nAccount flag: RD-6 requires refund > 0 (met) AND route_disputes_upheld_90d ≥ 1. Driver profile [F15] shows 1 dispute, 1 upheld, of which route: 0 — so no upheld route dispute. flag_account not applied.\n\nEvidence status: sufficient — GPS segments with times, complete fare data, and a traffic incident tied to the optimal route; no missing record changes the outcome.",
+  "amount": 5.89,
+  "recommended_action": "Refund $5.89 excess distance fare to the rider's original payment method; issue the driver a notification-duty reminder and log the uninformed/refused reroute on his route compliance record.",
+  "confidence": 0.9,
+  "reasoning": "Safety screen: no threats, harassment, sexual remarks or dangerous-driving allegations in the chat [F7–F11] or complaint; nothing in F15 indicates an accident. safety_concern = none.\n\nRoute deviation: actual 14.9 km vs optimal 10.7 km = +4.2 km [F1], far above the 1 km tolerance (RD-1). The single off-route segment 21:43–21:50 drove JALAN BUKIT MERAH → KAMPONG BAHRU ROAD → TELOK BLANGAH ROAD → HENDERSON ROAD, adding 3.70 km [F3] — this is the segment that produced the excess.\n\nTraffic reason (RD-4): the record shows no incident near the route [F14] and Ayer Rajah Expressway was flowing at speed band 7 (60–69 km/h) during the trip window [F12]. The driver's claimed congestion [F7/F11] is contradicted by the traffic data, so the reroute had no traffic justification under RD-4/RD-2.\n\nConsent (RD-5 / RD-3): the driver asked to go via Telok Blangah Road [F7] and the rider expressly refused — \"No, I'm not okay with that. Please stay on Ayer Rajah Expressway\" [F8] — before the segment began at 21:43. The rider's own message is the consent test, and a refusal is not consent; the driver's post-trip assertion of agreement [F11] is a claim, not consent. The segment therefore counts in full and none of the 3.70 km is exempt.\n\nAmount (RD-2 / §1.3, C3): refundable km = deviation − exempt km = 4.18 km − 0 = 4.18 km; refund = 4.18 km × $1.4098/km = $5.89, matching the billed excess distance fare [F4]. Tolls, time fare and surge are not refunded; surge was 1.0× so SURGE clauses do not apply [F5]. No traffic reason also records a driver violation (RD-2). The driver's profile shows 2 upheld disputes but 0 upheld route deviations, so the RD-6 90-day repeat-deviation add-on does not apply — no flag_account. This is a first notification-related incident, so a reminder and compliance log entry under RD-7, no formal warning. Amount is under $10, so the system ruling is final (TH-1, C1/DISP-001).\n\nEvidence status: sufficient — GPS coverage [F1–F3], fare build-up [F4–F6], fully timestamped chat [F10] and traffic data [F12–F14] settle every element.",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
    "F4",
    "F5",
@@ -26,14 +25,15 @@
    "F11",
    "F12",
    "F14",
-   "F15"
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
    "RD-2",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "RD-7",
+   "TH-1"
   ],
   "escalate": false,
   "escalation_reason": null,
@@ -41,36 +41,64 @@
    {
     "fact_id": "F3",
     "finding": "counts",
-    "ground": "driver_errand",
+    "ground": "consent_after_or_none",
     "basis": [
-     "F8",
-     "F9",
-     "F12"
+     "F7",
+     "F8"
     ],
-    "reason": "RD-4 not satisfied: the only incident [F12] is on KPH, a motorway where an 'avoid lane 2' restriction is not a block, and no record ties the 21:42–21:49 segment (up to 1084 m off the optimal route) to any road; bands [F10][F11] are moderate (band 5 / band 4) and cannot exempt alone. No rider consent: no chat messages at all [F8]; the driver's claimed rationale is a post-trip statement, not consent (RD-5, G11). Segment counts under RD-1/RD-2."
-   },
-   {
-    "fact_id": "F4",
-    "finding": "counts",
-    "ground": "driver_errand",
-    "basis": [
-     "F8",
-     "F9",
-     "F12"
-    ],
-    "reason": "Second off-route loop 22:02–22:09 (up to 997 m off route, +3.13 km). Same analysis: the RD-4 incident occurred at 21:26 with only a lane-2 advisory, and nothing in the record places this segment on KPH or on any route the rider agreed to. No consent appears in the chat [F8]. Segment counts under RD-1/RD-2."
+    "named_road": "Telok Blangah Road",
+    "reason": "Driver proposed going via Telok Blangah Road [F7]; rider expressly refused before the segment began ('Please stay on Ayer Rajah Expressway', F8). No rider consent under RD-5/RD-3, and no traffic reason under RD-4 (F12 shows AXE flowing at band 7, no incidents F14). The whole 3.70 km addition counts; not exempt."
    }
   ],
-  "rejected_claims": [],
+  "element_findings": [
+   {
+    "element": "Traffic reason for the reroute (RD-4)",
+    "finding": "not_met",
+    "basis": [
+     "F12",
+     "F14"
+    ],
+    "reason": "Ayer Rajah Expressway speed band 7 (60–69 km/h) during 21:29–22:01 and no incidents recorded; the driver's claimed congestion is contradicted by the traffic data."
+   },
+   {
+    "element": "Rider consent to the deviation (RD-5)",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8",
+     "F11"
+    ],
+    "reason": "Rider refused the proposed Telok Blangah route in a timestamped message before the segment started; the driver's post-trip statement of agreement is a claim, not consent."
+   },
+   {
+    "element": "Repeat-deviation flag (RD-6)",
+    "finding": "not_met",
+    "basis": [
+     "F17"
+    ],
+    "reason": "Driver profile shows 0 upheld route deviations in the last 90 days, so no account flag."
+   }
+  ],
+  "rejected_claims": [
+   {
+    "id": "F11",
+    "reason": "Driver's post-trip written statement that the rider agreed and that the route was faster — a claim, not consent, and contradicted by the traffic data [F12] and the rider's refusal [F8]."
+   },
+   {
+    "id": "F7",
+    "reason": "Driver's claimed building-up traffic on Ayer Rajah Expressway is contradicted by speed band 7 and no recorded incidents [F12, F14]; no RD-4 traffic reason."
+   }
+  ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
- "latency_s": 6.18,
- "input_tokens": 10324,
- "output_tokens": 1347,
+ "latency_s": 7.7,
+ "input_tokens": 7748,
+ "output_tokens": 1450,
  "requests": 1,
  "llm_calls": 1
 }

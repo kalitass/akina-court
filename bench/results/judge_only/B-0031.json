@@ -4,100 +4,122 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T18:41:24.623514+00:00",
+ "ts": "2026-10-13T17:47:39.265695+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag — the driver made no false arrival confirmation.",
-  "confidence": 0.86,
-  "reasoning": "The rider was charged a $6.61 cancellation fee after the driver cancelled the RydeX booking at 22:46:50, 9 min 50 s after acceptance [F4][F7]. Under NS-0, a driver-sided cancellation is routed to NS-1 / NS-2 because the driver claims a rider no-show [F12], so the $6.61 can only stand if all of NS-1 (i)–(iii) hold.\n\nNS-1 (i) fails: the record shows no arrival confirmation at all — the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null) [F6]. The driver's own statement confirms this (\"I forgot to press the I'm Here button\") [F12], and a driver's after-the-fact statement cannot supply the missing confirmation [F6]. NS-1 (ii) therefore fails as well: there is no moment of arrival confirmation at which the car's distance from the pickup could be measured [F6]. NS-1 (iii) fails for the same reason: the continuous-wait clock runs only from the arrival confirmation, and with no confirmation the trace measures 0 s of post-confirmation waiting against the >180 s threshold [F6], even though the car sat stationary 40 m from the pickup for 4 min 0 s [F3] and was within 200 m for 5 min 20 s in total [F2][F5]. The chat messages (\"At the pickup point, silver Toyota Altis\" at 22:43 [F9]; \"Waited 4 min, cancelling\" at 22:46 [F10]) are timestamped [F11] but only describe the driver's own position and intentions; they are not an arrival confirmation by the driver's button or by the platform [F6].\n\nBecause NS-1 (i)(ii)(iii) each fail, NS-2 applies: the $6.61 cancellation fee is refunded in full, and the rider bears no cancellation fee [F7][F4]. The NS-2 account flag is not triggered, because the driver never pressed \"I'm Here\" while outside the pickup radius — there was no confirmation at all, so there is no fake confirmation to flag [F6][F1]. NS-3's driver-cancellation rate mechanism is a separate operational matter and produces no flag here.\n\nNo traffic excuse is needed or available for a no-show dispute: no incidents were recorded and only an ordinary speed band appears on Woodlands Avenue 5 [F14][F13]. The fare record contains no unpublished item — the fee is exactly the published $6.61 cancellation fee, so FARE-1 does not add anything [F7]. No route-deviation segments exist in this case, so segment_findings is empty. Refund follows NS-7 (voucher form; Ryde retains final discretion).",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show cancellation fee to the rider's original payment method and void the charge against the driver; no account flag on the rider (2 prior no-shows in 30 days, below the NS-9 threshold of 3).",
+  "confidence": 0.95,
+  "reasoning": "This is a driver-cancellation no-show case, so NS-0 directs it to NS-1/NS-2 [F4][NS-0]. The driver picked rider_no_show and cancelled 8 min 0 s after acceptance [F4]. The trace settles the individual conditions: arrival was confirmed by the driver's tap at 22:39:00, 40 m from pickup (closest approach 38 m, well inside the 200 m radius) [F7][F1][NS-1]; and the wait ran 360 s continuously at the pickup from arrival, exceeding the 300 s threshold [F7][NS-1]. The decisive failure is NS-1(iii): before cancelling, the driver sent 2 in-app messages (first at 22:39:30, last at 22:44) but made 0 in-app calls [F5][F10][F11][NS-1]. The driver's own written statement confirms this — \"I messaged the rider in the app; I did not call\" [F13][NS-1]. The rider's complaint that \"he never called me\" is consistent with the record [F5][F13]. Because a required NS-1 condition fails, NS-2 voids the fee in full: refund_full of $5.00 [F4][F8][NS-2]. The NS-2 add-on flag for a fake arrival confirmation does not apply, since the driver genuinely was at the pickup (40 m, resident 6 min, stationary 6 min 5 s at 41 m) [F2][F3][F7][F1][NS-2]; the trace marks no fake confirmation. The rider's profile (2 no-shows in 30 days, 1 dispute, 0 upheld) does not decide the present case and does not reach the NS-9 repeat threshold of 3, so no rider flag [F17][NS-9][RD-6]. Weather was fair and no traffic incidents were recorded, neither of which affects a no-show determination [F15][F16].",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
-   "F9",
+   "F8",
    "F10",
    "F11",
-   "F12",
    "F13",
-   "F14"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-9"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SAFE-1",
+    "finding": "not_met",
+    "basis": [
+     "F10",
+     "F11",
+     "F13"
+    ],
+    "reason": "I read all the chat messages and the complaint and statement: chat #1 'Reached, grey Kia Niro, waiting at the pickup' [F10] and chat #2 '5 min up, cancelling the trip' [F11] are ordinary pickup messages, the driver's statement is a factual account of waiting and cancelling [F13], and the rider's complaint is a fee complaint ('I was charged $5.00 anyway. He never called me'). Nothing states or implies threats, intimidation, harassment, sexual remarks, assault, dangerous driving or a feeling of being unsafe, so no safety escalation is triggered under SAFE-1."
+   }
+  ],
   "rejected_claims": [],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
   "ruling": "refund_full",
-  "amount": 6.61,
-  "recommended_action": "Refund the $6.61 cancellation fee to the rider as a Ryde voucher (NS-7); no account flag — the driver made no false arrival confirmation.",
-  "confidence": 0.86,
-  "reasoning": "The rider was charged a $6.61 cancellation fee after the driver cancelled the RydeX booking at 22:46:50, 9 min 50 s after acceptance [F4][F7]. Under NS-0, a driver-sided cancellation is routed to NS-1 / NS-2 because the driver claims a rider no-show [F12], so the $6.61 can only stand if all of NS-1 (i)–(iii) hold.\n\nNS-1 (i) fails: the record shows no arrival confirmation at all — the driver never tapped \"I'm Here\" and the platform recorded no automatic arrival (driver_pressed_here_at is null) [F6]. The driver's own statement confirms this (\"I forgot to press the I'm Here button\") [F12], and a driver's after-the-fact statement cannot supply the missing confirmation [F6]. NS-1 (ii) therefore fails as well: there is no moment of arrival confirmation at which the car's distance from the pickup could be measured [F6]. NS-1 (iii) fails for the same reason: the continuous-wait clock runs only from the arrival confirmation, and with no confirmation the trace measures 0 s of post-confirmation waiting against the >180 s threshold [F6], even though the car sat stationary 40 m from the pickup for 4 min 0 s [F3] and was within 200 m for 5 min 20 s in total [F2][F5]. The chat messages (\"At the pickup point, silver Toyota Altis\" at 22:43 [F9]; \"Waited 4 min, cancelling\" at 22:46 [F10]) are timestamped [F11] but only describe the driver's own position and intentions; they are not an arrival confirmation by the driver's button or by the platform [F6].\n\nBecause NS-1 (i)(ii)(iii) each fail, NS-2 applies: the $6.61 cancellation fee is refunded in full, and the rider bears no cancellation fee [F7][F4]. The NS-2 account flag is not triggered, because the driver never pressed \"I'm Here\" while outside the pickup radius — there was no confirmation at all, so there is no fake confirmation to flag [F6][F1]. NS-3's driver-cancellation rate mechanism is a separate operational matter and produces no flag here.\n\nNo traffic excuse is needed or available for a no-show dispute: no incidents were recorded and only an ordinary speed band appears on Woodlands Avenue 5 [F14][F13]. The fare record contains no unpublished item — the fee is exactly the published $6.61 cancellation fee, so FARE-1 does not add anything [F7]. No route-deviation segments exist in this case, so segment_findings is empty. Refund follows NS-7 (voucher form; Ryde retains final discretion).",
+  "amount": 5.0,
+  "recommended_action": "Refund the $5.00 no-show cancellation fee to the rider's original payment method and void the charge against the driver; no account flag on the rider (2 prior no-shows in 30 days, below the NS-9 threshold of 3).",
+  "confidence": 0.95,
+  "reasoning": "This is a driver-cancellation no-show case, so NS-0 directs it to NS-1/NS-2 [F4][NS-0]. The driver picked rider_no_show and cancelled 8 min 0 s after acceptance [F4]. The trace settles the individual conditions: arrival was confirmed by the driver's tap at 22:39:00, 40 m from pickup (closest approach 38 m, well inside the 200 m radius) [F7][F1][NS-1]; and the wait ran 360 s continuously at the pickup from arrival, exceeding the 300 s threshold [F7][NS-1]. The decisive failure is NS-1(iii): before cancelling, the driver sent 2 in-app messages (first at 22:39:30, last at 22:44) but made 0 in-app calls [F5][F10][F11][NS-1]. The driver's own written statement confirms this — \"I messaged the rider in the app; I did not call\" [F13][NS-1]. The rider's complaint that \"he never called me\" is consistent with the record [F5][F13]. Because a required NS-1 condition fails, NS-2 voids the fee in full: refund_full of $5.00 [F4][F8][NS-2]. The NS-2 add-on flag for a fake arrival confirmation does not apply, since the driver genuinely was at the pickup (40 m, resident 6 min, stationary 6 min 5 s at 41 m) [F2][F3][F7][F1][NS-2]; the trace marks no fake confirmation. The rider's profile (2 no-shows in 30 days, 1 dispute, 0 upheld) does not decide the present case and does not reach the NS-9 repeat threshold of 3, so no rider flag [F17][NS-9][RD-6]. Weather was fair and no traffic incidents were recorded, neither of which affects a no-show determination [F15][F16].",
   "cited_facts": [
    "F1",
    "F2",
    "F3",
    "F4",
    "F5",
-   "F6",
    "F7",
-   "F9",
+   "F8",
    "F10",
    "F11",
-   "F12",
    "F13",
-   "F14"
+   "F15",
+   "F16",
+   "F17"
   ],
   "cited_policy": [
    "NS-0",
    "NS-1",
    "NS-2",
-   "NS-7"
+   "NS-9"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [],
+  "element_findings": [
+   {
+    "element": "SAFE-1",
+    "finding": "not_met",
+    "basis": [
+     "F10",
+     "F11",
+     "F13"
+    ],
+    "reason": "I read all the chat messages and the complaint and statement: chat #1 'Reached, grey Kia Niro, waiting at the pickup' [F10] and chat #2 '5 min up, cancelling the trip' [F11] are ordinary pickup messages, the driver's statement is a factual account of waiting and cancelling [F13], and the rider's complaint is a fee complaint ('I was charged $5.00 anyway. He never called me'). Nothing states or implies threats, intimidation, harassment, sexual remarks, assault, dangerous driving or a feeling of being unsafe, so no safety escalation is triggered under SAFE-1."
+   }
+  ],
   "rejected_claims": [
    {
-    "id": "C1",
-    "reason": "No rider claim was advanced; the rider advocate made no assertion to reject. The rider's complaint that they were 'on my way down' is consistent with the record — the fee cannot stand regardless, because NS-1 (i) is unmet: no arrival confirmation exists (F6), and the driver admits not pressing 'I'm Here' (F12)."
-   },
-   {
     "id": "D1",
-    "reason": "The driver's no-show defence fails under NS-1 (i): no arrival confirmation on record (F6), and the driver's statement that he 'was there' but forgot to press the button (F12) cannot substitute for the confirmation NS-1 requires. NS-2 therefore refunds the $6.61 in full (F7)."
+    "reason": "No driver brief claim id was supplied in the materials (advocates unavailable); any implied position that the fee stands is rejected because NS-1(iii) fails — 2 messages but 0 in-app calls before cancelling [F5][F13][NS-1] — and NS-2 voids the $5.00 fee [F8][NS-2]."
    },
    {
-    "id": "D2",
-    "reason": "Any claim that ~4 minutes of physical waiting (F3) satisfies NS-1 (iii) is rejected: the continuous-wait requirement runs only after an arrival confirmation, and with no confirmation the post-confirmation wait is 0 s against the >180 s threshold (F6)."
+    "id": "C1",
+    "reason": "No rider brief claim id was supplied in the materials (advocates unavailable); to the extent the rider's complaint that the driver 'never called' is treated as a claim, it is upheld rather than rejected — the record shows 0 in-app calls before cancellation [F5][F13], failing NS-1(iii) and voiding the fee under NS-2."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
-   "F9",
    "F10",
-   "F12"
+   "F11",
+   "F13"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
@@ -106,12 +128,12 @@
  "events": 8,
  "void_claims": 0,
  "verify_lines": [
-  "dropped rejected_claims not in any live brief: C1, D1, D2\n✓ ruling consistent with the policy certificate\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate)"
+  "dropped rejected_claims not in any live brief: D1, C1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 100%\nmodel confidence 0.95 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/judge_only/B-0031.record.json",
- "latency_s": 7.77,
- "input_tokens": 12822,
- "output_tokens": 1478,
+ "latency_s": 8.46,
+ "input_tokens": 11159,
+ "output_tokens": 1538,
  "requests": 2,
  "llm_calls": 2
 }

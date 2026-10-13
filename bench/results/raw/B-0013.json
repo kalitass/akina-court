@@ -4,71 +4,60 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-10T17:36:02.732526+00:00",
+ "ts": "2026-10-13T15:35:38.527155+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
   "ruling": "escalate",
   "amount": null,
-  "recommended_action": "Hold the fare-dispute decision; send to a human reviewer to match the driver's GPS trace against the road network (name the roads on both the agreed Rifle Range Road stretch and the later off-route loop) before any RydeTAXI metered refund is computed under RD-2. + flag_account",
-  "confidence": 0.55,
-  "reasoning": "RydeTAXI metered trip T-2013 (Woodlands Civic Centre → Orchard Road). Fare $61.32 is metered: 30.95 km billed vs 20.566 km quoted (≈10.4 km more), so any unexempt deviation feeds the fare (RD-2 taxi branch; distance rate $43.64/30.95 km = $1.41/km).\n\nChat: at 18:42:35 the driver said the BKE jam was building and proposed the named road \"Rifle Range Road\"; at 18:43:15 the rider replied \"Sure, your call.\" That is consent to a specific named road, given before the segment (RD-5). But the trace between 18:42:25 and 18:52:25 runs north-west/south-west (lon ~103.775 → ~103.777 with lat near 1.34–1.36, an area tagged ~6–8 km from Rifle Range Road in the route corridor data) rather than south-west into the corridor; and the driver's own statement says the later turn-off was a GPS reroute, not the agreed road. The record therefore places part of that stretch away from Rifle Range Road — a named_road_elsewhere / driver_errand reading (counts) — while the rest cannot be tied to the agreed road at all (named_road_untied → undetermined, G12/G13). A second, separate off-route excursion appears at 19:03:55–19:12:25 (heading north-east away from the drop-off before returning), with no chat message before it: consent_after_or_none → counts (RD-5). No LTA incident is recorded, and the only speed bands are band 4, which cannot exempt under RD-4 (band ≤ 2 support only; G3).\n\nThe rider alleges she agreed only to the first detour; system records do not settle whether the driver's \"go round via Rifle Range Road\" consent covers the first detour segments or whether the second loop was a driver errand vs GPS reroute. Because segments whose finding is undetermined change the refund amount and the RD-6 account flag, the case cannot be executed automatically and goes to a human reviewer.",
+  "recommended_action": "Escalate to human review: obtain the trip call recording and any road-specific agreement, and verify the traffic state on the replaced AYE stretch at 18:42–18:55 against the band-2 link; if the general assent is held not to cover the off-route loop and no traffic reason is confirmed, refund the excess distance fare (~$7.80) and record the driver violation under RD-2/RD-7.",
+  "confidence": 0.5,
+  "reasoning": "Safety screen: the complaint, the driver's statement and the chat logs contain no threat, intimidation, harassment, sexual remark or dangerous-driving allegation; dispute type is route_deviation. safety_concern = none.\n\nSubstance (route deviation). Recommended distance 24.445 km; actual 29.98 km; deviation 5.535 km, well over the 1 km tolerance (RD-1). The GPS track runs the recommended roads (Jalan Boon Lay, Ayer Rajah Expressway, Central Expressway, Merchant Road, Pickering/Church, Marina Boulevard, Sheares Avenue, ECP, Temasek Boulevard) — the record's off-route portion is the Clementi/Kent Ridge/Pasir Panjang/South Buona Vista loop driven roughly 18:43–18:56 (Clementi West St 1, West Coast Road, Clementi Road, Kent Ridge Crescent, Arts Link, Kent Ridge Drive, Pasir Panjang Road, South/North Buona Vista Road, before rejoining the AYE), which the recommended route does not use.\n\nKey element in dispute: consent / notice (RD-5). The driver's message at 18:41:20 tells the rider traffic is building on the AYE and asks \"shall I take another way?\" — but it names no road or route. The rider replied at 18:42:00 \"Just take whichever way is faster lah, I'm late,\" i.e. a general \"any faster way is fine\". The first off-route movement begins at about 18:43:15 as the vehicle leaves the AYE onto Clementi West Street 1, so the assent was given before the segment began and the segment is not an uninformed reroute. However, the rider's own complaint says any faster way was fine yet \"the meter ended up well above the estimate\" and \"I don't think it was faster at all\" — the only stated condition on the assent (that the alternative be faster) is in the rider's own words disputed on the record.\n\nPolicy application turns on whether this general assent qualifies as \"rider agreed to go via X\" under RD-5. RD-3/RD-5 make a rider-named place or route, once accepted, non-deviation; a bare \"take whichever way is faster\" names no road, so the RD-5 road-name check cannot be run (\"No road names in the record → escalate\"). RD-4 also cannot be resolved: the traffic_speed_bands log gives an AYE band-2 window 18:23:15–18:55:15 that covers the replaced part of the route, which would support a traffic reason for the off-route segment, but the AYE stretch the driver in fact avoided (around 18:42–18:55) was being driven at ~71–74 km/h, and no congestion, incident or closure is shown on the recommended route near the point of departure within 300 m. The traffic_conditions array is empty, so the traffic-reason question under RD-4 is not settled by a record that would favour either side.\n\nBecause the applicability of RD-3/RD-5 (and hence whether the off-route km are exempt or refundable) and of RD-4 turns on evidence the record does not settle — no road names in the consent exchange and a contradictory traffic picture (band-2 AYE link vs. actual high speeds, empty traffic_conditions) — I do not manufacture a refund figure. Under TH-4, a missing/undecidable outcome-relevant condition is escalated rather than presumed. This is a human-review case, so cited_policy includes RD-5 and TH-4.\n\nIf a reviewer determines the general consent does not cover the off-route route, the refund, computed at the trip's per-km distance fare ($42.27 / 29.98 km = $1.41/km) × 5.535 km ≈ $7.80; if it is treated as exempt, the charge stands. Tolls, time fare and platform fee are not refunded (RD-2).",
   "cited_facts": [],
   "cited_policy": [
    "RD-1",
-   "RD-2",
    "RD-3",
    "RD-4",
    "RD-5",
-   "RD-6"
+   "TH-4"
   ],
   "escalate": true,
-  "escalation_reason": "RD-5 consent scope for the later off-route stretch is undetermined (G13) and this finding changes the refund amount and the RD-6 flag decision; a human reviewer must resolve the road correspondence before ruling.",
+  "escalation_reason": "Route-deviation amount turns on whether the general 'whichever way is faster' assent covers the off-route segment (RD-3/RD-5) and whether a traffic reason applied (RD-4); both are undecidable on the record — no road names appear in the consent exchange, and traffic evidence is contradictory (band-2 AYE link vs ~71–74 km/h actual speeds, empty traffic_conditions). Per TH-4, missing/undecidable outcome-relevant records are escalated rather than presumed. Potential refund if the segment counts: ~$7.80 (5.535 km × $1.41/km).",
   "segment_findings": [
    {
     "fact_id": "seg1",
     "finding": "undetermined",
-    "ground": "named_road_untied",
-    "basis": [
-     "2026-09-07T18:42:35+08:00",
-     "2026-09-07T18:43:15+08:00"
-    ],
-    "reason": "First post-consent stretch (GPS 18:42:25–18:52:25) leaves the BKE corridor right after the rider's \"Sure, your call.\" at 18:43:15, which is consent to the driver's named road 'Rifle Range Road' (RD-5). Nothing in the thinned GPS trace (no road names) ties this driven stretch to Rifle Range Road, and the driver's statement only says 'the second turn-off was my GPS rerouting', so the scope is undetermined (G12/G13). An undetermined finding that changes the amount → escalate."
-   },
-   {
-    "fact_id": "seg2",
-    "finding": "counts",
     "ground": "consent_after_or_none",
     "basis": [],
-    "reason": "Second excursion (GPS 19:03:55–19:12:25) leaves the corridor heading north-east away from Orchard Road (lat 1.3317→1.3408, lon 103.8145→103.8340) then loops back, adding unauthorised mileage. No chat message precedes this segment and the rider only agreed to one diversion; the chat is complete, so no rider message was available and this is an unexcused deviation under RD-1/RD-5 (counts)."
-   },
+    "named_road": null,
+    "reason": "Off-route segment ~18:43–18:56 via Clementi West Street 1, West Coast Road, Clementi Road, Kent Ridge Crescent, Arts Link, Kent Ridge Drive, Pasir Panjang Road and South/North Buona Vista Road, rejoining the AYE at ~18:56. The driver's 18:41:20 notice ('shall I take another way?') preceded the segment and the rider assented at 18:42:00 ('whichever way is faster'), but the assent names no road and the driver's notice names no road, so the RD-5 road-name check cannot be run (RD-5: no road names → escalate) and RD-3 cannot be automatically applied. Traffic picture is contradictory: the AYE band-2 window 18:23:15–18:55:15 supports a traffic reason (RD-4), but the avoided AYE stretch was driven at ~71–74 km/h and traffic_conditions is empty. Exempt vs. counts cannot be determined on the record."
+   }
+  ],
+  "element_findings": [
    {
-    "fact_id": "seg3",
-    "finding": "counts",
-    "ground": "driver_errand",
+    "element": "RD-5 consent to the off-route segment",
+    "finding": "undetermined",
     "basis": [],
-    "reason": "Opening stretch of the off-route run (GPS 18:45:25–18:52:25, lon ~103.775 pushing west/south-west while lat climbs 1.3637→1.3425) heads away from the rider's named road and away from the destination; the record places it away from the agreed named road and the driver's own account calls it a GPS reroute, not the agreed road, so the RD-5 named-road consent does not cover it (RD-5; counts)."
-   }
-  ],
-  "rejected_claims": [
-   {
-    "id": "driver_statement_verbal_agreement",
-    "reason": "The driver's claim of agreement is not itself consent (G11); the only rider consent on record is the 18:43:15 message 'Sure, your call.', which is tied to the named road Rifle Range Road and does not cover the later unannounced loop."
+    "reason": "Driver's 18:41:20 'shall I take another way?' names no road; rider's 18:42:00 reply 'Just take whichever way is faster lah' is a general assent, and RD-5 provides that where no road names appear in the record the segment is escalated. The rider's own complaint that the route was not faster leaves the only stated condition unresolved on the record."
    },
    {
-    "id": "driver_gps_reroute_defence",
-    "reason": "A driver's own GPS reroute is not a 'reasonable cause' under RD-4: no LTA traffic incident is recorded on the replaced optimal-route stretch, and the only speed bands are band 4, which cannot exempt (RD-4(b), G3)."
+    "element": "RD-4 traffic reason for the off-route segment",
+    "finding": "undetermined",
+    "basis": [],
+    "reason": "traffic_conditions is empty; the only traffic record is an AYE band-2 window (18:23:15–18:55:15) which covers the replaced route, but the driver's own AYE travel at that time was ~71–74 km/h and no incident/closure is shown near the departure point."
    }
   ],
-  "flag_account": true,
+  "rejected_claims": [],
+  "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [],
   "evidence_status": "insufficient",
-  "evidence_gap": "GPS trace is thinned (every 6th sample, 30 s grid) and carries no road names, and the record contains no road-name facts linking the driven off-route stretches to the agreed \"Rifle Range Road\"; the first off-route stretch (18:42:25–18:52:25) cannot be tied to the named road or definitively placed elsewhere, which prevents an executable RD-2 refund computation."
+  "evidence_gap": "Consent/route-naming evidence: the consent exchange (driver 18:41:20, rider 18:42:00) names no road or route, so the RD-5 road-name check cannot be performed; and the traffic evidence is contradictory/missing — traffic_conditions is empty while traffic_speed_bands records an AYE band-2 window overlapping the affected period but actual AYE speeds of ~71–74 km/h, leaving the RD-4 traffic reason undecidable. No call recording or timed road-specific agreement exists in the record."
  },
- "latency_s": 7.59,
- "input_tokens": 18462,
- "output_tokens": 1637,
+ "latency_s": 12.36,
+ "input_tokens": 17884,
+ "output_tokens": 2008,
  "requests": 1,
  "llm_calls": 1
 }

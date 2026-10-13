@@ -4,19 +4,19 @@
  "repeat": 0,
  "swap": false,
  "model": "deepseek:deepseek-chat",
- "ts": "2026-10-11T02:28:49.006672+00:00",
+ "ts": "2026-10-13T17:48:02.894864+00:00",
  "ok": true,
  "ruling_schema": 2,
  "ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the case as no_action: the sole off-route segment is exempt under RD-4(a); no fare adjustment and no account flag.",
-  "confidence": 0.72,
-  "reasoning": "The trip was a RydeTAXI metered ride from Punggol Waterway Point to Tampines Mall, 12.40 km in 24.7 min, charged $29.26 against an estimate of 9.8 km / 15.1 min [F1][F2][F6]. Because it is metered, any unexempted detour kilometre would enter the fare, so RD-2 supplies the refund formula (unexempted extra_km × distance fare ÷ distance km) [F6][RD-2].\n\nRD-1 requires each off-route segment in the record to be tested against RD-3/RD-4/RD-5; here the record contains exactly one such segment, F3 (09:03–09:11, 3.97 km driven where the optimal route covers 1.80 km, +2.18 km, reaching 1040 m off the optimal route), and the trip-wide +2.6 km in F1 is not separately segmentable into any further detour [F1][F3][RD-1].\n\nOn that single segment the driver's account is not merely a statement: F8 (his post-trip claim of an accident on the Tampines Expressway) is corroborated by the traffic record. F12 records an Accident on the Tampines Expressway (towards PIE) after Punggol Road Exit, reported 08:44, located 0 m from the optimal route — i.e. on the very stretch that was replaced — and 08:44 precedes the segment start of 09:03 within the trip window 08:56–09:20; F9 adds that same expressway at speed band 1 (0–9 km/h) during 08:47–09:03 [F8][F12][F9][F3][RD-4]. That satisfies RD-4(a)'s location and timing conditions, so F3 is the substituted stretch of the optimal route and the segment is exempt.\n\nThe rider's apportionment argument — that the incident window closes at 09:03 while the segment runs to 09:11, leaving the surplus 2.18 km unexempted [F9][F3] — is an inference, not a fact: no fact records a return to the optimal corridor at 09:03, the fact table carries no road names for the driven path, and F9 is a speed-band fact which RD-4(b) says cannot exempt (or, here, partition) a segment on its own [F9][F3][RD-4]. The record therefore does not split F3 into an incident-covered part and a bare remainder, and I do not treat missing apportionment evidence as favouring the rider [F3][RD-2]. The alternate corridors' bands (F10 band 2, F11 band 4) are corroborative context only and are not relied on for the exemption [F10][F11][RD-4].\n\nRD-5 gives the driver no shelter at all — F7 records no in-app messages, so there is no rider message before the segment agreeing to anything, and F8 is a statement, not consent [F7][F8][RD-5] — and D5/D9 on both sides concede there was no driver errand and no stop, so the segment rests on RD-4 alone [F3][RD-5].\n\nWith no unexempted segment, the RD-2 multiplicand is zero, and FARE-1 is not engaged: F6 shows waiting $0.00, platform $1.47 and no undisclosed add-on, and F5 shows surge 1.0× [F6][F5][RD-2][FARE-1]. RD-6's precondition also fails: F15 shows 0 route disputes and 0 upheld in 90 days, so no flag_account attaches [F15][RD-6].\n\nSafety screen: I read the complaint, the driver statement F8 and the (empty) chat F7. The complaint is a fare/route grievance (\"I never agreed to any change\"), F8 is an explanation of the reroute, and there is no chat; nothing alleges threats, intimidation, harassment, sexual remarks or dangerous driving [F7][F8][F14], so safety_concern is none.",
+  "ruling": "refund_partial",
+  "amount": 5.95,
+  "recommended_action": "Refund $5.95 excess distance fare to the rider via the original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning — first such incident); do not record a driver violation, as the trace shows a traffic reason on the replaced stretch (F11, RD-4); do not flag the driver's account (RD-6 not met).",
+  "confidence": 0.86,
+  "reasoning": "The trip ran 17.6 km against a 13.3 km optimal route, +4.3 km [F1], and the single off-route segment 09:06–09:16 drove 6.29 km where the optimal route covers 2.26 km [F3]. The trace fixes the chargeable deviation at 4.22 km, over the 1 km tolerance, so RD-1 is satisfied and the case turns on whether the segment is exempt under RD-2 [RD-1][RD-2].\n\nConsent: at 09:03, before the segment began, the driver asked \"Jam on Kallang Paya Lebar Expressway is building up ahead, can I go round via Ubi Avenue 2?\" [F7] and the rider answered \"Sure, no problem.\" [F8]. Read in context, that \"yes\" answers a question that named a road — it is an agreement to go via Ubi Avenue 2, a specific named road, not a free-floating \"whichever way is faster\" choice (the driver's own account in [F10] frames it the same way: \"I asked the rider about going via Ubi Avenue 2 and the rider agreed\"). The 12 roads driven on the segment [F3] do not include Ubi Avenue 2, and the driver's statement admits \"In the end I went by Jalan Eunos instead\" [F10]. RD-5's road-name check therefore places the agreement elsewhere, and the segment counts [RD-5].\n\nBoth advocates reach the same ground on this segment (named_road_elsewhere → counts), and my own reading of the record agrees; the driver's unilateral substitution of Jalan Eunos for the agreed road is exactly the case RD-5 treats as not covered by the rider's agreement.\n\nThe KLE congestion (band 2, 10–19 km/h, 08:48–09:16) [F11] gives a traffic reason on the replaced stretch, so no driver violation is recorded under RD-4; but under RD-2 a traffic reason never exempts the segment, and the amount turns only on whether the rider agreed to the route driven [RD-4][RD-2].\n\nAmount: (4.22 km deviation − 0 km exempt) × $1.4103/km = $5.95 [F4][RD-2]. Tolls, time fare and surge are not refunded: the multiplier is 1.0× [F5] and the components are base $3.90, distance $24.75, time $6.41, waiting $0.00, platform $1.47 [F6], so only the excess distance fare is refundable, matching the billed figure [F4].\n\nBecause the refund is for an uninformed/unauthorised reroute — the rider was told of a reroute via Ubi Avenue 2 but not of the route actually driven [F7][F8][F10] — the driver gets the RD-7 reminder and the notification failure is logged; the trace settles RD-4 as no violation, so no violation is recorded [RD-7][RD-4]. RD-6 is not met: the driver's prior upheld dispute was not a route matter (route: 0) [F17][RD-6]. The amount is under $10 and the dispute is a route deviation, so system resolution is proper [TH-1][TH-2]. Precedent DISP-2026-0089 (uninformed reroute, $3.20) is aligned on the notification duty, though its quantum differs with its own rate and distance [PREC-1].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
+   "F4",
    "F5",
    "F6",
    "F7",
@@ -24,8 +24,8 @@
    "F9",
    "F10",
    "F11",
-   "F12",
-   "F15"
+   "F14",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -33,64 +33,99 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "RD-7"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
-    "ground": "incident",
+    "finding": "counts",
+    "ground": "named_road_elsewhere",
     "basis": [
-     "F12",
-     "F8"
+     "F7",
+     "F8",
+     "F10"
     ],
-    "reason": "The single off-route segment (09:03–09:11, 3.97 km against 1.80 km optimal, +2.18 km) replaces the stretch of the optimal route covered by an Accident on the Tampines Expressway reported 08:44 at 0 m from that route, before the segment start [F12][F8][F3]. RD-4(a)'s location and timing conditions are therefore met and the segment is exempt; RD-2 refund on it is zero [RD-4][RD-2]. The rider's 09:03 cut of the segment rests on a speed-band window which RD-4(b) says cannot exempt a segment alone, and no fact records the driven path's road names, so the record does not split the segment [F9][F3][RD-4]."
+    "named_road": "Ubi Avenue 2",
+    "excluded_road": null,
+    "reason": "The rider's only pre-segment agreement is his 09:03 'Sure, no problem.' [F8] answering the driver's 09:03 ask 'can I go round via Ubi Avenue 2?' [F7] — an agreement to a specific named road, not a general route choice. The roads driven on the segment [F3] do not include Ubi Avenue 2, and the driver's statement admits 'In the end I went by Jalan Eunos instead' [F10]. Under RD-5 the agreed road is not the road driven, so the agreement does not cover the segment and its extra km are not exempt; the segment counts under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5:consent_scope",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8",
+     "F10",
+     "F3"
+    ],
+    "reason": "The rider's agreement was to the named road Ubi Avenue 2 [F7][F8], which was not driven; the driver substituted Jalan Eunos [F10][F3]. No rider message before 09:06 agrees to the route actually driven, so the segment is not exempt under RD-5."
+   },
+   {
+    "element": "RD-3:rider_named_stop",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8",
+     "F3"
+    ],
+    "reason": "The rider named no stop and requested no route; his only message agreed to the driver's proposal [F8][F7], and no stop is measured in the segment [F3]. RD-3 does not exempt the segment."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C5",
-    "reason": "The claim that the surplus 2.18 km of F3 is unexempted because the expressway incident window ends at 09:03 [F9][F3] is an inference from a speed-band fact; RD-4(b) states a band alone does not exempt a segment, and no fact records a return to the optimal corridor at 09:03 or the road names of the driven path [F9][F3][RD-4]. The record does not apportion F3, and the exemption under RD-4(a) stands on F12 [F12][RD-4]."
+    "id": "D3",
+    "reason": "The 09:03 message [F7] is notice of an intention to go via Ubi Avenue 2, not notice of the route driven; the driver admits he took Jalan Eunos instead [F10], and RD-5 requires notice of the deviation actually made."
    },
    {
-    "id": "C8",
-    "reason": "The $3.07 refund (2.18 km × $1.4097/km from F4) presumes an unexempted segment; with F3 exempt under RD-4(a) because of F12, the RD-2 multiplicand is zero, so the amount is $0 and the outcome is no_action [F3][F4][F12][RD-2][RD-4]."
+    "id": "D4",
+    "reason": "The rider's 'Sure, no problem.' [F8] answers a question that named a specific road (Ubi Avenue 2) [F7], so it is an agreement to that road, not a general route choice; the named road was not among the segment's roads driven [F3] (RD-5)."
    },
    {
-    "id": "C2",
-    "reason": "Correct that F3 exists and is the only off-route segment under RD-1, but RD-1 makes a segment unexempted only if RD-3/RD-4/RD-5 fail, and F12 supplies the RD-4(a) exemption on that segment [F3][F12][RD-1][RD-4]."
+    "id": "D5",
+    "reason": "A complete timestamped chat record [F9] proves what was said, not that the ride followed the agreement; the driver's own statement [F10] shows it did not, and RD-5's road-name check governs."
    },
    {
     "id": "D7",
-    "reason": "The driver's framing that the rider's $3.61 distance excess in F4 is the RD-2 cap is not applied: F4 measures 2.56 km of corridor-matched excess (F4 and F1 exceed F3's 2.18 km extra_km), whereas RD-2 refunds the unexempted segment's own extra_km; here that figure is zero once F3 is exempt [F3][F4][F6][RD-2][RD-4]."
+    "reason": "The 'traffic reason, rider informed and agreed → no_action' row of RD-2 requires the rider to have agreed to the route driven; here the agreement was to Ubi Avenue 2 and the Jalan Eunos route was not informed or agreed [F7][F8][F10], so the refund row applies (RD-2, RD-5)."
+   },
+   {
+    "id": "C9",
+    "reason": "RD-6 requires an upheld deviation against the driver in this case plus a prior upheld route deviation in 90 days; the profile shows route_disputes_upheld_90d = 0 [F17], so flag_account is not available."
+   },
+   {
+    "id": "C10",
+    "reason": "The RD-7 reminder is appropriate here, but the DISP-2026-0142 precedent cited is a surge-without-notice case, not a route-deviation case; the RD-7 reminder rests on RD-7 itself and on DISP-2026-0089 [RD-7][PREC-1]."
    },
    {
     "id": "D10",
-    "reason": "Correct that no flag_account attaches (F15 shows 0 route disputes upheld in 90 days, so RD-6's precondition fails), but RD-6 is not the basis of the outcome; the ruling rests on the RD-4(a) exemption of F3 through F12 [F15][F3][F12][RD-6][RD-4]."
+    "reason": "The driver's request for no_action fails: the deviation of 4.22 km exceeds the 1 km tolerance [F1][F3][F4] and the consent did not cover the segment driven [F7][F8][F10], so the excess distance fare is refundable under RD-2."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F7",
    "F8",
-   "F14"
+   "F10"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "pre_verify_ruling": {
-  "ruling": "no_action",
-  "amount": null,
-  "recommended_action": "Close the case as no_action: the sole off-route segment is exempt under RD-4(a); no fare adjustment and no account flag.",
-  "confidence": 0.72,
-  "reasoning": "The trip was a RydeTAXI metered ride from Punggol Waterway Point to Tampines Mall, 12.40 km in 24.7 min, charged $29.26 against an estimate of 9.8 km / 15.1 min [F1][F2][F6]. Because it is metered, any unexempted detour kilometre would enter the fare, so RD-2 supplies the refund formula (unexempted extra_km × distance fare ÷ distance km) [F6][RD-2].\n\nRD-1 requires each off-route segment in the record to be tested against RD-3/RD-4/RD-5; here the record contains exactly one such segment, F3 (09:03–09:11, 3.97 km driven where the optimal route covers 1.80 km, +2.18 km, reaching 1040 m off the optimal route), and the trip-wide +2.6 km in F1 is not separately segmentable into any further detour [F1][F3][RD-1].\n\nOn that single segment the driver's account is not merely a statement: F8 (his post-trip claim of an accident on the Tampines Expressway) is corroborated by the traffic record. F12 records an Accident on the Tampines Expressway (towards PIE) after Punggol Road Exit, reported 08:44, located 0 m from the optimal route — i.e. on the very stretch that was replaced — and 08:44 precedes the segment start of 09:03 within the trip window 08:56–09:20; F9 adds that same expressway at speed band 1 (0–9 km/h) during 08:47–09:03 [F8][F12][F9][F3][RD-4]. That satisfies RD-4(a)'s location and timing conditions, so F3 is the substituted stretch of the optimal route and the segment is exempt.\n\nThe rider's apportionment argument — that the incident window closes at 09:03 while the segment runs to 09:11, leaving the surplus 2.18 km unexempted [F9][F3] — is an inference, not a fact: no fact records a return to the optimal corridor at 09:03, the fact table carries no road names for the driven path, and F9 is a speed-band fact which RD-4(b) says cannot exempt (or, here, partition) a segment on its own [F9][F3][RD-4]. The record therefore does not split F3 into an incident-covered part and a bare remainder, and I do not treat missing apportionment evidence as favouring the rider [F3][RD-2]. The alternate corridors' bands (F10 band 2, F11 band 4) are corroborative context only and are not relied on for the exemption [F10][F11][RD-4].\n\nRD-5 gives the driver no shelter at all — F7 records no in-app messages, so there is no rider message before the segment agreeing to anything, and F8 is a statement, not consent [F7][F8][RD-5] — and D5/D9 on both sides concede there was no driver errand and no stop, so the segment rests on RD-4 alone [F3][RD-5].\n\nWith no unexempted segment, the RD-2 multiplicand is zero, and FARE-1 is not engaged: F6 shows waiting $0.00, platform $1.47 and no undisclosed add-on, and F5 shows surge 1.0× [F6][F5][RD-2][FARE-1]. RD-6's precondition also fails: F15 shows 0 route disputes and 0 upheld in 90 days, so no flag_account attaches [F15][RD-6].\n\nSafety screen: I read the complaint, the driver statement F8 and the (empty) chat F7. The complaint is a fare/route grievance (\"I never agreed to any change\"), F8 is an explanation of the reroute, and there is no chat; nothing alleges threats, intimidation, harassment, sexual remarks or dangerous driving [F7][F8][F14], so safety_concern is none.",
+  "ruling": "refund_partial",
+  "amount": 5.95,
+  "recommended_action": "Refund $5.95 excess distance fare to the rider via the original payment method; send the driver the RD-7 notification-duty reminder and log the notification failure on his route compliance record (no formal warning — first such incident); do not record a driver violation, as the trace shows a traffic reason on the replaced stretch (F11, RD-4); do not flag the driver's account (RD-6 not met).",
+  "confidence": 0.86,
+  "reasoning": "The trip ran 17.6 km against a 13.3 km optimal route, +4.3 km [F1], and the single off-route segment 09:06–09:16 drove 6.29 km where the optimal route covers 2.26 km [F3]. The trace fixes the chargeable deviation at 4.22 km, over the 1 km tolerance, so RD-1 is satisfied and the case turns on whether the segment is exempt under RD-2 [RD-1][RD-2].\n\nConsent: at 09:03, before the segment began, the driver asked \"Jam on Kallang Paya Lebar Expressway is building up ahead, can I go round via Ubi Avenue 2?\" [F7] and the rider answered \"Sure, no problem.\" [F8]. Read in context, that \"yes\" answers a question that named a road — it is an agreement to go via Ubi Avenue 2, a specific named road, not a free-floating \"whichever way is faster\" choice (the driver's own account in [F10] frames it the same way: \"I asked the rider about going via Ubi Avenue 2 and the rider agreed\"). The 12 roads driven on the segment [F3] do not include Ubi Avenue 2, and the driver's statement admits \"In the end I went by Jalan Eunos instead\" [F10]. RD-5's road-name check therefore places the agreement elsewhere, and the segment counts [RD-5].\n\nBoth advocates reach the same ground on this segment (named_road_elsewhere → counts), and my own reading of the record agrees; the driver's unilateral substitution of Jalan Eunos for the agreed road is exactly the case RD-5 treats as not covered by the rider's agreement.\n\nThe KLE congestion (band 2, 10–19 km/h, 08:48–09:16) [F11] gives a traffic reason on the replaced stretch, so no driver violation is recorded under RD-4; but under RD-2 a traffic reason never exempts the segment, and the amount turns only on whether the rider agreed to the route driven [RD-4][RD-2].\n\nAmount: (4.22 km deviation − 0 km exempt) × $1.4103/km = $5.95 [F4][RD-2]. Tolls, time fare and surge are not refunded: the multiplier is 1.0× [F5] and the components are base $3.90, distance $24.75, time $6.41, waiting $0.00, platform $1.47 [F6], so only the excess distance fare is refundable, matching the billed figure [F4].\n\nBecause the refund is for an uninformed/unauthorised reroute — the rider was told of a reroute via Ubi Avenue 2 but not of the route actually driven [F7][F8][F10] — the driver gets the RD-7 reminder and the notification failure is logged; the trace settles RD-4 as no violation, so no violation is recorded [RD-7][RD-4]. RD-6 is not met: the driver's prior upheld dispute was not a route matter (route: 0) [F17][RD-6]. The amount is under $10 and the dispute is a route deviation, so system resolution is proper [TH-1][TH-2]. Precedent DISP-2026-0089 (uninformed reroute, $3.20) is aligned on the notification duty, though its quantum differs with its own rate and distance [PREC-1].",
   "cited_facts": [
    "F1",
-   "F2",
    "F3",
+   "F4",
    "F5",
    "F6",
    "F7",
@@ -98,8 +133,8 @@
    "F9",
    "F10",
    "F11",
-   "F12",
-   "F15"
+   "F14",
+   "F17"
   ],
   "cited_policy": [
    "RD-1",
@@ -107,64 +142,102 @@
    "RD-4",
    "RD-5",
    "RD-6",
-   "FARE-1"
+   "RD-7",
+   "TH-1",
+   "TH-2",
+   "PREC-1"
   ],
   "escalate": false,
   "escalation_reason": null,
   "segment_findings": [
    {
     "fact_id": "F3",
-    "finding": "exempt",
-    "ground": "incident",
+    "finding": "counts",
+    "ground": "named_road_elsewhere",
     "basis": [
-     "F12",
-     "F8"
+     "F7",
+     "F8",
+     "F10"
     ],
-    "reason": "The single off-route segment (09:03–09:11, 3.97 km against 1.80 km optimal, +2.18 km) replaces the stretch of the optimal route covered by an Accident on the Tampines Expressway reported 08:44 at 0 m from that route, before the segment start [F12][F8][F3]. RD-4(a)'s location and timing conditions are therefore met and the segment is exempt; RD-2 refund on it is zero [RD-4][RD-2]. The rider's 09:03 cut of the segment rests on a speed-band window which RD-4(b) says cannot exempt a segment alone, and no fact records the driven path's road names, so the record does not split the segment [F9][F3][RD-4]."
+    "named_road": "Ubi Avenue 2",
+    "excluded_road": null,
+    "reason": "The rider's only pre-segment agreement is his 09:03 'Sure, no problem.' [F8] answering the driver's 09:03 ask 'can I go round via Ubi Avenue 2?' [F7] — an agreement to a specific named road, not a general route choice. The roads driven on the segment [F3] do not include Ubi Avenue 2, and the driver's statement admits 'In the end I went by Jalan Eunos instead' [F10]. Under RD-5 the agreed road is not the road driven, so the agreement does not cover the segment and its extra km are not exempt; the segment counts under RD-2."
+   }
+  ],
+  "element_findings": [
+   {
+    "element": "RD-5:consent_scope",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8",
+     "F10",
+     "F3"
+    ],
+    "reason": "The rider's agreement was to the named road Ubi Avenue 2 [F7][F8], which was not driven; the driver substituted Jalan Eunos [F10][F3]. No rider message before 09:06 agrees to the route actually driven, so the segment is not exempt under RD-5."
+   },
+   {
+    "element": "RD-3:rider_named_stop",
+    "finding": "not_met",
+    "basis": [
+     "F7",
+     "F8",
+     "F3"
+    ],
+    "reason": "The rider named no stop and requested no route; his only message agreed to the driver's proposal [F8][F7], and no stop is measured in the segment [F3]. RD-3 does not exempt the segment."
    }
   ],
   "rejected_claims": [
    {
-    "id": "C5",
-    "reason": "The claim that the surplus 2.18 km of F3 is unexempted because the expressway incident window ends at 09:03 [F9][F3] is an inference from a speed-band fact; RD-4(b) states a band alone does not exempt a segment, and no fact records a return to the optimal corridor at 09:03 or the road names of the driven path [F9][F3][RD-4]. The record does not apportion F3, and the exemption under RD-4(a) stands on F12 [F12][RD-4]."
+    "id": "D3",
+    "reason": "The 09:03 message [F7] is notice of an intention to go via Ubi Avenue 2, not notice of the route driven; the driver admits he took Jalan Eunos instead [F10], and RD-5 requires notice of the deviation actually made."
    },
    {
-    "id": "C8",
-    "reason": "The $3.07 refund (2.18 km × $1.4097/km from F4) presumes an unexempted segment; with F3 exempt under RD-4(a) because of F12, the RD-2 multiplicand is zero, so the amount is $0 and the outcome is no_action [F3][F4][F12][RD-2][RD-4]."
+    "id": "D4",
+    "reason": "The rider's 'Sure, no problem.' [F8] answers a question that named a specific road (Ubi Avenue 2) [F7], so it is an agreement to that road, not a general route choice; the named road was not among the segment's roads driven [F3] (RD-5)."
    },
    {
-    "id": "C2",
-    "reason": "Correct that F3 exists and is the only off-route segment under RD-1, but RD-1 makes a segment unexempted only if RD-3/RD-4/RD-5 fail, and F12 supplies the RD-4(a) exemption on that segment [F3][F12][RD-1][RD-4]."
+    "id": "D5",
+    "reason": "A complete timestamped chat record [F9] proves what was said, not that the ride followed the agreement; the driver's own statement [F10] shows it did not, and RD-5's road-name check governs."
    },
    {
     "id": "D7",
-    "reason": "The driver's framing that the rider's $3.61 distance excess in F4 is the RD-2 cap is not applied: F4 measures 2.56 km of corridor-matched excess (F4 and F1 exceed F3's 2.18 km extra_km), whereas RD-2 refunds the unexempted segment's own extra_km; here that figure is zero once F3 is exempt [F3][F4][F6][RD-2][RD-4]."
+    "reason": "The 'traffic reason, rider informed and agreed → no_action' row of RD-2 requires the rider to have agreed to the route driven; here the agreement was to Ubi Avenue 2 and the Jalan Eunos route was not informed or agreed [F7][F8][F10], so the refund row applies (RD-2, RD-5)."
+   },
+   {
+    "id": "C9",
+    "reason": "RD-6 requires an upheld deviation against the driver in this case plus a prior upheld route deviation in 90 days; the profile shows route_disputes_upheld_90d = 0 [F17], so flag_account is not available."
+   },
+   {
+    "id": "C10",
+    "reason": "The RD-7 reminder is appropriate here, but the DISP-2026-0142 precedent cited is a surge-without-notice case, not a route-deviation case; the RD-7 reminder rests on RD-7 itself and on DISP-2026-0089 [RD-7][PREC-1]."
    },
    {
     "id": "D10",
-    "reason": "Correct that no flag_account attaches (F15 shows 0 route disputes upheld in 90 days, so RD-6's precondition fails), but RD-6 is not the basis of the outcome; the ruling rests on the RD-4(a) exemption of F3 through F12 [F15][F3][F12][RD-6][RD-4]."
+    "reason": "The driver's request for no_action fails: the deviation of 4.22 km exceeds the 1 km tolerance [F1][F3][F4] and the consent did not cover the segment driven [F7][F8][F10], so the excess distance fare is refundable under RD-2."
    }
   ],
   "flag_account": false,
+  "goodwill_credit": null,
   "safety_concern": "none",
   "safety_basis": [
    "F7",
    "F8",
-   "F14"
+   "F10"
   ],
   "evidence_status": "sufficient",
   "evidence_gap": null
  },
  "status": "resolved",
- "events": 27,
- "void_claims": 1,
+ "events": 29,
+ "void_claims": 0,
  "verify_lines": [
-  "✓ ruling consistent with the policy certificate\nmodel confidence 0.72 (diagnostic only; automation is decided by the certificate)"
+  "citations outside what decided this route_deviation case removed from cited_policy: TH-1, TH-2, PREC-1\n✓ ruling consistent with the policy certificate\n✓ TH-1/TH-3: under $10: the system decides; code confidence 100%\nmodel confidence 0.86 (diagnostic only; automation is decided by the certificate and TH-1 / TH-3)"
  ],
  "record_path": "bench/results/court/B-0008.record.json",
- "latency_s": 24.56,
- "input_tokens": 99488,
- "output_tokens": 7757,
- "requests": 9,
+ "latency_s": 30.15,
+ "input_tokens": 92758,
+ "output_tokens": 8200,
+ "requests": 10,
  "llm_calls": 6
 }

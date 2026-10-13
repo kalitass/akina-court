@@ -5,12 +5,12 @@
   * the organisers' sample is sampled every ~3 min; that cadence is not a hole, and the sample still clears
   * cancelled_by missing is not "the driver cancelled": insufficient
   * the no-show wait threshold comes from the case record when it states one (8 min, "reached" = at least),
-    else Ryde's default (more than 3 min); the trace names the source; a platform auto-arrival is never written as a tap
+    else the official 5-minute free wait (at least 5 min); the trace names the source; a platform auto-arrival is never written as a tap
   * evidence_status is a three-valued field: insufficient / unknown never execute; the words must agree with the status
   * every id the judge writes — in findings, safety basis, rejected claims — is checked, not only the top-level lists
   * safety_concern and evidence_status are required in the judge's output; old records still load
   * an escalated case gets a fixed notice that promises nothing; a notice whose amount disagrees with the ruling is replaced
-  * an undetermined finding that cannot change the outcome (fixed fare, no prior) does not force a hand-off
+  * an undetermined finding on an open segment changes the amount, so it goes to a person
 """
 import json
 from datetime import timedelta
@@ -67,16 +67,32 @@ def test_trace_that_ends_30s_into_the_trip_is_insufficient():
     assert cert.insufficient and cert.allowed == ["escalate"]
 
 
-def test_two_samples_220s_apart_do_not_prove_a_continuous_wait():
-    case = with_tap(no_show_case(stop_offset_m=40, wait_s=240), 240)
+def _two_samples(wait_s, gap_s):
+    """with_tap(no_show_case) keeping only the tap sample and one gap_s later, nothing between; cancelled at the second."""
+    case = with_tap(no_show_case(stop_offset_m=40, wait_s=wait_s), wait_s)
     here = case.trip.driver_pressed_here_at
     at = lambda s: next(p for p in case.gps if p.ts == here + timedelta(seconds=s))
-    keep = [p for p in case.gps if p.ts < here] + [at(0), at(220)]     # the tap sample and one 220 s later, nothing between
-    case = case.model_copy(update={"gps": keep, "trip": case.trip.model_copy(update={"cancelled_at": at(220).ts})})
+    keep = [p for p in case.gps if p.ts < here] + [at(0), at(gap_s)]
+    return case.model_copy(update={"gps": keep, "trip": case.trip.model_copy(update={"cancelled_at": at(gap_s).ts})})
+
+
+def test_two_samples_320s_apart_do_not_prove_a_continuous_wait():
+    """320 s between two samples would pass the 5-minute free wait if it were all waiting: the hole decides the case."""
+    case = _two_samples(400, 320)
     table = build_fact_table(case)
     assert any(f.value and f.value.get("gps_gap_s") for f in table.facts)
     cert = evaluate(case, table)
     assert cert.insufficient and "hole" in cert.insufficient and cert.allowed == ["escalate"]
+
+
+def test_a_hole_that_cannot_change_the_outcome_does_not_escalate():
+    """TH-4: 220 s between the samples is short of the 5-minute free wait even if it was all waiting, so the fee is void anyway."""
+    case = _two_samples(240, 220)
+    table = build_fact_table(case)
+    assert any(f.value and f.value.get("gps_gap_s") for f in table.facts)
+    cert = evaluate(case, table)
+    assert not cert.insufficient and cert.allowed == ["refund_full", "escalate"] and cert.amount == 5.00
+    assert any(p.clause == "NS-2" and "short of 300 s" in p.detail for p in cert.predicates)
 
 
 def test_sample_cadence_of_three_minutes_is_not_a_hole():
@@ -103,7 +119,7 @@ def test_threshold_source_is_the_record_when_it_states_one_else_the_default():
     s, inclusive, source = no_show_threshold(load("DISP-002"))
     assert (s, inclusive) == (480, True) and "8" in source and "record" in source
     s, inclusive, source = no_show_threshold(no_show_case(stop_offset_m=40, wait_s=300))
-    assert (s, inclusive) == (180, False) and "NS-1" in source and "more than" in source
+    assert (s, inclusive) == (300, True) and "NS-1" in source and "at least 5 min" in source
 
 
 @pytest.mark.parametrize("wait_s,ok", [(479, False), (480, True), (481, True)])
@@ -113,21 +129,21 @@ def test_explicit_eight_minute_threshold_is_reached_at_eight_minutes(wait_s, ok)
                                    "policy_params": PolicyParams(no_show_threshold_min=8, free_wait_min=5)})
     case = case.model_copy(update={"gps": [p for p in case.gps if p.ts <= case.trip.cancelled_at]})
     cert = evaluate(case, build_fact_table(case))
-    iii = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(iii)"))
-    assert (iii.status == "pass") is ok, (wait_s, iii.detail)
-    assert "8 min" in iii.element and "record" in iii.element
+    ii = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(ii)"))
+    assert (ii.status == "pass") is ok, (wait_s, ii.detail)
+    assert "8 min" in ii.element and "record" in ii.element
     assert ("no_action" in cert.allowed) is ok
 
 
-@pytest.mark.parametrize("wait_s,ok", [(179, False), (180, False), (181, True)])
-def test_default_threshold_is_more_than_three_minutes(wait_s, ok):
+@pytest.mark.parametrize("wait_s,ok", [(299, False), (300, True), (301, True)])
+def test_default_threshold_is_at_least_five_minutes(wait_s, ok):
     case = with_tap(no_show_case(stop_offset_m=40, wait_s=wait_s + 5), wait_s + 5)
     case = case.model_copy(update={"trip": case.trip.model_copy(update={"cancelled_at": case.trip.driver_pressed_here_at + timedelta(seconds=wait_s)})})
     case = case.model_copy(update={"gps": [p for p in case.gps if p.ts <= case.trip.cancelled_at]})
     cert = evaluate(case, build_fact_table(case))
-    iii = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(iii)"))
-    assert (iii.status == "pass") is ok, (wait_s, iii.detail)
-    assert "3 min" in iii.element and "NS-1" in iii.element
+    ii = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(ii)"))
+    assert (ii.status == "pass") is ok, (wait_s, ii.detail)
+    assert "5 min" in ii.element and "NS-1" in ii.element
     assert ("no_action" in cert.allowed) is ok
 
 
@@ -136,9 +152,7 @@ def test_platform_auto_arrival_is_named_as_such_never_as_a_tap():
     table = build_fact_table(case)
     cert = evaluate(case, table)
     i = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(i)"))
-    iii = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(iii)"))
-    assert "platform_auto" in i.detail and "tapped" not in i.detail
-    assert "platform_auto" in iii.detail
+    assert "platform_auto" in i.detail and "platform_auto" in i.element and "tapped" not in i.detail
     assert not any("tapped" in f.text for f in table.facts)
 
 
@@ -207,46 +221,25 @@ def test_safety_concern_and_evidence_status_are_required_but_old_records_load():
 
 
 def test_uncovered_tail_is_not_counted_as_waiting():
-    """B-0028-style counterexample: tap, GPS until 150 s after it, cancellation at 240 s. 150 s are measured, the
-    missing 90 s would decide the 3-minute threshold: neither 'waited long enough' nor 'did not' can be measured."""
-    case = with_tap(no_show_case(stop_offset_m=40, wait_s=250), 250)
+    """Tap, GPS until 220 s after it, cancellation at 330 s. 220 s are measured, the missing 110 s would decide the
+    5-minute free wait: neither 'waited long enough' nor 'did not' can be measured."""
+    case = with_tap(no_show_case(stop_offset_m=40, wait_s=340), 340)
     here = case.trip.driver_pressed_here_at
-    gps = [p for p in case.gps if p.ts <= here + timedelta(seconds=150)]
-    case = case.model_copy(update={"gps": gps, "trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=240)})})
+    gps = [p for p in case.gps if p.ts <= here + timedelta(seconds=220)]
+    case = case.model_copy(update={"gps": gps, "trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=330)})})
     table = build_fact_table(case)
     tl = next(f for f in table.facts if f.value and "within_200m_after_tap_s" in f.value)
-    assert tl.value["within_200m_after_tap_s"] == 150 and tl.value["tail_uncovered_s"] == 90
+    assert tl.value["within_200m_after_tap_s"] == 220 and tl.value["tail_uncovered_s"] == 110
     cert = evaluate(case, table)
     assert cert.insufficient and "uncovered" in cert.insufficient and cert.allowed == ["escalate"]
     # a tail of one sampling interval is closed (the trace reaches the cancellation to within a sample)
-    case2 = case.model_copy(update={"trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=153)})})
+    case2 = case.model_copy(update={"trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=223)})})
     tl2 = next(f for f in build_fact_table(case2).facts if f.value and "within_200m_after_tap_s" in f.value)
-    assert tl2.value["within_200m_after_tap_s"] == 153 and tl2.value["tail_uncovered_s"] == 0
-    # a tail that cannot change the answer is not a reason to refuse: 150 s measured, cancel at 170 s, threshold 180 → fail, refund
-    case3 = case.model_copy(update={"trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=170)})})
+    assert tl2.value["within_200m_after_tap_s"] == 223 and tl2.value["tail_uncovered_s"] == 0
+    # a tail that cannot change the answer is not a reason to refuse: 220 s measured, cancel at 290 s, threshold 300 → fail, refund
+    case3 = case.model_copy(update={"trip": case.trip.model_copy(update={"cancelled_at": here + timedelta(seconds=290)})})
     cert3 = evaluate(case3, build_fact_table(case3))
     assert not cert3.insufficient and cert3.allowed == ["refund_full", "escalate"]
-
-
-def test_blind_report_counts_each_case_once(tmp_path, monkeypatch):
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("blind_report", ROOT / "bench" / "blind_report.py")
-    br = importlib.util.module_from_spec(spec); spec.loader.exec_module(br)
-    man = json.loads((ROOT / "data" / "bench" / "blind" / "manifest.json").read_text())
-    c = man["cases"][0]; t = c["truth"]
-    res = tmp_path / "court"; res.mkdir()
-    good = {"case_id": c["case_id"], "ok": True, "ruling": {"ruling": t["ruling"], "amount": t.get("amount"), "escalate": t["escalate"]}}
-    (res / f"{c['case_id']}.json").write_text(json.dumps(good))
-    (res / f"{c['case_id']}.record.json").write_text(json.dumps({"case_id": c["case_id"], "events": []}))
-    c2 = man["cases"][1]
-    (res / f"{c2['case_id']}.json").write_text(json.dumps({"case_id": c2["case_id"], "ok": False, "error": "timeout"}))
-    monkeypatch.setattr(br, "RES", tmp_path)
-    import io, contextlib
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        br.main()
-    out = buf.getvalue()
-    assert "core decision 1/2, wrong and executed 0/2, runs failed 1/2" in out, out
 
 
 # ---------------------------------------------------------------------------- notices
@@ -269,47 +262,24 @@ def test_notice_amount_must_match_the_ruling():
     assert "$3.99" in rider and "$3.99" in driver
 
 
-# ---------------------------------------------------------------------------- undetermined that changes nothing
+# ---------------------------------------------------------------------------- undetermined on an open segment
 
-def test_undetermined_finding_that_cannot_change_the_outcome_may_still_rule():
+def test_undetermined_finding_on_an_open_segment_goes_to_a_person():
+    """Every fare is distance-based (FARE-0), so an open segment's finding always moves the amount: an undetermined
+    finding cannot ride along on a ruled case, while the same finding on an escalate is a ground."""
     case = load("C-0001")
-    case = case.model_copy(update={"trip": case.trip.model_copy(update={"service_type": "RydeX"}),
-                                   "fare": case.fare.model_copy(update={"pricing": "fixed"}),
-                                   "profiles": case.profiles.model_copy(update={"driver": case.profiles.driver.model_copy(update={"route_disputes_upheld_90d": 0})})})
+    case = case.model_copy(update={"gps": [p.model_copy(update={"road": None}) for p in case.gps]})   # no road names on record
     table = build_fact_table(case); cert = evaluate(case, table)
-    assert any(s["exempt"] is None for s in cert.segments.values())
+    assert any(s["exempt"] is None and not s["roads"] for s in cert.segments.values())
     findings = [_sf(fact_id=f, finding=("undetermined" if s["exempt"] is None else ("exempt" if s["exempt"] else "counts")),
-                               reason=("named road; no record ties the segment to it (G13)" if s["exempt"] is None else "code-settled [RD-4]"))
+                    reason=("named road; the record names no roads for this segment [RD-5]" if s["exempt"] is None else "code-settled [RD-5]"))
                 for f, s in cert.segments.items()]
     r = ruling(ruling="no_action", cited_policy=["RD-1", "RD-2"], segment_findings=findings)
     ok, why = check_ruling(cert, r)
+    assert not ok and any("undetermined" in w for w in why), why
+    esc = r.model_copy(update={"ruling": "escalate", "escalate": True})
+    ok, why = check_ruling(cert, esc)
     assert ok, why
-    # the same finding on the metered original must not execute
-    case_m = load("C-0001")
-    table_m = build_fact_table(case_m); cert_m = evaluate(case_m, table_m)
-    r_m = r.model_copy(update={"cited_policy": ["RD-1", "RD-2"]})
-    ok, why = check_ruling(cert_m, r_m)
-    assert not ok and any("undetermined" in w for w in why)
-
-
-# ---------------------------------------------------------------------------- reference answers follow the frozen rule, not the model
-
-def test_reference_answers_apply_g13_without_a_model():
-    """Agreement to a named road with no record tying the segment to it: undetermined; a person decides when it changes
-    the outcome (metered, or a prior), and the answer stays when it changes nothing (fixed fare, no prior)."""
-    m = json.loads((ROOT / "data" / "bench" / "manifest.json").read_text())
-    assert "G13" in m["reference_version"]
-    for c in m["cases"]:
-        cond, t = c["conditions"], c["truth"]
-        if c["type"] != "route_deviation" or cond["consent"] not in ("before", "before_seg1") or cond["incident"] in ("on_stretch", "seg1"):
-            continue
-        if cond["service"] == "RydeTAXI" or cond["prior"]:
-            assert t["escalate"] and t["ruling"] == "escalate" and "ties segment" in t.get("evidence_gap", ""), c["case_id"]
-        else:
-            assert not t["escalate"] and t["ruling"] == "no_action", c["case_id"]
-    changed = (ROOT / "data" / "bench" / "REFERENCE_CHANGES.md").read_text()
-    for cid in ("B-0002", "B-0013", "B-0023", "B-0025"):
-        assert cid in changed, f"{cid} moved but is not in the change log"
 
 
 def test_benchmark_runner_keeps_every_ruling_field():

@@ -5,6 +5,7 @@
     GET  /                       landing page (web/index.html)
     GET  /api/cases              [{case_id, type, filed_by, statement, service_type, has_run}]
     GET  /api/cases/{id}         Case JSON (map, timeline)
+    GET  /api/cases/{id}/file    the case file as stored (official RydeResolve fields + ours)
     GET  /api/cases/{id}/facts   FactTable (code only, instant)
     GET  /api/runs/{id}          CaseRecord of the last run (404 if none)
     POST /api/runs/{id}          start a run (idempotent while running); body {"rebuttal": true}
@@ -29,7 +30,8 @@ load_dotenv(ROOT / ".env")
 for _flag in ("STRETCH_PRECEDENT", "STRETCH_FRAUD", "STRETCH_SLA", "STRETCH_FEEDBACK"):
     os.environ.setdefault(_flag, "1")            # the demo service runs with every stretch module on; set 0 in .env to get the bare MVP
 
-from core.facts.tools import build_fact_table          # noqa: E402
+from core.case_format import read_case                 # noqa: E402
+from core.facts.tools import TOOLS_BY_TYPE, build_fact_table   # noqa: E402
 from core.llm import describe_model                     # noqa: E402
 from core.orchestrate import run_case, save_record      # noqa: E402
 from core.policy import policy_text                     # noqa: E402
@@ -62,26 +64,26 @@ RUNS: dict[str, Run] = {}
 
 
 BENCH_DIR = ROOT / "data" / "bench" / "cases"   # the benchmark cases replay on the map too (no stored court run; use Run live)
-BLIND_DIR = ROOT / "data" / "bench" / "blind" / "cases"
+
+
+def case_file(cid: str) -> Path:
+    for d in (CASES_DIR, BENCH_DIR):
+        p = d / f"{cid}.json"
+        if p.exists():
+            return p
+    raise HTTPException(404, f"no case {cid}")
 
 
 def load_case(cid: str) -> Case:
-    for d in (CASES_DIR, BENCH_DIR, BLIND_DIR):
-        p = d / f"{cid}.json"
-        if p.exists():
-            return Case.model_validate(json.loads(p.read_text()))
-    raise HTTPException(404, f"no case {cid}")
+    return Case.model_validate(json.loads(case_file(cid).read_text()))
 
 
 def bench_titles() -> dict:
     """Plain-language scenario title per benchmark case id (same map the ops page uses)."""
     try:
-        from bench.ops_page import SCENARIO, humanize
-        out = {}
-        for m in (ROOT / "data" / "bench" / "manifest.json", ROOT / "data" / "bench" / "blind" / "manifest.json"):
-            if m.exists():
-                out.update({c["case_id"]: SCENARIO.get(c["name"], humanize(c["name"])) for c in json.loads(m.read_text())["cases"]})
-        return out
+        from bench.ops_page import title_for
+        m = ROOT / "data" / "bench" / "manifest.json"
+        return {c["case_id"]: title_for(c["name"], c.get("type")) for c in json.loads(m.read_text())["cases"]} if m.exists() else {}
     except Exception:  # noqa: BLE001
         return {}
 
@@ -90,9 +92,11 @@ def bench_titles() -> dict:
 def list_cases():
     """Demo cases (group 'demo') followed by the benchmark cases (group 'benchmark'); every one is replayable."""
     out, titles = [], bench_titles()
-    for group, d, pat in (("demo", CASES_DIR, "C-*.json"), ("sample", CASES_DIR, "DISP-*.json"), ("benchmark", BENCH_DIR, "B-*.json"), ("held-out", BLIND_DIR, "X-*.json")):
+    for group, d, pat in (("demo", CASES_DIR, "C-*.json"), ("sample", CASES_DIR, "DISP-*.json"), ("benchmark", BENCH_DIR, "B-*.json")):
         for p in sorted(d.glob(pat)):
-            c = json.loads(p.read_text())
+            c = read_case(p)
+            if c["dispute"]["type"] not in TOOLS_BY_TYPE:      # a dispute type the court has no fact tools for
+                continue
             title = titles.get(c["case_id"]) or (f"Organisers' sample · {c['dispute']['type'].replace('_', ' ')}" if group == "sample" else None)
             out.append({"case_id": c["case_id"], "group": group, "title": title,
                         "type": c["dispute"]["type"], "filed_by": c["dispute"]["filed_by"],
@@ -118,26 +122,30 @@ def get_case(cid: str, counterfactual: Optional[str] = None):
     return case.model_dump(mode="json")
 
 
+@app.get("/api/cases/{cid}/file")
+def get_case_file(cid: str):
+    return json.loads(case_file(cid.partition("~")[0]).read_text())
+
+
 @app.get("/api/cases/{cid}/facts")
 def get_facts(cid: str, counterfactual: Optional[str] = None):
     from core.schemas import Case as _Case
-    return build_fact_table(_Case.model_validate(get_case(cid, counterfactual))).model_dump(mode="json")
+    case = _Case.model_validate(get_case(cid, counterfactual))
+    if case.dispute.type not in TOOLS_BY_TYPE:
+        raise HTTPException(422, f"no fact tools for {case.dispute.type} disputes yet")
+    return build_fact_table(case).model_dump(mode="json")
 
 
 BENCH_RUNS_DIR = ROOT / "bench" / "results" / "court"     # the benchmark's primary court run of every B-case (<id>.record.json)
-BLIND_RUNS_DIR = ROOT / "bench" / "results" / "blind" / "court"   # the same for the held-out X-cases
 
 
 def stored_run_path(cid: str) -> Optional[Path]:
-    """A run saved by this service (runs/<id>.json) or, for benchmark and held-out cases, the benchmark's own court record."""
+    """A run saved by this service (runs/<id>.json) or, for a benchmark case, the benchmark's own court record."""
     p = RUNS_DIR / f"{cid}.json"
     if p.exists():
         return p
-    for d in (BENCH_RUNS_DIR, BLIND_RUNS_DIR):
-        q = d / f"{cid}.record.json"
-        if q.exists():
-            return q
-    return None
+    q = BENCH_RUNS_DIR / f"{cid}.record.json"
+    return q if q.exists() else None
 
 
 @app.get("/api/runs/{cid}")
@@ -335,7 +343,7 @@ def receipt(cid: str):
             "model": describe_model(), "fact_ids": [f["id"] for f in rec["facts"]["facts"]],
             "certificate": rec.get("certificate"), "eligibility": rec.get("eligibility"),
             "ruling": {k: rec["ruling"][k] for k in ("ruling", "amount", "recommended_action", "cited_facts", "cited_policy", "escalate")},
-            "appeal": "Reply to the notice within 30 days (NS-7); a human reviewer re-opens the case with this receipt."}
+            "appeal": "To appeal, reply to the notice; a human reviewer re-opens the case with this receipt."}
 
 
 @app.get("/policy-sources.md", response_class=PlainTextResponse)

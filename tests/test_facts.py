@@ -76,8 +76,9 @@ def route_case() -> Case:
     )
 
 
-def no_show_case(stop_offset_m: float, wait_s: int, cancelled_by="driver") -> Case:
-    """Driver approaches Bugis from 2 km south, stops stop_offset_m short of the pickup for wait_s, then cancels."""
+def no_show_case(stop_offset_m: float, wait_s: int, cancelled_by="driver", contact: bool = True) -> Case:
+    """Driver approaches Bugis from 2 km south, stops stop_offset_m short of the pickup for wait_s, then cancels.
+    contact: the driver sent one in-app message and made one in-app call on the way (NS-1 (iii))."""
     start = (BUGIS[0] - 0.018, BUGIS[1])
     stop = (BUGIS[0] - stop_offset_m / 110_540, BUGIS[1])
     accepted = T0 - timedelta(minutes=1)
@@ -85,7 +86,10 @@ def no_show_case(stop_offset_m: float, wait_s: int, cancelled_by="driver") -> Ca
     trip = {"pickup": {"lat": BUGIS[0], "lon": BUGIS[1], "name": "Bugis Junction"},
             "accepted_at": accepted.isoformat(), "cancelled_at": gps[-1]["ts"], "cancelled_by": cancelled_by,
             "driver_arrived_at": None if stop_offset_m > 200 else gps[-(wait_s // 5) - 1]["ts"]}
-    return base_case("C-TEST-NS", "no_show", trip, gps, {"cancellation_fee": 6.61})
+    chat = ([{"ts": (T0 + timedelta(seconds=5)).isoformat(), "from": "driver", "text": "On my way, white car"},
+             {"ts": (T0 + timedelta(seconds=10)).isoformat(), "from": "driver", "text": "Outgoing call, not answered", "kind": "call"}]
+            if contact else [])
+    return base_case("C-TEST-NS", "no_show", trip, gps, {"cancellation_fee": 5.00}, chat=chat)
 
 
 def by_id(facts, tmp_id):
@@ -156,7 +160,7 @@ def test_no_show_never_within_200m():
     assert stop.value["duration_s"] == pytest.approx(180, abs=10)
     assert stop.value["m_from_pickup"] == pytest.approx(600, abs=30)
     tl = by_id(facts, "tl-cancel")
-    assert tl.value["cancelled_by"] == "driver" and tl.value["cancellation_fee"] == 6.61
+    assert tl.value["cancelled_by"] == "driver" and tl.value["cancellation_fee"] == 5.00
     assert by_id(facts, "tl-arrival").value["driver_arrived_at"] is None
 
 
@@ -311,25 +315,26 @@ def test_platform_auto_arrival_counts_as_arrival_confirmation():
     cert = evaluate(case, build_fact_table(case))
     i = next(p for p in cert.predicates if p.clause == "NS-1" and p.element.startswith("(i)"))
     assert i.status == "pass" and "platform_auto arrival" in i.detail
-    assert cert.allowed == ["no_action", "escalate"]
+    # NS-1 (i)-(iii) hold; the driver wrote to the rider, so why he cancelled is read by the judge (NS-0 / NS-3)
+    assert cert.allowed == ["no_action", "refund_full", "escalate"] and "NS-0:reason" in cert.elements
 
 
 def test_policy_params_override_wait_window_and_fee():
-    """A record-stated no-show threshold and fee replace Ryde's defaults; a free-wait window alone changes nothing."""
-    from core.policy_engine import evaluate, GRACE_S, CANCEL_FEE
+    """A record-stated no-show threshold and fee replace the official defaults; a free-wait window alone changes nothing."""
+    from core.policy_engine import evaluate, FREE_WAIT_S, CANCEL_FEE
     from core.schemas import PolicyParams
-    base = no_show_case(stop_offset_m=50, wait_s=240)        # 4 min inside the radius
+    base = no_show_case(stop_offset_m=50, wait_s=360)        # 6 min inside the radius
     base = base.model_copy(update={"trip": base.trip.model_copy(update={"driver_pressed_here_at": base.trip.driver_arrived_at})})
     default = evaluate(base, build_fact_table(base))
-    assert default.wait_threshold == GRACE_S and default.fee == CANCEL_FEE and default.allowed == ["no_action", "escalate"]    # 4 min > Ryde's 3 min
-    stricter = base.model_copy(update={"policy_params": PolicyParams(no_show_threshold_min=8, free_wait_min=5, cancellation_fee=5.0)})
+    assert default.wait_threshold == FREE_WAIT_S and default.fee == CANCEL_FEE == 5.00 and "no_action" in default.allowed   # 6 min ≥ 5 min
+    stricter = base.model_copy(update={"policy_params": PolicyParams(no_show_threshold_min=8, free_wait_min=5, cancellation_fee=4.0)})
     cert = evaluate(stricter, build_fact_table(stricter))
-    assert cert.wait_threshold == 480 and cert.wait_inclusive and cert.fee == 5.0
-    assert cert.allowed == ["refund_full", "escalate"] and "$5.00" in cert.amount_formula    # 4 min does not reach 8 min
+    assert cert.wait_threshold == 480 and cert.wait_inclusive and cert.fee == 4.0
+    assert cert.allowed == ["refund_full", "escalate"] and "$4.00" in cert.amount_formula    # 6 min does not reach 8 min
     assert any("case record" in l and "8 min" in l for l in cert.lines())
     free_only = base.model_copy(update={"policy_params": PolicyParams(free_wait_min=5)})
     cert2 = evaluate(free_only, build_fact_table(free_only))
-    assert cert2.wait_threshold == GRACE_S and cert2.allowed == ["no_action", "escalate"]    # free wait is not the no-show threshold
+    assert cert2.wait_threshold == FREE_WAIT_S and "no_action" in cert2.allowed    # free wait is not a record-stated threshold
 
 
 def test_call_attempts_are_counted_in_chat_facts():

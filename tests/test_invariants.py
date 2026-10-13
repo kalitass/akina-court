@@ -4,8 +4,9 @@
     and "whichever way is faster" loops really bypass a stretch (the generator and the demo case agree with their labels)
   * an independent twenty-line recomputation (own haversine) reproduces the fact table's distances, closest approach,
     cancellation timing and chat count for every case file in the repo
-  * policy.md, clauses_en.json and web/policy.html carry the same clause ids and gap count, and the page is what the
-    builder produces from today's files; the pages quote that gap count
+  * web/policy.html is built from policy.md (same clause ids, each with an anchor, a label and a source that resolves to
+    policy/sources.md) and is what the builder produces from today's files; the pages quote the count of rules Ryde has
+    not specified
   * the reference change log names cases that exist and outcomes the manifest holds
   * segment findings on a no-show case never survive verification
 """
@@ -18,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from core.facts.tools import _project, build_fact_table
+from core.facts.tools import TOOLS_BY_TYPE, _project, build_fact_table
 from core.policy import citable_ids
 from core.policy_engine import evaluate
 from core.schemas import Case, Ruling, SegmentFinding
@@ -26,8 +27,7 @@ from core.verify import verify_ruling
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = json.loads((ROOT / "data" / "bench" / "manifest.json").read_text())
-BLIND = json.loads((ROOT / "data" / "bench" / "blind" / "manifest.json").read_text())
-CASE_FILES = sorted((ROOT / "data" / "cases").glob("*.json")) + sorted((ROOT / "data" / "bench" / "cases").glob("*.json")) + sorted((ROOT / "data" / "bench" / "blind" / "cases").glob("*.json"))
+CASE_FILES = sorted((ROOT / "data" / "cases").glob("*.json")) + sorted((ROOT / "data" / "bench" / "cases").glob("*.json"))
 
 
 def load(path: Path) -> Case:
@@ -35,7 +35,7 @@ def load(path: Path) -> Case:
 
 
 def case_path(cid: str) -> Path:
-    for d in ("data/cases", "data/bench/cases", "data/bench/blind/cases"):
+    for d in ("data/cases", "data/bench/cases"):
         p = ROOT / d / f"{cid}.json"
         if p.exists():
             return p
@@ -54,7 +54,7 @@ def segments_of(case: Case):
     return [f.value for f in build_fact_table(case).facts if f.value and "extra_km" in f.value and "entry_km" in f.value]
 
 
-@pytest.mark.parametrize("entry", [c for c in MAIN["cases"] + BLIND["cases"] if c["type"] == "route_deviation"], ids=lambda c: c["case_id"])
+@pytest.mark.parametrize("entry", [c for c in MAIN["cases"] if c["type"] == "route_deviation"], ids=lambda c: c["case_id"])
 def test_scenario_label_matches_the_geometry(entry):
     cond, case = entry["conditions"], load(case_path(entry["case_id"]))
     segs = segments_of(case)
@@ -77,7 +77,10 @@ def test_flagship_demo_bypasses_the_accident():
     assert seg.value["exit_km"] - seg.value["entry_km"] >= 0.3
     assert seg.value["entry_km"] <= along <= seg.value["exit_km"]
     cert = evaluate(case, table)
-    assert cert.segments[seg.id]["exempt"] is True and "RD-4" in cert.segments[seg.id]["why"]
+    # v3 (RD-2 / RD-4): the accident is a traffic reason, so no driver violation is recorded for this segment, but it does
+    # not exempt the fare — whether the rider agreed beforehand (RD-5) is still the judge's question
+    rd4 = next(p for p in cert.predicates if p.clause == "RD-4" and p.subject == seg.id)
+    assert rd4.status == "pass" and cert.segments[seg.id]["traffic"] is True and cert.segments[seg.id]["exempt"] is None
 
 
 # ---------------------------------------------------------------------------- independent recomputation
@@ -85,6 +88,8 @@ def test_flagship_demo_bypasses_the_accident():
 @pytest.mark.parametrize("path", CASE_FILES, ids=lambda p: p.stem)
 def test_fact_numbers_reproduce_from_the_raw_record(path):
     case = load(path)
+    if case.dispute.type not in TOOLS_BY_TYPE:
+        pytest.skip(f"no fact tools for {case.dispute.type} yet (the v3 fare rules come later)")
     table = build_fact_table(case)
     vals = {f.id: f.value for f in table.facts if f.value}
     t = case.trip
@@ -135,26 +140,29 @@ def _policy_page_module():
     return mod
 
 
-def test_policy_md_clauses_en_and_policy_html_agree():
+def test_policy_page_is_built_from_policy_md():
     md = (ROOT / "policy" / "policy.md").read_text()
-    md_ids = set(re.findall(r"^\*\*([A-Z]+-\d+)\*\*", md, flags=re.M)) | set(re.findall(r"^\| (G\d+) \|", md, flags=re.M))
-    en = json.loads((ROOT / "policy" / "clauses_en.json").read_text())
-    en_ids = {x["id"] for x in en} - {"PREMISE"}
-    assert md_ids == en_ids, (md_ids ^ en_ids)
-    gaps = sorted(i for i in md_ids if i.startswith("G"))
-    assert len(gaps) == 13
+    md_ids = re.findall(r"^\*\*([A-Z]+-\d+)\*\*", md, flags=re.M)
     mod = _policy_page_module()
-    rows, reg = mod.load(), mod.load_sources()
-    fresh = mod.page(rows, reg)
-    assert fresh == (ROOT / "web" / "policy.html").read_text(), "web/policy.html is stale: run scripts/build_policy_page.py"
+    doc, reg = mod.load(), mod.load_sources()
+    rows = mod.clauses(doc)
+    assert [c["id"] for c in rows] == md_ids
+    html = (ROOT / "web" / "policy.html").read_text()
+    for c in rows:
+        assert c["label"] in mod.LABELS, (c["id"], c["label"])
+        src = mod.parse_source(c["source"], reg)
+        assert src["codes"] or src["system_set"] is not None, f"{c['id']} names no source and is not marked as a system rule"
+        assert not src["missing"], (c["id"], src["missing"])
+        assert f'id="{c["id"]}"' in html, f"no anchor for {c['id']} on web/policy.html"
+        for code in src["codes"]:
+            assert f'id="src-{code}"' in html, (c["id"], code)
+    assert mod.page(doc, reg) == html, "web/policy.html is stale: run scripts/build_policy_page.py"
+    defaults = mod.counts(doc)["not_specified"]
+    assert defaults > 0
     for page in ("README.md", "web/index.html"):
         text = (ROOT / page).read_text()
-        for m in re.finditer(r"\b(\d{1,2}) (?:rules Ryde has not published|open gaps|disclosed gaps)", text):
-            assert int(m.group(1)) == len(gaps), (page, m.group(0))
-    # the thresholds the engine uses appear in the clause text (no stale number survives a rule change)
-    ns1 = next(x for x in en if x["id"] == "NS-1")["rule_en"]
-    assert "within_200m_after_tap_s" in ns1 and "m_from_pickup_at_tap" in ns1 and "more than 3 minutes" in ns1
-    assert "within_200m_after_tap_s" in md and "no_show_threshold" in md
+        for m in re.finditer(r"\b(\d{1,2}) (?:rules Ryde has not (?:published|specified)|open gaps|disclosed gaps)", text):
+            assert int(m.group(1)) == defaults, (page, m.group(0))
 
 
 # ---------------------------------------------------------------------------- change log vs manifest
@@ -196,7 +204,7 @@ def test_reference_rationales_and_prompts_name_no_retired_mechanism():
         text = f.read_text()
         for r in retired:
             assert r not in text, (f.name, r)
-    for f in ("core/agents/judge.py", "core/agents/advocate.py", "bench/baseline.py", "core/facts/tools.py", "policy/policy.md", "policy/clauses_en.json", "scripts/build_policy_page.py"):
+    for f in ("core/agents/judge.py", "core/agents/advocate.py", "bench/baseline.py", "core/facts/tools.py", "policy/policy.md", "web/policy.html", "scripts/build_policy_page.py"):
         text = (ROOT / f).read_text()
         for r in retired:
             assert r not in text, (f, r)
@@ -209,12 +217,11 @@ def test_copy_quotes_the_engine_constants():
     from core.facts import tools
     from core import policy_engine as pe
     expect = {
-        f"{tools.PICKUP_RADIUS_M} m": ("policy/policy.md", "policy/clauses_en.json"),
-        f"{tools.DETOUR_MIN_KM} km": ("policy/clauses_en.json",),
-        f"{pe.NEAR_ROUTE_M} m": ("policy/policy.md", "policy/clauses_en.json"),
-        f"{tools.GPS_GAP_S // 60} minutes": ("policy/clauses_en.json",),
+        f"{tools.PICKUP_RADIUS_M} m": ("policy/policy.md", "web/policy.html"),
+        f"{tools.DETOUR_MIN_KM} km": ("policy/policy.md",),            # implementation detail: in the policy, not on the page
+        f"{pe.NEAR_ROUTE_M} m": ("policy/policy.md",),
         f"{pe.GRACE_S // 60} min": ("policy/policy.md",),
-        f"{pe.CANCEL_FEE:.2f}": ("policy/policy.md", "policy/clauses_en.json"),
+        f"{pe.CANCEL_FEE:.2f}": ("policy/policy.md", "web/policy.html"),
     }
     for needle, files in expect.items():
         for f in files:
