@@ -539,7 +539,12 @@ function eventStage(e){
   if (e.kind === 'rebuttal') return [2, 'Both sides argue · round 2: responses'];
   if (e.kind === 'ruling') return [3, 'Judge proposes a ruling · awaiting code check'];
   if (['notify', 'escalate', 'summary'].includes(e.kind)) return [4, 'Checked outcome · notices or human hand-off'];
-  if (e.kind === 'check') return [0, 'Code check · valid references do not prove a claim is correct'];
+  if (e.kind === 'check') {
+    if (/Ruling verification/i.test(e.title || '')) return [4, 'Code checks the proposed ruling · outcome, amount and references'];
+    if (/Policy execution trace/i.test(e.title || '')) return [1, 'Prepare evidence · apply policy and identify open questions'];
+    if (/Grounds put forward/i.test(e.title || '')) return [2, 'Both sides argue · grounds presented for the judge'];
+    return [0, 'Citation check · valid references do not prove a claim is correct'];
+  }
   return [1, 'Prepare evidence · collect records and apply policy'];
 }
 function head(e, ttl){ const stage = eventStage(e); return `<div class="eventStage stage${stage[0]}">${stage[0] ? stage[0] + ' · ' : ''}${esc(stage[1])}</div><div class="hd"><span class="el">${esc(e.elapsed||'')}</span><span class="who ${esc(e.actor)}">${esc(who(e))}</span><span class="ttl">${ttl != null ? ttl : esc(e.title)}</span></div>`; }
