@@ -113,7 +113,7 @@ def build() -> dict:
     cites_raw = raw["citations"] + raw["fact_citations"]
     return {
         "schema_version": "1.1",
-        "generated_at": dt.date.today().isoformat(),
+        "generated_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date().isoformat(),   # Singapore date, the same on any machine
         "generated_by": "scripts/build_submission.py (numbers read from bench/results/)",
         "project": "Ryde Dispute Court",
         "team": "Akina Court",
