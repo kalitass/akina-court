@@ -23,6 +23,24 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family
 #flash{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;box-shadow:inset 0 0 160px 40px rgba(255,60,60,.55);transition:opacity .25s}
 #flash.on{opacity:1}
 
+/* Hearing chapters */
+#court{scroll-behavior:auto}
+#courtStages{padding:12px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex:none}
+#courtStages .stageLabel{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:9px}
+#courtStages .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#courtStages button{appearance:none;text-align:left;cursor:pointer;background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:9px 7px;font:600 11px var(--sans);line-height:1.4}
+#courtStages button b{display:block;font:700 16px var(--mono);margin-bottom:3px}
+#courtStages button:disabled{opacity:.45;cursor:default}
+#courtStages button.active{color:var(--ink);border-color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,var(--panel))}
+.chapter{margin-bottom:28px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel2)}
+.chapterHeader{padding:18px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--chapterColor) 8%,var(--panel));display:flex;gap:12px;align-items:flex-start}
+.chapterHeader .num{width:35px;height:35px;flex:none;border-radius:10px;background:var(--chapterColor);color:#fff;display:grid;place-items:center;font:700 19px var(--mono)}
+.chapterHeader h2{margin:0;font-size:20px;letter-spacing:-.03em;color:var(--ink)}
+.chapterHeader p{margin:5px 0 0;line-height:1.5;font-size:12px;color:var(--ink2)}
+.chapterBody{padding:16px}
+.chapterBody .ev:last-child{margin-bottom:0}
+.roundLabel{margin-bottom:9px;font-size:11px;font-weight:700;color:var(--blue)}
+.chapter .ev.brief,.chapter .ev.rebuttal{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:16px;background:var(--panel)}
 /* ---------- HUD (top-left case card) ---------- */
 #hud{position:absolute;left:18px;top:18px;width:360px;max-height:calc(100vh - 250px);overflow-y:auto;z-index:10;background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px 12px}
 #hud .brand{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -380,13 +398,13 @@ html.mini #hud{display:none}
 
 <div id="controls">
   <div class="top">
-    <button class="btn primary" id="play" aria-label="Play or pause the trip replay (Space)">▶ Play</button>
+    <button class="btn primary" id="play" aria-label="Play or pause the trip replay (Space)">▶ Play full case</button>
     <div class="seg" id="speeds"><button data-s="50">50×</button><button data-s="100">100×</button><button data-s="200" class="on">200×</button></div>
     <div id="clock">00:00:00<small id="clockDate"></small></div>
     <div id="status">Loading…</div>
     <div id="speedo">0 km/h</div>
     <label class="toggle" id="follow"><i></i>Follow</label>
-    <button class="btn" id="toCourt" aria-label="Skip the trip replay and open the court">Court ▸</button>
+    <button class="btn" id="toCourt" aria-label="Skip the trip replay and open the court">Skip to Court ▸</button>
   </div>
   <div id="scrub" role="slider" aria-label="Trip timeline; Left and Right arrows move 30 seconds" tabindex="0"><div class="track"></div><div class="trip"></div><div class="played"></div><div id="scrubMarks"></div><div class="head"></div></div>
   <details id="mapKey"><summary>Map legend</summary><div id="legend" aria-label="Map legend"></div></details>
@@ -395,6 +413,7 @@ html.mini #hud{display:none}
 <div id="panel">
   <div class="tabs" role="tablist"><button type="button" class="tab on" role="tab" aria-selected="true" data-tab="feed">Trip feed</button><button type="button" class="tab" role="tab" aria-selected="false" data-tab="court">Court</button>
     <div class="act"><div class="pill idle" id="pill"><i></i><span>loading</span></div><button class="btn sm" id="modeBtn" aria-label="Switch between simple and expert view" title="Simple view: plain language for an audience. Expert view: every fact id, clause id and tool call.">Expert view</button><button class="btn sm" id="demoBtn">Demo ▾</button><button class="btn sm live" id="runBtn">▶ Run live</button></div></div>
+  <div id="courtStages" style="display:none"><div class="stageLabel">HEARING STAGES</div><div class="steps"><button data-stage="1"><b>01</b>Evidence</button><button data-stage="2"><b>02</b>Both sides argue</button><button data-stage="3"><b>03</b>Judge proposes</button><button data-stage="4"><b>04</b>Check &amp; outcome</button></div></div>
   <div id="drawer"></div>
   <div class="scroll" id="feed" role="log" aria-live="polite" aria-label="Trip feed: text version of the map animation"><div class="empty">Press play — messages, taps and conditions appear here as the trip unfolds.</div></div>
   <div class="scroll" id="court" style="display:none" role="log" aria-live="polite" aria-label="Court log"><div class="empty">The court convenes once the trip replay ends.</div></div>
