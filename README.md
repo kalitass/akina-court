@@ -1,6 +1,6 @@
 # Akina Court · Ryde Dispute Court
 
-![Agents argue. Code verifies.](web/cover.png)
+![Who pays for the detour? Akina Court settles a ride-hailing dispute, and code checks every cent.](web/cover.png)
 
 **Agents argue. Code verifies.** A rider says the driver took the long way. Akina Court reads the trip record, lets an AI advocate for each side argue the case before an AI judge, and gives Ryde a ruling in about <!--n:court.latency_mean_s:.0f-->30<!--/n--> seconds that both sides can check. A refund is only approved, back to the rider's original payment method, when code confirms the ruling follows Ryde's written policy; anything the record cannot settle goes to a person, with the case already prepared.
 
