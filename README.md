@@ -10,7 +10,7 @@
 | Watch one case, map and court | https://akina.kalitas.cc/replay.html?case=C-0001 |
 | The organisers' three samples | [DISP-001](https://akina.kalitas.cc/replay.html?case=DISP-001&phase=court) · [DISP-002](https://akina.kalitas.cc/replay.html?case=DISP-002&phase=court) · [DISP-003](https://akina.kalitas.cc/replay.html?case=DISP-003&phase=court) |
 | Full results | https://akina.kalitas.cc/report.html |
-| Demo video | https://www.youtube.com/watch?v=ewtcfCivAIg |
+| Demo video | https://www.youtube.com/watch?v=yp1zJfDsaFA |
 | Track | Ryde · Multi-Agent Autonomous Dispute Resolution |
 | Built with | CodeBuddy · DeepSeek API (deepseek-chat) · Tencent Cloud Lighthouse |
 
